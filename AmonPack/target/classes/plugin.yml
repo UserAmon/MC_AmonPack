@@ -1,0 +1,42 @@
+name: AmonPack
+version: '1.0-SNAPSHOT'
+main: methods_plugins.AmonPackPlugin
+api-version: 1.18
+authors: [ Amon ]
+depend: ['ProjectKorra']
+description: 'Plugin made for Avatarserv'
+commands:
+  QuestItems:
+    description: QuestItems
+    usage: /<command>
+  Skills:
+    description: choose yours spells
+    usage: /<command>
+  Puzzle:
+    usage: /<command>
+  MinGathOff:
+    usage: /<command>
+  MinGathOn:
+    usage: /<command>
+  Itemy:
+    usage: /<command>
+  Pomoc:
+    usage: /<command>
+  Reputation:
+    usage: /<command>
+  Quests:
+    usage: /<command>
+  GoWorld:
+    usage: /<command>
+  Wave:
+    usage: /<command>
+  ArenaBuilding:
+    usage: /<command>
+  Menagerie:
+    usage: /<command>
+  SpellTree:
+    usage: /<command>
+  Scbadder:
+    usage: /<command>
+  Jobs:
+    usage: /<command>
