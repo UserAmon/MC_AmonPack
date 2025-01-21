@@ -179,8 +179,6 @@ public class Menagerie {
     }
 
     public void ActivateByKill(Entity entity){
-        System.out.println("test Activate by kill");
-        System.out.println("test Activate by kill " + entity);
         UpdateObjectives(entity,null);
     }
     public void ActivateByClick(PlayerInteractEvent event){
@@ -601,6 +599,10 @@ public class Menagerie {
 
     public Location getReturnLocation() {
         return ReturnLocation;
+    }
+
+    public Location getCenterLocation() {
+        return CenterLocation;
     }
 }
 

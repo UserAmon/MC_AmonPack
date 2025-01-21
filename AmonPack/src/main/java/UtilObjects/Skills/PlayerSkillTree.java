@@ -133,11 +133,6 @@ public class PlayerSkillTree {
 
 
     public static void ResetSkillTree(PlayerSkillTree Sto) throws SQLException {
-        System.out.println("test resetu1   "+Sto.getPlayer());
-        System.out.println("test resetu2   "+Sto.getActSkillPoints());
-        System.out.println("test resetu3   "+Sto.getSelectedPath());
-        System.out.println("test resetu4   "+Sto.getElementsInPossesion());
-        System.out.println("test resetu5   "+Sto.getCurrentElement());
         Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
         ResultSet rs = stmt.executeQuery("select * from SpellTree where Player='" + Sto.getPlayer()+"'");
         if (!rs.next()) {

@@ -60,21 +60,6 @@ public class Mining implements Listener {
             Location loc = new Location(Bukkit.getWorld(World), X, Y, Z);
             Mine mine = new Mine(loc,YOffsetUp,Radius,RestoreTime,b,OChance,LChance);
             ListOfMines.add(mine);
-            System.out.println(mine.getLoc()+" "+YOffsetUp+" "+" "+Radius+" "+RestoreTime+" "+b+" "+LChance+" "+OChance);
-            System.out.println("test swiata");
-            System.out.println("test swiata");
-
-            System.out.println("  String w = "+World);
-            System.out.println("  String get w = "+Bukkit.getWorld(World));
-
-            for (org.bukkit.World W : Bukkit.getWorlds()){
-                System.out.println("  Lista swiatow = "+W.getName());
-
-            }
-
-
-
-            System.out.println("test swiata");
 
         }
         for(String key : AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.MiningOresDrops").getKeys(false)) {

@@ -81,7 +81,6 @@ public class MenagerieConfig {
 
                     ItemStack itemdrop =parseItemStack(Path + ".DropItems");
                     if(itemdrop!=null){
-                        System.out.println("Znaleziono  "+itemdrop);
                         objective.setItemDropBoolean(true);
                         objective.setItemDrop(itemdrop);
                     }
@@ -265,7 +264,6 @@ public class MenagerieConfig {
     private ItemStack parseItemStack(String path) {
         if (config.isConfigurationSection(path)) {
             String materialName = config.getString(path + ".Material");
-            System.out.println("test "+materialName);
             if (materialName == null) {
                 return null;
             }

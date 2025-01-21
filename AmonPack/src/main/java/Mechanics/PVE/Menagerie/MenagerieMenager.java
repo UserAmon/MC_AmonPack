@@ -27,36 +27,43 @@ public class MenagerieMenager {
 
     }
     public static void StartMenagerie(Player p, String name){
+        System.out.println("Start Menagerie");
         for (Menagerie mena:ListOfAllMenageries) {
             if(mena.getMenagerieName().equalsIgnoreCase(name)){
-                if (mena.PlayersInMenagerie().isEmpty()) {
-                    mena.StartMenagerie(p);
-                } else {
-                    p.sendMessage("Menazeria jest zajeta, tworze nowa kopie...");
-                    System.out.println("Menazeria zajeta, kopiowanie swiata...");
-
-                    String originalWorldName = mena.getReturnLocation().getWorld().getName(); // Załóżmy, że metoda zwraca nazwę oryginalnego świata.
-                    String newWorldName = generateNewWorldName(originalWorldName); // np. "menagerie_2"
-
-                    try {
-                        File originalWorldFolder = new File(Bukkit.getWorldContainer(), originalWorldName);
-                        File newWorldFolder = new File(Bukkit.getWorldContainer(), newWorldName);
-                        copyWorldFolder(originalWorldFolder, newWorldFolder);
-                        World newWorld = Bukkit.createWorld(new WorldCreator(newWorldName));
-                        if (newWorld != null) {
-                            Location spawnLocation = newWorld.getSpawnLocation();
-                            p.teleport(spawnLocation);
-                            p.sendMessage("Zostales przeniesiony do nowej menazerii: " + newWorldName);
-                        } else {
-                            p.sendMessage("Blad podczas ladowania nowej menazerii.");
-                            System.err.println("Nie mozna zaladowac swiata: " + newWorldName);
+                boolean empty = true;
+                    for (Player pla:Bukkit.getOnlinePlayers()) {
+                        if (pla.getWorld().equals(mena.getCenterLocation().getWorld())) {
+                            MenaerieCopy(mena,p);
+                            empty=false;
+                            break;
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        p.sendMessage("Wystapil blad podczas kopiowania swiata.");
-                    }
-                }
+                        }
+                    if(empty)mena.StartMenagerie(p);
+                    break;
             }
+        }
+    }
+
+    private static void MenaerieCopy(Menagerie mena, Player p){
+        p.sendMessage("Menazeria jest zajeta, tworze nowa kopie...");
+        System.out.println("Menazeria zajeta, kopiowanie swiata...");
+        String originalWorldName = mena.getCenterLocation().getWorld().getName();
+        String newWorldName = generateNewWorldName(originalWorldName);
+        try {
+            File originalWorldFolder = new File(Bukkit.getWorldContainer(), originalWorldName);
+            File newWorldFolder = new File(Bukkit.getWorldContainer(), newWorldName);
+            copyWorldFolder(originalWorldFolder, newWorldFolder);
+            World newWorld = Bukkit.createWorld(new WorldCreator(newWorldName));
+            if (newWorld != null) {
+                p.teleport(mena.getCenterLocation());//dodac menagerie bez wgzledu na swiat, byle by zaczynal sie poprawnie
+                p.sendMessage("Zostales przeniesiony do nowej menazerii: " + newWorldName);
+            } else {
+                p.sendMessage("Blad podczas ladowania nowej menazerii.");
+                System.err.println("Nie mozna zaladowac swiata: " + newWorldName);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            p.sendMessage("Wystapil blad podczas kopiowania swiata.");
         }
     }
 
@@ -72,6 +79,14 @@ public class MenagerieMenager {
                 throw new RuntimeException("Error copying world folder", e);
             }
         });
+
+        // Usuń plik uid.dat z nowego folderu świata
+        File uidFile = new File(target, "uid.dat");
+        if (uidFile.exists()) {
+            if (!uidFile.delete()) {
+                throw new IOException("Failed to delete uid.dat in copied world folder!");
+            }
+        }
     }
 
     private static String generateNewWorldName(String baseName) {

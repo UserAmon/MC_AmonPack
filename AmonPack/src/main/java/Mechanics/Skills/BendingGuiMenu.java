@@ -260,7 +260,7 @@ public class BendingGuiMenu {
     private void AddPlayerFromDBToListOnEnable() throws SQLException {
         Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
         ResultSet rs = stmt.executeQuery("select * from SpellTree");
-        if (rs.next()) {
+        while (rs.next()) {
             AllPlayersSkillTrees.add(new PlayerSkillTree(
                     rs.getString(1),
                     rs.getInt(2),

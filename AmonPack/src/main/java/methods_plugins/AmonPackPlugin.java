@@ -128,12 +128,12 @@ public class AmonPackPlugin extends JavaPlugin {
 		this.getServer().getPluginManager().registerEvents(new ReputationMenager(), this);
 		this.getServer().getPluginManager().registerEvents(new GuiMenu(), this);
 		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
-		new UpgradesMenager();
 		new newPvP();
 		try {
-			new MenagerieMenager();
 			new BendingGuiMenu();
 			new JobsMenager();
+			new MenagerieMenager();
+			new UpgradesMenager();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

@@ -77,8 +77,6 @@ public class newPvP {
         Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::FireTimer,Period*20 ,Period*20);
         Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::RandomSpawner,(Period+5)*20 ,(Period+5)*20);
         Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::Fireworks ,Period*20 ,200);
-        System.out.println("test pvp1 " + Loc.getWorld());
-        System.out.println("test pvp2 " + Loc);
     }
 
     private void Fireworks() {

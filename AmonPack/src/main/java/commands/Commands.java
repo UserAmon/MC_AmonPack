@@ -33,35 +33,6 @@ public class Commands implements CommandExecutor {
 
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-		switch (cmd.getName().toLowerCase()) {
-			case "menagerie":
-				Player p = Bukkit.getPlayer(args[0]);
-				MenagerieMenager.StartMenagerie(p,args[1]);
-				break;
-			case "spelltree":
-				try {
-					Player pl = Bukkit.getPlayer(args[1]);
-					if(args[0].equalsIgnoreCase("Multibend")){
-						BendingGuiMenu.getPlayerSkillTreeByName(pl).setMultibend(Boolean.parseBoolean(args[2]));
-					}else if(args[0].equalsIgnoreCase("Create")){
-						PlayerSkillTree NPST = new PlayerSkillTree(args[1],Integer.parseInt(args[2]),"",args[3],args[3]);
-						 NPST.ResetSkillTree(NPST);
-					}else if(args[0].equalsIgnoreCase("Set")){
-						 PlayerSkillTree NPST = new PlayerSkillTree(args[1],Integer.parseInt(args[2]),args[3],args[4],args[5]);
-						 NPST.ResetSkillTree(NPST);
-					 }else if (args[0].equalsIgnoreCase("AddP")){
-						 int i = BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1])).getActSkillPoints();
-						BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1])).setActSkillPoints(i+Integer.parseInt(args[2]));
-					}else if (args[0].equalsIgnoreCase("AddE")){
-						 PlayerSkillTree PST = BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1]));
-						PST.AddElement(PST,args[2]);
-					}
-				}catch (Exception e){
-					System.out.println("JAKIS BLAD   Z KOMENDA SPELLTREE   " + e.getMessage());
-				}
-
-				break;
-		}
 		/*if(cmd.getName().equalsIgnoreCase("Dungeon")) {
 				List<Player> PList = new ArrayList<>();
 			PList.add((Player) sender);
@@ -201,7 +172,40 @@ public class Commands implements CommandExecutor {
 					AmonPackPlugin.on();
 					break;
 			}
-		}/*
+		}else{
+			switch (cmd.getName().toLowerCase()) {
+				case "menagerie":
+					Player p = Bukkit.getPlayer(args[1]);
+					MenagerieMenager.StartMenagerie(p,args[0]);
+					break;
+				case "spelltree":
+					try {
+						Player pl = Bukkit.getPlayer(args[1]);
+						if(args[0].equalsIgnoreCase("Multibend")){
+							BendingGuiMenu.getPlayerSkillTreeByName(pl).setMultibend(Boolean.parseBoolean(args[2]));
+						}else if(args[0].equalsIgnoreCase("Create")){
+							PlayerSkillTree NPST = new PlayerSkillTree(args[1],Integer.parseInt(args[2]),"",args[3],args[3]);
+							NPST.ResetSkillTree(NPST);
+						}else if(args[0].equalsIgnoreCase("Set")){
+							PlayerSkillTree NPST = new PlayerSkillTree(args[1],Integer.parseInt(args[2]),args[3],args[4],args[5]);
+							NPST.ResetSkillTree(NPST);
+						}else if (args[0].equalsIgnoreCase("AddP")){
+							int i = BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1])).getActSkillPoints();
+							BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1])).setActSkillPoints(i+Integer.parseInt(args[2]));
+						}else if (args[0].equalsIgnoreCase("AddE")){
+							PlayerSkillTree PST = BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1]));
+							PST.AddElement(PST,args[2]);
+						}
+					}catch (Exception e){
+						System.out.println("JAKIS BLAD   Z KOMENDA SPELLTREE   " + e.getMessage());
+					}
+
+					break;
+			}
+		}
+
+
+		/*
 		if(cmd.getName().equalsIgnoreCase("FallChest")) {
 			if (sender instanceof Player) {
 				Player p = (Player) sender;

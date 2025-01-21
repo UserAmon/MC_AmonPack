@@ -159,13 +159,10 @@ public class ObjectiveEffect {
 
     public void setReqObjToEnd(List<String> reqObjToEnd) {
         ReqObjToEnd = reqObjToEnd;
-        System.out.println("Ustawiono!!! 1   "+ReqObjToEnd.size());
-        System.out.println("Ustawiono!!! 2   "+ReqObjToEnd.get(0));
     }
 
     public void setIntervals(int intervals) {
         Intervals = intervals;
-        System.out.println("Ustawiono!!! 3   "+Intervals);
     }
 
     public void setExecuted(boolean executed) {
