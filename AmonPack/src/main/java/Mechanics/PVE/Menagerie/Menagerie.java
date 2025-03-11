@@ -66,11 +66,13 @@ public class Menagerie {
         ListOfEncounters = listOfEncounters;
     }
 
-    public void StartMenagerie(Player p){
+    public void StartMenagerie(List<Player> p){
         ActiveEncounter=ListOfEncounters.get(0);
-        Reset(p);
+        for(Player player :p){
+            Reset(player);
+        }
         ClearMenagerie();
-        PlayersInDungAndBossBars.add(p);
+        PlayersInDungAndBossBars.addAll(p);
         NextEncouter();
         sbManager=new BoardManager();
         //ItemStack Gifts = FastEasyStack(Material.ENDER_CHEST, ChatColor.RED+"Dar");
@@ -183,14 +185,13 @@ public class Menagerie {
     }
     public void ActivateByClick(PlayerInteractEvent event){
         Player player = event.getPlayer();
-        if (ActiveEncounter!=null &&ActiveEncounter.getReadyWaitingDoors().IsClosed){
         if(event.getItem() != null && event.getItem().isSimilar(FastEasyStack(Material.COMPASS, ChatColor.RED+"Gotowy?"))){
             event.setCancelled(true);
             OpenMenagerieMenu(player);
         }else if(event.getItem() != null && event.getItem().isSimilar(FastEasyStack(Material.ENDER_CHEST, ChatColor.RED+"Dar"))){
             event.setCancelled(true);
             OpenUpgradesMenagerie(player);
-        }}else{
+        }else{
             UpdateObjectives(null,event);
         }
     }
@@ -603,6 +604,9 @@ public class Menagerie {
 
     public Location getCenterLocation() {
         return CenterLocation;
+    }
+    public List<Player> GetPlayersList(){
+        return PlayersInDungAndBossBars;
     }
 }
 

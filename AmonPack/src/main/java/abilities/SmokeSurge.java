@@ -1,4 +1,5 @@
 package abilities;
+import abilities.Util_Objects.SmokeSource;
 import com.projectkorra.projectkorra.attribute.Attribute;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -34,12 +35,12 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 	private int zonerange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.SmokeZoneRange");
 	private int zonedur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.SmokeZoneDuration");
 	public int i;
-	public int act;
 	Location origin;
 	Location location;
 	Vector direction;
 	public int degree;
 	public int degree2;
+	private int interval;
 	public SmokeSurge(Player player) {
 		super(player);
 		if (bPlayer.isOnCooldown(this)) {
@@ -48,15 +49,15 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 		if (!bPlayer.canBend(this)) {
 			return;
 		}
-		i=0;
+		origin = player.getLocation().clone();
+		direction = player.getLocation().clone().getDirection();
+		location = origin.clone().add(0, 1, 0);
+		i = 0;
 		degree = -180;
 		degree2 = -60;
-		origin = player.getLocation().clone();
-		location = origin.clone().add(0,1,0);
-		direction = player.getLocation().getDirection().clone();
+		interval=0;
 		start();
 		bPlayer.addCooldown(this);
-	        
 	}
 	@Override
 	public void progress() {
@@ -65,22 +66,27 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 			return;
 		}
 		if (GeneralMethods.isSolid(location.getBlock())) {
-			Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
+			SmokeSource Source = new SmokeSource(location,60,2,1,player);
+			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
 			remove();
 			return;
 		}
 		if (origin.distance(location) > (range)) {
-			Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
+			SmokeSource Source = new SmokeSource(location,60,2,1,player);
+			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
 			remove();
 			return;
 		}
-		
-		for (Block b : GeneralMethods.getBlocksAroundPoint(location, 3)) {
+		interval++;
+		if(interval>1){
+			interval=0;
+
+		/*for (Block b : GeneralMethods.getBlocksAroundPoint(location, 3)) {
 		if (b.getType() == Material.FIRE) {
-			Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
+			SmokeSource Source = new SmokeSource(location,60,2,1,player);
+			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
 		}
-		}
-		
+		}*/
 		location.add(direction.multiply(1));
 		vortex();
    		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 2)) {
@@ -90,7 +96,7 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
 			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
     	}}
-	}
+	}}
 	public void vortex() {
 		if (degree < 180) {
         degree = degree + 30;
@@ -100,7 +106,8 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
         Vector newDir = loc.getDirection().clone().multiply(2 * Math.cos(Math.toRadians(degree)));
         tempLoc.add(newDir);
         tempLoc.setY(tempLoc.getY() + 2 * Math.sin(Math.toRadians(degree)));
-        ParticleEffect.SMOKE_NORMAL.display(tempLoc, 15, 0.6, 0.6, 0.6, 0);
+        ParticleEffect.SMOKE_NORMAL.display(tempLoc, 12, 0.2, 0.1, 0.2, 0.01);
+        ParticleEffect.CAMPFIRE_COSY_SMOKE.display(tempLoc, 3, 0.2, 0.1, 0.2, 0);
     } else {
         degree = -180;
     }
@@ -112,8 +119,8 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 	        Vector newDir2 = loc2.getDirection().clone().multiply(2 * Math.cos(Math.toRadians(degree2)));
 	        tempLoc2.add(newDir2);
 	        tempLoc2.setY(tempLoc2.getY() + 2 * Math.sin(Math.toRadians(degree2)));
-	        ParticleEffect.SMOKE_NORMAL.display(tempLoc2, 15, 0.6, 0.6, 0.6, 0);
-	             
+			ParticleEffect.SMOKE_NORMAL.display(tempLoc2, 10, 0.15, 0.1, 0.15, 0.01);
+			ParticleEffect.CAMPFIRE_COSY_SMOKE.display(tempLoc2, 2, 0.15, 0.1, 0.15, 0);
 	} else {
 	        degree2 = 180;
 	}

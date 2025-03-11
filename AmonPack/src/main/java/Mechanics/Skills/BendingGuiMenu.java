@@ -44,7 +44,7 @@ public class BendingGuiMenu {
     public static void OpenGeneralBendingMenu(Player player) {
         PlayerSkillTree PSkillTree = getPlayerSkillTreeByName(player);
         if(PSkillTree==null ||PSkillTree.getElementsInPossesionAsString().contains("brak")){
-            player.sendMessage(ChatColor.RED+ "Nie mozesz uzyc tej komendy - nie wybrales jeszcze zywiolu");
+            player.sendMessage(ChatColor.RED+ "Nie mozesz uzyc tej komendy - nie wybrales jeszcze zywiolu. Przejdź tutorial! (/warp wybor)");
             return;
         }
             Inventory menu = Bukkit.createInventory(null, 36, "GeneralBending");

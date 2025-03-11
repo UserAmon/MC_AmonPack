@@ -9,15 +9,16 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Mine {
-    Location loc;
-    int YOffsetUp;
-    int Radius;
-    int RestoreTime;
-    Material MainBlock;
-    HashMap<Material, Integer> OresList = new HashMap();
-    HashMap<String, Integer> LootList = new HashMap();
+    private Location loc;
+    private int YOffsetUp;
+    private int Radius;
+    private int RestoreTime;
+    private Material MainBlock;
+    private HashMap<Material, Integer> OresList = new HashMap();
+    private HashMap<String, Integer> LootList = new HashMap();
+    private HashMap<Material, Double> ExpList = new HashMap<>();
 
-    public Mine(Location loc, int YOffsetUp, int radius, int restoreTime, Material mainBlock, HashMap<Material, Integer> oresList, HashMap<String, Integer> lootList) {
+    public Mine(Location loc, int YOffsetUp, int radius, int restoreTime, Material mainBlock, HashMap<Material, Integer> oresList, HashMap<String, Integer> lootList, HashMap<Material,Double> explist) {
         this.loc = loc;
         this.YOffsetUp = YOffsetUp;
         Radius = radius;
@@ -25,6 +26,7 @@ public class Mine {
         MainBlock = mainBlock;
         OresList = oresList;
         LootList = lootList;
+        ExpList = explist;
     }
 
     public Location getLoc() {
@@ -47,5 +49,8 @@ public class Mine {
     }
     public HashMap<String, Integer> getLootList() {
         return LootList;
+    }
+    public double GetExpByMaterial(Material mat){
+        return ExpList.get(mat);
     }
 }

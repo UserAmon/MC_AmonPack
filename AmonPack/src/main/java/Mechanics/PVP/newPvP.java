@@ -4,10 +4,7 @@ import UtilObjects.PVP.FallingChest;
 import UtilObjects.PVP.RandomEvents;
 import commands.Commands;
 import methods_plugins.AmonPackPlugin;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Entity;
@@ -23,13 +20,14 @@ import Mechanics.PVP.PvPMethods.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import static Mechanics.PVE.SimpleWorldGenerator.loadExistingWorld;
 import static Mechanics.PVP.PvPMethods.RTP;
 import static Mechanics.PVP.PvPMethods.sendTitleMessage;
 
 
 public class newPvP {
     public static Location Loc = null;
-    private static double radius;
+    public static double radius;
     private long Period;
     public static final List<FallingChest> ChestList = new ArrayList<>();
     private final List<RandomEvents> REventsList = new ArrayList<>();
@@ -39,17 +37,17 @@ public class newPvP {
         double X = AmonPackPlugin.getPvPConfig().getDouble("AmonPack.PvP.Loc.X");
         double Y = AmonPackPlugin.getPvPConfig().getDouble("AmonPack.PvP.Loc.Y");
         double Z = AmonPackPlugin.getPvPConfig().getDouble("AmonPack.PvP.Loc.Z");
-        String World = AmonPackPlugin.getPvPConfig().getString("AmonPack.PvP.Loc.World");
+        String W = AmonPackPlugin.getPvPConfig().getString("AmonPack.PvP.Loc.World");
         radius = AmonPackPlugin.getPvPConfig().getDouble("AmonPack.PvP.Loc.Radius");
         Period = AmonPackPlugin.getPvPConfig().getLong("AmonPack.PvP.FallingChest.FallPeriod");
-        Loc = new Location(Bukkit.getWorld(World), X, Y, Z);
+        Loc = new Location(Bukkit.getWorld(W), X, Y, Z);
         List<String> DefLoot = new ArrayList<>();
         List<Double> DefLootChance = new ArrayList<>();
         for(String key : AmonPackPlugin.getPvPConfig().getConfigurationSection("AmonPack.PvP.FallingChest.Loot").getKeys(false)) {
             DefLoot.add(key);
             DefLootChance.add(AmonPackPlugin.getPvPConfig().getDouble("AmonPack.PvP.FallingChest.Loot."+key));
         }
-        ChestList.add(new FallingChest("Falling Chest", "Default",DefLoot  ,DefLootChance));
+        ChestList.add(new FallingChest("Falling Chest", "Default",DefLoot  ,DefLootChance,5));
         for(String ChestType : AmonPackPlugin.getPvPConfig().getConfigurationSection("AmonPack.PvP.FallingChest.Occurance").getKeys(false)) {
             if (ChestType.equalsIgnoreCase("Combat")) {
                 for (String ChestName : AmonPackPlugin.getPvPConfig().getConfigurationSection("AmonPack.PvP.FallingChest.Occurance." + ChestType).getKeys(false)) {
@@ -63,7 +61,8 @@ public class newPvP {
                     }
                     EType = AmonPackPlugin.getPvPConfig().getStringList("AmonPack.PvP.FallingChest.Occurance." + ChestType + "." + ChestName + ".EType");
                     EAmount = AmonPackPlugin.getPvPConfig().getInt("AmonPack.PvP.FallingChest.Occurance." + ChestType + "." + ChestName + ".EAmount");
-                    ChestList.add(new FallingChest(ChestName, ChestType, Loot, LootChance, EAmount, EType));
+                    double Exp = AmonPackPlugin.getPvPConfig().getInt("AmonPack.PvP.FallingChest.Occurance." + ChestType + "." + ChestName + ".Exp");
+                    ChestList.add(new FallingChest(ChestName, ChestType, Loot, LootChance, EAmount, EType,Exp));
                 }}}
         for(String REType : AmonPackPlugin.getPvPConfig().getConfigurationSection("AmonPack.PvP.Events").getKeys(false)) {
             if (REType.equalsIgnoreCase("RandomSpawns")) {
@@ -75,10 +74,18 @@ public class newPvP {
                         REventsList.add(new RandomEvents(REName, REType,EAmount, EType,SpaAmount));
                     }}}}
         Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::FireTimer,Period*20 ,Period*20);
-        Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::RandomSpawner,(Period+5)*20 ,(Period+5)*20);
+        Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::RandomSpawner,(Period+15)*20 ,(Period+15)*20);
         Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::Fireworks ,Period*20 ,200);
+        Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, this::MapClear ,(Period*20)*90 ,(Period*20)*90);
     }
-
+    private void MapClear() {
+        if (AmonPackPlugin.PvPEnabled) {
+            ClearPvP();
+            Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
+            example.executeCommand("rollback paste 702 50 666 SwiatPvPAs MPvP1");
+            System.out.println("Uwaga, Reset mapy PVP!");
+        }
+    }
     private void Fireworks() {
         if (!LastFallChest.isEmpty()){
         for (Block b:LastFallChest) {
@@ -156,12 +163,16 @@ public class newPvP {
     }
     public List<Entity> GetEnemiesInDung(){
         List<Entity>List=new ArrayList<>();
-        for (Entity entity : Objects.requireNonNull(Loc.getWorld()).getEntities()) {
-            if (entity.getWorld().equals(Loc.getWorld()) && !entity.getType().equals(EntityType.PLAYER) && entity instanceof LivingEntity){
-                Location l = entity.getLocation();
-                if ((l.getX() < Loc.getX()+radius && l.getX() > Loc.getX()-radius)&&(l.getZ() < Loc.getZ()+radius && l.getZ() > Loc.getZ()-radius)) {
-                    List.add(entity);
-                }}}
+        if(Loc.getWorld() != null) {
+            for (Entity entity : Objects.requireNonNull(Loc.getWorld()).getEntities()) {
+                if (entity.getWorld().equals(Loc.getWorld()) && !entity.getType().equals(EntityType.PLAYER) && entity instanceof LivingEntity) {
+                    Location l = entity.getLocation();
+                    if ((l.getX() < Loc.getX() + radius && l.getX() > Loc.getX() - radius) && (l.getZ() < Loc.getZ() + radius && l.getZ() > Loc.getZ() - radius)) {
+                        List.add(entity);
+                    }
+                }
+            }
+        }
         return List;
     }
     public void ClearPvP(){
@@ -214,9 +225,7 @@ public class newPvP {
             }}
     }
     public void RandomSpawner(){
-        if(GetEnemiesInDung().size()<60 && !PlayersInPvP().isEmpty()){
-        //wysokie zasoby
-        //if(GetEnemiesInDung().size()<60){
+        if(GetEnemiesInDung().size()<25 && !PlayersInPvP().isEmpty()){
         RandomEvents RE;
         int AmountOffset = PlayersInPvP().size();
         int RI = new Random().nextInt(AmountOffset);
@@ -252,7 +261,7 @@ public class newPvP {
                 p.sendMessage(ChatColor.RED+"[Ogłoszenie]  "+ChatColor.DARK_PURPLE+"Pojawiły się zgraje magów! Zachowaj czujność!");
             }}
     }//}
-    private List<Player>PlayersInPvP(){
+    public static List<Player>PlayersInPvP(){
         List<Player>List=new ArrayList<>();
         for (Player p: Bukkit.getOnlinePlayers()) {
             if (playerinzone(p.getLocation())){

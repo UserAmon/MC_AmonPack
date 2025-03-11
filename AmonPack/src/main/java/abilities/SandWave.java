@@ -1,16 +1,19 @@
 package abilities;
 
 import com.projectkorra.projectkorra.GeneralMethods;
-import com.projectkorra.projectkorra.ability.AddonAbility;
-import com.projectkorra.projectkorra.ability.ComboAbility;
-import com.projectkorra.projectkorra.ability.EarthAbility;
+import com.projectkorra.projectkorra.ability.*;
 import com.projectkorra.projectkorra.ability.util.ComboManager.AbilityInformation;
 import com.projectkorra.projectkorra.util.ClickType;
+import com.projectkorra.projectkorra.util.DamageHandler;
+import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 
 import methods_plugins.AmonPackPlugin;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import methods_plugins.Methods;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -20,9 +23,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+
+import static methods_plugins.Methods.getRandom;
+
 @SuppressWarnings("deprecation")
 
-public class SandWave extends EarthAbility implements AddonAbility, ComboAbility {
+public class SandWave extends SandAbility implements AddonAbility, ComboAbility {
 	
     private int cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandWave.Cooldown");
 	private int range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandWave.Range");
@@ -34,8 +40,10 @@ public class SandWave extends EarthAbility implements AddonAbility, ComboAbility
 	private Location proj;
 	private Location oriploc;
 	private Vector direction;
-	int safeint;
-	
+	List<Entity>Burrowed;
+	private int interval;
+	private double growth;
+
 		public SandWave(Player player) {
     		super(player);
     		if (bPlayer.isOnCooldown(this)) {
@@ -44,87 +52,79 @@ public class SandWave extends EarthAbility implements AddonAbility, ComboAbility
     		if (!player.isOnGround()) {
     			return;
     		}
+			interval=0;
+			Burrowed=new ArrayList<>();
     		oriploc = player.getLocation().clone();
+			oriploc.setPitch(0);
+			growth=1;
     		proj = oriploc.clone();	
-    		direction = player.getLocation().getDirection();
-    		safeint = 0;
-        	start();
+    		direction = oriploc.getDirection();
+			proj.add(direction).multiply(1);
+			start();
         	bPlayer.addCooldown(this);
     		}
 		
 		@Override
     	public void progress() {
-			
-    		if (player.isDead() || !player.isOnline()) {
-    			remove();
-    			return;
-    		}
-    		
-    		/*if (GeneralMethods.isSolid(proj.getBlock())) {
-    			remove();
-    			return;
-    		}*/
+			if (player.isDead() || !player.isOnline()) {
+				remove();
+				return;
+			}
+			interval++;
+				if(interval>1){
+					interval=0;
+					if(growth<size){
+						growth=growth+0.5;
+					}
+					proj.add(direction).multiply(1);
+					if(proj.getBlock().getType()!=Material.AIR && !PlantAbility.isPlant(proj.getBlock())){
+						proj.setY(proj.getY()+1);
+					}
+					if(proj.clone().subtract(0,1,0).getBlock().getType()==Material.AIR){
+						proj.setY(proj.getY()-1);
+					}
+					List<Block> BendableBlocks = new ArrayList<>();
+					for (Block b : GeneralMethods.getBlocksAroundPoint(proj, growth)) {
+						if (b.getY() < proj.getY() && (EarthAbility.isEarthbendable(player, b))) {
+							BendableBlocks.add(b);
+							if(oriploc.distance(b.getLocation())>oriploc.distance(proj)+0.5){
+							int chance = getRandom(0, 20);
+							if (chance <=  8) {
+								TempBlock tb2 = new TempBlock(b, Material.SAND);
+								tb2.setRevertTime(time);
+							} else if (chance <=  16) {
+								TempBlock tb2 = new TempBlock(b, Material.SANDSTONE);
+								tb2.setRevertTime(time);
+							}else if (chance <=  18) {
+								Methods.spawnFallingBlocks(b.getLocation(),Material.SANDSTONE,1,0.7,player);
+							}else {
+								Methods.spawnFallingBlocks(b.getLocation(),Material.SAND,1,0.7,player);
+							}
+						}}}
 
-    		if (oriploc.distance(proj) > (range)) {
-    			remove();
-    			return;
-    		}
-    		safeint = safeint+1;
-    		if (safeint > 20) {
-    			return;
-    		}
-    		if (proj.getY() != oriploc.getY()) {
-    			proj.setY(oriploc.getY());;
-    		}
-    		proj.add(direction.multiply(1));
-        	for (Block blocks : GeneralMethods.getBlocksAroundPoint(proj.clone().subtract(0,1,0), size)) {
-        		if (blocks.getLocation().getY() == oriploc.clone().subtract(0,1,0).getY()) {
-        			if (EarthAbility.isEarthbendable(player,blocks)) {
-        				if (proj.distance(blocks.getLocation()) < size) {
-		        		TempBlock tb1 = new TempBlock(blocks, Material.SANDSTONE);
-		   	    		tb1.setRevertTime(time);
-        			}}
-        		}
-        		if (blocks.getLocation().distance(oriploc) > 3) {
-        			if (blocks.getLocation().getY() == oriploc.clone().getY()) {
-	        				if (proj.distance(blocks.getLocation()) < size) {
-	           		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(blocks.getLocation(), 2)) {
-	        			if ((entity instanceof LivingEntity)) {
-		        			if (entity.getUniqueId() != player.getUniqueId()) {
-		        				if (entity.getLocation().getY() >= oriploc.getY()) {
-									entity.teleport(entity.getLocation().clone().subtract(0,SandWave.burrow,0));
-									((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, SandWave.DeBuffsDuration , SandWave.DeBuffsPower , false , false));
-									((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, SandWave.DeBuffsDuration, SandWave.DeBuffsPower , false , false));
-		        				}
-		        			}
-	        			}}
-	           		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(blocks.getLocation(), 4)) {
-	        			if ((entity instanceof LivingEntity)) {
-	    		        			if (entity.getUniqueId() == player.getUniqueId()) {
-				    					if (player.isSneaking()) {
-	    								Vector forceDir = GeneralMethods.getDirection(player.getLocation(), proj.clone().add(0,2,0));
-	    								player.setVelocity(forceDir.clone().normalize().multiply(0.8));
-	    		        			}}}}}}
- 
-        		if (blocks.getLocation().getY() == oriploc.clone().add(0,1,0).getY()) {
-        			if (blocks.getType().isAir()) {
-        				if (EarthAbility.isEarthbendable(player,blocks.getLocation().clone().subtract(0,1,0).getBlock())) {
-	        				if (!blocks.getLocation().clone().subtract(0,1,0).getBlock().isLiquid()) {
-		        				if (proj.distance(blocks.getLocation()) < size) {
-			        			if (oriploc.distance(blocks.getLocation()) > (proj.distance(oriploc)-1)) {
-						        TempBlock tb1 = new TempBlock(blocks, Material.SANDSTONE);
-						   	    tb1.setRevertTime(100);
-			        				}}}}}}
-        		if (blocks.getLocation().getY() == oriploc.clone().getY()) {
-        			if (blocks.getType().isAir()) {
-        				if (EarthAbility.isEarthbendable(player,blocks.getLocation().clone().subtract(0,1,0).getBlock())) {
-	        				if (!blocks.getLocation().clone().subtract(0,1,0).getBlock().isLiquid()) {
-		        				if (proj.distance(blocks.getLocation()) < size) {
-			        			if (oriploc.distance(blocks.getLocation()) > (proj.distance(oriploc)-2)) {
-						        TempBlock tb1 = new TempBlock(blocks, Material.SANDSTONE);
-						   	    tb1.setRevertTime(100);
-			        				}}}}}}
-        		}}}	
+					for (Entity entity : GeneralMethods.getEntitiesAroundPoint(proj, growth+2)) {
+						if(entity.getLocation().distance(proj)<=growth){
+							if ((entity instanceof LivingEntity)) {
+								if (entity.getUniqueId() != player.getUniqueId() && !Burrowed.contains(entity)) {
+									if (entity.getLocation().getY() < proj.getY()+1) {
+										entity.teleport(entity.getLocation().clone().subtract(0,burrow,0));
+										((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, SandWave.DeBuffsDuration , SandWave.DeBuffsPower , false , false));
+										((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, SandWave.DeBuffsDuration, SandWave.DeBuffsPower , false , false));
+										Burrowed.add(entity);
+									}}}
+						}else{
+							if (entity.getUniqueId() == player.getUniqueId()) {
+								if (player.isSneaking()) {
+									Vector forceDir = GeneralMethods.getDirection(player.getLocation(), proj.clone().add(0,1,0));
+									player.setVelocity(forceDir.clone().normalize().multiply(0.8));
+								}}}}
+					if (BendableBlocks.size()<2){
+						remove();
+					}}
+				if (proj.distance(oriploc) > range+3){
+					remove();
+				}
+		}
 		
 public long getCooldown() {
         return cooldown; 

@@ -18,17 +18,7 @@ commands:
     usage: /<command>
   MinGathOn:
     usage: /<command>
-  Itemy:
-    usage: /<command>
   Pomoc:
-    usage: /<command>
-  Reputation:
-    usage: /<command>
-  Quests:
-    usage: /<command>
-  GoWorld:
-    usage: /<command>
-  Wave:
     usage: /<command>
   ArenaBuilding:
     usage: /<command>
@@ -36,7 +26,9 @@ commands:
     usage: /<command>
   SpellTree:
     usage: /<command>
-  Scbadder:
+  PvP:
     usage: /<command>
-  Jobs:
+  Level:
+    usage: /<command>
+  Reload:
     usage: /<command>

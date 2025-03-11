@@ -1,5 +1,7 @@
 package Mechanics.PVE;
 
+import AvatarSystems.PlayerLevelMenager;
+import AvatarSystems.Util_Objects.LevelSkill;
 import UtilObjects.PVE.Mine;
 import com.projectkorra.projectkorra.util.TempBlock;
 import commands.Commands;
@@ -47,6 +49,7 @@ public class Mining implements Listener {
             Material b = matchMaterial(Objects.requireNonNull(AmonPackPlugin.getMinesConfig().getString("AmonPack.Mining." + key + ".RevertBlock")));
             HashMap<String, Integer> LChance = new HashMap<>();
             HashMap<Material, Integer> OChance = new HashMap<>();
+            HashMap<Material, Double> ExpMap = new HashMap<>();
             if (AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Mining."+key+".Loot") != null){
             for(String LootName : AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Mining."+key+".Loot").getKeys(false)) {
                 for (int i = 0; i < AmonPackPlugin.getMinesConfig().getInt("AmonPack.Mining." + key + ".Loot."+LootName); i++) {
@@ -57,14 +60,16 @@ public class Mining implements Listener {
                 for (int i = 0; i < AmonPackPlugin.getMinesConfig().getInt("AmonPack.Mining." + key + ".Ores."+OresName); i++) {
                     OChance.put(Material.getMaterial(OresName),AmonPackPlugin.getMinesConfig().getInt("AmonPack.Mining." + key + ".Ores."+OresName));
                 }}}
+            if (AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Mining."+key+".Exp") != null){
+                for(String OresName : AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Mining."+key+".Exp").getKeys(false)) {
+                    ExpMap.put(Material.getMaterial(OresName),AmonPackPlugin.getMinesConfig().getDouble("AmonPack.Mining." + key + ".Exp."+OresName));
+                }}
             Location loc = new Location(Bukkit.getWorld(World), X, Y, Z);
-            Mine mine = new Mine(loc,YOffsetUp,Radius,RestoreTime,b,OChance,LChance);
+            Mine mine = new Mine(loc,YOffsetUp,Radius,RestoreTime,b,OChance,LChance,ExpMap);
             ListOfMines.add(mine);
-
         }
         for(String key : AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.MiningOresDrops").getKeys(false)) {
             MiningOresDrops.put(Material.getMaterial(key),AmonPackPlugin.getMinesConfig().getString("AmonPack.MiningOresDrops." + key));
-            System.out.println("  "+key+"   "+AmonPackPlugin.getMinesConfig().getString("AmonPack.MiningOresDrops." + key));
         }
     }
 
@@ -77,11 +82,14 @@ public class Mining implements Listener {
     public void MineBlocks(Material MinedMat, Player player, Mine m, Block b){
         if (b.getType().equals(MinedMat)) {
             player.getInventory().addItem(Commands.QuestItemConfig(MiningOresDrops.get(MinedMat)));
+            if (PlayerLevelMenager.GetSkillByPlayer(LevelSkill.SkillType.MINING,player)>getRandom(0, 100)) {
+                player.getInventory().addItem(Commands.QuestItemConfig(MiningOresDrops.get(MinedMat)));
+            }
             int DropRandom = getRandom(0, 40);
             int OreRandom = getRandom(0, 40);
             if (DropRandom <= m.getLootList().size()) {
                 String st = getRandomKeyFromHashMap(m.getLootList());
-                player.sendMessage("" + ChatColor.GRAY + "Udało Ci się wydobyć " + Commands.QuestItemConfig(st).getItemMeta().getDisplayName());
+                player.sendMessage(ChatColor.GRAY + "Udało Ci się wydobyć " + Commands.QuestItemConfig(st).getItemMeta().getDisplayName());
                 player.getInventory().addItem(Commands.QuestItemConfig(st));
             }
             if (OreRandom > m.getOresList().size()) {
@@ -94,12 +102,13 @@ public class Mining implements Listener {
                 TempBlock tb1 = new TempBlock(b, Material.AIR);
                 tb1.setRevertTime(m.getRestoreTime()* 1000L);
             }
+            AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING,player, m.GetExpByMaterial(MinedMat),ChatColor.AQUA+"Exp:");
         }
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        if (AmonPackPlugin.MiningAndGatheringOn){
+        if (!AmonPackPlugin.BuildingOnArenas){
             Player player = event.getPlayer();
         Block b = event.getBlock();
         for (Mine m:ListOfMines) {

@@ -9,9 +9,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -49,7 +49,41 @@ public class Methods {
 		Random random = new Random();
 		return random.nextInt((upper - lower) + 1) + lower;
 	}
-	
+
+	public static List<FallingBlock> SpawnedByMe = new ArrayList<>();
+	public static void spawnFallingBlocks(Location location,Material mat, int amount,double factor,Player player) {
+		if (location == null || location.getWorld() == null) return;
+		World world = location.getWorld();
+		Random random = new Random();
+		for (int i = 0; i < amount; i++) {
+			FallingBlock fallingBlock = world.spawnFallingBlock(location, mat.createBlockData());
+			fallingBlock.setDropItem(false);
+			double x = (random.nextDouble() - 0.5) * (0.5*factor);
+			double z = (random.nextDouble() - 0.5) * (0.5*factor);
+			double y = 0.3 + random.nextDouble() * (0.1*factor);
+			fallingBlock.setVelocity(new Vector(x, y, z));
+			SpawnedByMe.add(fallingBlock);
+			startDamageTask(fallingBlock,player);
+		}
+	}
+	private static void startDamageTask(FallingBlock fallingBlock, Player player) {
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				if (fallingBlock.isDead() || !fallingBlock.isValid()) {
+					this.cancel();
+					SpawnedByMe.remove(fallingBlock.getUniqueId());
+					return;
+				}
+				for (Entity entity : fallingBlock.getNearbyEntities(1.5, 1.5, 1.5)) {
+					if (entity instanceof LivingEntity && entity!=player) {
+						((LivingEntity) entity).damage(1.0);
+					}
+				}
+			}
+		}.runTaskTimer(AmonPackPlugin.plugin, 0, 5);
+	}
+
 	public static void CreateSmokeZoneSub(Player player, Location loc, Ability abi, double range, long duration) {
 		int slowpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Smoke.SlowPower");
 		int slowdur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Smoke.SlowDuration");
@@ -60,8 +94,8 @@ public class Methods {
 		HashMap<String, Integer> taskID = new HashMap<String, Integer>();
     	taskID.put("Task",Bukkit.getScheduler().scheduleSyncRepeatingTask(AmonPackPlugin.plugin, new Runnable() {
     		   public void run() {
-    			   
-    			ParticleEffect.SMOKE_NORMAL.display(loc, (int) (range*5), (range/2), 0.5, (range/2), 0);
+    			ParticleEffect.SMOKE_NORMAL.display(loc, (int) (range*5), (range/2), 0.5, (range/2), 0.1);
+    			ParticleEffect.SMOKE_LARGE.display(loc, (int) (range*2), (range/2), 0.5, (range/2), 0.1);
     			for (Entity entity : loc.getWorld().getNearbyEntities(loc, range, range , range)) {
     	 		if ((entity instanceof LivingEntity)) {
     	 		if (affect == true) {
@@ -99,7 +133,42 @@ public class Methods {
     	l = l+1;
    		   }while (l != 11);
    	   }
-    
+
+
+
+
+	public static void FreezeTarget(Location location, int range, int rangeY,int maxy, long Duration,Material mat) {
+		for (int i = 0; i < rangeY; i++) {
+		for (Block b : GeneralMethods.getBlocksAroundPoint(location.add(0,i,0), range)) {
+			if ((b.getType().isAir()||WaterAbility.isWaterbendable(b.getType())||EarthAbility.isEarthbendable(b.getType(),false,true,false)) &&
+					b.getY()<=location.getY()+maxy) {
+						TempBlock tb1 = new TempBlock(b, mat);
+						addFrozenBlock(tb1);
+						tb1.setRevertTime(Duration);
+					}}}
+	}
+
+/*
+			if(intervals>500){
+		intervals=0;
+		List<Location>UsedLoc=new ArrayList<>();
+		for (Location b : NearBlocks) {
+			if (player.getLocation().distance(b) >= 2) {
+				b.add(GeneralMethods.getDirection(b, player.getLocation().clone().add(0,1,0)).normalize().multiply(0.2));
+				TempBlock tb1 = new TempBlock(b.getBlock(), b.getBlock().getType());
+				tb1.setRevertTime(200);
+			} else {
+				UsedLoc.add(b);
+				neededblocks = neededblocks - 1;
+			}}
+		NearBlocks.removeAll(UsedLoc);
+	}else{
+		intervals++;
+	}
+*/
+
+
+
     public static void FreezeField(Location location, int range, int Duration2, int Delay1, int Delay2) {
     	if (Duration2 <= 2700) {
     		Duration2 = Duration2 + 2700;
@@ -206,9 +275,40 @@ public class Methods {
    				TempBlock tb1 = new TempBlock(loc.getBlock(), Material.AIR);
    	    		tb1.setRevertTime(5000);
    			}
-   	     				return;
-		
     }
+
+
+
+	public static List<Location> BendableBlocksAnimation(List<Location> NearBlocks,Location playerloc, Material mat, double speed) {
+		//int DryRevert = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Water.DryGrassRevert");
+		//int DryRange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Water.DryGrassRange");
+		List<Location> ToAdd = new ArrayList<>();
+		for(Location tloc : NearBlocks){
+			if(tloc.distance(playerloc)>2){
+				Location temploc = tloc.clone();
+				temploc.add(GeneralMethods.getDirection(temploc, playerloc.clone().add(0,1,0)).normalize().multiply(speed));
+				TempBlock tb1 = new TempBlock(temploc.getBlock(), mat);
+				tb1.setRevertTime(100);
+				ToAdd.add(temploc);
+			}}
+		return ToAdd;
+		/*if (WaterAbility == true) {
+			if (loc.getBlock().getBlockData().getMaterial() == Material.GRASS_BLOCK) {
+				for (Block b : GeneralMethods.getBlocksAroundPoint(loc, DryRange)) {
+					if (b.getBlockData().getMaterial() == Material.GRASS_BLOCK) {
+						TempBlock tb1 = new TempBlock(b, Material.PODZOL);
+						tb1.setRevertTime(DryRevert);
+					}
+
+				}
+			} else {
+				TempBlock tb1 = new TempBlock(loc.getBlock(), Material.AIR);
+				tb1.setRevertTime(5000);
+			}} else {*/
+
+		//}
+	}
+
     private static void addFrozenBlock(TempBlock tempBlock) {
         PhaseChange.getFrozenBlocksMap().put(tempBlock, null);
     }
@@ -325,5 +425,7 @@ public class Methods {
 
 		return blocks;
 	}
+
+
 	
 }

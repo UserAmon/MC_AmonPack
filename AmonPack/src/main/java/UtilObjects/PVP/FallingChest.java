@@ -14,25 +14,28 @@ public class FallingChest {
     private Location StartLoc;
     private Location EndLoc;
     private int enemyamount;
+    private double expgranted;
     private final List<String> EnemyTypes = new ArrayList<>();
 
     public List<Double> getLootchance() {
         return lootchance;
     }
 
-    public FallingChest(String name, String type, List<String> l, List<Double> lc) {
+    public FallingChest(String name, String type, List<String> l, List<Double> lc, double exp) {
         this.name = name;
         this.type = type;
         this.loot.addAll(l);
         this.lootchance.addAll(lc);
+        this.expgranted=exp;
     }
-    public FallingChest(String name, String type, List<String> l, List<Double> lc, int eamo, List<String> ETypes) {
+    public FallingChest(String name, String type, List<String> l, List<Double> lc, int eamo, List<String> ETypes, double exp) {
         this.name = name;
         this.type = type;
         this.enemyamount = eamo;
         this.loot.addAll(l);
         this.EnemyTypes.addAll(ETypes);
         this.lootchance.addAll(lc);
+        this.expgranted=exp;
     }
     public FallingChest(String name, String type, List<String> l, List<Double> lc, String c) {
         this.name = name;
@@ -84,5 +87,13 @@ public class FallingChest {
 
     public List<String> getEnemyTypes() {
         return EnemyTypes;
+    }
+
+    public double getExpgranted() {
+        return expgranted;
+    }
+
+    public void setExpgranted(int expgranted) {
+        this.expgranted = expgranted;
     }
 }

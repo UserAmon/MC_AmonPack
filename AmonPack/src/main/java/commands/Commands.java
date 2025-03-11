@@ -3,14 +3,18 @@ package commands;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
+import AvatarSystems.Util_Objects.LevelSkill;
 import Mechanics.MMORPG.GuiMenu;
 import Mechanics.MMORPG.ReputationMenager;
 import Mechanics.PVE.Menagerie.BoardManager;
 import Mechanics.PVE.Menagerie.MenagerieMenager;
 import Mechanics.PVE.Mining;
 import Mechanics.PVE.SimpleWorldGenerator;
+import Mechanics.PVP.PvPMethods;
+import Mechanics.PVP.newPvP;
 import Mechanics.Skills.BendingGuiMenu;
 import Mechanics.Skills.JobsMenager;
 import UtilObjects.Skills.PlayerSkillTree;
@@ -33,6 +37,24 @@ public class Commands implements CommandExecutor {
 
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+		switch (cmd.getName().toLowerCase()) {
+			case "level":
+				if(args.length!=0 && args[0].equalsIgnoreCase("add")) {
+					try {
+						LevelSkill.SkillType type=  LevelSkill.SkillType.valueOf(args[1]);
+						Player p = Bukkit.getPlayer(args[2]);
+						AmonPackPlugin.getPlayerMenager().AddPointsToSkill(type,p, Double.parseDouble(args[3]),true);
+
+					}catch (Exception e){
+						System.out.println("Error in Level command "+e.getMessage());
+					}
+				}else{
+					if (sender instanceof Player) {
+						AmonPackPlugin.getPlayerMenager().TryOpenPlayerLevel((Player) sender);
+					}
+				}
+				break;
+		}
 		/*if(cmd.getName().equalsIgnoreCase("Dungeon")) {
 				List<Player> PList = new ArrayList<>();
 			PList.add((Player) sender);
@@ -46,18 +68,6 @@ public class Commands implements CommandExecutor {
 				} catch (CloneNotSupportedException e) {
 					e.printStackTrace();
 			}}*/
-		/*if(cmd.getName().equalsIgnoreCase("SpellTree")) {
-			if (args[0].equalsIgnoreCase("Set")) {
-				//for (SkillTreeObj sto:SkillPoints) {
-				//if (sto.getPlayer().equalsIgnoreCase(args[0])){
-				try {
-					System.out.println(args[1]+"  "+args[2]+"  "+args[3]);
-					AddPoints(args[1], Integer.parseInt(args[2]));
-					AddElement(args[1], args[3]);
-					//BendingGuiMenu.AllPlayersSkillTrees.add()
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}}}*/			//}}
 		if (sender instanceof Player) {
 			BendingPlayer bPlayer = BendingPlayer.getBendingPlayer((OfflinePlayer) sender);
 			Player player = (Player) sender;
@@ -110,11 +120,22 @@ public class Commands implements CommandExecutor {
 				case "pomoc":
 					GuiMenu.OHelpGui((Player) sender);
 					break;
-				case "quests":
+				case "reload":
 					AmonPackPlugin.reloadAllConfigs();
 					break;
 				case "menagerie":
-					MenagerieMenager.StartMenagerie(player,args[0]);
+					List<Player> listofplayers = new ArrayList<>();
+					for(String s: args){
+						try{
+							for (Player p : Bukkit.getOnlinePlayers()){
+								if(p.getName().equalsIgnoreCase(s)){
+									listofplayers.add(p);
+									break;
+								}}
+						} catch (Exception e) {
+						}
+					}
+					MenagerieMenager.StartMenagerie(listofplayers,args[0]);
 					break;
 				case "jobs":
 					if (args[0].equalsIgnoreCase("show")) {
@@ -174,9 +195,34 @@ public class Commands implements CommandExecutor {
 			}
 		}else{
 			switch (cmd.getName().toLowerCase()) {
+				case "pvp":
+					if(args[0].equalsIgnoreCase("rtp")){
+						try {
+							Player player = Bukkit.getOnlinePlayers().stream().filter(p->p.getName().equalsIgnoreCase(args[1])).collect(Collectors.toList()).get(0);
+							Location loc = PvPMethods.RTP(newPvP.radius,newPvP.Loc);
+							player.teleport(loc);
+						} catch (Exception e) {
+							System.out.println("blad z rtp "+e.getMessage());
+						}
+					} else if (args[0].equalsIgnoreCase("on")) {
+						AmonPackPlugin.PvPon();
+					} else if (args[0].equalsIgnoreCase("off")) {
+						AmonPackPlugin.PvPoff();
+					}
+					break;
 				case "menagerie":
-					Player p = Bukkit.getPlayer(args[1]);
-					MenagerieMenager.StartMenagerie(p,args[0]);
+					List<Player> listofplayers = new ArrayList<>();
+					for(String s: args){
+						try{
+							for (Player p : Bukkit.getOnlinePlayers()){
+								if(p.getName().equalsIgnoreCase(s)){
+									listofplayers.add(p);
+									break;
+								}}
+						} catch (Exception e) {
+						}
+					}
+					MenagerieMenager.StartMenagerie(listofplayers,args[0]);
 					break;
 				case "spelltree":
 					try {

@@ -21,31 +21,51 @@ import java.util.Objects;
 
 public class MenagerieMenager {
     public static final List<Menagerie> ListOfAllMenageries  = new ArrayList<>();
+    static MenagerieConfig mc = new MenagerieConfig();
     public MenagerieMenager() {
-        MenagerieConfig mc = new MenagerieConfig();
-        ListOfAllMenageries.addAll(mc.MenagerieFromConfig());
-
+        List<String>Worlds=new ArrayList<>();
+        File baseFolder = new File(Bukkit.getWorldContainer(), "MultiWorlds");
+        if (baseFolder.exists() && baseFolder.isDirectory()) {
+            for (File folder : baseFolder.listFiles()) {
+                if (folder.isDirectory()) {
+                    for (File worldFolder : folder.listFiles()) {
+                        if (worldFolder.isDirectory() && new File(worldFolder, "level.dat").exists()) {
+                            Worlds.add("MultiWorlds/" + folder.getName() + "/" + worldFolder.getName());
+                        }}}}}
+        ListOfAllMenageries.addAll(mc.LoadMenageriesUponStart(Worlds));
     }
-    public static void StartMenagerie(Player p, String name){
-        System.out.println("Start Menagerie");
+    public void ReloadMenageries(){
+        ListOfAllMenageries.clear();
+        List<String>Worlds=new ArrayList<>();
+        File baseFolder = new File(Bukkit.getWorldContainer(), "MultiWorlds");
+        if (baseFolder.exists() && baseFolder.isDirectory()) {
+            for (File folder : baseFolder.listFiles()) {
+                if (folder.isDirectory()) {
+                    for (File worldFolder : folder.listFiles()) {
+                        if (worldFolder.isDirectory() && new File(worldFolder, "level.dat").exists()) {
+                            Worlds.add("MultiWorlds/" + folder.getName() + "/" + worldFolder.getName());
+                        }}}}}
+        ListOfAllMenageries.addAll(mc.LoadMenageriesUponStart(Worlds));
+    }
+    public static void StartMenagerie(List<Player> p, String name){
+        Menagerie ToCopy=null;
+        boolean copy =false;
         for (Menagerie mena:ListOfAllMenageries) {
             if(mena.getMenagerieName().equalsIgnoreCase(name)){
-                boolean empty = true;
-                    for (Player pla:Bukkit.getOnlinePlayers()) {
-                        if (pla.getWorld().equals(mena.getCenterLocation().getWorld())) {
-                            MenaerieCopy(mena,p);
-                            empty=false;
-                            break;
-                        }
-                        }
-                    if(empty)mena.StartMenagerie(p);
-                    break;
+                ToCopy=mena;
+                if(mena.GetPlayersList().isEmpty()){
+                    mena.StartMenagerie(p);
+                    return;
+                }else{
+                    copy=true;
+                }
             }
         }
+        if(copy)MenaerieCopy(ToCopy,p);
     }
 
-    private static void MenaerieCopy(Menagerie mena, Player p){
-        p.sendMessage("Menazeria jest zajeta, tworze nowa kopie...");
+    private static void MenaerieCopy(Menagerie mena, List<Player> p){
+        if(mena==null)return;
         System.out.println("Menazeria zajeta, kopiowanie swiata...");
         String originalWorldName = mena.getCenterLocation().getWorld().getName();
         String newWorldName = generateNewWorldName(originalWorldName);
@@ -55,23 +75,20 @@ public class MenagerieMenager {
             copyWorldFolder(originalWorldFolder, newWorldFolder);
             World newWorld = Bukkit.createWorld(new WorldCreator(newWorldName));
             if (newWorld != null) {
-                p.teleport(mena.getCenterLocation());//dodac menagerie bez wgzledu na swiat, byle by zaczynal sie poprawnie
-                p.sendMessage("Zostales przeniesiony do nowej menazerii: " + newWorldName);
-            } else {
-                p.sendMessage("Blad podczas ladowania nowej menazerii.");
+                Menagerie menagerie = mc.MenagerieFromWorldName(newWorldName);
+                ListOfAllMenageries.add(menagerie);
+                menagerie.StartMenagerie(p);
+            }else {
                 System.err.println("Nie mozna zaladowac swiata: " + newWorldName);
             }
         } catch (IOException e) {
             e.printStackTrace();
-            p.sendMessage("Wystapil blad podczas kopiowania swiata.");
         }
     }
 
-    // Metoda do kopiowania folderu świata
     private static void copyWorldFolder(File source, File target) throws IOException {
         if (!source.exists()) throw new IllegalArgumentException("Source world folder does not exist!");
         if (target.exists()) throw new IllegalArgumentException("Target world folder already exists!");
-
         Files.walk(source.toPath()).forEach(path -> {
             try {
                 Files.copy(path, target.toPath().resolve(source.toPath().relativize(path)));
@@ -79,8 +96,6 @@ public class MenagerieMenager {
                 throw new RuntimeException("Error copying world folder", e);
             }
         });
-
-        // Usuń plik uid.dat z nowego folderu świata
         File uidFile = new File(target, "uid.dat");
         if (uidFile.exists()) {
             if (!uidFile.delete()) {

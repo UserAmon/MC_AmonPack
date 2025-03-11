@@ -1,5 +1,8 @@
 package Mechanics;
 
+import AvatarSystems.PlayerLevelMenager;
+import AvatarSystems.Util_Objects.LevelSkill;
+import AvatarSystems.Util_Objects.PlayerLevel;
 import Mechanics.PVE.Menagerie.Menagerie;
 import Mechanics.PVE.Menagerie.Objectives.Objectives;
 import Mechanics.PVE.Mining;
@@ -26,6 +29,7 @@ import com.projectkorra.projectkorra.event.PlayerCooldownChangeEvent;
 import com.projectkorra.projectkorra.firebending.util.FireDamageTimer;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import commands.Commands;
+import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
 import methods_plugins.Methods;
 import net.md_5.bungee.api.ChatMessageType;
@@ -55,6 +59,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.*;
 
+import static AvatarSystems.PlayerLevelMenager.AllPlayerLevels;
 import static Mechanics.PVE.Menagerie.MenagerieMenager.ListOfAllMenageries;
 import static Mechanics.Skills.BendingGuiMenu.ChangeElement;
 import static Mechanics.Skills.UpgradesMenager.*;
@@ -169,6 +174,19 @@ public class Listeners implements Listener {
             }}
         }
     }*/
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        World mainWorld = Bukkit.getWorld("AvatarServGlownyNowy");
+        if (mainWorld != null) {
+            if(event.getPlayer().getLocation().getWorld()!=mainWorld){
+            Location spawnLocation = mainWorld.getSpawnLocation();
+            player.teleport(spawnLocation);
+        }}
+    }
+
+
     @EventHandler
     public void OnInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
@@ -304,6 +322,24 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
+        if(event.getEntity().getLocation().getWorld()==newPvP.Loc.getWorld()){
+            Location eventloc=event.getEntity().getLocation();
+            if(newPvP.playerinzone(eventloc)){
+                if (event.getEntity() instanceof Player) {
+                    Player killedPlayer = (Player) event.getEntity();
+                    if (killedPlayer.getKiller() != null) {
+                        Player killer = killedPlayer.getKiller();
+                        for (Player p : newPvP.PlayersInPvP()) {
+                            p.sendMessage(ChatColor.GREEN + killedPlayer.getName() + ChatColor.GREEN + " Został zabity przez Gracza: " + killer.getName());
+                        }
+                        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT,killer, 15,ChatColor.AQUA+"Zabójstwo gracza, Exp:");
+                    }}else{
+                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT,event.getEntity().getKiller(), 6,ChatColor.AQUA+"Zabójstwo, Exp:");
+                }
+            }
+
+        }else{
+
         for (Menagerie mena:ListOfAllMenageries) {
             if (mena.IsInMenagerie(event.getEntity().getLocation())){
                 if(event.getEntity().getKiller() != null){
@@ -333,7 +369,7 @@ public class Listeners implements Listener {
                 break;
                 }
 
-            }}
+            }}}
         /*if (playerinzone(PvPLoc, Radius+1700, event.getEntity().getLocation())) {
             if (event.getEntity() instanceof Player) {
                 Player killedPlayer = (Player) event.getEntity();
@@ -386,10 +422,40 @@ public class Listeners implements Listener {
     }
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) throws SQLException {
+        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SkillDetails)&& event.getCurrentItem()!=null){
+            event.setCancelled(true);
+            if(event.getCurrentItem().getType()==Material.BARRIER){
+                PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
+            }
+            if(event.getCurrentItem().getItemMeta().getDisplayName().contains("Poziom") && event.getCurrentItem().getType()!=Material.PLAYER_HEAD){
+                LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
+                PlayerLevelMenager.ClaimReward(sktype,(Player) event.getWhoClicked(),event.getCurrentItem().getItemMeta().getDisplayName());
+            }
+        }
+        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.Holder1) && event.getCurrentItem()!=null){
+            Player p = (Player) event.getWhoClicked();
+            event.setCancelled(true);
+            LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
+            if(sktype!=null){
+                PlayerLevel Level = PlayerLevelMenager.GetPlayerLevelFromList(event.getWhoClicked().getName());
+                if(Level!=null){
+                    PlayerLevelMenager.OpenSkillDetails(Level.GetSkillByType(sktype), (Player) event.getWhoClicked());
+                }
+            }
+            Element ele = PlayerLevelMenager.GetElementByPlace(event.getSlot());
+            if(ele!=null){
+                BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p),ele,p);
+            }
+
+
+
+
+        }
         for (FallingChest fc:newPvP.ChestList) {
             if (event.getView().getTitle().equalsIgnoreCase(fc.getName())) {
                 if (newPvP.isInventoryEmpty(event.getView().getTopInventory()) && event.getClickedInventory().getType() == InventoryType.CHEST) {
                     event.getView().getTopInventory().getLocation().getBlock().setType(Material.AIR);
+                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT,(Player) event.getWhoClicked(), fc.getExpgranted(),ChatColor.AQUA+"Exp:");
                     //Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
                     //example.executeCommand("q event "+event.getWhoClicked().getName()+" DailyPvP.punkt_PvP");
                     newPvP.LastFallChest.removeIf(b -> b.getLocation().distance(event.getView().getTopInventory().getLocation()) < 5);
@@ -542,7 +608,15 @@ public class Listeners implements Listener {
             }
     }
     }
-
+    @EventHandler
+    public void onFallingBlockLand(EntityChangeBlockEvent event) {
+        if (event.getEntity() instanceof FallingBlock) {
+            if(Methods.SpawnedByMe.contains(event.getEntity())){
+                event.setCancelled(true);
+                event.getEntity().remove();
+            }
+        }
+    }
     @EventHandler
     public void onChestOpen(InventoryOpenEvent event) {
         if (event.getInventory().getType() == org.bukkit.event.inventory.InventoryType.CHEST) {
@@ -857,6 +931,10 @@ public class Listeners implements Listener {
     }
     @EventHandler
     public void test(AbilityDamageEntityEvent event) {
+        if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")){
+            event.setCancelled(true);
+            SoundAbility.HandleDamage(event.getEntity(),10);
+        }
             /*for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
                 if (InArenaRange(event.getAbility().getPlayer().getLocation(),A.getArenaLocation(),A.getRange(),A.getRange())) {
                     Player player = event.getAbility().getPlayer();

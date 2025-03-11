@@ -180,7 +180,6 @@ public class PlayerSkillTree {
                     STO.setSelectedPath(Arrays.asList(path.split(",")));
                     STO.setActSkillPoints(points);
                     STO.setCurrentElement(ele);
-                    System.out.println("test bledu4   "+STO.getElementsInPossesion());
                     STO.setElementsInPossesion(Arrays.asList((STO.getElementsInPossesionAsString()).split(",")));
                     break;
                 }}

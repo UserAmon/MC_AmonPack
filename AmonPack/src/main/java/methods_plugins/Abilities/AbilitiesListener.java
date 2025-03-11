@@ -1,4 +1,5 @@
 package methods_plugins.Abilities;
+import abilities.*;
 import methods_plugins.AmonPackPlugin;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -20,19 +21,7 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 
 import com.projectkorra.projectkorra.BendingPlayer;
 
-import abilities.AirPressure;
-import abilities.Counter;
-import abilities.IceArch;
-import abilities.SmokeSurge;
-import abilities.MetalCompress;
-import abilities.MetalFlex;
-import abilities.Pierce;
-import abilities.SandBreath;
-import abilities.Slash;
-import abilities.SmokeDaggers;
-import abilities.Stab;
-import abilities.SteelShackles;
-	public class AbilitiesListener implements Listener {
+public class AbilitiesListener implements Listener {
 		@EventHandler
     	public void onShift(PlayerToggleSneakEvent event) {
     		Player player = event.getPlayer();
@@ -90,7 +79,21 @@ import abilities.SteelShackles;
                         new SmokeSurge(player);
                         }else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeDaggers")) {
                         new SmokeDaggers(player);
-                        }
+                        }else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePull")) {
+						new SmokePull(player);
+						}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePath")) {
+						new SmokePath(player);
+					}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SoundCrash")) {
+						new SoundCrash(player);
+					}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeSlash")) {
+						new SmokeSlash(player);
+					}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
+						new SmokeShot(player,false);
+					}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("NoisySlash")) {
+						new NoisySlash(player);
+					}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EchoJab")) {
+						new EchoJab(player);
+					}
             			}}else return;
             			} else return;}
 	
@@ -241,6 +244,19 @@ import abilities.SteelShackles;
 	        if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirPressure")) {   
 	        new AirPressure(player);
 	        }
+				if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthHammer")) {
+					new EarthHammer(player);
+				}
+				if (bPlayer.getBoundAbilityName().equalsIgnoreCase("IceThorn")) {
+					new IceThorn(player);
+				}				if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeBarrage")) {
+					new SmokeBarrage(player);
+				}
+				if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeCamouflage")) {
+					new SmokeCamouflage(player);
+				}if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
+					new SmokeShot(player,true);
+				}
 	        if (bPlayer.getBoundAbilityName().equalsIgnoreCase("IceArch")) {   
 	        new IceArch(player);
 	        }

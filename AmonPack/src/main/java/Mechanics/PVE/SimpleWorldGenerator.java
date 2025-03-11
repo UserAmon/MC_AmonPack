@@ -1,10 +1,12 @@
 package Mechanics.PVE;
 
+import methods_plugins.AmonPackPlugin;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.Random;
 
 public class SimpleWorldGenerator extends ChunkGenerator {
@@ -65,6 +67,12 @@ public class SimpleWorldGenerator extends ChunkGenerator {
     }
 
     public static void loadAllWorlds() {
+        String world = AmonPackPlugin.getPvPConfig().getString("AmonPack.PvP.Loc.World");
+        loadExistingWorld(world);
+        for(String key : Objects.requireNonNull(AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Mining")).getKeys(false)) {
+            String World = AmonPackPlugin.getMinesConfig().getString("AmonPack.Mining." + key + ".World");
+            loadExistingWorld(World);
+        }
         File baseFolder = new File(Bukkit.getWorldContainer(), "MultiWorlds");
         if (baseFolder.exists() && baseFolder.isDirectory()) {
             for (File folder : baseFolder.listFiles()) {
@@ -72,7 +80,6 @@ public class SimpleWorldGenerator extends ChunkGenerator {
                     for (File worldFolder : folder.listFiles()) {
                         if (worldFolder.isDirectory() && new File(worldFolder, "level.dat").exists()) {
                             String worldName = "MultiWorlds/" + folder.getName() + "/" + worldFolder.getName();
-                            System.out.println("Loading world: " + worldName);
                             loadExistingWorld(worldName);
                         }}}}}}
 

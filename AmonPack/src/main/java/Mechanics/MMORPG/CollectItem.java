@@ -79,7 +79,7 @@ public class CollectItem implements Listener {
     }
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (AmonPackPlugin.MiningAndGatheringOn == true){
+        if (AmonPackPlugin.MiningAndGatheringOn){
         Action action = event.getAction();
         Block block = event.getClickedBlock();
         Player player = event.getPlayer();
