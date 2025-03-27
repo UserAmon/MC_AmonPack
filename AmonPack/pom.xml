@@ -76,5 +76,12 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/ProjectKorra-1.11.3.jar</systemPath>
         </dependency>
+        <dependency>
+            <groupId>IA</groupId>
+            <artifactId>IA</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/ItemsAdder_3.6.4_5.jar</systemPath>
+        </dependency>
     </dependencies>
 </project>

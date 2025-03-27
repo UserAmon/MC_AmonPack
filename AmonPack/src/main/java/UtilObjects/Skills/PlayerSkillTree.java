@@ -7,7 +7,7 @@ import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
 import methods_plugins.AmonPackPlugin;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import org.bukkit.ChatColor;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -233,6 +233,10 @@ public class PlayerSkillTree {
     }
     public void setActSkillPoints(int actSkillPoints) {
         ActSkillPoints = actSkillPoints;
+    }
+    public void AddSkillPoints(int actSkillPoints) {
+        ActSkillPoints+= actSkillPoints;
+        Objects.requireNonNull(Bukkit.getPlayer(Player)).sendMessage(ChatColor.DARK_GREEN+"Otrzymano Punkty Drzewka Magii, twój aktualny stan: "+ActSkillPoints);
     }
 
     public String getCurrentElement() {

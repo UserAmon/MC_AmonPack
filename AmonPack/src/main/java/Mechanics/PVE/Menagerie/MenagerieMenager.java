@@ -20,22 +20,13 @@ import java.util.List;
 import java.util.Objects;
 
 public class MenagerieMenager {
-    public static final List<Menagerie> ListOfAllMenageries  = new ArrayList<>();
+    public static List<Menagerie> ListOfAllMenageries;
     static MenagerieConfig mc = new MenagerieConfig();
     public MenagerieMenager() {
-        List<String>Worlds=new ArrayList<>();
-        File baseFolder = new File(Bukkit.getWorldContainer(), "MultiWorlds");
-        if (baseFolder.exists() && baseFolder.isDirectory()) {
-            for (File folder : baseFolder.listFiles()) {
-                if (folder.isDirectory()) {
-                    for (File worldFolder : folder.listFiles()) {
-                        if (worldFolder.isDirectory() && new File(worldFolder, "level.dat").exists()) {
-                            Worlds.add("MultiWorlds/" + folder.getName() + "/" + worldFolder.getName());
-                        }}}}}
-        ListOfAllMenageries.addAll(mc.LoadMenageriesUponStart(Worlds));
+        ReloadMenageries();
     }
     public void ReloadMenageries(){
-        ListOfAllMenageries.clear();
+        ListOfAllMenageries = new ArrayList<>();
         List<String>Worlds=new ArrayList<>();
         File baseFolder = new File(Bukkit.getWorldContainer(), "MultiWorlds");
         if (baseFolder.exists() && baseFolder.isDirectory()) {

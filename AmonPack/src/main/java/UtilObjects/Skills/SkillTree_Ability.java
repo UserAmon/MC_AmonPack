@@ -11,6 +11,7 @@ public class SkillTree_Ability {
     List<String> ListOfPreAbility;
     int place;
     boolean def;
+    boolean IsUpgrade=false;
 
     public SkillTree_Ability(Element element, String name, int cost, List<String> listOfPreAbility, int place, boolean aDefault) {
         this.element = element;
@@ -44,5 +45,11 @@ public class SkillTree_Ability {
 
     public boolean isdef() {
         return def;
+    }
+    public boolean isUpgrade() {
+        return IsUpgrade;
+    }
+    public void setUpgrade(boolean upgrade) {
+        IsUpgrade = upgrade;
     }
 }

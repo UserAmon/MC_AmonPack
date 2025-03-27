@@ -1,6 +1,8 @@
 package Mechanics;
 
+import AvatarSystems.ForestMenager;
 import AvatarSystems.PlayerLevelMenager;
+import AvatarSystems.Util_Objects.Forest;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
 import Mechanics.PVE.Menagerie.Menagerie;
@@ -189,12 +191,12 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void OnInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK||event.getAction() == Action.RIGHT_CLICK_AIR) {
+            Player player = event.getPlayer();
+            ItemStack itemInHand = player.getInventory().getItemInMainHand();
             for (Menagerie mena:ListOfAllMenageries) {
                 if (mena.IsInMenagerie(event.getPlayer().getLocation())){
                     mena.ActivateByClick(event);
-                    ItemStack itemInHand = player.getInventory().getItemInMainHand();
                     if (itemInHand.isSimilar(SpiritOrb) ) {
                         itemInHand.setAmount(itemInHand.getAmount() - 1);
                         player.getInventory().setItemInMainHand(itemInHand);
@@ -287,6 +289,19 @@ public class Listeners implements Listener {
                             }}*/
                     }}
                     break;
+                }}
+
+            if (!AmonPackPlugin.BuildingOnArenas) {
+                Block block = event.getClickedBlock();
+                Forest forest = ForestMenager.GetForestByLocation(block.getLocation());
+                if(forest!=null){
+                    if(forest.getMaterials().contains(block.getType())){
+                        if(block instanceof  Ageable&& ((Ageable) block).getAge()<7){
+                            return;
+                        }
+                        forest.HandleForestInteract(player,block);
+                        event.setCancelled(true);
+                    }
                 }}}
     }
     @EventHandler
@@ -422,7 +437,17 @@ public class Listeners implements Listener {
     }
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) throws SQLException {
-        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SkillDetails)&& event.getCurrentItem()!=null){
+        if(event.getCurrentItem()!=null){
+            if(Objects.equals(event.getInventory().getHolder(), ForestMenager.ForestHolder)){
+                if (!AmonPackPlugin.BuildingOnArenas) {
+                    ItemStack item = event.getCurrentItem();
+                    Forest forest = ForestMenager.GetForestByLocation(event.getWhoClicked().getLocation());
+                    if(forest!=null){
+                        forest.HandleForestInvClick((Player) event.getWhoClicked(),item);
+                        event.setCancelled(true);
+                    }}
+            }
+        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SkillDetails)){
             event.setCancelled(true);
             if(event.getCurrentItem().getType()==Material.BARRIER){
                 PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
@@ -432,7 +457,7 @@ public class Listeners implements Listener {
                 PlayerLevelMenager.ClaimReward(sktype,(Player) event.getWhoClicked(),event.getCurrentItem().getItemMeta().getDisplayName());
             }
         }
-        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.Holder1) && event.getCurrentItem()!=null){
+        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.Holder1)){
             Player p = (Player) event.getWhoClicked();
             event.setCancelled(true);
             LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
@@ -444,13 +469,17 @@ public class Listeners implements Listener {
             }
             Element ele = PlayerLevelMenager.GetElementByPlace(event.getSlot());
             if(ele!=null){
-                BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p),ele,p);
+                if (BendingGuiMenu.getPlayerSkillTreeByName(p).getCurrentElement().equalsIgnoreCase(ele.getName())) {
+                    BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p),ele,p);
+                }else{
+                    event.getWhoClicked().sendMessage(ChatColor.RED+"Nie masz wybranego tego zywiołu! Twój zywioł to: "+BendingGuiMenu.getPlayerSkillTreeByName(p).getCurrentElement());
+                }
             }
 
 
 
 
-        }
+        }}
         for (FallingChest fc:newPvP.ChestList) {
             if (event.getView().getTitle().equalsIgnoreCase(fc.getName())) {
                 if (newPvP.isInventoryEmpty(event.getView().getTopInventory()) && event.getClickedInventory().getType() == InventoryType.CHEST) {
@@ -521,7 +550,8 @@ public class Listeners implements Listener {
                         BendingGuiMenu.OpenBindingGui(p, Objects.requireNonNull(event.getCurrentItem().getItemMeta()).getDisplayName());
                     }}
                 if (event.getCurrentItem().getType() == Material.BARRIER) {
-                    BendingGuiMenu.OpenGeneralBendingMenu(p);
+                    PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
+                    //BendingGuiMenu.OpenGeneralBendingMenu(p);
                 }
             }
             switch (event.getView().getTitle()) {

@@ -111,7 +111,7 @@ public class BendingGuiMenu {
                     int tempplace = STA.getPlace()-(54*page);
                     if (tempplace>=0 && tempplace<53){
                         Ability tempabi = CoreAbility.getAbility(STA.getName());
-                        if (tempabi != null && STA.getElement() != null) {
+                        if ((tempabi != null||STA.isUpgrade()) && STA.getElement() != null) {
                             if (SubElementByElement(ele,tempabi) ||STA.getElement().equals(ele) ||
                                     SubElementByElement(ElementBasedOnSubElement(ele),tempabi) ||
                                     STA.getElement().equals(ElementBasedOnSubElement(ele))) {
@@ -252,6 +252,9 @@ public class BendingGuiMenu {
                 if (Cost==0){
                     DefAbilities.add(Ability);
                 }
+                if(AmonPackPlugin.getSkillTreeConfig().getBoolean("AmonPack.SpellTree.Abilities."+AbiElement+"."+Ability+".IsAbilityUpgrade")){
+                    AbilityObject.setUpgrade(true);
+                }
                 ListOfAllAvailableAbilities.add(AbilityObject);
                 if (MaxRowsForElementTree.get(AbiElement) < Place){
                     MaxRowsForElementTree.replace(AbiElement,Place);
@@ -290,6 +293,9 @@ public class BendingGuiMenu {
         return null;
     }
     public static boolean SubElementByElement(Element MElement, Ability abi){
+        if(abi==null){
+            return false;
+        }
         if (abi.getElement().equals(MElement)) {
             return true;
         }

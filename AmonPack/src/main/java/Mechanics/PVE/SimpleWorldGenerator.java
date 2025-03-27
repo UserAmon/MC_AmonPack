@@ -73,6 +73,10 @@ public class SimpleWorldGenerator extends ChunkGenerator {
             String World = AmonPackPlugin.getMinesConfig().getString("AmonPack.Mining." + key + ".World");
             loadExistingWorld(World);
         }
+        for(String key : Objects.requireNonNull(AmonPackPlugin.getForestConfig().getConfigurationSection("AmonPack.Forest")).getKeys(false)) {
+            String World = AmonPackPlugin.getForestConfig().getString("AmonPack.Forest." + key + ".World");
+            loadExistingWorld(World);
+        }
         File baseFolder = new File(Bukkit.getWorldContainer(), "MultiWorlds");
         if (baseFolder.exists() && baseFolder.isDirectory()) {
             for (File folder : baseFolder.listFiles()) {

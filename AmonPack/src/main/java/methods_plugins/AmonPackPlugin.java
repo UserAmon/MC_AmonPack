@@ -8,9 +8,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import AvatarSystems.ForestMenager;
 import AvatarSystems.PlayerLevelMenager;
+import AvatarSystems.Util_Objects.LevelSkill;
 import Mechanics.Listeners;
-import Mechanics.MMORPG.CollectItem;
 import Mechanics.MMORPG.GuiMenu;
 import Mechanics.MMORPG.Puzzle;
 import Mechanics.MMORPG.ReputationMenager;
@@ -59,6 +60,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	static File PvPFile;
 	static File MinesConfigFile;
 	static File LevelConfigFile;
+	static File ForestConfigFile;
 	static File AbilitiesConfigFile;
 	static File SkillTreeFile;
 	static File GuiFile;
@@ -67,6 +69,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	private static FileConfiguration newConfigz;
 	private static List<FileConfiguration> MenagerieConfig = new ArrayList<>();
 	private static FileConfiguration PvPConfig;
+	private static FileConfiguration ForestConfig;
 	private static FileConfiguration LevelConfig;
 	private static FileConfiguration AbilitiesConfig;
 	private static FileConfiguration MinesConfig;
@@ -89,7 +92,6 @@ public class AmonPackPlugin extends JavaPlugin {
         BladesElement = new SubElement("Blades", Element.CHI, ElementType.BLOCKING, this);
         SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
 		createconf();
-		sqlConnection();
 		PvPFile = new File(getDataFolder(), "PvPConfig.yml");
 		setPvPConfig(YamlConfiguration.loadConfiguration(PvPFile));
 		newConfig = new File(getDataFolder(), "newconfig.yml");
@@ -100,11 +102,16 @@ public class AmonPackPlugin extends JavaPlugin {
 		GuiFile = new File(getDataFolder(), "GuiConfig.yml");
 		setDungeonsConfig(MenagerieConfigFile);
 		configpath = getDataFolder();
+
 		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
 		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
+
+		ForestConfigFile = new File(getDataFolder() + File.separator + "RPG", "Forest.yml");
+		ForestConfig = YamlConfiguration.loadConfiguration(ForestConfigFile);
+
 		AbilitiesConfigFile = new File(getDataFolder(), "AbilitiesConfig.yml");
 		AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
-
+		sqlConnection();
 		setMinesConfigFile(YamlConfiguration.loadConfiguration(MinesConfigFile));
 		setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
 		setGuiConfig(YamlConfiguration.loadConfiguration(GuiFile));
@@ -133,7 +140,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		this.getCommand("ArenaBuilding").setTabCompleter(new CommandsTabMenager());
 		this.getCommand("PvP").setExecutor(new Commands());
 		this.getCommand("Reload").setExecutor(new Commands());
-		this.getServer().getPluginManager().registerEvents(new CollectItem(this), this);
 		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 		this.getServer().getPluginManager().registerEvents(new Puzzle(), this);
 		this.getServer().getPluginManager().registerEvents(new Mining(), this);
@@ -145,6 +151,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			StartDeafnessTimer();
 			PlayerMenager = new PlayerLevelMenager();
 			PlayerMenager.CreateInventories();
+			new ForestMenager();
 			new BendingGuiMenu();
 			new JobsMenager();
 			MenaMenager = new MenagerieMenager();
@@ -268,6 +275,9 @@ public class AmonPackPlugin extends JavaPlugin {
 			if (!AbilitiesConfig.contains("AmonPack")) {
 				LevelConfig.set("AmonPack.Earth.EarthHammer.Cooldown", 7000);
 			}
+			if (!ForestConfig.contains("AmonPack")) {
+				ForestConfig.set("AmonPack.Forest.Forest1.World", "AvatarServGlownyNowy");
+			}
 			if (!LevelConfig.contains("AmonPack")) {
 				LevelConfig.set("AmonPack.Levels.GENERAL.Gui.Place", 4);
 				LevelConfig.set("AmonPack.Levels.GENERAL.Gui.Title", ChatColor.GOLD+"Poziom Ogólny: ");
@@ -278,6 +288,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 			LevelConfig.save(LevelConfigFile);
 			AbilitiesConfig.save(AbilitiesConfigFile);
+			ForestConfig.save(ForestConfigFile);
 		}catch(Exception e){
 			System.out.println("Błąd z konfigiem! "+e.getMessage());
 		}}
@@ -636,10 +647,10 @@ public class AmonPackPlugin extends JavaPlugin {
 		ExecuteQuery("CREATE TABLE IF NOT EXISTS SpellTree (Player VARCHAR(50) PRIMARY KEY, SkillPoint INT, Path TEXT, Element TEXT, AllElements TEXT)");
 		ExecuteQuery("CREATE TABLE IF NOT EXISTS Reputation (Player VARCHAR(50) PRIMARY KEY, RepLvL1 INT, RepLvL2 INT, RepLvL3 INT, RepLvL4 INT, RepLvL5 INT, RepLvL6 INT, RepLvL7 INT)");
 		ExecuteQuery("CREATE TABLE IF NOT EXISTS Jobs (Player VARCHAR(50) PRIMARY KEY, Job1 INT, Job2 INT, Job3 INT, Job4 INT)");
-		ExecuteQuery("CREATE TABLE IF NOT EXISTS LevelGENERAL (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
-		ExecuteQuery("CREATE TABLE IF NOT EXISTS LevelCOMBAT (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
-		ExecuteQuery("CREATE TABLE IF NOT EXISTS LevelMINING (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
-    	}
+		for(String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
+			ExecuteQuery("CREATE TABLE IF NOT EXISTS Level"+key+" (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
+		}
+ 	}
 
 	public static void ExecuteQuery(String query) {
 		try {
@@ -844,12 +855,14 @@ public class AmonPackPlugin extends JavaPlugin {
 		System.out.println("start test reload");
 		LevelConfig = YamlConfiguration.loadConfiguration(new File(configpath, "Levels.yml"));
 		AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "AbilitiesConfig.yml"));
+		ForestConfig = YamlConfiguration.loadConfiguration(new File(configpath + File.separator + "RPG", "Forest.yml"));
 		MinesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "MinesConfigFile.yml"));
 		MinesConfigFile = new File(configpath, "MinesConfigFile.yml");
 		setMinesConfigFile(YamlConfiguration.loadConfiguration(MinesConfigFile));
 		setDungeonsConfig(getMenagerieFilesReload());
 		// = YamlConfiguration.loadConfiguration(new File(configpath, "PvPConfig.yml"));
 		MenaMenager.ReloadMenageries();
+		ForestMenager.LoadData();
 		System.out.println("koniec test reload");
 	}
 
@@ -947,5 +960,8 @@ public class AmonPackPlugin extends JavaPlugin {
 
 	public static FileConfiguration getAbilitiesConfig() {
 		return AbilitiesConfig;
+	}
+	public static FileConfiguration getForestConfig() {
+		return ForestConfig;
 	}
 }

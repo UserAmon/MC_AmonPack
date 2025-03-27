@@ -3,6 +3,8 @@ package AvatarSystems;
 import AvatarSystems.Util_Objects.InventoryXHolder;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
+import Mechanics.Skills.BendingGuiMenu;
+import UtilObjects.Skills.PlayerSkillTree;
 import com.projectkorra.projectkorra.Element;
 import commands.Commands;
 import methods_plugins.AmonPackPlugin;
@@ -17,6 +19,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
+import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -30,23 +34,38 @@ public class PlayerLevelMenager {
     public static List<PlayerLevel> AllPlayerLevels;
     public static InventoryXHolder Holder1;
     public static InventoryXHolder SkillDetails;
+    public static List<LevelSkill.SkillType> EnabledSkillTypes;
 
     public PlayerLevelMenager() throws SQLException {
         AllPlayerLevels=new ArrayList<>();
+        EnabledSkillTypes=new ArrayList<>();
+        FileConfiguration config= AmonPackPlugin.getLevelConfig();
+        try {
+            for(String key : config.getStringList("AmonPack.Levels.Enabled")) {
+                EnabledSkillTypes.add(LevelSkill.SkillType.valueOf(key));
+            }
+        }catch (Exception e){
+            System.out.println("Error: "+e.getMessage());
+        }
         LoadPlayersFromDatabase();
     }
 
     public static void TryOpenPlayerLevel(Player player){
         try {
+            PlayerSkillTree PSkillTree = BendingGuiMenu.getPlayerSkillTreeByName(player);
+            if(PSkillTree==null ||PSkillTree.getElementsInPossesionAsString().contains("brak")){
+                player.sendMessage(ChatColor.RED+ "Nie mozesz uzyc tej komendy - nie wybrales jeszcze zywiolu. Przejdź tutorial! (/warp wybor) Jeśli juz zacząłeś, to walisz /q purge nick i wtedy gadaj z duchem");
+                return;
+            }
             PlayerLevel Level;
             Optional<PlayerLevel> Exist = AllPlayerLevels.stream().filter(lvl->lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst();
             if(Exist.isPresent() && Exist.get().getPlayerSkills().size()>=3){
                 Level = Exist.get();
             }else{
                 List<LevelSkill>Skills=new ArrayList<>();
-                Skills.add(new LevelSkill(0, LevelSkill.SkillType.MINING,new ArrayList<>(),0));
-                Skills.add(new LevelSkill(0, LevelSkill.SkillType.COMBAT,new ArrayList<>(),0));
-                Skills.add(new LevelSkill(0, LevelSkill.SkillType.GENERAL,new ArrayList<>(),0));
+                for (LevelSkill.SkillType Skillt : EnabledSkillTypes){
+                    Skills.add(new LevelSkill(0, Skillt,new ArrayList<>(),0));
+                }
                 Level=new PlayerLevel(player.getName(),Skills);
                 AllPlayerLevels.add(Level);
             }
@@ -75,47 +94,106 @@ public class PlayerLevelMenager {
                     totallvl=totallvl-MaxLvL;
                     Item = new ItemStack(Material.valueOf(config.getString(Path + ".Details.UnLockedItem")));
                     LockedItemMeta = Item.getItemMeta();
+                    if(config.getInt(Path + ".Details.UnLockedItemModelData")!=0){
+                        LockedItemMeta.setCustomModelData(config.getInt(Path + ".Details.UnLockedItemModelData"));
+                    }
                     LockedItemMeta.setDisplayName(ChatColor.GREEN+"Poziom "+lvl);
                     List<String>Lore=new ArrayList<>();
                     if(skill.getUsedRewards().contains(lvl)){
                         Lore.add(ChatColor.RED+ "Juz odebrano tę nagrodę");
                     }else{
                         Lore.add(ChatColor.GREEN+ "Nagroda dostepna");
-                    }
+                        for(String Rewards : config.getConfigurationSection(newpath).getKeys(false)) {
+                            if(Rewards.startsWith("Reward")){
+                                String reward = config.getString(Path + "." + key + "."+Rewards);
+                                if(Rewards.endsWith("Lore")){
+                                    for (String line : reward.split("%break%")) {
+                                        Lore.add(line);
+                                    }
+                                }else{
+                                if(reward.startsWith("command:")){
+                                if(reward.contains("economy give")){
+                                    reward=reward.replace("command:economy give %player%","");
+                                    Lore.add(ChatColor.GOLD+ "+"+reward+"¥");
+                                }}
+                                if(reward.startsWith("skillupgrade:")){
+                                    reward=reward.replace("skillupgrade:","");
+                                    Lore.add(ChatColor.AQUA+ "+"+reward+" do poziomu umiejętności dziedziny");
+                                }
+                                if(reward.startsWith("SkillPoints:")){
+                                    reward=reward.replace("SkillPoints:","");
+                                    Lore.add(ChatColor.LIGHT_PURPLE+ "+"+reward+" Punktów Drzewka Magii");
+                                }
+                        }}}}
                     LockedItemMeta.setLore(Lore);
                 }else{
                     Item = new ItemStack(Material.valueOf(config.getString(Path + ".Details.LockedItem")));
                     LockedItemMeta = Item.getItemMeta();
+                    if(config.getInt(Path + ".Details.LockedItemModelData")!=0){
+                        LockedItemMeta.setCustomModelData(config.getInt(Path + ".Details.LockedItemModelData"));
+                    }
                     LockedItemMeta.setDisplayName(ChatColor.RED+"Poziom "+lvl);
+                    List<String>Lore=new ArrayList<>();
                     if(lvl==ActualLevel+1){
-                        List<String>Lore=new ArrayList<>();
-                        Lore.add(totallvl+"/"+MaxLvL);
-                        LockedItemMeta.setLore(Lore);
-                    }}
+                        Lore.add(ChatColor.LIGHT_PURPLE+"Doświadczenie: "+ (totallvl+"/"+MaxLvL));
+                    }
+                    for(String Rewards : config.getConfigurationSection(newpath).getKeys(false)) {
+                        if(Rewards.startsWith("Reward")){
+                            String reward = config.getString(Path + "." + key + "."+Rewards);
+                            if(Rewards.endsWith("Lore")){
+                                for (String line : reward.split("%break%")) {
+                                    Lore.add(line);
+                                }
+                            }else{
+                            if(reward.startsWith("command:")){
+                                if(reward.contains("economy give")){
+                                    reward=reward.replace("command:economy give %player%","");
+                                    Lore.add(ChatColor.GOLD+ "+"+reward+"¥");
+                                }}
+                            if(reward.startsWith("skillupgrade:")){
+                                reward=reward.replace("skillupgrade:","");
+                                Lore.add(ChatColor.AQUA+ "Zwiększenie poziomu umiejętności dziedziny");
+                            }
+                            if(reward.startsWith("SkillPoints:")){
+                                reward=reward.replace("SkillPoints:","");
+                                Lore.add(ChatColor.LIGHT_PURPLE+ "+"+reward+" Punktów Drzewka Magii");
+                            }}
+                        }}
+                    LockedItemMeta.setLore(Lore);
+                }
                 Item.setItemMeta(LockedItemMeta);
                 inv.setItem(8 + lvl, Item);
             }
         }
+        String npath = Path+".Gui";
         ItemStack pl = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta plmeta = pl.getItemMeta();
-        plmeta.setDisplayName(ChatColor.GOLD+"Twój poziom: "+ActualLevel);
+        plmeta.setDisplayName(config.getString(npath+".SkillDisplay")+": "+ActualLevel);
         List<String>Lore=new ArrayList<>();
-        Lore.add(ChatColor.LIGHT_PURPLE+ "Twój Exp: "+totallvl);
-        Lore.add(ChatColor.AQUA+ "Szansa na podwójny drop: "+skill.getUpgradePercent()+"%");
+        Lore.add(ChatColor.LIGHT_PURPLE+ "Obecne doświadczenie: "+totallvl);
+        String BuffSkillLore = config.getString(npath+".BuffSkilllore");
+        BuffSkillLore = BuffSkillLore.replace("%chance%", skill.getUpgradePercent() + "%");
+        for (String line : BuffSkillLore.split("%break%")) {
+            Lore.add(ChatColor.GRAY + line);
+        }
         plmeta.setLore(Lore);
         pl.setItemMeta(plmeta);
         inv.setItem(0,pl);
-        inv.setItem(26,ReturnItem());
+        inv.setItem(35,ReturnItem());
         p.openInventory(inv);
     }
     private static void OpenPlayerLevelWindow(PlayerLevel level){
-        Inventory inv = Bukkit.createInventory(Holder1, Holder1.getSize(), Holder1.getTitle());
-        for (int i = 0; i < inv.getSize(); i++) {
+        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(Holder1,
+                Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amon:first_gui")
+        );
+        Inventory inv = inventory.getInternal();
+        /*for (int i = 0; i < inv.getSize(); i++) {
             inv.setItem(i,GuiBlank());
-        }
+        }*/
         FileConfiguration config= AmonPackPlugin.getLevelConfig();
         try {
             for(String key : config.getConfigurationSection("AmonPack.Levels").getKeys(false)) {
+                if(!key.startsWith("Enabled")){
                 if(!key.startsWith("Mastery")) {
                     LevelSkill skill = level.getPlayerSkills().stream().filter(sk -> sk.getType().toString().equalsIgnoreCase(key)).findFirst().get();
                     String Path = "AmonPack.Levels." + skill.getType().toString();
@@ -138,11 +216,11 @@ public class PlayerLevelMenager {
                     Item1.setItemMeta(Item1Meta);
                     inv.setItem(place,Item1);
                 }
-            }
+            }}
         } catch (Exception e) {
             System.out.println("error "+e.getMessage());
         }
-        Bukkit.getPlayer(level.getPlayerName()).openInventory(inv);
+        inventory.showInventory(Bukkit.getPlayer(level.getPlayerName()));
     }
     public static void ClaimReward(LevelSkill.SkillType Type, Player player, String title){
         try {
@@ -155,9 +233,7 @@ public class PlayerLevelMenager {
                 title = title.replaceAll("\\D+", "");
                 if(lvl.equalsIgnoreCase(title)){
                     if(Integer.parseInt(lvl)<=ReturnUnlocked(skill)){
-                        if(skill.getUsedRewards().contains(Integer.parseInt(lvl))){
-                            player.sendMessage(ChatColor.RED+ "Juz odebrano te nagrode");
-                        }else{
+                        if(!skill.getUsedRewards().contains(Integer.parseInt(lvl))){
                             for(String Rewards : config.getConfigurationSection(Path + "." + key).getKeys(false)) {
                                 if(Rewards.startsWith("Reward")){
                                     String reward = config.getString(Path + "." + key + "."+Rewards);
@@ -170,6 +246,10 @@ public class PlayerLevelMenager {
                                     if(reward.startsWith("skillupgrade:")){
                                         reward=reward.replace("skillupgrade:","");
                                         skill.setUpgradePercent(skill.getUpgradePercent()+Double.parseDouble(reward));
+                                    }
+                                    if(reward.startsWith("SkillPoints:")){
+                                        reward=reward.replace("SkillPoints:","");
+                                        BendingGuiMenu.getPlayerSkillTreeByName(player).AddSkillPoints(Integer.parseInt(reward));
                                     }
                                 }
                             }
@@ -240,7 +320,7 @@ public class PlayerLevelMenager {
     }
     public static LevelSkill.SkillType GetSkillTypeByMaterial(Material mat){
         for(String key : AmonPackPlugin.getLevelConfig().getConfigurationSection("AmonPack.Levels").getKeys(false)) {
-            if(!key.startsWith("Mastery")) {
+            if(!key.startsWith("Mastery")&&!key.startsWith("Enabled")) {
                 String Path = "AmonPack.Levels." + key;
                 Material foundmat = Material.valueOf(AmonPackPlugin.getLevelConfig().getString(Path + ".Gui.Item"));
                 Material foundmat2 = Material.valueOf(AmonPackPlugin.getLevelConfig().getString(Path + ".Details.LockedItem"));
@@ -291,56 +371,30 @@ public class PlayerLevelMenager {
         }
     }
     public void CreateInventories(){
-        Holder1=new InventoryXHolder(36,"");
-        SkillDetails=new InventoryXHolder(27,"");
+        Holder1=new InventoryXHolder(54,"");
+        SkillDetails=new InventoryXHolder(36,"");
     }
     private void LoadPlayersFromDatabase()throws SQLException {
         Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
-        ResultSet rs = stmt.executeQuery("select * from LevelGENERAL");//PlayerMiningLevel,PlayerCombatLevel
+        ResultSet rs = stmt.executeQuery("select * from LevelGENERAL");
         while (rs.next()) {
             List<LevelSkill>Skills=new ArrayList<>();
             String PlayerName = rs.getString(1);
-            Double PlayerPoints = rs.getDouble(2);
-            ResultSet Combat = stmt.executeQuery("select * from LevelCOMBAT where Player='"+PlayerName+"'");
-            while (Combat.next()) {
-                String[] parts = Combat.getString(3).split(",");
-                List<Integer> intList = new ArrayList<>();
-                for (String part : parts) {
-                    try {
-                        if(!Objects.equals(part, "")){
-                            intList.add(Integer.parseInt(part));
-                        }
-                    }catch (Exception e){
-                        System.out.println("Blad przy wgrywaniu poziomow z bazy danych");
-                    }
-                }
-                Skills.add(new LevelSkill(Combat.getDouble(2), LevelSkill.SkillType.COMBAT,intList,Combat.getDouble(4)));
-            }
-            ResultSet Mining = stmt.executeQuery("select * from LevelMINING where Player='"+PlayerName+"'");
-            while (Mining.next()) {
-                String[] parts = Mining.getString(3).split(",");
-                List<Integer> intList = new ArrayList<>();
-                for (String part : parts) {
-                    try {
-                        if(!Objects.equals(part, "")){
-                            intList.add(Integer.parseInt(part));
-                        }
-                    }catch (Exception e){
-                        System.out.println("Blad przy wgrywaniu poziomow z bazy danych "+e.getMessage());
-                    }
-                }
-                Skills.add(new LevelSkill(Mining.getDouble(2), LevelSkill.SkillType.MINING,intList,Mining.getDouble(4)));
-            }
-            List<Integer> intList = new ArrayList<>();
-            try {
-                String[] parts = rs.getString(3).split(",");
-                for (String part : parts) {
-                    intList.add(Integer.parseInt(part));
-                }
-            } catch (Exception e) {
-                System.out.println("Blad przy wgrywaniu poziomow z bazy danych " + e.getMessage());
-            }
-            Skills.add(new LevelSkill(PlayerPoints, LevelSkill.SkillType.GENERAL,intList,rs.getDouble(4)));
+            for (LevelSkill.SkillType Skillt : EnabledSkillTypes){
+                ResultSet Result = stmt.executeQuery("select * from Level"+Skillt.toString()+" where Player='"+PlayerName+"'");
+                while (Result.next()) {
+                    String[] parts = Result.getString(3).split(",");
+                    List<Integer> intList = new ArrayList<>();
+                    for (String part : parts) {
+                        try {
+                            if(!Objects.equals(part, "")){
+                                intList.add(Integer.parseInt(part));
+                            }
+                        }catch (Exception e){
+                            System.out.println("Blad przy wgrywaniu poziomow z bazy danych");
+                        }}
+                    Skills.add(new LevelSkill(Result.getDouble(2),Skillt,intList,Result.getDouble(4)));
+                }}
             AllPlayerLevels.add(new PlayerLevel(PlayerName,Skills));
         }
         stmt.close();

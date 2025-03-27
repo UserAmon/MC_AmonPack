@@ -10,7 +10,7 @@ public class LevelSkill {
     private double UpgradePercent;
     public enum SkillType{
         MINING,
-        GATHERING,
+        FARMING,
         MAGIC,
         COMBAT,
         GENERAL
