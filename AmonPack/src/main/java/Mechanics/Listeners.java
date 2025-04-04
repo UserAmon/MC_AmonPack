@@ -293,6 +293,7 @@ public class Listeners implements Listener {
 
             if (!AmonPackPlugin.BuildingOnArenas) {
                 Block block = event.getClickedBlock();
+                if(block !=null){
                 Forest forest = ForestMenager.GetForestByLocation(block.getLocation());
                 if(forest!=null){
                     if(forest.getMaterials().contains(block.getType())){
@@ -302,7 +303,7 @@ public class Listeners implements Listener {
                         forest.HandleForestInteract(player,block);
                         event.setCancelled(true);
                     }
-                }}}
+                }}}}
     }
     @EventHandler
     public void BlockPlace(BlockPlaceEvent event) {
