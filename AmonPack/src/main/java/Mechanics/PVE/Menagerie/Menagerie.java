@@ -579,8 +579,8 @@ public class Menagerie {
             double xOffset = radius * Math.cos(angle);
             double zOffset = radius * Math.sin(angle);
             Location particleLocation = center.clone().add(xOffset, 1.5, zOffset);
-            world.spawnParticle(Particle.BLOCK_CRACK, particleLocation, 1, 0, 0, 0, 0, b.createBlockData());
-            world.spawnParticle(Particle.BLOCK_DUST, particleLocation, 1, 0, 0, 0, 0, b.createBlockData());
+            world.spawnParticle(Particle.BLOCK, particleLocation, 1, 0, 0, 0, 0, b.createBlockData());
+            world.spawnParticle(Particle.DUST, particleLocation, 1, 0, 0, 0, 0, b.createBlockData());
         }
     }
     public HashMap<Player, Boolean> getReadyPlayers() {

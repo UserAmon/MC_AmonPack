@@ -90,7 +90,7 @@ public class SmokeSource {
                     }else{
                         if ((entity instanceof LivingEntity)&&entity.getUniqueId()!=player.getUniqueId()) {
                             if (entity.getLocation().getY() <= location.getY()+Yrange+1) {
-                                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW,30,2,false,false,false));
+                                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,30,2,false,false,false));
                             }}
                     }
                     }

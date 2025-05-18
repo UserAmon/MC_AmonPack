@@ -11,6 +11,7 @@ import com.projectkorra.projectkorra.ability.SubAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import methods_plugins.AmonPackPlugin;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -39,9 +40,9 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
         return Element.SubElement.getElement("Sound");
     }
     public static void HandleDamage(Entity entity, int i){
-        ParticleEffect.SPELL.display(entity.getLocation(),(10),1.4,1.7,1.4);
-        ParticleEffect.NOTE.display(entity.getLocation(),(10),1.4,1.7,1.4);
-        ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(10),1.4,1.7,1.4);
+        ParticleEffect.SPELL.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
+        ParticleEffect.NOTE.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
+        ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
         if(!AfffectedEntities.isEmpty()&&AfffectedEntities.get(entity)!=null){
             int actual = AfffectedEntities.get(entity);
             AfffectedEntities.put(entity,actual+i);
@@ -65,16 +66,16 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                             if(time>15){
                                 ((LivingEntity) entity).damage(4);
                                 ((LivingEntity)entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,40,3,false,false,false));
-                                ((LivingEntity)entity).addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION,40,10,false,false,false));
-                                ((LivingEntity)entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW,40,3,false,false,false));
-                                ParticleEffect.SPELL.display(entity.getLocation(),(10),1.4,1.7,1.4);
-                                ParticleEffect.NOTE.display(entity.getLocation(),(10),1.4,1.7,1.4);
-                                ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(10),1.4,1.7,1.4);
+                                ((LivingEntity)entity).addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA,40,10,false,false,false));
+                                ((LivingEntity)entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,40,3,false,false,false));
+                                ParticleEffect.SPELL.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
+                                ParticleEffect.NOTE.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
+                                ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(10),1.4,1.7,1.4,Color.fromRGB(192, 192, 192));
                                 ToRemove.add(entity);
                             }else{
-                            ParticleEffect.SPELL.display(entity.getLocation(),(4*time),0.4,1.7,0.4);
-                            ParticleEffect.NOTE.display(entity.getLocation(),(2*time),0.4,1.7,0.4);
-                            ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(4*time),0.4,1.7,0.4);
+                            ParticleEffect.SPELL.display(entity.getLocation(),(4*time),0.4,1.7,0.4, Color.fromRGB(192, 192, 192));
+                            ParticleEffect.NOTE.display(entity.getLocation(),(2*time),0.4,1.7,0.4, Color.fromRGB(192, 192, 192));
+                            ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(4*time),0.4,1.7,0.4,Color.fromRGB(192, 192, 192));
                             AfffectedEntities.put(entity,time-1);
                         }}}}
                     }

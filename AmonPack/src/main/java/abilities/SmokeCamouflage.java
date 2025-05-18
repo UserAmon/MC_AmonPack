@@ -20,11 +20,11 @@ import java.util.List;
 
 
 public class SmokeCamouflage extends SmokeAbility implements AddonAbility {
-	@Attribute("Cooldown")
+	//@Attribute("Cooldown")
 	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeCamouflage.Cooldown");
 	private double Force = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeCamouflage.DashForce");
 	private double ForceY = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeCamouflage.DashForce-Y");
-	@Attribute("Duration")
+	//@Attribute("Duration")
 	private long Duration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Smoke.SmokeCamouflage.Duration");
 	private int EffectsPower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeCamouflage.Effects-Power");
 

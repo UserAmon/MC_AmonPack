@@ -20,7 +20,7 @@ import java.util.Random;
 
 
 public class SmokeBarrage extends SmokeAbility implements AddonAbility {
-	@Attribute("Cooldown")
+	//@Attribute("Cooldown")
 	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Cooldown");
 	private double Gravity = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeBarrage.Gravity-Factor");
 	private double progress = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeBarrage.Progress-Factor");

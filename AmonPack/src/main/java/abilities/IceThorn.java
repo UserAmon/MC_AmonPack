@@ -30,17 +30,17 @@ import static methods_plugins.Methods.getRandom;
 
 
 public class IceThorn extends IceAbility implements AddonAbility {
-	@Attribute("Cooldown")
+	//@Attribute("Cooldown")
 	private long Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Cooldown");
-	@Attribute("Damage")
+	//@Attribute("Damage")
 	private int dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Damage");
-	@Attribute("ChargeTime")
+	//@Attribute("ChargeTime")
 	private long TimeToCharge = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.ChargeTime");
 	private final long RevertTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.Ice.IceThorn.RevertTime");
 	private final long FreezeDuration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.Ice.IceThorn.FreezeDuration");
-	@Attribute("Range")
+	//@Attribute("Range")
 	private int range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Range");
-	@Attribute("Radius")
+	//@Attribute("Radius")
 	private int radius = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Radius");
 	private State AbilityState;
 	private enum State {

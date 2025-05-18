@@ -214,20 +214,20 @@ public class Listeners implements Listener {
                                 double z = direction.getZ() * t;
                                 location.add(x, y, z);
                                 Particle.DustOptions dustOptions = new Particle.DustOptions(Color.PURPLE, 1);
-                                location.getWorld().spawnParticle(Particle.REDSTONE, location, 5, 0.2, 0.2, 0.2, 0.3, dustOptions);
+                                location.getWorld().spawnParticle(Particle.DUST, location, 5, 0.2, 0.2, 0.2, 0.3, dustOptions);
                                 location.getWorld().spawnParticle(Particle.PORTAL, location, 5, 0.2, 0.2, 0.2, 0.3);
                                 for (Entity HitBox : location.getWorld().getNearbyEntities(location, 1, 1, 1)) {
                                     for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, 2.5, 1, 2.5)) {
                                         if (nearbyEntity instanceof LivingEntity && !(nearbyEntity instanceof ArmorStand) && !(nearbyEntity instanceof Player)) {
                                             Vector direction = nearbyEntity.getLocation().toVector().subtract(location.clone().subtract(0, 3, 0).toVector()).normalize();
                                             ((LivingEntity) nearbyEntity).damage(4);
-                                            location.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, location, 1, 0, 0, 0, 0);
+                                            location.getWorld().spawnParticle(Particle.EXPLOSION, location, 1, 0, 0, 0, 0);
                                             cancel();
                                         }}
                                     break;
                                 }
                                 if (origin.distance(location) > 25 || location.getBlock().getType().isSolid()) {
-                                    location.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, location, 1, 0, 0, 0, 0);
+                                    location.getWorld().spawnParticle(Particle.EXPLOSION, location, 1, 0, 0, 0, 0);
                                     cancel();
                                 }
                                 t += 0.20;
@@ -261,14 +261,14 @@ public class Listeners implements Listener {
                                     Vector offset = new Vector(offsetX, offsetY, offsetZ);
                                     Location particleLocation = location.clone().add(offset);
                                     Particle.DustOptions dustOptions = new Particle.DustOptions(Color.PURPLE, 1);
-                                    particleLocation.getWorld().spawnParticle(Particle.REDSTONE, particleLocation, 1, 0, 0, 0, 0, dustOptions);
+                                    particleLocation.getWorld().spawnParticle(Particle.DUST, particleLocation, 1, 0, 0, 0, 0, dustOptions);
                                     particleLocation.getWorld().spawnParticle(Particle.PORTAL, particleLocation, 1, 0, 0, 0, 0);
                                 }
                                 for (Entity hitBox : location.getWorld().getNearbyEntities(location, radius, 1, radius)) {
                                     if (hitBox instanceof LivingEntity && !(hitBox instanceof ArmorStand) && !(hitBox instanceof Player)) {
                                         ((LivingEntity) hitBox).damage(3);
                                         hitBox.setVelocity(direction.clone().add(new Vector(0,0.6,0).multiply(0.8)));
-                                        ((LivingEntity) hitBox).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 50, 3, false, false));
+                                        ((LivingEntity) hitBox).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 50, 3, false, false));
                                     }
                                 }
                                 if (origin.distance(location) > 20 || location.getBlock().getType().isSolid()) {

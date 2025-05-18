@@ -109,7 +109,7 @@ public class SandWave extends SandAbility implements AddonAbility, ComboAbility 
 									if (entity.getLocation().getY() < proj.getY()+1) {
 										entity.teleport(entity.getLocation().clone().subtract(0,burrow,0));
 										((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, SandWave.DeBuffsDuration , SandWave.DeBuffsPower , false , false));
-										((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, SandWave.DeBuffsDuration, SandWave.DeBuffsPower , false , false));
+										((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, SandWave.DeBuffsDuration, SandWave.DeBuffsPower , false , false));
 										Burrowed.add(entity);
 									}}}
 						}else{

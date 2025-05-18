@@ -151,7 +151,7 @@ public class SteelShackles extends MetalAbility implements AddonAbility {
         Location particleLocation = source.clone().add(0,1,0);
         for (int i = 0; i < particleAmount; i++) {
         	
-        	player.getWorld().spawnParticle(Particle.REDSTONE, particleLocation, 1, new Particle.DustOptions(Color.fromRGB(50, 50, 50), 1));
+        	player.getWorld().spawnParticle(Particle.DUST, particleLocation, 1, new Particle.DustOptions(Color.fromRGB(50, 50, 50), 1));
         	
 				//ParticleEffect.CRIT.display(particleLocation, 3, 0.1, 0.1, 0.1, 0);
             particleLocation.add(direction);

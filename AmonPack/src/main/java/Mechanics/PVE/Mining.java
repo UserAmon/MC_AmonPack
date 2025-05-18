@@ -30,8 +30,8 @@ public class Mining implements Listener {
     public void setMiningTools(){
         PickaxeTier3 = new ItemStack(Material.GOLDEN_PICKAXE, 1);
         ItemMeta PickaxeTier3Meta = PickaxeTier3.getItemMeta();
-        PickaxeTier3Meta.addEnchant(Enchantment.DURABILITY, 10, true);
-        PickaxeTier3Meta.addEnchant(Enchantment.DIG_SPEED, 6, true);
+        PickaxeTier3Meta.addEnchant(Enchantment.UNBREAKING, 10, true);
+        PickaxeTier3Meta.addEnchant(Enchantment.EFFICIENCY, 6, true);
         PickaxeTier3Meta.setDisplayName("" + ChatColor.GRAY +ChatColor.BOLD + "Kilof Tier 3");
         PickaxeTier3.setItemMeta(PickaxeTier3Meta);
     }

@@ -7,6 +7,7 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.Methods;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -39,11 +40,14 @@ public class NoisySlash extends SoundAbility implements AddonAbility {
 		Projectiles=new ArrayList<>();
 		List<BetterParticles> Particles = new ArrayList<>();
 		List<BetterParticles> ParticlesMain = new ArrayList<>();
-		Particles.add(new BetterParticles(1,ParticleEffect.SPELL,0.15,0.01,0.1));
-		Particles.add(new BetterParticles(3,ParticleEffect.SPELL_MOB_AMBIENT,0.25,0.01,0.1));
-		ParticlesMain.add(new BetterParticles(2,ParticleEffect.SPELL,0.25,0.05,0.1));
-		ParticlesMain.add(new BetterParticles(1,ParticleEffect.NOTE,0.25,0.01,0.1));
-		ParticlesMain.add(new BetterParticles(6,ParticleEffect.SPELL_MOB_AMBIENT,0.25,0.1,0.1));
+		Particles.add(new BetterParticles(1, ParticleEffect.SPELL, 0.15, 0.01, 0.1));
+		Particles.add(new BetterParticles(3, ParticleEffect.SPELL_MOB_AMBIENT, 0.0, 0.0, 0.0, Color.fromRGB(128, 128, 128)));
+		ParticlesMain.add(new BetterParticles(2, ParticleEffect.SPELL, 0.25, 0.05, 0.1));
+		ParticlesMain.add(new BetterParticles(1, ParticleEffect.NOTE, 0.25, 0.01, 0.1));
+
+// Jasnoszary SPELL_MOB_AMBIENT (RGB: 192,192,192)
+		ParticlesMain.add(new BetterParticles(6, ParticleEffect.SPELL_MOB_AMBIENT, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192)));
+
 		Vector direction = selorigin.toVector().subtract(player.getLocation().toVector()).normalize();
 		MainProjectile=new AbilityProjectile(direction,player.getLocation().clone(), origin,ParticlesMain,1);
 		selorigin.setPitch(0);

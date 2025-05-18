@@ -21,14 +21,14 @@ import java.util.List;
 
 
 public class SmokeSlash extends SmokeAbility implements AddonAbility {
-	@Attribute("Cooldown")
+	//@Attribute("Cooldown")
 	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBlade.Cooldown");
-	@Attribute("Damage")
+	//@Attribute("Damage")
 	private long Damage = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBlade.Damage");
 	private int SmokeDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBlade.SmokeDuration");
-	@Attribute("Range")
+	//@Attribute("Range")
 	private long range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBlade.Range");
-	@Attribute("Radius")
+	//@Attribute("Radius")
 	private long Radius = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBlade.BladeSize");
 	private List<AbilityProjectile> Projectiles;
 	private AbilityProjectile MainOrb;

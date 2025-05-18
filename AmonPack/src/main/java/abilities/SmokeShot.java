@@ -22,9 +22,9 @@ import java.util.List;
 
 
 public class SmokeShot extends SmokeAbility implements AddonAbility {
-	@Attribute("Cooldown")
+	//@Attribute("Cooldown")
 	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeShot.Cooldown");
-	@Attribute("Range")
+	//@Attribute("Range")
 	private long Range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeShot.Range");
 	private AbilityProjectile Projectiles;
 	private Location origin;

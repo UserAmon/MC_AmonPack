@@ -22,8 +22,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="ProjectKorra-1.11.3" level="project" />
-    <orderEntry type="library" name="ItemsAdder_3.6.4_5" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="ItemsAdder_4.0.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.spigotmc:spigot-ap i:1.20.6-RO.1-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:guava:31.0.1-jre" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:failureaccess:1.0.1" level="project" />
@@ -39,7 +39,7 @@
       <library name="Maven: AmonPack:AmonPack:1.0">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/ProjectKorra-1.11.3.jar!/" />
-          <root url="jar://$MODULE_DIR$/ItemsAdder_3.6.4_5.jar!/" />
+          <root url="jar://$MODULE_DIR$/ItemsAdder_4.0.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

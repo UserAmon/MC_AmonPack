@@ -9,6 +9,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class QuestItems {
     public static List<ItemStack>ListOfAllQuestItems = new ArrayList<>();
@@ -24,21 +25,26 @@ public class QuestItems {
                         if (lore != null) {
                             lorelist.add(ChatColor.translateAlternateColorCodes('&', lore));
                         }}}
-                ItemStack QuestItem = new ItemStack(Material.getMaterial(type), 1);
-                ItemMeta QuestItemMeta = QuestItem.getItemMeta();
-                if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
-                    for(String enchname : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
-                        int enchpower = AmonPackPlugin.getNewConfigz().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
-                        QuestItemMeta.addEnchant(Enchantment.getByName(enchname), enchpower, true);
-                    }}
-                if (name != null) {
-                    QuestItemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+                try{
+                    ItemStack QuestItem = new ItemStack(Objects.requireNonNull(Material.getMaterial(type)), 1);
+                    ItemMeta QuestItemMeta = QuestItem.getItemMeta();
+                    if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
+                        for(String enchname : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
+                            int enchpower = AmonPackPlugin.getNewConfigz().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
+                            QuestItemMeta.addEnchant(Enchantment.getByName(enchname), enchpower, true);
+                        }}
+                    if (name != null) {
+                        QuestItemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+                    }
+                    if (lorelist != null) {
+                        QuestItemMeta.setLore(lorelist);
+                    }
+                    QuestItem.setItemMeta(QuestItemMeta);
+                    ListOfAllQuestItems.add(QuestItem);
+                } catch (Exception e) {
+                    System.out.println("Error ale moze nie wyjebalo: "+e.getMessage());
                 }
-                if (lorelist != null) {
-                    QuestItemMeta.setLore(lorelist);
-                }
-                QuestItem.setItemMeta(QuestItemMeta);
-                ListOfAllQuestItems.add(QuestItem);
+
             }}
     }
 }

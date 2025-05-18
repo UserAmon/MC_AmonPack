@@ -62,9 +62,9 @@ public class Forest {
                 if (clickCounts.get(player) >= resource.getClickRequired()) {
                     AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING,player, resource.getExp(),ChatColor.AQUA+"Exp:");
                     clickCounts.remove(player);
-                    block.getWorld().spawnParticle(Particle.BLOCK_DUST, block.getLocation().add(0,1,0), 30, Bukkit.createBlockData(block.getType()));
-                    block.getWorld().spawnParticle(Particle.BLOCK_DUST, block.getLocation().add(0,0.5,0), 30, Bukkit.createBlockData(block.getType()));
-                    block.getWorld().spawnParticle(Particle.BLOCK_DUST, block.getLocation(), 30, Bukkit.createBlockData(block.getType()));
+                    block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation().add(0,1,0), 30, Bukkit.createBlockData(block.getType()));
+                    block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation().add(0,0.5,0), 30, Bukkit.createBlockData(block.getType()));
+                    block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation(), 30, Bukkit.createBlockData(block.getType()));
                     Material revertmat =block.getType();
                     if(isTreeWood(block.getType())){
                         destroyTree(block.getLocation(), (int) (resource.getRestoreTime()*20));

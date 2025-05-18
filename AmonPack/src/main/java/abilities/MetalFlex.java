@@ -76,9 +76,9 @@ public class MetalFlex extends MetalAbility implements AddonAbility {
                             }}}}}
         	            if (!this.player.hasPotionEffect(PotionEffectType.ABSORPTION)) {
         	            	if (player.getHealth() < low) {
-        	                this.player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, crysisduration, 20, true));
+        	                this.player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, crysisduration, 20, true));
         	                this.player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, crysisduration, 20, true));
-        	                this.player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, crysisduration, 1, true));
+        	                this.player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, crysisduration, 1, true));
         	                crysis();
         	            }}else{
         	            end(); 

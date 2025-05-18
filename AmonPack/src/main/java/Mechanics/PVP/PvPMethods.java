@@ -29,7 +29,7 @@ public class PvPMethods {
         return getBlockWithAirAbove(loc.clone().add(xOffset, (yOffset/3), zOffset)).getLocation().clone().add(0,1,0);
     }
     public static void spawnFlyingFirework(Location location) {
-        Firework firework = (Firework) location.getWorld().spawnEntity(location, EntityType.FIREWORK);
+        Firework firework = (Firework) location.getWorld().spawnEntity(location, EntityType.FIREWORK_ROCKET);
         FireworkMeta fireworkMeta = firework.getFireworkMeta();
         FireworkEffect.Builder builder = FireworkEffect.builder();
         builder.withColor(Color.RED);

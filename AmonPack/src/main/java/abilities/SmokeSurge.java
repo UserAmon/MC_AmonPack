@@ -23,7 +23,7 @@ import methods_plugins.Abilities.SmokeAbility;
 
 
 public class SmokeSurge extends SmokeAbility implements AddonAbility {
-	@Attribute("Cooldown")
+	//@Attribute("Cooldown")
 	private int Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.Cooldown");
 	private int dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.Dmg");
 	private int range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.Range");
@@ -92,7 +92,7 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
    		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 2)) {
 		if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
 		DamageHandler.damageEntity(entity, dmg, this);
-			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slowdur, slowpower));
+			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowdur, slowpower));
 			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
 			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
     	}}

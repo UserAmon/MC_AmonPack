@@ -30,16 +30,16 @@ import static methods_plugins.Methods.getRandom;
 
 
 public class EarthHammer extends EarthAbility implements AddonAbility {
-	@Attribute("Cooldown")
+	//@Attribute("Cooldown")
 	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Cooldown");
-	@Attribute("Damage")
+	//@Attribute("Damage")
 	private int dmg = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Damage");
-	@Attribute("ChargeTime")
+	//@Attribute("ChargeTime")
 	private long TimeToCharge = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.ChargeTime");
 	private final long RevertTime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.RevertTime");
-	@Attribute("Range")
+	//@Attribute("Range")
 	private int range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Range");
-	@Attribute("Radius")
+	//@Attribute("Radius")
 	private int radius = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Radius");
 	private State AbilityState;
 	private enum State {

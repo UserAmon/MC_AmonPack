@@ -51,7 +51,7 @@ public class BowAbility {
         arrow.setPickupStatus(Arrow.PickupStatus.DISALLOWED);
         arrow.setVelocity(direction.multiply(3));
         arrow.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 40, 1, false, false), true);
-        arrow.addCustomEffect(new PotionEffect(PotionEffectType.SLOW, 40, 4, false, false), true);
+        arrow.addCustomEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 4, false, false), true);
         arrow.setColor(Color.PURPLE);
     }
 

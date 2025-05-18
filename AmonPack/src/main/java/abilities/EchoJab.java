@@ -6,6 +6,7 @@ import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import methods_plugins.Abilities.SoundAbility;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -33,8 +34,8 @@ public class EchoJab extends SoundAbility implements AddonAbility {
 		origin = player.getLocation().clone().add(0,0.4,0);
 		Projectiles=new ArrayList<>();
 		List<BetterParticles> Particles = new ArrayList<>();
-		Particles.add(new BetterParticles(1,ParticleEffect.SPELL,0.15,0,0.1));
-		Particles.add(new BetterParticles(2,ParticleEffect.SPELL_MOB_AMBIENT,0.15,0,0.1));
+		Particles.add(new BetterParticles(1,ParticleEffect.SPELL,0.15,0,0.1, Color.fromRGB(128, 128, 128)));
+		Particles.add(new BetterParticles(2,ParticleEffect.SPELL_MOB_AMBIENT,0.15,0,0.1,Color.fromRGB(128, 128, 128)));
 		int Offset=0;
 		Interval=0;
 		origin.setPitch(0);

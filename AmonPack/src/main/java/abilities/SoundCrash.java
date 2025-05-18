@@ -10,6 +10,7 @@ import com.projectkorra.projectkorra.util.ParticleEffect;
 import methods_plugins.Abilities.SmokeAbility;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -37,8 +38,8 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 		Projectiles=new ArrayList<>();
 		interval=0;
 		List<BetterParticles> Particles = new ArrayList<>();
-		Particles.add(new BetterParticles(1,ParticleEffect.SPELL,0.05,0.01,0.15));
-		Particles.add(new BetterParticles(4,ParticleEffect.SPELL_MOB_AMBIENT,0.15,0.01,0.15));
+		Particles.add(new BetterParticles(1,ParticleEffect.SPELL,0.05,0.01,0.15,Color.fromRGB(128, 128, 128)));
+		Particles.add(new BetterParticles(4,ParticleEffect.SPELL_MOB_AMBIENT,0.15,0.01,0.15, Color.fromRGB(128, 128, 128)));
 		Location temploc = origin.clone();
 		temploc.setPitch(15);
 		int Offset=0;

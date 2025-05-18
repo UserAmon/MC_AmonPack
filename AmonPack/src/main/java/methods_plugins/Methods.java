@@ -99,12 +99,12 @@ public class Methods {
     			for (Entity entity : loc.getWorld().getNearbyEntities(loc, range, range , range)) {
     	 		if ((entity instanceof LivingEntity)) {
     	 		if (affect == true) {
-    				((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slowdur, slowpower));
+    				((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowdur, slowpower));
     				((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
     				((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
     	 			} else if (affect == false) {
     	 			if (entity.getUniqueId() != player.getUniqueId()) {
-        			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slowdur, slowpower));
+        			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowdur, slowpower));
         			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
         			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
         	 		}}}}
@@ -336,7 +336,7 @@ public class Methods {
 				if (SandBreath.push == true) {
 					
 					((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, SandBreath.DeBuffsDuration , SandBreath.DeBuffsPower , false , false));
-					((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, SandBreath.DeBuffsDuration, SandBreath.DeBuffsPower , false , false));
+					((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, SandBreath.DeBuffsDuration, SandBreath.DeBuffsPower , false , false));
             } }}
 		} while (loc.distance(originloc) < range || !loc.getBlock().getType().isSolid());
 		return;
