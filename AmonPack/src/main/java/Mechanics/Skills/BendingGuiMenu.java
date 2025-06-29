@@ -232,6 +232,14 @@ public class BendingGuiMenu {
         TempItem.setItemMeta(IMeta);
         return TempItem;
     }
+    public static ItemStack FastEasyStack(Material mat, String name, int modelil){
+        ItemStack TempItem = new ItemStack(mat);
+        ItemMeta IMeta = TempItem.getItemMeta();
+        IMeta.setCustomModelData(modelil);
+        IMeta.setDisplayName(name);
+        TempItem.setItemMeta(IMeta);
+        return TempItem;
+    }
     public static ItemStack FastEasyStackWithLore(Material mat, String name,List<String> lore){
         ItemStack TempItem = new ItemStack(mat);
         ItemMeta IMeta = TempItem.getItemMeta();

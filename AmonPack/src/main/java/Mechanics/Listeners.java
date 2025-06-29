@@ -1,7 +1,9 @@
 package Mechanics;
 
 import AvatarSystems.ForestMenager;
-import AvatarSystems.PlayerLevelMenager;
+import AvatarSystems.Levels.ElementTree;
+import AvatarSystems.Levels.PlayerBendingBranch;
+import AvatarSystems.Levels.PlayerLevelMenager;
 import AvatarSystems.Util_Objects.Forest;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
@@ -14,23 +16,16 @@ import Mechanics.Skills.UpgradesMenager;
 import UtilObjects.PVE.BowAbility;
 import UtilObjects.PVE.Mine;
 import UtilObjects.PVP.FallingChest;
-import UtilObjects.PVP.RandomEvents;
 import UtilObjects.Skills.PlayerSkillTree;
 import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.Element;
-import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.CoreAbility;
-import com.projectkorra.projectkorra.attribute.Attribute;
-import com.projectkorra.projectkorra.attribute.AttributeModifier;
-import com.projectkorra.projectkorra.attribute.AttributePriority;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
 import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
 import com.projectkorra.projectkorra.event.AbilityStartEvent;
 import com.projectkorra.projectkorra.event.PlayerCooldownChangeEvent;
 import com.projectkorra.projectkorra.firebending.util.FireDamageTimer;
-import com.projectkorra.projectkorra.util.ParticleEffect;
-import commands.Commands;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
 import methods_plugins.Methods;
@@ -45,7 +40,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -61,11 +55,9 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.*;
 
-import static AvatarSystems.PlayerLevelMenager.AllPlayerLevels;
 import static Mechanics.PVE.Menagerie.MenagerieMenager.ListOfAllMenageries;
 import static Mechanics.Skills.BendingGuiMenu.ChangeElement;
 import static Mechanics.Skills.UpgradesMenager.*;
-import static com.projectkorra.projectkorra.attribute.AttributeModifier.*;
 
 public class Listeners implements Listener {
     @EventHandler
@@ -437,8 +429,11 @@ public class Listeners implements Listener {
                 }}}
     }
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) throws SQLException {
+    public void onInventoryClick(InventoryClickEvent event) {
         if(event.getCurrentItem()!=null){
+            Player p = (Player) event.getWhoClicked();
+            event.setCancelled(true);
+
             if(Objects.equals(event.getInventory().getHolder(), ForestMenager.ForestHolder)){
                 if (!AmonPackPlugin.BuildingOnArenas) {
                     ItemStack item = event.getCurrentItem();
@@ -447,7 +442,7 @@ public class Listeners implements Listener {
                         forest.HandleForestInvClick((Player) event.getWhoClicked(),item);
                         event.setCancelled(true);
                     }}
-            }
+            }else
         if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SkillDetails)){
             event.setCancelled(true);
             if(event.getCurrentItem().getType()==Material.BARRIER){
@@ -457,171 +452,122 @@ public class Listeners implements Listener {
                 LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
                 PlayerLevelMenager.ClaimReward(sktype,(Player) event.getWhoClicked(),event.getCurrentItem().getItemMeta().getDisplayName());
             }
-        }
+        }else
         if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.Holder1)){
-            Player p = (Player) event.getWhoClicked();
-            event.setCancelled(true);
             LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
             if(sktype!=null){
                 PlayerLevel Level = PlayerLevelMenager.GetPlayerLevelFromList(event.getWhoClicked().getName());
                 if(Level!=null){
                     PlayerLevelMenager.OpenSkillDetails(Level.GetSkillByType(sktype), (Player) event.getWhoClicked());
-                }
-            }
+                }}
             Element ele = PlayerLevelMenager.GetElementByPlace(event.getSlot());
             if(ele!=null){
-                if (BendingGuiMenu.getPlayerSkillTreeByName(p).getCurrentElement().equalsIgnoreCase(ele.getName())) {
-                    BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p),ele,p);
+
+                PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+                if(playersBranch==null){
+                    p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
+                    return;
+                }
+                Element element = playersBranch.getCurrentElement();
+
+                if (element==ele) {
+                    AmonPackPlugin.levelsBending.OpenBendingSkillMenu(playersBranch.getName());
                 }else{
                     event.getWhoClicked().sendMessage(ChatColor.RED+"Nie masz wybranego tego zywiołu! Twój zywioł to: "+BendingGuiMenu.getPlayerSkillTreeByName(p).getCurrentElement());
+                }}
+        }else
+            if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillMenu)){
+                if (event.getCurrentItem().getType() == Material.CHEST) {
+                    AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,0);
+                }
+                if (event.getCurrentItem().getType() == Material.PAPER) {
+                    AmonPackPlugin.levelsBending.OpenBindingMenu(p.getName(),event.getCurrentItem().getItemMeta().getDisplayName());
+                }
+                if (event.getCurrentItem().getType() == Material.BARRIER) {
+                    PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
+                }
+            } else
+
+                if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BindingAbilitiesMenu)) {
+                Material clickedItem = event.getCurrentItem().getType();
+                BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
+                if (clickedItem.equals(Material.PAPER)) {
+                    bPlayer.bindAbility(Objects.requireNonNull(event.getClickedInventory().getItem(4).getItemMeta()).getDisplayName(), Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
+                    bPlayer.saveAbility(Objects.requireNonNull(event.getClickedInventory().getItem(4)).getItemMeta().getDisplayName(), Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
+                    Element ele = BendingGuiMenu.ElementBasedOnSubElement(CoreAbility.getAbility(event.getClickedInventory().getItem(4).getItemMeta().getDisplayName()).getElement());
+                    BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p), ele, p);
+                }
+                if (event.getCurrentItem().getType() == Material.BARRIER) {
+                    AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                 }
             }
 
+            else if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillTree)){
 
+                PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+                    if(playersBranch==null){
+                        p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
+                        return;
+                    }
+                Element element = playersBranch.getCurrentElement();
+                ElementTree SelectedElement = AmonPackPlugin.levelsBending.GetElement(element);
+                Material ClickedItem = event.getCurrentItem().getType();
+                BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
 
-
-        }}
-        for (FallingChest fc:newPvP.ChestList) {
-            if (event.getView().getTitle().equalsIgnoreCase(fc.getName())) {
-                if (newPvP.isInventoryEmpty(event.getView().getTopInventory()) && event.getClickedInventory().getType() == InventoryType.CHEST) {
-                    event.getView().getTopInventory().getLocation().getBlock().setType(Material.AIR);
-                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT,(Player) event.getWhoClicked(), fc.getExpgranted(),ChatColor.AQUA+"Exp:");
-                    //Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
-                    //example.executeCommand("q event "+event.getWhoClicked().getName()+" DailyPvP.punkt_PvP");
-                    newPvP.LastFallChest.removeIf(b -> b.getLocation().distance(event.getView().getTopInventory().getLocation()) < 5);
-                }}}
-        Player p = Bukkit.getPlayer(event.getWhoClicked().getName());
-        if (event.getCurrentItem() != null && p!=null && event.getInventory().getHolder() != p){
-            ItemStack clickedItem = event.getCurrentItem();
-            BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
+                    if (ClickedItem == Material.BARRIER) {
+                        AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
+                    }
+                    if (ClickedItem.equals(Material.CHEST)) {
+                        for (int i = 0; i <= 9; i++) {
+                            if(CoreAbility.getAbility(bPlayer.getAbilities().get(i))!=null&&(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement().equals(SelectedElement.getElement())
+                                    || Objects.equals(BendingGuiMenu.ElementBasedOnSubElement(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()), SelectedElement.getElement()))){
+                                BendingBoardManager.getBoard(p).get().clearSlot(i);
+                                bPlayer.getAbilities().remove(i);
+                            }}
+                        playersBranch.ClearAbilities(SelectedElement);
+                        AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,0);
+                        bPlayer.removeUnusableAbilities();
+                    }
+                    if (event.getSlot()==26) {
+                        if (playersBranch.getCurrentPage()>0){
+                            AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage()+1);
+                        }}
+                if (event.getSlot()==35) {
+                        if (playersBranch.getCurrentPage()<(SelectedElement.getRows())/54){
+                            AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage()-1);
+                        }}
+                    if (ClickedItem.equals(Material.ORANGE_TERRACOTTA)) {
+                        for (SkillTree_Ability STA:SelectedElement.getAbilities()) {
+                            if (STA.getName().equalsIgnoreCase(event.getCurrentItem().getItemMeta().getDisplayName())){
+                                if (playersBranch.GetPoints(element) >= STA.getCost()) {
+                                    if (new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().size()==0) {
+                                        playersBranch.UnlockAbility(STA.getElement(),STA.getCost(),STA.getName());
+                                        AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage());
+                                    }}}}
+                }
+            }
+        else
+        if(newPvP.playerinzone(event.getWhoClicked().getLocation())) {
+            for (FallingChest fc : newPvP.ChestList) {
+                if (event.getView().getTitle().equalsIgnoreCase(fc.getName())) {
+                    if (newPvP.isInventoryEmpty(event.getView().getTopInventory()) && event.getClickedInventory().getType() == InventoryType.CHEST) {
+                        event.getView().getTopInventory().getLocation().getBlock().setType(Material.AIR);
+                        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT, (Player) event.getWhoClicked(), fc.getExpgranted(), ChatColor.AQUA + "Exp:");
+                        //Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
+                        //example.executeCommand("q event "+event.getWhoClicked().getName()+" DailyPvP.punkt_PvP");
+                        newPvP.LastFallChest.removeIf(b -> b.getLocation().distance(event.getView().getTopInventory().getLocation()) < 5);
+                    }
+                }
+            }
+        }
+        else
+        if (event.getInventory().getHolder() != p){
             for (Menagerie mena:ListOfAllMenageries) {
                 if (mena.IsInMenagerie(p.getLocation())){
                     mena.OnInventoryClickMenagerie(event);
                     break;
                 }}
-            if (event.getInventory().getHolder() == null){
-            if (event.getView().getTitle().startsWith("Skills: ")){
-                event.setCancelled(true);
-                PlayerSkillTree PSkillTree = BendingGuiMenu.getPlayerSkillTreeByName(p);
-                Element ele = Element.getElement(event.getView().getTitle().substring(8));
-                if (PSkillTree!=null){
-                if (event.getCurrentItem().getType() == Material.BARRIER) {
-                    BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p), ele, p);
-                }
-                if (clickedItem.getType().equals(Material.CHEST)) {
-                    for (int i = 0; i <= 9; i++) {
-                        if(CoreAbility.getAbility(bPlayer.getAbilities().get(i))!=null&&(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement().equals(ele)
-                        || Objects.equals(BendingGuiMenu.ElementBasedOnSubElement(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()), ele))){
-                            BendingBoardManager.getBoard(p).get().clearSlot(i);
-                            bPlayer.getAbilities().remove(i);
-                        }}
-                    PlayerSkillTree.SetPathAndPoints(p.getName(),PSkillTree.getActSkillPoints()+PSkillTree.CountCostByElement(BendingGuiMenu.ListOfAllAvailableAbilities,ele),PSkillTree.PathRemoveElement(ele),PSkillTree.getCurrentElement());
-                    BendingGuiMenu.OpenSkillTreeMenuByElement(p,ele,0, Objects.requireNonNull(PSkillTree));
-                    bPlayer.removeUnusableAbilities();
-                }
-                if (clickedItem.getType().equals(Material.OAK_SIGN)) {
-                            if (PSkillTree.getCurrentPage()>0){
-                                BendingGuiMenu.OpenSkillTreeMenuByElement(p,ele,PSkillTree.getCurrentPage()-1, Objects.requireNonNull(PSkillTree));
-                            }}
-                if (clickedItem.getType().equals(Material.DARK_OAK_SIGN)) {
-                            if (PSkillTree.getCurrentPage()<(BendingGuiMenu.MaxRowsForElementTree.get(ele.getName()))/54){
-                                BendingGuiMenu.OpenSkillTreeMenuByElement(p,ele,PSkillTree.getCurrentPage()+1, Objects.requireNonNull(PSkillTree));
-                    }}
-                    if (clickedItem.getType().equals(Material.ORANGE_TERRACOTTA)) {
-                    for (SkillTree_Ability STA:BendingGuiMenu.ListOfAllAvailableAbilities) {
-                        if (STA.getName().equalsIgnoreCase(clickedItem.getItemMeta().getDisplayName())){
-                                        if (PSkillTree.getActSkillPoints() >= STA.getCost()) {
-                                            if (PSkillTree.getSelectedPath().containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().size()==0) {
-                                                PlayerSkillTree.SetPathAndPoints(p.getName(),PSkillTree.getActSkillPoints() - STA.getCost(),PSkillTree.getSelectedPathAsString() + "," + STA.getName() + ",",PSkillTree.getCurrentElement());
-                                                BendingGuiMenu.OpenSkillTreeMenuByElement(p,ele,0, Objects.requireNonNull(PSkillTree));
-                                            }}}}}
-            }}
-            if (event.getView().getTitle().startsWith("Menu: ")){
-                event.setCancelled(true);
-                if (event.getCurrentItem().getType() == Material.CHEST) {
-                    BendingGuiMenu.OpenSkillTreeMenuByElement(p,Element.getElement(event.getView().getTitle().substring(6)),0, Objects.requireNonNull(BendingGuiMenu.getPlayerSkillTreeByName(p)));
-                }
-                if (event.getCurrentItem().getType() == Material.GREEN_TERRACOTTA) {
-                    if(newPvP.playerinzone(p.getLocation()) || !BendingGuiMenu.getPlayerSkillTreeByName(p).isMultibend()){
-                        if (BendingGuiMenu.getPlayerSkillTreeByName(p).getCurrentElement().equalsIgnoreCase(event.getView().getTitle().substring(6))){
-                            BendingGuiMenu.OpenBindingGui(p, Objects.requireNonNull(event.getCurrentItem().getItemMeta()).getDisplayName());
-                        }else{
-                            p.sendMessage(ChatColor.RED+ "Nie masz wybranego tego żywiołu!");
-                        }}else{
-                        BendingGuiMenu.OpenBindingGui(p, Objects.requireNonNull(event.getCurrentItem().getItemMeta()).getDisplayName());
-                    }}
-                if (event.getCurrentItem().getType() == Material.BARRIER) {
-                    PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
-                    //BendingGuiMenu.OpenGeneralBendingMenu(p);
-                }
-            }
-            switch (event.getView().getTitle()) {
-            case "GeneralBending":
-                event.setCancelled(true);
-                if (event.getCurrentItem().getType() == Material.BARRIER) {
-                    p.closeInventory();
-                }
-                if (BendingGuiMenu.ElementByMaterial(event.getCurrentItem().getType())!=null) {
-                if (event.getSlot() == 4) {
-                    BendingGuiMenu.OpenElementChangeMenu(p, BendingGuiMenu.getPlayerSkillTreeByName(p));
-                }else{
-                    if(newPvP.playerinzone(p.getLocation()) || !BendingGuiMenu.getPlayerSkillTreeByName(p).isMultibend()){
-                        if (BendingGuiMenu.getPlayerSkillTreeByName(p).getCurrentElement().equalsIgnoreCase(BendingGuiMenu.ElementByMaterial(event.getCurrentItem().getType()).getName())){
-                            BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p), BendingGuiMenu.ElementByMaterial(event.getCurrentItem().getType()), p);
-                        }else{
-                            p.sendMessage(ChatColor.RED+ "Nie masz wybranego tego żywiołu!");
-                        }}else{
-                        BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p), BendingGuiMenu.ElementByMaterial(event.getCurrentItem().getType()), p);
-                    }}}
-                break;
-            case "SelectElement":
-                event.setCancelled(true);
-                if (event.getCurrentItem().getType() == Material.BARRIER) {
-                    BendingGuiMenu.OpenGeneralBendingMenu(p);
-                }else{
-                Element ele = BendingGuiMenu.ElementByMaterial(clickedItem.getType());
-                /*if (Multibend){
-                    bPlayer.addElement(ele);
-                }else{
-                    bPlayer.setElement(ele);
-                }*/
-                ChangeElement(p,bPlayer,ele.getName().toUpperCase());
-                BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p), ele, p);
-                p.sendMessage(ele.getColor()+"Wybrałeś Żywioł: "+ele.getName()+"!");
-                    for (int i = 0; i <= 9; i++) {
-                        if(CoreAbility.getAbility(bPlayer.getAbilities().get(i))!=null&&(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement().equals(ele)
-                                || Objects.equals(BendingGuiMenu.ElementBasedOnSubElement(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()), ele))){
-                            BendingBoardManager.getBoard(p).get().clearSlot(i);
-                            bPlayer.getAbilities().remove(i);
-                        }}
-                    bPlayer.removeUnusableAbilities();
-                }break;
-            case "Bind":
-                event.setCancelled(true);
-                if (clickedItem.getType().equals(Material.RED_STAINED_GLASS_PANE)) {
-                        bPlayer.bindAbility(Objects.requireNonNull(event.getClickedInventory().getItem(4).getItemMeta()).getDisplayName(), Integer.parseInt(clickedItem.getItemMeta().getDisplayName()));
-                        bPlayer.saveAbility(Objects.requireNonNull(event.getClickedInventory().getItem(4)).getItemMeta().getDisplayName(), Integer.parseInt(clickedItem.getItemMeta().getDisplayName()));
-                        Element ele = BendingGuiMenu.ElementBasedOnSubElement(CoreAbility.getAbility(event.getClickedInventory().getItem(4).getItemMeta().getDisplayName()).getElement());
-                        BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p), ele, p);
-                }
-                if (event.getCurrentItem().getType() == Material.BARRIER) {
-                    BendingGuiMenu.OpenGeneralBendingMenu(p);
-                }
-                break;
-            case "ItemList":
-            case "HelpGui":
-            case "ItemGui":
-                event.setCancelled(true);
-                break;
-            case "AssaultGui":
-                event.setCancelled(true);
-                /*for (AssaultDef A : AssaultMenager.listOfAssaultDef) {
-                    if (InArenaRange(event.getWhoClicked().getLocation(), A.getArenaLocation(), A.getRange(), A.getRange())) {
-                        if (event.getInventory().getType() == InventoryType.CHEST) {
-                            A.AssaultMenuClick((Player) event.getWhoClicked(), event.getCurrentItem());
-                        }}}*/
-                break;
-            }}}}
+            }}}
 
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {

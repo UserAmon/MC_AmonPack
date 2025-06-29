@@ -9,8 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import AvatarSystems.ForestMenager;
-import AvatarSystems.PlayerLevelMenager;
-import AvatarSystems.Util_Objects.LevelSkill;
+import AvatarSystems.Levels.Levels_Bending;
+import AvatarSystems.Levels.PlayerLevelMenager;
 import Mechanics.Listeners;
 import Mechanics.MMORPG.GuiMenu;
 import Mechanics.MMORPG.Puzzle;
@@ -28,7 +28,6 @@ import com.projectkorra.projectkorra.storage.SQLite;
 import commands.*;
 import methods_plugins.Abilities.AbilitiesListener;
 import methods_plugins.Abilities.BladesAbility;
-import methods_plugins.Abilities.SoundAbility;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -48,7 +47,6 @@ import static methods_plugins.Abilities.SoundAbility.StartDeafnessTimer;
 public class AmonPackPlugin extends JavaPlugin {
 	public static Plugin plugin;
 	JavaPlugin jp = this;
-	public static boolean MiningAndGatheringOn;
 	public static boolean BuildingOnArenas;
 	public static boolean PvPEnabled;
 	public static SQLite sqlite;
@@ -65,7 +63,6 @@ public class AmonPackPlugin extends JavaPlugin {
 	static File SkillTreeFile;
 	static File GuiFile;
 	private static PlayerLevelMenager PlayerMenager;
-	//static File WaveFile;
 	private static FileConfiguration newConfigz;
 	private static List<FileConfiguration> MenagerieConfig = new ArrayList<>();
 	private static FileConfiguration PvPConfig;
@@ -76,20 +73,19 @@ public class AmonPackPlugin extends JavaPlugin {
 	private static FileConfiguration SkillTreeConfig;
 	private static FileConfiguration GuiConfig;
 	private static MenagerieMenager MenaMenager;
-	//private static FileConfiguration WaveConfig;
 	private static NamespacedKey upgradeKey;
 	static File configpath;
+	public static Levels_Bending levelsBending;
 
 
     @Override
     public void onEnable() {
-		MiningAndGatheringOn = true;
 		BuildingOnArenas = false;
 		PvPEnabled = true;
     	plugin = this;
         getLogger().info("AmonPack włączony");
         CoreAbility.registerPluginAbilities(jp, "abilities");
-        BladesElement = new SubElement("Blades", Element.CHI, ElementType.BLOCKING, this);
+        //BladesElement = new SubElement("Blades", Element.CHI, ElementType.BLOCKING, this);
         SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
 		createconf();
 		PvPFile = new File(getDataFolder(), "PvPConfig.yml");
@@ -123,20 +119,17 @@ public class AmonPackPlugin extends JavaPlugin {
 		saveDungeonConfig();
 		SimpleWorldGenerator.loadAllWorlds();
 		saveMinesConfig();
-        BladesAbility.CreateSwords();
+		levelsBending=new Levels_Bending();
 		new QuestItems();
 		upgradeKey = new NamespacedKey(this, "playerUpgrade");
         this.getCommand("MinGathOn").setExecutor(new Commands());
         this.getCommand("MinGathOff").setExecutor(new Commands());
         this.getCommand("QuestItems").setExecutor(new Commands());
-        this.getCommand("Skills").setExecutor(new Commands());
         this.getCommand("Level").setExecutor(new Commands());
         this.getCommand("puzzle").setExecutor(new Puzzle());
-        this.getCommand("Pomoc").setExecutor(new Commands());
 		this.getCommand("ArenaBuilding").setExecutor(new Commands());
 		this.getCommand("Menagerie").setExecutor(new Commands());
 		this.getCommand("Menagerie").setTabCompleter(new CommandsTabMenager());
-		this.getCommand("SpellTree").setExecutor(new Commands());
 		this.getCommand("ArenaBuilding").setTabCompleter(new CommandsTabMenager());
 		this.getCommand("PvP").setExecutor(new Commands());
 		this.getCommand("Reload").setExecutor(new Commands());
@@ -178,15 +171,6 @@ public class AmonPackPlugin extends JavaPlugin {
     public static SQLite mysqllite() {
 		return sqlite;
     }
-
-    public static void off() {
-		MiningAndGatheringOn = false;
-		plugin.getLogger().info("Off");
-    }
-	public static void on() {
-		MiningAndGatheringOn = true;
-		plugin.getLogger().info("On");
-	}
 	public static void BuildingOff() {
 		BuildingOnArenas = false;
 	}
@@ -201,7 +185,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		PvPEnabled = true;
 		plugin.getLogger().info("PvP-On");
 	}
-
 	public static void savePvPConfig(){
 			try{
 				if (!getPvPConfig().contains("AmonPack")) {
@@ -269,7 +252,6 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 
 	}
-
 	public static void SaveConfigs(){
 		try{
 			if (!AbilitiesConfig.contains("AmonPack")) {
@@ -292,8 +274,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		}catch(Exception e){
 			System.out.println("Błąd z konfigiem! "+e.getMessage());
 		}}
-
-
 	public static void saveMinesConfig(){
 		try{
 			if (!getMinesConfig().contains("AmonPack")) {
@@ -330,7 +310,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		}catch(Exception e){
 			e.printStackTrace();
 		}}
-
 	public static void saveDungeonConfig() {
 		try {
 			FileConfiguration config = GetMenagerieConfig().get(0);
@@ -433,48 +412,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 	}
 
-/*
-	public static void SaveWaveDefender(){
-		try{
-			if (!getWaveConfig().contains("WaveDefender")) {
-			getWaveConfig().set("WaveDefender.WaveDefender_1.SpawnX", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.SpawnY", 64);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.SpawnZ", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.World", "Wave");
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Rollback", "say testwave");
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Range", 100);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.StartHP", 15);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.RestTimer", 7);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.DefendRadius", 3);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.1.AttackFromX", 9);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.1.AttackFromY", 64);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.1.AttackFromZ", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.1.MobTypes", new HashMap<String, Integer>(){{put("TestMob",1);}});
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.1.ExtraMobs", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.AttackFromX", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.AttackFromY", 64);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.AttackFromZ", -9);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.MobTypes", new HashMap<String, Integer>(){{put("TestMob",1);}});
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.FriendlyMobTypes", new HashMap<String, Integer>(){{put("FabulaBandytaMagWody",1);}});
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.AllowedEntityTypes", List.of("ZOMBIE"));
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.ExtraMobs", 1);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.2.SpawnOffset", 1);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.1.AttackFromX", 9);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.1.AttackFromY", 64);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.1.AttackFromZ", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.1.MobTypes", new HashMap<String, Integer>(){{put("TestMob",2);}});
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.1.ExtraMobs", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.2.AttackFromX", 0);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.2.AttackFromY", 64);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.2.AttackFromZ", -9);
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.2.MobTypes", new HashMap<String, Integer>(){{put("TestMob",1);}});
-			getWaveConfig().set("WaveDefender.WaveDefender_1.Waves.3.2.ExtraMobs", 2);
-			}
-			getWaveConfig().save(WaveFile);
-		}catch(Exception e){
-			e.printStackTrace();
-		}}
-*/
 	public static void saveGuiConfig(){
 		try{
 			if (!getGuiConfig().contains("AmonPack")) {
@@ -644,6 +581,15 @@ public class AmonPackPlugin extends JavaPlugin {
     	if (sqlite.open() != null) {
     		getLogger().info("Baza danych połączona!");
     	}
+		ExecuteQuery("CREATE TABLE IF NOT EXISTS BendingTree (Player VARCHAR(50) PRIMARY KEY," +
+				" AirPoints INT," +
+				" FirePoints INT," +
+				" WaterPoints INT," +
+				" EarthPoints INT," +
+				" UnlockedAbilities TEXT," +
+				" CurrentElement TEXT," +
+				" AllElements TEXT" +
+				")");
 		ExecuteQuery("CREATE TABLE IF NOT EXISTS SpellTree (Player VARCHAR(50) PRIMARY KEY, SkillPoint INT, Path TEXT, Element TEXT, AllElements TEXT)");
 		ExecuteQuery("CREATE TABLE IF NOT EXISTS Reputation (Player VARCHAR(50) PRIMARY KEY, RepLvL1 INT, RepLvL2 INT, RepLvL3 INT, RepLvL4 INT, RepLvL5 INT, RepLvL6 INT, RepLvL7 INT)");
 		ExecuteQuery("CREATE TABLE IF NOT EXISTS Jobs (Player VARCHAR(50) PRIMARY KEY, Job1 INT, Job2 INT, Job3 INT, Job4 INT)");
@@ -863,6 +809,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		// = YamlConfiguration.loadConfiguration(new File(configpath, "PvPConfig.yml"));
 		MenaMenager.ReloadMenageries();
 		ForestMenager.LoadData();
+		levelsBending.LoadData();
 		System.out.println("koniec test reload");
 	}
 

@@ -1,13 +1,10 @@
 package AvatarSystems.Util_Objects;
 
-import AvatarSystems.PlayerLevelMenager;
-import commands.Commands;
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import methods_plugins.AmonPackPlugin;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;

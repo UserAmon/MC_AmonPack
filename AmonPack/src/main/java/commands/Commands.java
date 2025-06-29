@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+import AvatarSystems.Levels.PlayerBendingBranch;
 import AvatarSystems.Util_Objects.LevelSkill;
 import Mechanics.MMORPG.GuiMenu;
 import Mechanics.MMORPG.ReputationMenager;
@@ -19,6 +20,7 @@ import Mechanics.Skills.BendingGuiMenu;
 import Mechanics.Skills.JobsMenager;
 import UtilObjects.Skills.PlayerSkillTree;
 import com.projectkorra.projectkorra.BendingPlayer;
+import com.projectkorra.projectkorra.Element;
 import methods_plugins.AmonPackPlugin;
 import org.bukkit.*;
 import org.bukkit.command.Command;
@@ -39,6 +41,38 @@ public class Commands implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 		switch (cmd.getName().toLowerCase()) {
 			case "level":
+				if(args!=null && args.length == 4 && args[0].equalsIgnoreCase("magic")) {
+					try {
+					Player p = Bukkit.getPlayer(args[1]);
+					PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+					if(branch!=null){
+						//magic amon set fire -> ustawia na fire
+						//magic amon 5 fire -> daje 5 points fire
+						//magic amon 5 all -> daje 5 points wszystkim zywiolom
+						if(args[2].equalsIgnoreCase("Set")){
+							branch.SetCurrentElement(Element.getElement(args[3]));
+						}else{
+							int points = Integer.parseInt(args[2]);
+						if(args[3].equalsIgnoreCase("All")){
+							branch.AddAllPoints(points);
+						}else{
+							Element element = Element.getElement(args[3]);
+							branch.AddPoints(element,points);
+						}}
+					}else{
+						//magic amon 5 fire -> tworzy branch, zapisuje, ustawia element, dodaje do tego elementu punkty
+						int points = Integer.parseInt(args[2]);
+						List<Element> elements = new ArrayList<>();
+						List<String> abilities = new ArrayList<>();
+						elements.add(Element.getElement(args[3]));
+						branch=new PlayerBendingBranch(0,Element.getElement(args[3]),0,elements,0,p.getName(),abilities,0);
+						AmonPackPlugin.levelsBending.AddNewBranch(branch);
+						AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName()).AddPoints(Element.getElement(args[3]),points);
+					}
+					}catch (Exception e){
+						System.out.println("Error in Level magic command "+e.getMessage());
+					}
+				}else
 				if(args.length!=0 && args[0].equalsIgnoreCase("add")) {
 					try {
 						LevelSkill.SkillType type=  LevelSkill.SkillType.valueOf(args[1]);
@@ -55,71 +89,9 @@ public class Commands implements CommandExecutor {
 				}
 				break;
 		}
-		/*if(cmd.getName().equalsIgnoreCase("Dungeon")) {
-				List<Player> PList = new ArrayList<>();
-			PList.add((Player) sender);
-				for (String playerName : args) {
-					Player targetPlayer = Bukkit.getServer().getPlayer(playerName);
-					if (targetPlayer != null) {
-						PList.add(targetPlayer);
-					}}
-				try {
-					Dungeons.StartDungeon(PList, args[0]);
-				} catch (CloneNotSupportedException e) {
-					e.printStackTrace();
-			}}*/
 		if (sender instanceof Player) {
-			BendingPlayer bPlayer = BendingPlayer.getBendingPlayer((OfflinePlayer) sender);
 			Player player = (Player) sender;
 			switch (cmd.getName().toLowerCase()) {
-				case "spelltree":
-					PlayerSkillTree NPST = new PlayerSkillTree(player.getName(),10,"","","Fire");
-					BendingGuiMenu.AllPlayersSkillTrees.add(NPST);
-					break;
-					/*
-				case "woda":
-					if (bPlayer.hasElement(Element.WATER)) {
-						PGrowth.OpenBendingGui((Player) sender, Element.WATER);
-					} else {
-						sender.sendMessage(ChatColor.RED + "Nie masz dostępu do tego żywiołu!");
-					}
-					break;
-				case "ogien":
-					if (bPlayer.hasElement(Element.FIRE)) {
-						PGrowth.OpenBendingGui((Player) sender, Element.FIRE);
-					} else {
-						sender.sendMessage(ChatColor.RED + "Nie masz dostępu do tego żywiołu!");
-					}
-					break;
-				case "ziemia":
-					if (bPlayer.hasElement(Element.EARTH)) {
-						PGrowth.OpenBendingGui((Player) sender, Element.EARTH);
-					} else {
-						sender.sendMessage(ChatColor.RED + "Nie masz dostępu do tego żywiołu!");
-					}
-					break;
-				case "powietrze":
-					if (bPlayer.hasElement(Element.AIR)) {
-						PGrowth.OpenBendingGui((Player) sender, Element.AIR);
-					} else {
-						sender.sendMessage(ChatColor.RED + "Nie masz dostępu do tego żywiołu!");
-					}
-					break;
-				case "ava":
-					if (args.length == 2 && args[0].equalsIgnoreCase("bind")) {
-						bPlayer.bindAbility(args[1]);
-					}
-					break;
-					*/
-				case "skills":
-					BendingGuiMenu.OpenGeneralBendingMenu(player);
-					break;
-				case "itemy":
-					GuiMenu.OItemGui((Player) sender);
-					break;
-				case "pomoc":
-					GuiMenu.OHelpGui((Player) sender);
-					break;
 				case "reload":
 					AmonPackPlugin.reloadAllConfigs();
 					break;
@@ -137,43 +109,6 @@ public class Commands implements CommandExecutor {
 					}
 					MenagerieMenager.StartMenagerie(listofplayers,args[0]);
 					break;
-				case "jobs":
-					if (args[0].equalsIgnoreCase("show")) {
-						JobsMenager.ShowPlayerData(player);
-					}
-					if (args[0].equalsIgnoreCase("add")) {
-						if(args[2]==null){
-							player.sendMessage("Error with command!!!");
-						}else{
-						int i1 = Integer.parseInt(args[1]);
-						int i2 = Integer.parseInt(args[2]);
-						try {
-							JobsMenager.AddPoints(player.getName(),i1,i2);
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-					}
-					}
-					break;
-				case "scbadder":
-					BoardManager BM = new BoardManager();
-					if (args[0].equalsIgnoreCase("remove")) {
-						BM.removeTopRows(player);
-					}else{
-						int numRows = Integer.parseInt(args[0]);
-						StringBuilder text = new StringBuilder();
-						for (int i = 1; i < args.length; i++) {
-							text.append(args[i]).append(" ");
-						}
-						BM.addRowsWithoutremove(player, String.valueOf(text), numRows);
-					}
-					break;
-				case "goworld":
-					if (args.length==1){
-						SimpleWorldGenerator.createAndSaveTemporaryWorld(player,args[0], "",null);
-					}else {
-						SimpleWorldGenerator.createAndSaveTemporaryWorld(player,args[0], args[1],null);
-					}
 				case "arenabuilding":
 					if (args[0].equalsIgnoreCase("On")){
 						AmonPackPlugin.BuildingOn();
@@ -182,15 +117,6 @@ public class Commands implements CommandExecutor {
 						AmonPackPlugin.BuildingOff();
 						player.sendMessage(ChatColor.RED+"Nie Można Budować");
 					}
-					break;
-				case "reputation":
-					ReputationMenager.OpenRepGui((Player) sender);
-					break;
-				case "mingathoff":
-					AmonPackPlugin.off();
-					break;
-				case "mingathon":
-					AmonPackPlugin.on();
 					break;
 			}
 		}else{
@@ -250,88 +176,6 @@ public class Commands implements CommandExecutor {
 			}
 		}
 
-
-		/*
-		if(cmd.getName().equalsIgnoreCase("FallChest")) {
-			if (sender instanceof Player) {
-				Player p = (Player) sender;
-				if (args[0].equalsIgnoreCase("Multibend")){
-					Multibend = true;
-				}
-				if (args[0].equalsIgnoreCase("Semibend")){
-					Multibend = false;
-				}
-				if (args[0].equalsIgnoreCase("On")){
-					AmonPackPlugin.PvPon();
-				}else if (args[0].equalsIgnoreCase("Off")){
-					AmonPackPlugin.PvPoff();
-				}else if (args[0].equalsIgnoreCase("Fall")){
-					PvP.Fall();
-				}else
-				if (args[0].equalsIgnoreCase("Event")){
-					PvP.ActEvent = "";
-					Bukkit.getScheduler().cancelTask(taskId);
-					if (args[1].equalsIgnoreCase("Boss")){
-						PvP.RaidBoss();
-						PvP.ActEvent = "Boss";
-					}else if (args[1].equalsIgnoreCase("Loot")){
-						for (Player player : Bukkit.getOnlinePlayers()) {
-							player.sendMessage(ChatColor.DARK_PURPLE+"Król **** **** dostrzegł wasze dokonania. Radujcie się jego darami!");
-							player.sendMessage(ChatColor.DARK_PURPLE+"Zwiększony loot, spada więcej skrzyń, szybkość dla każdego!!");
-						}
-						PvP.LootCounter = 2;
-						PvP.ActEvent = "Loot";
-						GlobalPotions(PotionEffectType.SPEED);
-					}else if (args[1].equalsIgnoreCase("Zar")){
-						for (Player player : Bukkit.getOnlinePlayers()) {
-							player.sendMessage(ChatColor.DARK_PURPLE+"Żar leje się z nieba, trzymaj się blisko wody!");
-						}
-						PvP.ClimateChange(PvP.WMats, PotionEffectType.CONFUSION, 8);
-						PvP.ActEvent = "Zar";
-					}else if (args[1].equalsIgnoreCase("Chlod")){
-						for (Player player : Bukkit.getOnlinePlayers()) {
-							player.sendMessage(ChatColor.DARK_PURPLE+"Nadciągają chłody, trzymaj się blisko ognia!");
-						}
-						PvP.ClimateChange(PvP.FMats, PotionEffectType.SLOW, 3);
-						PvP.ActEvent = "Chlod";
-					}else if (args[1].equalsIgnoreCase("Mapa")){
-						PvP.MapRollBack();
-					}else {
-						PvP.RandomSpawner();
-					}
-				}else
-				if (args[0].equalsIgnoreCase("RTP")){
-					p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1));
-					if (args[1].equalsIgnoreCase("1")){
-						p.teleport(PvP.RTPPvP1());
-					}
-					if (args[1].equalsIgnoreCase("2")){
-						p.teleport(PvP.RTP());
-					}
-					if (!p.getInventory().contains(Material.COMPASS)){
-						p.getInventory().addItem(new ItemStack(Material.COMPASS));
-					}
-					sendTitleMessage(p,ChatColor.DARK_PURPLE + "Losowy Teleport!", ChatColor.YELLOW + "", 20,40,20);
-				}else{
-					System.out.println("Błąd komendy");
-				}
-			}else if (args[0].equalsIgnoreCase("RTP")){
-				Player p = Bukkit.getPlayer(args[2]);
-				if (p!=null){
-				p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1));
-				if (args[1].equalsIgnoreCase("1")){
-					p.teleport(PvP.RTPPvP1());
-				}
-				if (args[1].equalsIgnoreCase("2")){
-					p.teleport(PvP.RTP());
-				}
-				if (!p.getInventory().contains(Material.COMPASS)){
-					p.getInventory().addItem(new ItemStack(Material.COMPASS));
-				}
-				sendTitleMessage(p,ChatColor.DARK_PURPLE + "Losowy Teleport!", ChatColor.YELLOW + "", 20,40,20);
-			}}
-
-		}*/
 	    if(cmd.getName().equalsIgnoreCase("QuestItems")) {
     		if (sender instanceof Player) {
        		 	Player player = (Player) sender;
@@ -362,9 +206,6 @@ public class Commands implements CommandExecutor {
 				QuestItem.setItemMeta(QuestItemMeta);
        			player.getInventory().addItem(QuestItem);
        		}}
-			//player.getInventory().addItem(Kopalnie.PickaxeTier1);
-			//player.getInventory().addItem(Kopalnie.PickaxeTier2);
-			player.getInventory().addItem(Mining.PickaxeTier3);
        	 } else {
              System.out.println("QuestItems");
            }

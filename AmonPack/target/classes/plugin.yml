@@ -9,22 +9,11 @@ commands:
   QuestItems:
     description: QuestItems
     usage: /<command>
-  Skills:
-    description: choose yours spells
-    usage: /<command>
   Puzzle:
-    usage: /<command>
-  MinGathOff:
-    usage: /<command>
-  MinGathOn:
-    usage: /<command>
-  Pomoc:
     usage: /<command>
   ArenaBuilding:
     usage: /<command>
   Menagerie:
-    usage: /<command>
-  SpellTree:
     usage: /<command>
   PvP:
     usage: /<command>

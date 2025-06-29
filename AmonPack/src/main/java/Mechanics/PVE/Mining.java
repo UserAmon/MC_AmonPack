@@ -1,12 +1,11 @@
 package Mechanics.PVE;
 
-import AvatarSystems.PlayerLevelMenager;
+import AvatarSystems.Levels.PlayerLevelMenager;
 import AvatarSystems.Util_Objects.LevelSkill;
 import UtilObjects.PVE.Mine;
 import com.projectkorra.projectkorra.util.TempBlock;
 import commands.Commands;
 import methods_plugins.AmonPackPlugin;
-import methods_plugins.Methods;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;

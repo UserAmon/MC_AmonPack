@@ -1,4 +1,4 @@
-package AvatarSystems;
+package AvatarSystems.Levels;
 
 import AvatarSystems.Util_Objects.InventoryXHolder;
 import AvatarSystems.Util_Objects.LevelSkill;
@@ -34,6 +34,9 @@ public class PlayerLevelMenager {
     public static List<PlayerLevel> AllPlayerLevels;
     public static InventoryXHolder Holder1;
     public static InventoryXHolder SkillDetails;
+    public static InventoryXHolder BendingSkillMenu;
+    public static InventoryXHolder BendingSkillTree;
+    public static InventoryXHolder BindingAbilitiesMenu;
     public static List<LevelSkill.SkillType> EnabledSkillTypes;
 
     public PlayerLevelMenager() throws SQLException {
@@ -373,6 +376,9 @@ public class PlayerLevelMenager {
     public void CreateInventories(){
         Holder1=new InventoryXHolder(54,"");
         SkillDetails=new InventoryXHolder(36,"");
+        BendingSkillMenu=new InventoryXHolder(54,"");
+        BendingSkillTree=new InventoryXHolder(54,"");
+        BindingAbilitiesMenu=new InventoryXHolder(18,"");
     }
     private void LoadPlayersFromDatabase()throws SQLException {
         Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
