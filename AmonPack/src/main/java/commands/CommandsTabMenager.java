@@ -1,4 +1,5 @@
 package commands;
+/*
 import Mechanics.PVE.Menagerie.Menagerie;
 import Mechanics.PVE.Menagerie.MenagerieMenager;
 import org.bukkit.command.Command;
@@ -12,7 +13,7 @@ import java.util.List;
 
 
 public class CommandsTabMenager implements TabCompleter {
-    @Override
+    /*@Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (sender instanceof  Player){
             Player player = (Player) sender;
@@ -95,7 +96,7 @@ public class CommandsTabMenager implements TabCompleter {
                         }
                         return suggestions;
                     }
-                    break;*/
+                    break;
                 case "ava":
                     if (args.length == 1) {
                         List<String> suggestions = new ArrayList<>();
@@ -120,7 +121,7 @@ public class CommandsTabMenager implements TabCompleter {
                                         suggestions.add(sto.getName());
                                     }}}
                         }*/
-                        return suggestions;
+                        /*return suggestions;
                     }
                     break;
                 case "arenabuilding":
@@ -144,4 +145,4 @@ public class CommandsTabMenager implements TabCompleter {
         }
         return new ArrayList<>();
     }
-}
+}*/

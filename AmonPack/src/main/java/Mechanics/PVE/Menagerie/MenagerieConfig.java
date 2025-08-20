@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class MenagerieConfig {
-    FileConfiguration configdefault= AmonPackPlugin.getNewConfigz();
     public MenagerieConfig(){
     }
 
@@ -106,10 +105,7 @@ public class MenagerieConfig {
 
                 boolean havecompass = config.getString("Menagerie." + MenagerieName + ".HaveCompass") == null;
                 Location center=new Location(Bukkit.getWorld(BaseWorld),CenterX.get(0),CenterX.get(1),CenterX.get(2));
-                Double X = configdefault.getDouble("AmonPack.Spawn.X");
-                Double Y = configdefault.getDouble("AmonPack.Spawn.Y");
-                Double Z = configdefault.getDouble("AmonPack.Spawn.Z");
-                Location ned = new Location(null,X,Y,Z);
+                Location ned = new Location(null,1,1000,1);
                 Menagerie menagerie = new Menagerie(MenagerieName,center,ned,LastEncounter,havecompass,RangeX,RangeZ,ListOfEncounters);
                 if(config.getString("Menagerie."+MenagerieName+".Return_World_Name")!=null){
                     String ReturnWorld = config.getString("Menagerie."+MenagerieName+".Return_World_Name");
@@ -209,10 +205,7 @@ public class MenagerieConfig {
 
                         boolean havecompass = config.getString("Menagerie." + MenagerieName + ".HaveCompass") == null;
                         Location center=new Location(Bukkit.getWorld(BaseWorld),CenterX.get(0),CenterX.get(1),CenterX.get(2));
-                        Double X = configdefault.getDouble("AmonPack.Spawn.X");
-                        Double Y = configdefault.getDouble("AmonPack.Spawn.Y");
-                        Double Z = configdefault.getDouble("AmonPack.Spawn.Z");
-                        Location ned = new Location(null,X,Y,Z);
+                        Location ned = new Location(null,1,100,1);
                         Menagerie menagerie = new Menagerie(MenagerieName,center,ned,LastEncounter,havecompass,RangeX,RangeZ,ListOfEncounters);
                         if(config.getString("Menagerie."+MenagerieName+".Return_World_Name")!=null){
                             String ReturnWorld = config.getString("Menagerie."+MenagerieName+".Return_World_Name");

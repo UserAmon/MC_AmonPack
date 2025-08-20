@@ -1,29 +1,19 @@
 package Mechanics.PVE.Menagerie;
 
-import methods_plugins.AmonPackPlugin;
-import Mechanics.PVE.Menagerie.Objectives.Enemy;
-import Mechanics.PVE.Menagerie.Objectives.ObjectiveConditions;
-import Mechanics.PVE.Menagerie.Objectives.ObjectiveEffect;
-import Mechanics.PVE.Menagerie.Objectives.Objectives;
-import Mechanics.Skills.BendingGuiMenu;
 import org.bukkit.*;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class MenagerieMenager {
     public static List<Menagerie> ListOfAllMenageries;
     static MenagerieConfig mc = new MenagerieConfig();
     public MenagerieMenager() {
-        ReloadMenageries();
+        //ReloadMenageries();
     }
     public void ReloadMenageries(){
         ListOfAllMenageries = new ArrayList<>();

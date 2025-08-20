@@ -1,5 +1,5 @@
 package AvatarSystems.Util_Objects;
-
+/*
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import methods_plugins.AmonPackPlugin;
@@ -183,3 +183,4 @@ public class Forest {
     }
 }
 
+*/

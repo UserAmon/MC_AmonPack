@@ -6,16 +6,11 @@ authors: [ Amon ]
 depend: ['ProjectKorra']
 description: 'Plugin made for Avatarserv'
 commands:
-  QuestItems:
-    description: QuestItems
-    usage: /<command>
   Puzzle:
     usage: /<command>
   ArenaBuilding:
     usage: /<command>
   Menagerie:
-    usage: /<command>
-  PvP:
     usage: /<command>
   Level:
     usage: /<command>

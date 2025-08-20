@@ -11,16 +11,19 @@ import javax.swing.text.html.parser.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import static methods_plugins.AmonPackPlugin.FastEasyStack;
+import static methods_plugins.AmonPackPlugin.FastEasyStackWithLore;
+
 public class UpgradesMenager {
 
     public static List<Upgrades>MenagerieUpgradesList = new ArrayList<>();
-    public static ItemStack SpiritOrb=BendingGuiMenu.FastEasyStack(Material.BUDDING_AMETHYST,ChatColor.LIGHT_PURPLE+"Duchowa Kula");
-    public static ItemStack SpiritBlade=BendingGuiMenu.FastEasyStack(Material.GOLDEN_SWORD,ChatColor.LIGHT_PURPLE+"Duchowa Ostrze");
-    public static ItemStack SpiritShield=BendingGuiMenu.FastEasyStack(Material.SHIELD,ChatColor.DARK_PURPLE+"Duchowa Tarcza");
+    public static ItemStack SpiritOrb=FastEasyStack(Material.BUDDING_AMETHYST,ChatColor.LIGHT_PURPLE+"Duchowa Kula");
+    public static ItemStack SpiritBlade=FastEasyStack(Material.GOLDEN_SWORD,ChatColor.LIGHT_PURPLE+"Duchowa Ostrze");
+    public static ItemStack SpiritShield=FastEasyStack(Material.SHIELD,ChatColor.DARK_PURPLE+"Duchowa Tarcza");
 
 
-    public static ItemStack MoonBlade=BendingGuiMenu.FastEasyStack(Material.STONE_SWORD,ChatColor.DARK_PURPLE+"Ostrze Księżyca");
-    public static ItemStack MoonBow=BendingGuiMenu.FastEasyStack(Material.BOW,ChatColor.DARK_PURPLE+"Łuk Księżyca");
+    public static ItemStack MoonBlade=FastEasyStack(Material.STONE_SWORD,ChatColor.DARK_PURPLE+"Ostrze Księżyca");
+    public static ItemStack MoonBow=FastEasyStack(Material.BOW,ChatColor.DARK_PURPLE+"Łuk Księżyca");
     public UpgradesMenager(){
 
 
@@ -61,16 +64,16 @@ public class UpgradesMenager {
         Lore9.add(ChatColor.GOLD+"Ostrze Księżyca");
 
 
-        ItemStack item1 =BendingGuiMenu.FastEasyStackWithLore(Material.COBWEB, Element.AIR.getColor()+"AirSwipe",Lore3);
-        ItemStack item2 =BendingGuiMenu.FastEasyStackWithLore(Material.COBWEB, Element.AIR.getColor()+"AirSwipe 2",Lore2);
-        ItemStack item3 =BendingGuiMenu.FastEasyStackWithLore(Material.WATER_BUCKET, Element.WATER.getColor()+"Torrent",Lore3);
-        ItemStack item4 =BendingGuiMenu.FastEasyStackWithLore(Material.AMETHYST_BLOCK, Element.AVATAR.getColor()+"Duchowe Kule - Kill",Lore4);
-        ItemStack item5 =BendingGuiMenu.FastEasyStackWithLore(Material.AMETHYST_BLOCK, Element.AVATAR.getColor()+"Duchowe Kule - Dmg",Lore5);
-        ItemStack item6 =BendingGuiMenu.FastEasyStackWithLore(Material.BLAZE_POWDER, Element.FIRE.getColor()+"Zapłon",Lore6);
-        ItemStack item7 =BendingGuiMenu.FastEasyStackWithLore(Material.GOLDEN_CHESTPLATE, Element.EARTH.getColor()+"Osłona",Lore7);
-        ItemStack item11 =BendingGuiMenu.FastEasyStackWithLore(Material.BLUE_ICE, Element.WATER.getColor()+"IceArch",Lore3);
-        ItemStack item8 =BendingGuiMenu.FastEasyStackWithLore(Material.WOODEN_SWORD, Element.CHI.getColor()+"Obrażenia",Lore8);
-        ItemStack item9 =BendingGuiMenu.FastEasyStackWithLore(Material.WOODEN_SWORD, Element.CHI.getColor()+"Ostrze Księżyca",Lore9);
+        ItemStack item1 =FastEasyStackWithLore(Material.COBWEB, Element.AIR.getColor()+"AirSwipe",Lore3);
+        ItemStack item2 =FastEasyStackWithLore(Material.COBWEB, Element.AIR.getColor()+"AirSwipe 2",Lore2);
+        ItemStack item3 =FastEasyStackWithLore(Material.WATER_BUCKET, Element.WATER.getColor()+"Torrent",Lore3);
+        ItemStack item4 =FastEasyStackWithLore(Material.AMETHYST_BLOCK, Element.AVATAR.getColor()+"Duchowe Kule - Kill",Lore4);
+        ItemStack item5 =FastEasyStackWithLore(Material.AMETHYST_BLOCK, Element.AVATAR.getColor()+"Duchowe Kule - Dmg",Lore5);
+        ItemStack item6 =FastEasyStackWithLore(Material.BLAZE_POWDER, Element.FIRE.getColor()+"Zapłon",Lore6);
+        ItemStack item7 =FastEasyStackWithLore(Material.GOLDEN_CHESTPLATE, Element.EARTH.getColor()+"Osłona",Lore7);
+        ItemStack item11 =FastEasyStackWithLore(Material.BLUE_ICE, Element.WATER.getColor()+"IceArch",Lore3);
+        ItemStack item8 =FastEasyStackWithLore(Material.WOODEN_SWORD, Element.CHI.getColor()+"Obrażenia",Lore8);
+        ItemStack item9 =FastEasyStackWithLore(Material.WOODEN_SWORD, Element.CHI.getColor()+"Ostrze Księżyca",Lore9);
 
         Upgrades AirSwipe1 = new Upgrades("AirSwipe1","AirSwipe" ,10.0,item1);
         Upgrades AirSwipe2 = new Upgrades("AirSwipe2","AirSwipe" ,40.0,ListOfValues,item2);

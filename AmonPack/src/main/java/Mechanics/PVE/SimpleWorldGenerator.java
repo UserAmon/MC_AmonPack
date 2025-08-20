@@ -67,16 +67,16 @@ public class SimpleWorldGenerator extends ChunkGenerator {
     }
 
     public static void loadAllWorlds() {
-        String world = AmonPackPlugin.getPvPConfig().getString("AmonPack.PvP.Loc.World");
-        loadExistingWorld(world);
-        for(String key : Objects.requireNonNull(AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Mining")).getKeys(false)) {
+        //String world = AmonPackPlugin.getPvPConfig().getString("AmonPack.PvP.Loc.World");
+        //loadExistingWorld(world);
+        /*for(String key : Objects.requireNonNull(AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Mining")).getKeys(false)) {
             String World = AmonPackPlugin.getMinesConfig().getString("AmonPack.Mining." + key + ".World");
             loadExistingWorld(World);
-        }
-        for(String key : Objects.requireNonNull(AmonPackPlugin.getForestConfig().getConfigurationSection("AmonPack.Forest")).getKeys(false)) {
-            String World = AmonPackPlugin.getForestConfig().getString("AmonPack.Forest." + key + ".World");
-            loadExistingWorld(World);
-        }
+        }*/
+        //for(String key : Objects.requireNonNull(AmonPackPlugin.getForestConfig().getConfigurationSection("AmonPack.Forest")).getKeys(false)) {
+         //   String World = AmonPackPlugin.getForestConfig().getString("AmonPack.Forest." + key + ".World");
+         //   loadExistingWorld(World);
+        //}
         File baseFolder = new File(Bukkit.getWorldContainer(), "MultiWorlds");
         if (baseFolder.exists() && baseFolder.isDirectory()) {
             for (File folder : baseFolder.listFiles()) {

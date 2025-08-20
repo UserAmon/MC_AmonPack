@@ -1,36 +1,28 @@
 package Mechanics;
 
-import AvatarSystems.ForestMenager;
+//import AvatarSystems.ForestMenager;
+import AvatarSystems.Gathering.CombatMenager;
+import AvatarSystems.Gathering.FarmMenager;
+import AvatarSystems.Gathering.ForestMenager;
+import AvatarSystems.Gathering.MiningMenager;
 import AvatarSystems.Levels.ElementTree;
 import AvatarSystems.Levels.PlayerBendingBranch;
 import AvatarSystems.Levels.PlayerLevelMenager;
-import AvatarSystems.Util_Objects.Forest;
+//import AvatarSystems.Util_Objects.Forest;
+import AvatarSystems.Perks.Objects.Perk;
+import AvatarSystems.Perks.PerksMenager;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
-import Mechanics.PVE.Menagerie.Menagerie;
-import Mechanics.PVE.Menagerie.Objectives.Objectives;
-import Mechanics.PVE.Mining;
-import Mechanics.PVP.newPvP;
-import Mechanics.Skills.BendingGuiMenu;
-import Mechanics.Skills.UpgradesMenager;
-import UtilObjects.PVE.BowAbility;
-import UtilObjects.PVE.Mine;
-import UtilObjects.PVP.FallingChest;
-import UtilObjects.Skills.PlayerSkillTree;
+//import Mechanics.PVP.newPvP;
 import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.Element;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
 import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
-import com.projectkorra.projectkorra.event.AbilityStartEvent;
-import com.projectkorra.projectkorra.event.PlayerCooldownChangeEvent;
-import com.projectkorra.projectkorra.firebending.util.FireDamageTimer;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
 import methods_plugins.Methods;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -41,25 +33,17 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.io.File;
-import java.sql.SQLException;
 import java.util.*;
 
-import static Mechanics.PVE.Menagerie.MenagerieMenager.ListOfAllMenageries;
-import static Mechanics.Skills.BendingGuiMenu.ChangeElement;
-import static Mechanics.Skills.UpgradesMenager.*;
+
+import static methods_plugins.AmonPackPlugin.ElementBasedOnSubElement;
 
 public class Listeners implements Listener {
+    /*
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
         Entity entity = event.getEntity();
@@ -108,9 +92,9 @@ public class Listeners implements Listener {
                 }
             }
             break;
-        }}*/
+        }}
     }
-    @EventHandler
+    /*@EventHandler
     public void OnMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if(newPvP.playerinzone(player.getLocation())){
@@ -121,7 +105,7 @@ public class Listeners implements Listener {
             int distance = (int) Math.round(player.getLocation().distance(nearestChestLocation));
             String message = "Najbliższa skrzynia znajduje się: " + distance + " Bloków stąd.";
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
-    }}}
+    }}}*/
         /*if (AmonPackPlugin.PvPEnabled){
             if (player.getWorld().equals(PvPLoc.getWorld())){
             if (playerinzone(PvPLoc,Radius,player.getLocation())){
@@ -168,19 +152,7 @@ public class Listeners implements Listener {
             }}
         }
     }*/
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        World mainWorld = Bukkit.getWorld("AvatarServGlownyNowy");
-        if (mainWorld != null) {
-            if(event.getPlayer().getLocation().getWorld()!=mainWorld){
-            Location spawnLocation = mainWorld.getSpawnLocation();
-            player.teleport(spawnLocation);
-        }}
-    }
-
-
+/*
     @EventHandler
     public void OnInteract(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK||event.getAction() == Action.RIGHT_CLICK_AIR) {
@@ -279,11 +251,11 @@ public class Listeners implements Listener {
                                     victim.damage(1);
                                 }
                             }}*/
-                    }}
+                    /*}}
                     break;
                 }}
 
-            if (!AmonPackPlugin.BuildingOnArenas) {
+            /*if (!AmonPackPlugin.BuildingOnArenas) {
                 Block block = event.getClickedBlock();
                 if(block !=null){
                 Forest forest = ForestMenager.GetForestByLocation(block.getLocation());
@@ -295,11 +267,30 @@ public class Listeners implements Listener {
                         forest.HandleForestInteract(player,block);
                         event.setCancelled(true);
                     }
-                }}}}
+                }}}*//*}
+    }*/
+
+    @EventHandler
+    public void onRightClick(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        Player player = event.getPlayer();
+        if(player.getGameMode().equals(GameMode.CREATIVE)){
+            return;
+        }
+        Block block = event.getClickedBlock();
+        FarmMenager.CheckFarmBlock(block,player,true);
     }
+
+
     @EventHandler
     public void BlockPlace(BlockPlaceEvent event) {
-        if (!AmonPackPlugin.BuildingOnArenas && event.getBlock().getWorld().equals(event.getPlayer().getWorld())){
+        Player player = event.getPlayer();
+        if(player.getGameMode().equals(GameMode.CREATIVE)){
+            return;
+        }
+        Block b = event.getBlock();
+        MiningMenager.PlayerPlaceBlock(player,b);
+        /*if (!AmonPackPlugin.BuildingOnArenas && event.getBlock().getWorld().equals(event.getPlayer().getWorld())){
             for (Mine mine:Mining.ListOfMines) {
                 if(event.getBlock().getWorld().equals(mine.getLoc().getWorld())&&event.getBlock().getLocation().distance(mine.getLoc())<= mine.getRadius()){
                     event.setCancelled(true);
@@ -310,12 +301,21 @@ public class Listeners implements Listener {
                     event.setCancelled(true);
                     break;
                 }}
-        }
+        }*/
     }
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        if(player.getGameMode().equals(GameMode.CREATIVE)){
+            return;
+        }
         Block b = event.getBlock();
-        if (event.getBlock().getWorld().equals(newPvP.Loc.getWorld())){
+        if(FarmMenager.CheckFarmBlock(b,player,false)
+                ||MiningMenager.PlayerBreakBlock(player,b)
+                || ForestMenager.PlayerBreakBlock(player,b)){
+            event.setCancelled(true);
+        }
+        /*if (event.getBlock().getWorld().equals(newPvP.Loc.getWorld())){
             if (b.getType() == Material.CHEST){
                 event.setCancelled(true);
             }}
@@ -325,29 +325,67 @@ public class Listeners implements Listener {
                     event.setCancelled(true);
                     break;
                 }}
-        }
+        }*/
     }
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        if(event.getEntity().getLocation().getWorld()==newPvP.Loc.getWorld()){
-            Location eventloc=event.getEntity().getLocation();
-            if(newPvP.playerinzone(eventloc)){
-                if (event.getEntity() instanceof Player) {
-                    Player killedPlayer = (Player) event.getEntity();
-                    if (killedPlayer.getKiller() != null) {
-                        Player killer = killedPlayer.getKiller();
-                        for (Player p : newPvP.PlayersInPvP()) {
-                            p.sendMessage(ChatColor.GREEN + killedPlayer.getName() + ChatColor.GREEN + " Został zabity przez Gracza: " + killer.getName());
-                        }
-                        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT,killer, 15,ChatColor.AQUA+"Zabójstwo gracza, Exp:");
-                    }}else{
-                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT,event.getEntity().getKiller(), 6,ChatColor.AQUA+"Zabójstwo, Exp:");
+        if(event.getEntity().getKiller() != null){
+        Player player = event.getEntity().getKiller();
+        if (player.getGameMode().equals(GameMode.CREATIVE)) {
+            return;
+        }
+            List<ItemStack> drops = new ArrayList<>(event.getDrops());
+         event.getDrops().clear();
+          for (ItemStack item : drops) {
+                HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(item);
+                for (ItemStack leftover : leftovers.values()) {
+                    player.getWorld().dropItemNaturally(player.getLocation(), leftover);
                 }
             }
+        Entity victim = event.getEntity();
+        CombatMenager.ExecuteKill(player,victim);
 
-        }else{
+           /* if(PerksMenager.PlayerConditionPerk(player,"TestowyPerk", Perk.PerkType.PASSIVE)) {
+                player.sendMessage("Pomyslnie perk TESTOWY wporowadzono!");
+            }
+            if(PerksMenager.PlayerConditionPerk(player,"MiningKill", Perk.PerkType.PASSIVE)) {
+                player.sendMessage("Pomyslnie perk MINING wporowadzono!");
+            }*/
 
+                if(PerksMenager.PlayerConditionPerk(player,"Combat_1_Explosion", Perk.PerkType.PASSIVE)){
+            Location location = victim.getLocation();
+            /*List<Entity> entities =
+                    (List<Entity>) Objects.requireNonNull(location.getWorld()).getNearbyEntities(location,5,5,5,
+                            (entity) -> {
+                                return !entity.isDead() && entity!=player&& (!(entity instanceof Player) || !((Player)entity).getGameMode().equals(GameMode.SPECTATOR)) || entity instanceof ArmorStand && ((ArmorStand)entity).isMarker();
+                            });*/
+                    Methods.spawnFallingBlocks(location,Material.DIRT,6,1.5,player);
+
+        }
+
+    }}
+
+
+    @EventHandler
+    public void onCropTrample(EntityInteractEvent event) {
+        if (event.getEntityType() != EntityType.PLAYER) return;
+        if(PerksMenager.PlayerConditionPerk((Player) event.getEntity(),"Farming_1_Jumping", Perk.PerkType.PASSIVE)){
+            Block block = event.getBlock();
+            if (block.getType() == Material.FARMLAND || block.getBlockData() instanceof Ageable) {
+                System.out.println("Zablokowano zniszczenie");
+                event.setCancelled(true);
+            }
+        }else {
+            Block block = event.getBlock();
+            if (block.getType() == Material.FARMLAND || block.getBlockData() instanceof Ageable) {
+                    event.getEntity().sendMessage("powinno zniszczyć boki");
+        }
+        }
+    }
+
+        /*else{
+/*
         for (Menagerie mena:ListOfAllMenageries) {
             if (mena.IsInMenagerie(event.getEntity().getLocation())){
                 if(event.getEntity().getKiller() != null){
@@ -377,7 +415,7 @@ public class Listeners implements Listener {
                 break;
                 }
 
-            }}}
+            }}
         /*if (playerinzone(PvPLoc, Radius+1700, event.getEntity().getLocation())) {
             if (event.getEntity() instanceof Player) {
                 Player killedPlayer = (Player) event.getEntity();
@@ -418,7 +456,7 @@ public class Listeners implements Listener {
                                 break;
                             }}}
                 }}}*/
-
+/*
     @EventHandler
     public void onPlayerItemDamage(PlayerItemDamageEvent event) {
         if (event.getPlayer().getInventory().getItemInMainHand().isSimilar(MoonBlade)) {
@@ -427,14 +465,14 @@ public class Listeners implements Listener {
                     event.setCancelled(true);
                     break;
                 }}}
-    }
+    }*/
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if(event.getCurrentItem()!=null){
             Player p = (Player) event.getWhoClicked();
-            event.setCancelled(true);
-
+            /*
             if(Objects.equals(event.getInventory().getHolder(), ForestMenager.ForestHolder)){
+                event.setCancelled(true);
                 if (!AmonPackPlugin.BuildingOnArenas) {
                     ItemStack item = event.getCurrentItem();
                     Forest forest = ForestMenager.GetForestByLocation(event.getWhoClicked().getLocation());
@@ -442,7 +480,7 @@ public class Listeners implements Listener {
                         forest.HandleForestInvClick((Player) event.getWhoClicked(),item);
                         event.setCancelled(true);
                     }}
-            }else
+            }else*/
         if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SkillDetails)){
             event.setCancelled(true);
             if(event.getCurrentItem().getType()==Material.BARRIER){
@@ -454,6 +492,7 @@ public class Listeners implements Listener {
             }
         }else
         if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.Holder1)){
+            event.setCancelled(true);
             LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
             if(sktype!=null){
                 PlayerLevel Level = PlayerLevelMenager.GetPlayerLevelFromList(event.getWhoClicked().getName());
@@ -473,37 +512,37 @@ public class Listeners implements Listener {
                 if (element==ele) {
                     AmonPackPlugin.levelsBending.OpenBendingSkillMenu(playersBranch.getName());
                 }else{
-                    event.getWhoClicked().sendMessage(ChatColor.RED+"Nie masz wybranego tego zywiołu! Twój zywioł to: "+BendingGuiMenu.getPlayerSkillTreeByName(p).getCurrentElement());
+                    event.getWhoClicked().sendMessage(ChatColor.RED+"Nie masz wybranego tego zywiołu! Twój zywioł to: "+playersBranch.getCurrentElement());
                 }}
         }else
             if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillMenu)){
+                event.setCancelled(true);
                 if (event.getCurrentItem().getType() == Material.CHEST) {
                     AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,0);
                 }
                 if (event.getCurrentItem().getType() == Material.PAPER) {
                     AmonPackPlugin.levelsBending.OpenBindingMenu(p.getName(),event.getCurrentItem().getItemMeta().getDisplayName());
                 }
-                if (event.getCurrentItem().getType() == Material.BARRIER) {
+                if (event.getCurrentItem().getType() == Material.PAPER && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
                     PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
                 }
             } else
-
                 if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BindingAbilitiesMenu)) {
+                    event.setCancelled(true);
                 Material clickedItem = event.getCurrentItem().getType();
                 BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
                 if (clickedItem.equals(Material.PAPER)) {
                     bPlayer.bindAbility(Objects.requireNonNull(event.getClickedInventory().getItem(4).getItemMeta()).getDisplayName(), Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
                     bPlayer.saveAbility(Objects.requireNonNull(event.getClickedInventory().getItem(4)).getItemMeta().getDisplayName(), Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
-                    Element ele = BendingGuiMenu.ElementBasedOnSubElement(CoreAbility.getAbility(event.getClickedInventory().getItem(4).getItemMeta().getDisplayName()).getElement());
-                    BendingGuiMenu.OpenAbilitiesByElement(BendingGuiMenu.getPlayerSkillTreeByName(p), ele, p);
+                    AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                 }
-                if (event.getCurrentItem().getType() == Material.BARRIER) {
+                if (event.getCurrentItem().getType() == Material.PAPER && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
                     AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                 }
             }
 
             else if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillTree)){
-
+                    event.setCancelled(true);
                 PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
                     if(playersBranch==null){
                         p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
@@ -514,43 +553,44 @@ public class Listeners implements Listener {
                 Material ClickedItem = event.getCurrentItem().getType();
                 BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
 
-                    if (ClickedItem == Material.BARRIER) {
+                    if (ClickedItem == Material.PAPER && event.getCurrentItem().getItemMeta().getDisplayName().contains("Powrot")) {
                         AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
-                    }
+                    }else
                     if (ClickedItem.equals(Material.CHEST)) {
                         for (int i = 0; i <= 9; i++) {
                             if(CoreAbility.getAbility(bPlayer.getAbilities().get(i))!=null&&(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement().equals(SelectedElement.getElement())
-                                    || Objects.equals(BendingGuiMenu.ElementBasedOnSubElement(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()), SelectedElement.getElement()))){
+                                    || Objects.equals(ElementBasedOnSubElement(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()), SelectedElement.getElement()))){
                                 BendingBoardManager.getBoard(p).get().clearSlot(i);
                                 bPlayer.getAbilities().remove(i);
                             }}
                         playersBranch.ClearAbilities(SelectedElement);
                         AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,0);
                         bPlayer.removeUnusableAbilities();
-                    }
+                    }else
                     if (event.getSlot()==26) {
-                        if (playersBranch.getCurrentPage()>0){
+                        if (playersBranch.getCurrentPage()<(SelectedElement.getRows()/54)){
                             AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage()+1);
-                        }}
+                        }}else
                 if (event.getSlot()==35) {
-                        if (playersBranch.getCurrentPage()<(SelectedElement.getRows())/54){
+                        if (playersBranch.getCurrentPage()>0){
                             AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage()-1);
-                        }}
-                    if (ClickedItem.equals(Material.ORANGE_TERRACOTTA)) {
-                        for (SkillTree_Ability STA:SelectedElement.getAbilities()) {
-                            if (STA.getName().equalsIgnoreCase(event.getCurrentItem().getItemMeta().getDisplayName())){
+                        }}else
+                    if (ClickedItem.equals(Material.PAPER)) {
+                        SkillTree_Ability STA = SelectedElement.getAbilities().stream().filter(abi->abi.getName().equalsIgnoreCase(event.getCurrentItem().getItemMeta().getDisplayName())).findFirst().orElse(null);
+                        if (STA!=null) {
                                 if (playersBranch.GetPoints(element) >= STA.getCost()) {
                                     if (new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().size()==0) {
                                         playersBranch.UnlockAbility(STA.getElement(),STA.getCost(),STA.getName());
                                         AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage());
-                                    }}}}
+                                    }}}
                 }
             }
-        else
-        if(newPvP.playerinzone(event.getWhoClicked().getLocation())) {
+        //else
+        /*if(newPvP.playerinzone(event.getWhoClicked().getLocation())) {
             for (FallingChest fc : newPvP.ChestList) {
                 if (event.getView().getTitle().equalsIgnoreCase(fc.getName())) {
                     if (newPvP.isInventoryEmpty(event.getView().getTopInventory()) && event.getClickedInventory().getType() == InventoryType.CHEST) {
+                        event.setCancelled(true);
                         event.getView().getTopInventory().getLocation().getBlock().setType(Material.AIR);
                         AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT, (Player) event.getWhoClicked(), fc.getExpgranted(), ChatColor.AQUA + "Exp:");
                         //Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
@@ -560,15 +600,18 @@ public class Listeners implements Listener {
                 }
             }
         }
-        else
+        else*/
+                /*
         if (event.getInventory().getHolder() != p){
             for (Menagerie mena:ListOfAllMenageries) {
                 if (mena.IsInMenagerie(p.getLocation())){
+                    event.setCancelled(true);
                     mena.OnInventoryClickMenagerie(event);
                     break;
                 }}
-            }}}
-
+            }*/
+        }}
+/*
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         for (Menagerie mena:ListOfAllMenageries) {
@@ -577,14 +620,14 @@ public class Listeners implements Listener {
                 event.getPlayer().sendMessage("Nie możesz wyrzucić tego przedmiotu!");
                 break;
             }}
-    if(newPvP.playerinzone(event.getPlayer().getLocation())){
+    /*if(newPvP.playerinzone(event.getPlayer().getLocation())){
             ItemStack item = event.getItemDrop().getItemStack();
             if(QuestItems.ListOfAllQuestItems.contains(item) || item.getType()==Material.STONE){
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(ChatColor.RED+"Nie mozesz wyrzucac tego przedmiotu na pvp");
             }
     }
-    }
+    }*/
     @EventHandler
     public void onFallingBlockLand(EntityChangeBlockEvent event) {
         if (event.getEntity() instanceof FallingBlock) {
@@ -594,6 +637,7 @@ public class Listeners implements Listener {
             }
         }
     }
+    /*
     @EventHandler
     public void onChestOpen(InventoryOpenEvent event) {
         if (event.getInventory().getType() == org.bukkit.event.inventory.InventoryType.CHEST) {
@@ -625,20 +669,20 @@ public class Listeners implements Listener {
                             PvP.Parkour(player,event.getView().getTitle());
                         }
                         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 10)); // Speed for 10 seconds (200 ticks)
-                    */}}
-            }}}
+                    }}
+            }}}*/
 
 
-
+/*
     @EventHandler
     public void onEntityShootBow(EntityShootBowEvent event) {
         if (event.getEntity() instanceof Player && event.getBow() != null) {
              new BowAbility(event);
         }
     }
+*/
 
-
-
+/*
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntity() instanceof Arrow) {
@@ -652,7 +696,7 @@ public class Listeners implements Listener {
                 arrow.remove();
                 //arrow.setVelocity(new Vector().multiply(1));
                 /*event.setCancelled(true);
-                livingEntity.damage(2);*/
+                livingEntity.damage(2);
 
             }
         }
@@ -662,7 +706,7 @@ public class Listeners implements Listener {
     public void onSmith(FurnaceSmeltEvent event) {
 
     }*/
-
+/*
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
        /* if (playerinzone(event.getEntity().getLocation(),Radius,PvPLoc) || playerinzone(event.getEntity().getLocation(),Radius1,PvPLoc1)){
@@ -718,7 +762,7 @@ public class Listeners implements Listener {
                     fightParticipants.put(attacker,attacker);
                     lastAttackTimes.put(attacker, System.currentTimeMillis());
                     checkFights();
-                }}}*/
+                }}}
             if(event.getDamager() instanceof Player){
         Player p = (Player)event.getDamager();
         Entity Victim = event.getEntity();
@@ -809,18 +853,8 @@ public class Listeners implements Listener {
             }}
         return false;
     }
-
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        /*if (fightParticipants.containsKey(player) || fightParticipants.containsValue(player)) {
-            player.setHealth(0);
-            fightParticipants.remove(player, player);
-            lastAttackTimes.remove(player);
-        }*/
-    }
-
+*/
+/*
     @EventHandler
     public void cooldown(PlayerCooldownChangeEvent event) {
         if (event.getCooldown()>0 && (event.getAbility().equalsIgnoreCase("FireBlast")||event.getAbility().equalsIgnoreCase("AirSwipe"))){
@@ -847,10 +881,10 @@ public class Listeners implements Listener {
                             bp.addCooldown("AirSwipe",5000);
                         }}}}
             }break;
-            }*/}
-    }
+            }*///}
+    //}
 
-
+/*
     @EventHandler
     public void test(AbilityStartEvent event) {
         Player p = event.getAbility().getPlayer();
@@ -905,7 +939,7 @@ public class Listeners implements Listener {
             System.out.println("Error   "+ex.getMessage());
         }}}*/
 
-    }
+    //}
     @EventHandler
     public void test(AbilityDamageEntityEvent event) {
         if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")){
@@ -919,7 +953,7 @@ public class Listeners implements Listener {
                         if (A.IndividualUpgrades.get(player)!=null){
                             PlayerUpgrades = A.IndividualUpgrades.get(player);
                         }
-                    if (event.getAbility().getName().equalsIgnoreCase("FireBlast")){
+                    if (event.getAbility().getNagme().equalsIgnoreCase("FireBlast")){
                             if (GetUpgradeByNameFromPlayer("FireBlastUpgrade1", PlayerUpgrades)!=null){
                                 if (GetUpgradeByNameFromPlayer("FireBlastUpgrade1",PlayerUpgrades).isUnlocked()){
                                     if (!event.getEntity().isVisualFire() && event.getDamage()>2){

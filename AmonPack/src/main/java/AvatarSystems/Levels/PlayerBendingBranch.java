@@ -1,11 +1,7 @@
 package AvatarSystems.Levels;
 
-import UtilObjects.Skills.PlayerSkillTree;
-import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.Element;
-import com.projectkorra.projectkorra.ability.CoreAbility;
 import methods_plugins.AmonPackPlugin;
-import org.bukkit.block.data.type.Fire;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,8 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static Mechanics.Skills.BendingGuiMenu.AllPlayersSkillTrees;
-import static Mechanics.Skills.BendingGuiMenu.SubElementByElement;
 import static methods_plugins.AmonPackPlugin.ExecuteQuery;
 
 public class PlayerBendingBranch {
@@ -38,7 +32,8 @@ public class PlayerBendingBranch {
         ElementsInPossesion = elementsInPossesion;
         FirePoints = firePoints;
         Name = name;
-        UnlockedAbilities = unlockedAbilities;
+        UnlockedAbilities = new ArrayList<>(unlockedAbilities);
+        TemporaryAbilities=new ArrayList<>();
         WaterPoints = waterPoints;
     }
     public void SetCurrentElement(Element element){
@@ -53,8 +48,11 @@ public class PlayerBendingBranch {
         int totalcost = 0;
         List<String> AbilitiesToRemove=new ArrayList<>();
             for (String st:UnlockedAbilities) {
-                totalcost = totalcost+elementtree.GetCostByAbilityName(st);
-                AbilitiesToRemove.add(st);
+                int temp_cost = elementtree.GetCostByAbilityName(st);
+                if(temp_cost>=0){
+                    totalcost = totalcost+temp_cost;
+                    AbilitiesToRemove.add(st);
+                }
             }
         UnlockedAbilities.removeAll(AbilitiesToRemove);
         AddPoints(CurrentElement,totalcost);
@@ -91,7 +89,11 @@ public class PlayerBendingBranch {
         if(element.equals(Element.WATER))WaterPoints-=amount;
         if(element.equals(Element.FIRE))FirePoints-=amount;
         if(element.equals(Element.EARTH))EarthPoints-=amount;
-        UnlockedAbilities.add(AbilityName);
+        try {
+            UnlockedAbilities.add(AbilityName);
+        } catch (Exception e) {
+            System.out.println("blad :<  "+e);
+        }
         try {
             SaveInDatabaes();
         } catch (SQLException e) {
@@ -100,29 +102,31 @@ public class PlayerBendingBranch {
     }
     public void SaveInDatabaes() throws SQLException {
         Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
-        ResultSet rs = stmt.executeQuery("select * from BendingTree where Player='" + Name+"'");
-        String elementsText = ElementsInPossesion.stream().map(Element::toString).collect(Collectors.joining(","));
+        ResultSet rs = stmt.executeQuery("select * from BendingTree WHERE Player='" + Name+"'");
+        String elementsText = ElementsInPossesion.stream().map(Element::getName).collect(Collectors.joining(","));
         String abilitiesText = String.join(",", UnlockedAbilities);
         if (rs.next()) {
-            ExecuteQuery("UPDATE BendingTree SET" +
+            String st = "UPDATE BendingTree SET" +
                     " AirPoints = '" + AirPoints + "'," +
                     " FirePoints = '" + FirePoints + "'," +
                     " WaterPoints = '" + WaterPoints + "'," +
                     " EarthPoints = '" + EarthPoints + "'," +
-                    " CurrentElement = '" + CurrentElement.toString() + "'," +
+                    " CurrentElement = '" + CurrentElement.getName().toString() + "'," +
                     " AllElements = '" + elementsText + "'," +
-                    " UnlockedAbilities = '" + abilitiesText + "'," +
-                    " WHERE Player = '"+ Name+"';");
+                    " UnlockedAbilities = '" + abilitiesText + "'" +
+                    " WHERE Player = '"+ Name+"';";
+            ExecuteQuery(st);
         }else {
-            ExecuteQuery("INSERT INTO BendingTree (Player, AirPoints, FirePoints, WaterPoints, EarthPoints, CurrentElement, AllElements, UnlockedAbilities) VALUES (" +
+            String st = "INSERT INTO BendingTree (Player, AirPoints, FirePoints, WaterPoints, EarthPoints, CurrentElement, AllElements, UnlockedAbilities) VALUES (" +
                     "'" + Name + "', " +
                     "'" + AirPoints + "', " +
                     "'" + FirePoints + "', " +
                     "'" + WaterPoints + "', " +
                     "'" + EarthPoints + "', " +
-                    "'" + CurrentElement.toString() + "', " +
+                    "'" + CurrentElement.getName().toString() + "', " +
                     "'" + elementsText + "', " +
-                    "'" + abilitiesText + "');");
+                    "'" + abilitiesText + "');";
+            ExecuteQuery(st);
         }
         stmt.close();
     }

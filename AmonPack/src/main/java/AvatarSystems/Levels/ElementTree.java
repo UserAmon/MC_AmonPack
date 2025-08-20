@@ -20,7 +20,12 @@ public class ElementTree {
         this.rows = rows;
     }
     public int GetCostByAbilityName(String name){
-        return Abilities.stream().filter(skillTreeAbility -> skillTreeAbility.getName().equalsIgnoreCase(name)).findFirst().orElse(null).getCost();
+        SkillTree_Ability abi = Abilities.stream().filter(skillTreeAbility -> skillTreeAbility.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+        if(abi==null){
+            return -1;
+        }else{
+            return abi.getCost();
+        }
     }
     public List<SkillTree_Ability> getAbilities() {
         return Abilities;

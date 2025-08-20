@@ -3,8 +3,6 @@ package AvatarSystems.Levels;
 import AvatarSystems.Util_Objects.InventoryXHolder;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
-import Mechanics.Skills.BendingGuiMenu;
-import UtilObjects.Skills.PlayerSkillTree;
 import com.projectkorra.projectkorra.Element;
 import commands.Commands;
 import methods_plugins.AmonPackPlugin;
@@ -53,29 +51,36 @@ public class PlayerLevelMenager {
         LoadPlayersFromDatabase();
     }
 
-    public static void TryOpenPlayerLevel(Player player){
+    public static void TryOpenPlayerLevel(Player player) {
         try {
-            PlayerSkillTree PSkillTree = BendingGuiMenu.getPlayerSkillTreeByName(player);
-            if(PSkillTree==null ||PSkillTree.getElementsInPossesionAsString().contains("brak")){
-                player.sendMessage(ChatColor.RED+ "Nie mozesz uzyc tej komendy - nie wybrales jeszcze zywiolu. Przejdź tutorial! (/warp wybor) Jeśli juz zacząłeś, to walisz /q purge nick i wtedy gadaj z duchem");
-                return;
-            }
             PlayerLevel Level;
-            Optional<PlayerLevel> Exist = AllPlayerLevels.stream().filter(lvl->lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst();
-            if(Exist.isPresent() && Exist.get().getPlayerSkills().size()>=3){
+            Optional<PlayerLevel> Exist = AllPlayerLevels.stream()
+                    .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName()))
+                    .findFirst();
+            if (Exist.isPresent()) {
                 Level = Exist.get();
-            }else{
-                List<LevelSkill>Skills=new ArrayList<>();
-                for (LevelSkill.SkillType Skillt : EnabledSkillTypes){
-                    Skills.add(new LevelSkill(0, Skillt,new ArrayList<>(),0));
+                List<LevelSkill> currentSkills = Level.getPlayerSkills();
+                for (LevelSkill.SkillType enabledType : EnabledSkillTypes) {
+                    boolean hasSkill = currentSkills.stream()
+                            .anyMatch(skill -> skill.getType() == enabledType);
+                    if (!hasSkill) {
+                        currentSkills.add(new LevelSkill(0, enabledType, new ArrayList<>(), 0));
+                    }
                 }
-                Level=new PlayerLevel(player.getName(),Skills);
+            } else {
+                List<LevelSkill> Skills = new ArrayList<>();
+                for (LevelSkill.SkillType skillType : EnabledSkillTypes) {
+                    Skills.add(new LevelSkill(0, skillType, new ArrayList<>(), 0));
+                }
+                Level = new PlayerLevel(player.getName(), Skills);
                 AllPlayerLevels.add(Level);
             }
             OpenPlayerLevelWindow(Level);
-        }catch (Exception e){
-            System.out.println("Error In Player Level "+e.getMessage());
-        }}
+        } catch (Exception e) {
+            System.out.println("Error In Player Level " + e.getMessage());
+        }
+    }
+
     public static void OpenSkillDetails(LevelSkill skill,Player p){
         Inventory inv = Bukkit.createInventory(SkillDetails, SkillDetails.getSize(), SkillDetails.getTitle());
         for (int i = 0; i < inv.getSize(); i++) {
@@ -106,19 +111,20 @@ public class PlayerLevelMenager {
                         Lore.add(ChatColor.RED+ "Juz odebrano tę nagrodę");
                     }else{
                         Lore.add(ChatColor.GREEN+ "Nagroda dostepna");
-                        for(String Rewards : config.getConfigurationSection(newpath).getKeys(false)) {
-                            if(Rewards.startsWith("Reward")){
-                                String reward = config.getString(Path + "." + key + "."+Rewards);
-                                if(Rewards.endsWith("Lore")){
-                                    for (String line : reward.split("%break%")) {
-                                        Lore.add(line);
-                                    }
-                                }else{
+                    }
+                    for(String Rewards : config.getConfigurationSection(newpath).getKeys(false)) {
+                        if(Rewards.startsWith("Reward")){
+                            String reward = config.getString(Path + "." + key + "."+Rewards);
+                            if(Rewards.endsWith("Lore")){
+                                for (String line : reward.split("%break%")) {
+                                    Lore.add(line);
+                                }
+                            }else{
                                 if(reward.startsWith("command:")){
-                                if(reward.contains("economy give")){
-                                    reward=reward.replace("command:economy give %player%","");
-                                    Lore.add(ChatColor.GOLD+ "+"+reward+"¥");
-                                }}
+                                    if(reward.contains("money add")){
+                                        reward=reward.replace("command:money add %player%","");
+                                        Lore.add(ChatColor.GOLD+ "+"+reward+"¥");
+                                    }}
                                 if(reward.startsWith("skillupgrade:")){
                                     reward=reward.replace("skillupgrade:","");
                                     Lore.add(ChatColor.AQUA+ "+"+reward+" do poziomu umiejętności dziedziny");
@@ -127,7 +133,7 @@ public class PlayerLevelMenager {
                                     reward=reward.replace("SkillPoints:","");
                                     Lore.add(ChatColor.LIGHT_PURPLE+ "+"+reward+" Punktów Drzewka Magii");
                                 }
-                        }}}}
+                            }}}
                     LockedItemMeta.setLore(Lore);
                 }else{
                     Item = new ItemStack(Material.valueOf(config.getString(Path + ".Details.LockedItem")));
@@ -221,7 +227,9 @@ public class PlayerLevelMenager {
                 }
             }}
         } catch (Exception e) {
-            System.out.println("error "+e.getMessage());
+            System.out.println("error open1  "+e.getMessage());
+            System.out.println("error open2  "+e.getLocalizedMessage());
+            System.out.println("error open3  "+e);
         }
         inventory.showInventory(Bukkit.getPlayer(level.getPlayerName()));
     }
@@ -252,7 +260,7 @@ public class PlayerLevelMenager {
                                     }
                                     if(reward.startsWith("SkillPoints:")){
                                         reward=reward.replace("SkillPoints:","");
-                                        BendingGuiMenu.getPlayerSkillTreeByName(player).AddSkillPoints(Integer.parseInt(reward));
+                                        //BendingGuiMenu.getPlayerSkillTreeByName(player).AddSkillPoints(Integer.parseInt(reward));
                                     }
                                 }
                             }
@@ -290,37 +298,69 @@ public class PlayerLevelMenager {
             }}
         return lvl;
     }
-    public void AddPoints(LevelSkill.SkillType Type, Player player, double points,String title){
+    public void AddPoints(LevelSkill.SkillType Type, Player player, int points) {
         try {
-            PlayerLevel Level = AllPlayerLevels.stream().filter(lvl->lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst().get();
-            LevelSkill skill = Level.getPlayerSkills().stream().filter(sk->sk.getType().equals(Type)).findFirst().get();
-            FileConfiguration config= AmonPackPlugin.getLevelConfig();
-            String Path = "AmonPack.Levels." + skill.getType().toString();
-            int ActualLevel=0;
-            int NeededLvL=0;
-            int totallvl= (int) skill.getExpPoints();
-            for(String key : config.getConfigurationSection(Path).getKeys(false)) {
-                if (key.startsWith("Level")) {
-                    String newpath = Path + "." + key;
-                    int MaxLvL = config.getInt(newpath + ".ReqExp");
-                    int lvl = Integer.parseInt(key.replace("Level_", ""));
-                    if (totallvl >= MaxLvL) {
-                        ActualLevel = lvl;
-                        totallvl = totallvl - MaxLvL;
+            PlayerLevel Level = AllPlayerLevels.stream()
+                    .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName()))
+                    .findFirst().orElse(null);
+            if (Level == null) return;
+            LevelSkill skill = Level.getPlayerSkills().stream()
+                    .filter(sk -> sk.getType().equals(Type))
+                    .findFirst().orElse(null);
+            if (skill == null) return;
+            FileConfiguration config = AmonPackPlugin.getLevelConfig();
+            String path = "AmonPack.Levels." + skill.getType().toString();
+            int actualLevel = 0;
+            int neededExp = 0;
+            int totalExpBefore = (int) skill.getExpPoints();
+            int expPool = totalExpBefore;
+            for (String key : config.getConfigurationSection(path).getKeys(false)) {
+                if (!key.startsWith("Level")) continue;
+                String levelPath = path + "." + key;
+                int reqExp = config.getInt(levelPath + ".ReqExp");
+                int level = Integer.parseInt(key.replace("Level_", ""));
+                if (expPool >= reqExp) {
+                    actualLevel = level;
+                    expPool -= reqExp;
+                } else {
+                    if (expPool + points >= reqExp) {
+                        sendTitleMessage(player,
+                                ChatColor.GREEN + "Osiągnąłeś poziom " + (actualLevel + 1) + " " + skill.getType() + "!",
+                                ChatColor.YELLOW + "Odbierz swoje nagrody!", 20, 80, 20);
                     } else {
-                        if (totallvl + points >= MaxLvL) {
-                            sendTitleMessage(player, ChatColor.GREEN + "Osiągnieto " + (ActualLevel+1) + " Poziom " + skill.getType() + "!", ChatColor.YELLOW + "Udało Ci się osiągnąć nowy poziom, odbierz nagrody", 20, 80, 20);
-                        }else{
-                            NeededLvL=MaxLvL;
-                            break;
-                        }
-                    }}}
-            skill.setExpPoints(skill.getExpPoints()+points);
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(title+" "+(totallvl + points)+"/"+NeededLvL));
-        }catch (Exception e){
-            System.out.println("Error In Player Adding Level Points "+e.getMessage());
+                        neededExp = reqExp;
+                        break;
+                    }
+                }
+            }
+            skill.setExpPoints(skill.getExpPoints() + points);
+            int newTotalExp = totalExpBefore + points;
+            if (points > 1 || newTotalExp % 5 == 0) {
+                double progress = (double)(expPool + points) / neededExp;
+                ChatColor color;
+                if (progress < 0.33) {
+                    color = ChatColor.RED;
+                } else if (progress < 0.66) {
+                    color = ChatColor.GOLD;
+                } else {
+                    color = ChatColor.GREEN;
+                }
+                String icon = getSkillIcon(Type);
+                String skillName = Type.toString().substring(0, 1) + Type.toString().substring(1).toLowerCase(); // Capitalize
+                String msg = ChatColor.DARK_GRAY + "[" +
+                        ChatColor.AQUA + icon + " " + ChatColor.BOLD + skillName +
+                        ChatColor.DARK_GRAY + "] " +
+                        color + (expPool + points) +
+                        ChatColor.GRAY + "/" +
+                        ChatColor.GREEN + neededExp;
+
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(msg));
+            }
+        } catch (Exception e) {
+            System.out.println("Error In Player Adding Level Points: " + e.getMessage());
         }
     }
+
     public static LevelSkill.SkillType GetSkillTypeByMaterial(Material mat){
         for(String key : AmonPackPlugin.getLevelConfig().getConfigurationSection("AmonPack.Levels").getKeys(false)) {
             if(!key.startsWith("Mastery")&&!key.startsWith("Enabled")) {
@@ -437,4 +477,19 @@ public class PlayerLevelMenager {
         Item1.setItemMeta(Item1Meta);
         return Item1;
     }
+    private String getSkillIcon(LevelSkill.SkillType type) {
+        return switch (type) {
+            case MINING -> "⛏";       // Kopalnie
+            case LUMBERING -> "🌲";    // Drzewa
+            case FARMING -> "🌾";     // Uprawy
+            case MAGIC -> "✨";        // Magia
+            case COMBAT -> "⚔";       // Walka
+            case GENERAL -> "❖";      // Postęp ogólny
+            case SMITHING -> "🔥";     // Przepalanie
+            case BUILDING -> "🏗";     // Budowanie
+            case CRAFTING -> "🛠";     // Crafting
+            default -> "✦";           // Domyślna ikona
+        };
+    }
+
 }

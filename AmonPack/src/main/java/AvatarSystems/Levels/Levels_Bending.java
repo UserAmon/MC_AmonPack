@@ -1,12 +1,7 @@
 package AvatarSystems.Levels;
 
-import AvatarSystems.Util_Objects.PlayerLevel;
-import UtilObjects.Skills.PlayerSkillTree;
 import UtilObjects.Skills.SkillTree_Ability;
-import abilities.Util_Objects.SmokeSource;
 import com.projectkorra.projectkorra.Element;
-import com.projectkorra.projectkorra.ability.Ability;
-import com.projectkorra.projectkorra.ability.CoreAbility;
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import methods_plugins.AmonPackPlugin;
@@ -26,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static AvatarSystems.Levels.PlayerLevelMenager.*;
-import static Mechanics.Skills.BendingGuiMenu.FastEasyStack;
+import static methods_plugins.AmonPackPlugin.FastEasyStack;
 
 public class Levels_Bending {
     private FileConfiguration LevelConfig;
@@ -50,11 +45,11 @@ public class Levels_Bending {
         PlayerBendingBranch branch= AmonPackPlugin.levelsBending.GetBranchByPlayerName(name);
         if(branch==null)return;
         Element element=branch.getCurrentElement();
-        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BendingSkillTree,
-                BendingSkillTree.getSize(), BendingSkillTree.getTitle(), new FontImageWrapper("amon:bending_skills_binding")
+        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BindingAbilitiesMenu,
+                BindingAbilitiesMenu.getSize(), BindingAbilitiesMenu.getTitle(), new FontImageWrapper("amon:bending_skills_binding")
         );
         Inventory inv = inventory.getInternal();
-        int modelid=SkillTreeConfig.getInt("AmonPack.Menu." + element.toString().toLowerCase() + ".Green");
+        int modelid=SkillTreeConfig.getInt("AmonPack.Menu." + element.getName().toString().toLowerCase() + ".Green");
         inv.setItem(4, FastEasyStack(Material.PAPER,AbilityName,modelid));
         int baseint = 10062;
         for (int i = 9; i < 18; i++) {
@@ -73,6 +68,7 @@ public class Levels_Bending {
         ElementTree SelectedElement = GetElement(element);
 
         String ElementName = element.getName().toLowerCase();
+        //                Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amon:first_gui")
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BendingSkillTree,
                 BendingSkillTree.getSize(), BendingSkillTree.getTitle(), new FontImageWrapper("amon:bending_skills_tree_"+ElementName)
         );
@@ -83,16 +79,16 @@ public class Levels_Bending {
             int tempplace = STA.getPlace()-(54*page);
             if (tempplace>=0 && tempplace<53){
 
-                Material material = Material.getMaterial(Objects.requireNonNull(SkillTreeConfig.getString("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Material")));
+                Material material = Material.getMaterial(Objects.requireNonNull(SkillTreeConfig.getString("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Material")));
                 ItemStack item = FastEasyStack(material,STA.getName());
                 ItemMeta meta = item.getItemMeta();
                 int modelid;
                 if ((playersBranch.getUnlockedAbilities().contains(STA.getName())|| playersBranch.getTemporaryAbilities().contains(STA.getName()) || STA.isdef())){
-                    modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Green");
+                    modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Green");
 
 
                 } else if (playersBranch.GetPoints(element) >= STA.getCost() && (new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().isEmpty())) {
-                    modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Orange");
+                    modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Orange");
 
                     List<String> modifiedList = new ArrayList<>(Collections.singleton("Koszt: " + STA.getCost()));
                     for (String st:STA.getListOfPreAbility()) {
@@ -101,7 +97,7 @@ public class Levels_Bending {
                     meta.setLore(modifiedList);
 
                 }else{
-                    modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Red");
+                    modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Red");
 
                     List<String> modifiedList = new ArrayList<>(Collections.singleton("Koszt: " + STA.getCost()));
                     for (String st:STA.getListOfPreAbility()) {
@@ -115,8 +111,8 @@ public class Levels_Bending {
                 inv.setItem(tempplace, item);
             }}
 
-        Material PathMaterial = Material.getMaterial(Objects.requireNonNull(SkillTreeConfig.getString("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Material")));
-        int ModelId = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Path");
+        Material PathMaterial = Material.getMaterial(Objects.requireNonNull(SkillTreeConfig.getString("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Material")));
+        int ModelId = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Path");
 
             for (Integer i: SelectedElement.getPathDecoration()) {
                 int tempPatDec = i-(54*page);
@@ -142,12 +138,13 @@ public class Levels_Bending {
         ElementTree SelectedElement = GetElement(element);
         int i =0;
         List<SkillTree_Ability> UsabelAbilities = SelectedElement.getAbilities().stream()
-                .filter(sta -> playersBranch.getUnlockedAbilities().contains(sta.getName())|| playersBranch.getTemporaryAbilities().contains(sta.getName()))
+                .filter(sta -> sta.isdef()||playersBranch.getUnlockedAbilities().contains(sta.getName())|| playersBranch.getTemporaryAbilities().contains(sta.getName()))
                 .collect(Collectors.toList());
         for (SkillTree_Ability STA:UsabelAbilities) {
             if(!STA.isUpgrade()){
-                Material material = Material.getMaterial(Objects.requireNonNull(SkillTreeConfig.getString("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Material")));
-                int modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.toString().toLowerCase() + ".Green");
+                String elementname = element.getName().toLowerCase();
+                Material material = Material.getMaterial(SkillTreeConfig.getString("AmonPack.Menu." + elementname + ".Material"));
+                int modelid = SkillTreeConfig.getInt("AmonPack.Menu." + elementname + ".Green");
                 ItemStack item = FastEasyStack(material,STA.getName());
                 if(modelid>0){
                     ItemMeta meta = item.getItemMeta();
@@ -176,8 +173,9 @@ public class Levels_Bending {
         }
     }//Reload Danych
     private void AddPlayerFromDBToListOnEnable() throws SQLException {
+        PlayersBending=new ArrayList<>();
         Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
-        ResultSet rs = stmt.executeQuery("select * from SpellTree");
+        ResultSet rs = stmt.executeQuery("select * from BendingTree");
         while (rs.next()) {
             String name = rs.getString(1);
             int AirP = rs.getInt(2);
@@ -205,6 +203,7 @@ public class Levels_Bending {
             List<Integer> PathDecoration = new ArrayList<>(SkillTreeConfig.getIntegerList("AmonPack.Tree."+Element+".PathDecoration"));
 
             for(String Ability : Objects.requireNonNull(SkillTreeConfig.getConfigurationSection("AmonPack.Tree."+Element)).getKeys(false)) {
+                if(!Ability.equalsIgnoreCase("PathDecoration")){
                 int Cost = SkillTreeConfig.getInt("AmonPack.Tree."+Element+"."+Ability+".Cost");
                 int Place = SkillTreeConfig.getInt("AmonPack.Tree."+Element+"."+Ability+".Place");
                 List<String> ReqAbi = SkillTreeConfig.getStringList("AmonPack.Tree."+Element+"."+Ability+".ReqAbilities");
@@ -215,7 +214,7 @@ public class Levels_Bending {
                 ElementAbilities.add(AbilityObject);
                 if (MaxPlace < Place){
                     MaxPlace=Place;
-                }}
+                }}}
             ListOfElements.add(new ElementTree(ElementAbilities,pk_element,PathDecoration,MaxPlace));
         }
     }//przy reload ogarnij wszystkie dostepne skille w drzewku

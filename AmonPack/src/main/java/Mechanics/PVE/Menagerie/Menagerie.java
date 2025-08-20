@@ -3,11 +3,8 @@ package Mechanics.PVE.Menagerie;
 import Mechanics.Skills.Upgrades;
 import Mechanics.PVE.Menagerie.Objectives.ObjectiveConditions;
 import Mechanics.PVE.Menagerie.Objectives.Objectives;
-import Mechanics.Skills.BendingGuiMenu;
 import Mechanics.Skills.UpgradesMenager;
-import UtilObjects.Skills.PlayerSkillTree;
 import com.projectkorra.projectkorra.BendingPlayer;
-import com.projectkorra.projectkorra.Element;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
 import methods_plugins.AmonPackPlugin;
@@ -24,14 +21,12 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static Mechanics.Skills.BendingGuiMenu.FastEasyStack;
-import static Mechanics.Skills.BendingGuiMenu.MaterialByElement;
+import static methods_plugins.AmonPackPlugin.FastEasyStack;
 
 public class Menagerie {
     private final String MenagerieName;
@@ -213,7 +208,7 @@ public class Menagerie {
             menu.setItem(i, up.getItem());
             i++;
         }
-        menu.setItem(17,BendingGuiMenu.FastEasyStack(Material.BARRIER,ChatColor.RED+"Wyjscie"));
+        menu.setItem(17,FastEasyStack(Material.BARRIER,ChatColor.RED+"Wyjscie"));
         p.openInventory(menu);
     }
     private void OpenShop(Player p){
@@ -226,8 +221,8 @@ public class Menagerie {
             menu.setItem(i,up.getItem());
             i++;
         }
-        menu.setItem(53,BendingGuiMenu.FastEasyStack(Material.BARRIER,ChatColor.RED+"Wyjscie"));
-        menu.setItem(52,BendingGuiMenu.FastEasyStack(Material.GOLD_BLOCK,ChatColor.RED+"Wyjscie"));
+        menu.setItem(53,FastEasyStack(Material.BARRIER,ChatColor.RED+"Wyjscie"));
+        menu.setItem(52,FastEasyStack(Material.GOLD_BLOCK,ChatColor.RED+"Wyjscie"));
         p.openInventory(menu);
     }
     public void OpenUpgradesMenagerie(Player p){
@@ -237,9 +232,9 @@ public class Menagerie {
         }
         List<String> UpgradesOfPlayer = AmonPackPlugin.getPlayerUpgrades(p);
         List<Upgrades> eligibleUpgrades = new ArrayList<>();
-        List<String> SelectedPath = new ArrayList<>(Objects.requireNonNull(BendingGuiMenu.getPlayerSkillTreeByName(p)).getSelectedPath());
+        //List<String> SelectedPath = new ArrayList<>(Objects.requireNonNull(BendingGuiMenu.getPlayerSkillTreeByName(p)).getSelectedPath());
         for (Mechanics.Skills.Upgrades up : UpgradesMenager.MenagerieUpgradesList) {
-            if (!SelectedPath.contains(up.getName())&&
+            if (
                     !UpgradesOfPlayer.contains(up.getName()) &&
                     (up.getReqUpdates() == null || UpgradesOfPlayer.stream().anyMatch(up.getReqUpdates()::contains))) {
                 eligibleUpgrades.add(up);
@@ -251,7 +246,7 @@ public class Menagerie {
             menu.setItem(i, up.getItem());
             i++;
         }
-        menu.setItem(17,BendingGuiMenu.FastEasyStack(Material.BARRIER,ChatColor.RED+"Wyjscie"));
+        menu.setItem(17,FastEasyStack(Material.BARRIER,ChatColor.RED+"Wyjscie"));
         p.openInventory(menu);
     }
     public void OpenMenagerieMenu(Player p){
@@ -267,9 +262,7 @@ public class Menagerie {
         }
         menu.setItem(8, FastEasyStack(Material.CHEST,ChatColor.DARK_PURPLE + "Dary"));
         menu.setItem(7, FastEasyStack(Material.ENDER_CHEST,ChatColor.DARK_PURPLE + "Sklep"));
-        PlayerSkillTree Skills=BendingGuiMenu.getPlayerSkillTreeByName(p);
-        Element ele = Element.getElement(Skills.getCurrentElement());
-        menu.setItem(17, FastEasyStack(MaterialByElement(ele),ele.getColor()+"Wybierz Ruchy"));
+        //menu.setItem(17, FastEasyStack(MaterialByElement(ele),ele.getColor()+"Wybierz Ruchy"));
         p.openInventory(menu);
     }}
     public void OnInventoryClickMenagerie(InventoryClickEvent e){
@@ -286,10 +279,9 @@ public class Menagerie {
                 setPlayerReady(p);
                 p.closeInventory();
             }
-            PlayerSkillTree Skills=BendingGuiMenu.getPlayerSkillTreeByName(p);
-            if (e.getCurrentItem().getType().equals(MaterialByElement(Element.getElement(Skills.getCurrentElement())))) {
-                BendingGuiMenu.OpenGeneralBendingMenu(p);
-            }
+            //if (e.getCurrentItem().getType().equals(MaterialByElement(Element.getElement(Skills.getCurrentElement())))) {
+                //BendingGuiMenu.OpenGeneralBendingMenu(p);
+            //}
         }
         if (e.getInventory().getHolder() == MenagerieMenuListUpgrades) {
             if (e.getCurrentItem().getType().equals(Material.BARRIER)) {
@@ -355,10 +347,10 @@ public class Menagerie {
         if(ActiveEncounter.isLast()){
             for (Player p : PlayersInMenagerie()){
                 if(ReturnLocation!=null){
-                    ReturnLocation.setWorld(Bukkit.getWorld(AmonPackPlugin.getNewConfigz().getString("AmonPack.Spawn.World")));
+                    ReturnLocation.setWorld(Bukkit.getWorld("Avatar-Survival"));
                     p.teleport(ReturnLocation);
                 }else{
-                EndLocation.setWorld(Bukkit.getWorld(AmonPackPlugin.getNewConfigz().getString("AmonPack.Spawn.World")));
+                EndLocation.setWorld(Bukkit.getWorld("Avatar-Survival"));
                 p.teleport(EndLocation);
                 }
             }
@@ -437,13 +429,10 @@ public class Menagerie {
     }
     public void ResetAdditionalAbilities(Player p){
         BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
-        PlayerSkillTree skills = BendingGuiMenu.getPlayerSkillTreeByName(p);
-        List<String> defabilities = BendingGuiMenu.DefAbilities;
+
         for (int i = 0; i <= 9; i++) {
             String ability = bPlayer.getAbilities().get(i);
-            if (CoreAbility.getAbility(ability) != null &&
-                    !skills.getSelectedPath().contains(ability) &&
-                    !defabilities.contains(ability)) {
+            if (CoreAbility.getAbility(ability) != null) {
                 BendingBoardManager.getBoard(p).get().clearSlot(i);
                 bPlayer.getAbilities().remove(i);
             }

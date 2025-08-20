@@ -1,25 +1,14 @@
 package commands;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 import AvatarSystems.Levels.PlayerBendingBranch;
 import AvatarSystems.Util_Objects.LevelSkill;
-import Mechanics.MMORPG.GuiMenu;
-import Mechanics.MMORPG.ReputationMenager;
-import Mechanics.PVE.Menagerie.BoardManager;
+//import Mechanics.MMORPG.GuiMenu;
 import Mechanics.PVE.Menagerie.MenagerieMenager;
-import Mechanics.PVE.Mining;
-import Mechanics.PVE.SimpleWorldGenerator;
-import Mechanics.PVP.PvPMethods;
-import Mechanics.PVP.newPvP;
-import Mechanics.Skills.BendingGuiMenu;
-import Mechanics.Skills.JobsMenager;
-import UtilObjects.Skills.PlayerSkillTree;
-import com.projectkorra.projectkorra.BendingPlayer;
+//import Mechanics.PVP.newPvP;
 import com.projectkorra.projectkorra.Element;
 import methods_plugins.AmonPackPlugin;
 import org.bukkit.*;
@@ -31,8 +20,6 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
 
 
 public class Commands implements CommandExecutor {
@@ -84,7 +71,11 @@ public class Commands implements CommandExecutor {
 					}
 				}else{
 					if (sender instanceof Player) {
-						AmonPackPlugin.getPlayerMenager().TryOpenPlayerLevel((Player) sender);
+						try {
+							AmonPackPlugin.getPlayerMenager().TryOpenPlayerLevel((Player) sender);
+						}catch (Exception e){
+							System.out.println("Error!!! "+e.getMessage());
+						}
 					}
 				}
 				break;
@@ -121,7 +112,7 @@ public class Commands implements CommandExecutor {
 			}
 		}else{
 			switch (cmd.getName().toLowerCase()) {
-				case "pvp":
+				/*case "pvp":
 					if(args[0].equalsIgnoreCase("rtp")){
 						try {
 							Player player = Bukkit.getOnlinePlayers().stream().filter(p->p.getName().equalsIgnoreCase(args[1])).collect(Collectors.toList()).get(0);
@@ -135,7 +126,7 @@ public class Commands implements CommandExecutor {
 					} else if (args[0].equalsIgnoreCase("off")) {
 						AmonPackPlugin.PvPoff();
 					}
-					break;
+					break;*/
 				case "menagerie":
 					List<Player> listofplayers = new ArrayList<>();
 					for(String s: args){
@@ -150,51 +141,28 @@ public class Commands implements CommandExecutor {
 					}
 					MenagerieMenager.StartMenagerie(listofplayers,args[0]);
 					break;
-				case "spelltree":
-					try {
-						Player pl = Bukkit.getPlayer(args[1]);
-						if(args[0].equalsIgnoreCase("Multibend")){
-							BendingGuiMenu.getPlayerSkillTreeByName(pl).setMultibend(Boolean.parseBoolean(args[2]));
-						}else if(args[0].equalsIgnoreCase("Create")){
-							PlayerSkillTree NPST = new PlayerSkillTree(args[1],Integer.parseInt(args[2]),"",args[3],args[3]);
-							NPST.ResetSkillTree(NPST);
-						}else if(args[0].equalsIgnoreCase("Set")){
-							PlayerSkillTree NPST = new PlayerSkillTree(args[1],Integer.parseInt(args[2]),args[3],args[4],args[5]);
-							NPST.ResetSkillTree(NPST);
-						}else if (args[0].equalsIgnoreCase("AddP")){
-							int i = BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1])).getActSkillPoints();
-							BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1])).setActSkillPoints(i+Integer.parseInt(args[2]));
-						}else if (args[0].equalsIgnoreCase("AddE")){
-							PlayerSkillTree PST = BendingGuiMenu.getPlayerSkillTreeByName(Bukkit.getPlayer(args[1]));
-							PST.AddElement(PST,args[2]);
-						}
-					}catch (Exception e){
-						System.out.println("JAKIS BLAD   Z KOMENDA SPELLTREE   " + e.getMessage());
-					}
-
-					break;
 			}
 		}
 
 	    if(cmd.getName().equalsIgnoreCase("QuestItems")) {
     		if (sender instanceof Player) {
        		 	Player player = (Player) sender;
-       		for(String key : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items").getKeys(false)) {
-				if (AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Name") != null) {
-       			String type = AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Type");
-				String name = ""+AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Name").replace("&", "§");
+       		for(String key : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items").getKeys(false)) {
+				if (AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Name") != null) {
+       			String type = AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Type");
+				String name = ""+AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Name").replace("&", "§");
        			List<String> lorelist = new ArrayList<String>();
-       			if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Lore") != null) {
-       			for(String lores : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Lore").getKeys(false)) {
-           		String lore = ""+AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Lore." + lores).replace("&", "§");;
+       			if (AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Lore") != null) {
+       			for(String lores : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Lore").getKeys(false)) {
+           		String lore = ""+AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Lore." + lores).replace("&", "§");;
            		if (lore != null) {
                		lorelist.add(ChatColor.translateAlternateColorCodes('&', lore));
            		}}}
        			ItemStack QuestItem = new ItemStack(Material.getMaterial(type), 1);
        	        ItemMeta QuestItemMeta = QuestItem.getItemMeta();
-       			if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
-       			for(String enchname : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
-           		int enchpower = AmonPackPlugin.getNewConfigz().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
+       			if (AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
+       			for(String enchname : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
+           		int enchpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
 				QuestItemMeta.addEnchant(Enchantment.getByName(enchname), enchpower, true);
        			}}
        	        if (name != null) {
@@ -215,25 +183,25 @@ public class Commands implements CommandExecutor {
 
 	public static ItemStack QuestItemConfig(String itemname){
 		ItemStack QuestItem = new ItemStack(Material.DIRT, 1);
-		for(String key : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items").getKeys(false)) {
+		for(String key : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items").getKeys(false)) {
 			if (key.equalsIgnoreCase(itemname)){
 			String name = null;
-			String type = AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Type");
-			if (AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Name") != null) {
-				name = ""+AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Name").replace("&", "§");
+			String type = AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Type");
+			if (AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Name") != null) {
+				name = ""+AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Name").replace("&", "§");
 			}
 			List<String> lorelist = new ArrayList<String>();
-			if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Lore") != null) {
-				for(String lores : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Lore").getKeys(false)) {
-					String lore = ""+AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Lore." + lores).replace("&", "§");;
+			if (AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Lore") != null) {
+				for(String lores : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Lore").getKeys(false)) {
+					String lore = ""+AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Lore." + lores).replace("&", "§");;
 					if (lore != null) {
 						lorelist.add(ChatColor.translateAlternateColorCodes('&', lore));
 					}}}
 			QuestItem = new ItemStack(Material.getMaterial(type), 1);
 			ItemMeta QuestItemMeta = QuestItem.getItemMeta();
-			if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
-			for(String enchname : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
-			int enchpower = AmonPackPlugin.getNewConfigz().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
+			if (AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
+			for(String enchname : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
+			int enchpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
 			QuestItemMeta.addEnchant(Enchantment.getByName(enchname), enchpower, true);
 			}}
 			if (name != null) {
@@ -244,25 +212,25 @@ public class Commands implements CommandExecutor {
 			}
 			QuestItem.setItemMeta(QuestItemMeta);
 		}}
-		for(String key : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items").getKeys(false)) {
+		for(String key : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items").getKeys(false)) {
 			if (key.equalsIgnoreCase(itemname)){
 				String name = null;
-				String type = AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Type");
-				if (AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Name") != null) {
-					name = ""+AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Name").replace("&", "§");
+				String type = AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Type");
+				if (AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Name") != null) {
+					name = ""+AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Name").replace("&", "§");
 				}
 				List<String> lorelist = new ArrayList<String>();
-				if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Lore") != null) {
-					for(String lores : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Lore").getKeys(false)) {
-						String lore = ""+AmonPackPlugin.getNewConfigz().getString("AmonPack.Items." + key + ".Lore." + lores).replace("&", "§");;
+				if (AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Lore") != null) {
+					for(String lores : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Lore").getKeys(false)) {
+						String lore = ""+AmonPackPlugin.plugin.getConfig().getString("AmonPack.Items." + key + ".Lore." + lores).replace("&", "§");;
 						if (lore != null) {
 							lorelist.add(ChatColor.translateAlternateColorCodes('&', lore));
 						}}}
 				QuestItem = new ItemStack(Material.getMaterial(type), 1);
 				ItemMeta QuestItemMeta = QuestItem.getItemMeta();
-				if (AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
-					for(String enchname : AmonPackPlugin.getNewConfigz().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
-						int enchpower = AmonPackPlugin.getNewConfigz().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
+				if (AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
+					for(String enchname : AmonPackPlugin.plugin.getConfig().getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
+						int enchpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
 						QuestItemMeta.addEnchant(Enchantment.getByName(enchname), enchpower, true);
 					}}
 				if (name != null) {

@@ -1,12 +1,9 @@
-package UtilObjects.PVE;
+package AvatarSystems.Gathering.Objects;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class Mine {
     private Location loc;
@@ -17,6 +14,13 @@ public class Mine {
     private HashMap<Material, Integer> OresList = new HashMap();
     private HashMap<String, Integer> LootList = new HashMap();
     private HashMap<Material, Double> ExpList = new HashMap<>();
+
+
+    public Mine(Location loc, HashMap<Material, Double> expList, HashMap<String, Integer> lootList) {
+        this.loc = loc;
+        ExpList = expList;
+        LootList = lootList;
+    }
 
     public Mine(Location loc, int YOffsetUp, int radius, int restoreTime, Material mainBlock, HashMap<Material, Integer> oresList, HashMap<String, Integer> lootList, HashMap<Material,Double> explist) {
         this.loc = loc;
@@ -51,6 +55,11 @@ public class Mine {
         return LootList;
     }
     public double GetExpByMaterial(Material mat){
-        return ExpList.get(mat);
+        if(ExpList.containsKey(mat)){
+            return ExpList.get(mat);
+        }
+        else {
+            return 2;
+        }
     }
 }

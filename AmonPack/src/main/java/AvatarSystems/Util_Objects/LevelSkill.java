@@ -9,11 +9,16 @@ public class LevelSkill {
     private List<Integer> UsedRewards = new ArrayList<>();
     private double UpgradePercent;
     public enum SkillType{
-        MINING,
-        FARMING,
-        MAGIC,
-        COMBAT,
-        GENERAL
+        MINING,//Kopalnie
+        LUMBERING,//Drzewa
+        FARMING,//Uprawianie pól
+        MAGIC,//Bending
+        COMBAT,//Zabijanie mobów
+        GENERAL,//Postęp serworowy
+        SMITHING,//Przepalanie
+        BUILDING,//Budowanie
+        CRAFTING//Craftowanie
+
     }
 
     public LevelSkill(double expPoints, SkillType type, List<Integer> usedRewards, double upgradePercent) {
