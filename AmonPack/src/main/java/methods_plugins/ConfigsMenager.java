@@ -510,6 +510,25 @@ public class ConfigsMenager {
         cfg.set("Craftable_Items_Molds.earth_hammer.Item.Lore.l1", "§aNiezwykle ciężki młot wykonany z twardej skały.");
         cfg.set("Craftable_Items_Molds.earth_hammer.Item.Items_To_Craft.c1.Material", "STICK");
         cfg.set("Craftable_Items_Molds.earth_hammer.Item.Items_To_Craft.c1.Amount", 2);
+
+        // Craftable Items Defaults
+        cfg.set("Craftable_Items.Test_Item.Material", "PAPER");
+        cfg.set("Craftable_Items.Test_Item.Name", "§aTest Item");
+        cfg.set("Craftable_Items.Test_Item.Custom_Model_ID", 1001);
+        cfg.set("Craftable_Items.Test_Item.Mold.Items_To_Craft.m1.Material", "DIRT");
+        cfg.set("Craftable_Items.Test_Item.Mold.Items_To_Craft.m1.Amount", 1);
+        cfg.set("Craftable_Items.Test_Item.Mold.AllowedMagicEffects", Arrays.asList("Item_Effect_Test"));
+        cfg.set("Craftable_Items.Test_Item.Item.Lore.l1", "§7A test item.");
+
+        // Item Magic Effect Default
+        cfg.set("MagicEffects.Item_Effect_Test.Name", "§bItem Effect");
+        cfg.set("MagicEffects.Item_Effect_Test.Lore.l1", "§7Does something magical.");
+        cfg.set("MagicEffects.Item_Effect_Test.IsMajor", false);
+        cfg.set("MagicEffects.Item_Effect_Test.IsItemEffect", true);
+        cfg.set("MagicEffects.Item_Effect_Test.Conditions.req1.Skill_Type", "MINING");
+        cfg.set("MagicEffects.Item_Effect_Test.Conditions.req1.Skill_Level", 1);
+        cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Material", "STONE");
+        cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Amount", 1);
     }
 
 }

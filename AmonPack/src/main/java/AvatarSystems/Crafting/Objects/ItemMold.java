@@ -24,15 +24,16 @@ public class ItemMold {
     private final String weaponID;
     private List<MagicEffects> AllowedMagicEffects = new ArrayList<>();
     private ItemType TypeOfMold;
+
     public enum ItemType {
         WEAPON,
         TOOL,
-        ARMOR
+        ARMOR,
+        ITEM
     }
 
-
-
-    public ItemMold(String weaponID, List<ItemStack> itemsRequiredToShapeMold, String itemName, Material itemMaterial, List<String> itemLore, Integer customModelID, List<MagicEffects> allowedMagicEffects, ItemType i_type) {
+    public ItemMold(String weaponID, List<ItemStack> itemsRequiredToShapeMold, String itemName, Material itemMaterial,
+            List<String> itemLore, Integer customModelID, List<MagicEffects> allowedMagicEffects, ItemType i_type) {
         this.weaponID = weaponID;
         ItemsRequiredToShapeMold = itemsRequiredToShapeMold;
         ItemName = itemName;
@@ -40,37 +41,40 @@ public class ItemMold {
         ItemLore = itemLore;
         CustomModelID = customModelID;
         AllowedMagicEffects = allowedMagicEffects;
-        TypeOfMold=i_type;
+        TypeOfMold = i_type;
     }
 
-    public void Craft(Player player, List<MagicEffects> ListOfEffects, ItemStack mold, boolean CraftIntoItem,double damage){
-        if (mold == null || !mold.hasItemMeta() || mold.getType()!=Material.PAPER) return;
+    public void Craft(Player player, List<MagicEffects> ListOfEffects, ItemStack mold, boolean CraftIntoItem,
+            double damage) {
+        if (mold == null || !mold.hasItemMeta() || mold.getType() != Material.PAPER)
+            return;
         List<MagicEffects> ExistingEffects = new ArrayList<>();
         List<String> EffectsLore = new ArrayList<>(ItemLore);
         NamespacedKey key = new NamespacedKey(AmonPackPlugin.plugin, "magic_effects");
-        String data = Objects.requireNonNull(mold.getItemMeta()).getPersistentDataContainer().get(key, PersistentDataType.STRING);
+        String data = Objects.requireNonNull(mold.getItemMeta()).getPersistentDataContainer().get(key,
+                PersistentDataType.STRING);
         if (data != null && !data.isEmpty()) {
             ExistingEffects.addAll(MagicEffects.deserializeList(data));
         }
         player.getInventory().remove(mold);
 
         ExistingEffects.addAll(ListOfEffects);
-        if(!ExistingEffects.isEmpty()) {
+        if (!ExistingEffects.isEmpty()) {
             EffectsLore.add("§9Wykute Runy:");
             for (MagicEffects effects : ExistingEffects) {
                 EffectsLore.add("§8- " + effects.getDisplayName());
             }
         }
         ItemStack NewMold;
-        if(CraftIntoItem){
-            NewMold = addEffectsToItem(toItemStack(),ExistingEffects);
-        }else{
-            NewMold = addEffectsToItem(to_Empty_Mold_ItemStack(),ExistingEffects);
+        if (CraftIntoItem) {
+            NewMold = addEffectsToItem(toItemStack(), ExistingEffects);
+        } else {
+            NewMold = addEffectsToItem(to_Empty_Mold_ItemStack(), ExistingEffects);
         }
         ItemMeta MoldMeta = NewMold.getItemMeta();
         assert MoldMeta != null;
         EffectsLore.add("");
-        EffectsLore.add("§9§lBazowe obrażenia: "+damage);
+        EffectsLore.add("§9§lBazowe obrażenia: " + damage);
         MoldMeta.setLore(EffectsLore);
         NewMold.setItemMeta(MoldMeta);
         player.getInventory().addItem(NewMold);
@@ -90,43 +94,50 @@ public class ItemMold {
         item.setItemMeta(meta);
         return item;
     }
+
     public ItemStack toItemStack() {
         ItemStack item = new ItemStack(ItemMaterial);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            if (ItemName != null) meta.setDisplayName(ItemName);
-            if (ItemLore != null && !ItemLore.isEmpty()) meta.setLore(ItemLore);
-            if (CustomModelID != null) meta.setCustomModelData(CustomModelID);
+            if (ItemName != null)
+                meta.setDisplayName(ItemName);
+            if (ItemLore != null && !ItemLore.isEmpty())
+                meta.setLore(ItemLore);
+            if (CustomModelID != null)
+                meta.setCustomModelData(CustomModelID);
             meta.getPersistentDataContainer().set(
                     new NamespacedKey(AmonPackPlugin.plugin, "weapon_id"),
                     PersistentDataType.STRING,
-                    weaponID
-            );
+                    weaponID);
             item.setItemMeta(meta);
         }
         return item;
     }
+
     public ItemStack to_Empty_Mold_ItemStack() {
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
         meta.setCustomModelData(10095);
         if (meta != null) {
-            if (ItemName != null) meta.setDisplayName(ChatColor.DARK_AQUA+"Forma: "+ChatColor.GOLD+ChatColor.BOLD+ItemName);
+            if (ItemName != null)
+                meta.setDisplayName(ChatColor.DARK_AQUA + "Forma: " + ChatColor.GOLD + ChatColor.BOLD + ItemName);
             meta.getPersistentDataContainer().set(
                     new NamespacedKey(AmonPackPlugin.plugin, "weapon_id"),
                     PersistentDataType.STRING,
-                    weaponID
-            );
+                    weaponID);
             item.setItemMeta(meta);
         }
         return item;
     }
+
     public String getWeaponID() {
         return weaponID;
     }
+
     public List<ItemStack> getItemsRequiredToShapeMold() {
         return ItemsRequiredToShapeMold;
     }
+
     public List<String> getItemLore() {
         return ItemLore;
     }
