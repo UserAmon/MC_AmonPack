@@ -37,6 +37,11 @@ public class MagicEffects {
     private final String id;
     private final boolean isMajor;
 
+    public MagicEffects(List<MagicEffectsConditions> conditions, List<ItemStack> cost, String name, List<String> lore,
+            String id, boolean isMajor) {
+        this(conditions, cost, name, lore, id, isMajor, false);
+    }
+
     public double ExecuteOnTakinHit(Entity attacker, Player player) {
         double DamageReduction = 0;
         switch (id) {

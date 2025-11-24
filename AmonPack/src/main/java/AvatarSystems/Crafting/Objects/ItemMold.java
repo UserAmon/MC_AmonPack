@@ -73,8 +73,14 @@ public class ItemMold {
         }
         ItemMeta MoldMeta = NewMold.getItemMeta();
         assert MoldMeta != null;
-        EffectsLore.add("");
-        EffectsLore.add("§9§lBazowe obrażenia: " + damage);
+        if (TypeOfMold == ItemType.WEAPON) {
+            EffectsLore.add("");
+            EffectsLore.add("§9§lBazowe obrażenia: " + damage);
+        }
+        if (TypeOfMold == ItemType.ARMOR) {
+            EffectsLore.add("");
+            EffectsLore.add("§9§lBazowe obrona: " + damage);
+        }
         MoldMeta.setLore(EffectsLore);
         NewMold.setItemMeta(MoldMeta);
         player.getInventory().addItem(NewMold);

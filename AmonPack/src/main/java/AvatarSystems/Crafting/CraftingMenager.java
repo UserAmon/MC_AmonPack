@@ -419,6 +419,10 @@ public class CraftingMenager {
         Craftable_Armor armor_1 = new Craftable_Armor("200", new ArrayList<>(),
                 ChatColor.DARK_GREEN + "Kryształowy Hełm z Omashu", Material.IRON_HELMET, new ArrayList<>(), 0,
                 new ArrayList<>(), 1.5);
+        Craftable_Item item1 = new Craftable_Item("300", new ArrayList<>(),
+                ChatColor.LIGHT_PURPLE + "Magiczny Zwój", Material.PAPER,
+                new ArrayList<>(), 10002, new ArrayList<>());
+        AllCraftableItems.add(item1);
         AllTools.add(tool1);
         AllArmor.add(armor_1);
         AllMolds.addAll(AllTools);
