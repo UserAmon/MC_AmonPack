@@ -79,6 +79,27 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 		}
 	}
 
+
+	public EarthHammer(Player player, int mode) {
+		super(player);
+		if(mode==0 && this.bPlayer.isOnCooldown("EarthHammerItem_Smash")){
+			Methods.spawnFallingBlocks(player.getLocation(), Material.DIRT,6,1.5,player);
+			bPlayer.addCooldown("EarthHammerItem_Smash",5000);
+		}
+		if (mode==1){
+			if (!this.bPlayer.isOnCooldown("EarthHammerItem")) {
+				interval=0;
+				origin = player.getLocation();
+				origin.setPitch(0);
+				Direction = origin.getDirection();
+				Projectile = origin.clone();
+				AbilityState = State.USED;
+				bPlayer.addCooldown("EarthHammerItem",5000);
+				start();
+		}}
+	}
+
+
 	@Override
 	public void progress() {
 		if (player.isDead() || !player.isOnline()) {

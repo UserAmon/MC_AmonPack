@@ -1,4 +1,5 @@
 package abilities;
+import com.projectkorra.projectkorra.attribute.Attribute;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;

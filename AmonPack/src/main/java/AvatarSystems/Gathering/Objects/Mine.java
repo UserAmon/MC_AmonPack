@@ -4,6 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class Mine {
     private Location loc;
@@ -14,23 +15,15 @@ public class Mine {
     private HashMap<Material, Integer> OresList = new HashMap();
     private HashMap<String, Integer> LootList = new HashMap();
     private HashMap<Material, Double> ExpList = new HashMap<>();
+    private Map<String, Double> iaExpMap = new HashMap<>();
 
 
-    public Mine(Location loc, HashMap<Material, Double> expList, HashMap<String, Integer> lootList) {
+
+    public Mine(Location loc, HashMap<Material, Double> expList, HashMap<String, Integer> lootList, Map<String, Double> iaExpMap) {
         this.loc = loc;
         ExpList = expList;
         LootList = lootList;
-    }
-
-    public Mine(Location loc, int YOffsetUp, int radius, int restoreTime, Material mainBlock, HashMap<Material, Integer> oresList, HashMap<String, Integer> lootList, HashMap<Material,Double> explist) {
-        this.loc = loc;
-        this.YOffsetUp = YOffsetUp;
-        Radius = radius;
-        RestoreTime = restoreTime;
-        MainBlock = mainBlock;
-        OresList = oresList;
-        LootList = lootList;
-        ExpList = explist;
+        this.iaExpMap = iaExpMap;
     }
 
     public Location getLoc() {
@@ -61,5 +54,8 @@ public class Mine {
         else {
             return 2;
         }
+    }
+    public double GetExpByIA(String namespacedId) {
+        return iaExpMap.getOrDefault(namespacedId, 0.0);
     }
 }

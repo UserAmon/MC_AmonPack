@@ -5,16 +5,24 @@ import abilities.Util_Objects.BetterParticles;
 import abilities.Util_Objects.SmokeSource;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.EarthAbility;
+import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
+import com.projectkorra.projectkorra.util.TempBlock;
 import methods_plugins.Abilities.SmokeAbility;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
+import methods_plugins.Methods;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -130,4 +138,15 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 	public void stop() {
 		super.remove();
 	}
+
+	public SoundCrash(Player player, Entity victim, int use) {
+		super(player);
+		switch (use){
+			case 0:
+				if (!bPlayer.isOnCooldown("Major_Sound_OnHit")) {
+					HandleDamage(victim,10);
+					bPlayer.addCooldown("Major_Sound_OnHit",5000);
+					break;
+				}
+		}}
 }

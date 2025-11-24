@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -44,18 +45,19 @@ public class FarmMenager {
     public void ReloadConfig(){
         FarmBlocks=new ArrayList<>();
         FarmWorlds = new ArrayList<>();
-        for(String key : Objects.requireNonNull(AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Farms")).getKeys(false)) {
-            String World = AmonPackPlugin.getMinesConfig().getString("AmonPack.Farms." + key + ".World");
+        FileConfiguration config = AmonPackPlugin.getConfigs_menager().getMining_Config();
+        for(String key : Objects.requireNonNull(config.getConfigurationSection("AmonPack.Farms")).getKeys(false)) {
+            String World = config.getString("AmonPack.Farms." + key + ".World");
             HashMap<Material, Double> ExpMap = new HashMap<>();
-            if (AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Farms."+key+".Exp") != null){
-                for(String FarmItem : AmonPackPlugin.getMinesConfig().getConfigurationSection("AmonPack.Farms."+key+".Exp").getKeys(false)) {
-                    ExpMap.put(Material.getMaterial(FarmItem),AmonPackPlugin.getMinesConfig().getDouble("AmonPack.Farms." + key + ".Exp."+FarmItem));
+            if (config.getConfigurationSection("AmonPack.Farms."+key+".Exp") != null){
+                for(String FarmItem : config.getConfigurationSection("AmonPack.Farms."+key+".Exp").getKeys(false)) {
+                    ExpMap.put(Material.getMaterial(FarmItem),config.getDouble("AmonPack.Farms." + key + ".Exp."+FarmItem));
                 }}
             Location loc = new Location(Bukkit.getWorld(World), 0, 0, 0);
             Farm farm = new Farm(loc,ExpMap);
             FarmWorlds.add(farm);
         }
-        for(String key : AmonPackPlugin.getMinesConfig().getStringList("AmonPack.FarmingBlocks")) {
+        for(String key : config.getStringList("AmonPack.FarmingBlocks")) {
             FarmBlocks.add(Material.getMaterial(key));
         }
     }

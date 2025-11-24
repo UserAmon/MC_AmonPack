@@ -29,7 +29,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public abstract class SoundAbility extends AirAbility implements SubAbility {
-    public static HashMap<Entity,Integer> AfffectedEntities = new HashMap<>();
+    public static HashMap<Entity,Double> AfffectedEntities = new HashMap<>();
     public SoundAbility(Player player) {
         super(player);
     }
@@ -39,12 +39,12 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
     public Element getElement() {
         return Element.SubElement.getElement("Sound");
     }
-    public static void HandleDamage(Entity entity, int i){
+    public static void HandleDamage(Entity entity, double i){
         ParticleEffect.SPELL.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
         ParticleEffect.NOTE.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
         ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(10),1.4,1.7,1.4, Color.fromRGB(192, 192, 192));
         if(!AfffectedEntities.isEmpty()&&AfffectedEntities.get(entity)!=null){
-            int actual = AfffectedEntities.get(entity);
+            Double actual = AfffectedEntities.get(entity);
             AfffectedEntities.put(entity,actual+i);
         }else{
             AfffectedEntities.put(entity,i);
@@ -61,7 +61,7 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                         if(entity.isDead()){
                             ToRemove.add(entity);
                         }else{
-                        int time = AfffectedEntities.get(entity);
+                        double time = AfffectedEntities.get(entity);
                         if(time>0){
                             if(time>15){
                                 ((LivingEntity) entity).damage(4);
@@ -73,10 +73,10 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                                 ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(10),1.4,1.7,1.4,Color.fromRGB(192, 192, 192));
                                 ToRemove.add(entity);
                             }else{
-                            ParticleEffect.SPELL.display(entity.getLocation(),(4*time),0.4,1.7,0.4, Color.fromRGB(192, 192, 192));
-                            ParticleEffect.NOTE.display(entity.getLocation(),(2*time),0.4,1.7,0.4, Color.fromRGB(192, 192, 192));
-                            ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(4*time),0.4,1.7,0.4,Color.fromRGB(192, 192, 192));
-                            AfffectedEntities.put(entity,time-1);
+                            ParticleEffect.SPELL.display(entity.getLocation(), (int) time,0.4,1.7,0.4, Color.fromRGB(192, 192, 192));
+                            ParticleEffect.NOTE.display(entity.getLocation(),(int)time,0.4,1.7,0.4, Color.fromRGB(192, 192, 192));
+                            ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(),(int)time,0.4,1.7,0.4,Color.fromRGB(192, 192, 192));
+                            AfffectedEntities.put(entity,(time-0.5));
                         }}}}
                     }
                     for (Entity ent : ToRemove){
@@ -84,6 +84,6 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                     }
                 }
             }
-        }.runTaskTimer(AmonPackPlugin.plugin, 20, 20);
+        }.runTaskTimer(AmonPackPlugin.plugin, 20, 5);
     }
 }

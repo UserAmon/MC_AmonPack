@@ -1,5 +1,5 @@
 name: AmonPack
-version: '1.0-SNAPSHOT'
+version: '1.1'
 main: methods_plugins.AmonPackPlugin
 api-version: 1.20
 authors: [ Amon ]
@@ -15,4 +15,6 @@ commands:
   Level:
     usage: /<command>
   Reload:
+    usage: /<command>
+  Craft:
     usage: /<command>

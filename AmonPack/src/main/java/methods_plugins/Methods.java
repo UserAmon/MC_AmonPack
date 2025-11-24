@@ -1,13 +1,9 @@
 package methods_plugins;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import abilities.Util_Objects.AbilityProjectile;
+import abilities.Util_Objects.BetterParticles;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -33,7 +29,57 @@ public class Methods {
 	public Methods() {
 		super();
     }
-	
+
+	public static void LightningProjectile(Location location, Player player) {
+		List<AbilityProjectile> projectiles = new ArrayList<>();
+		List<BetterParticles> particles = new ArrayList<>();
+		Location origin = location.clone();
+
+		Location offset1 = player.getLocation().clone();
+		Location offset2 = player.getLocation().clone();
+		offset1.setYaw(location.getYaw()+30);
+		offset2.setYaw(location.getYaw()-30);
+
+		particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(0, 153, 255)));
+		particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(0, 255, 235)));
+		particles.add(new BetterParticles(2, ParticleEffect.CRIT_MAGIC, 0.3, 0.01, 0.15));
+		particles.add(new BetterParticles(2, ParticleEffect.FIREWORKS_SPARK, 0.3, 0.01, 0.15));
+
+
+
+
+		projectiles.add(new AbilityProjectile(player.getLocation().getDirection(), location, location, particles, 1));
+		projectiles.add(new AbilityProjectile(offset1.getDirection(), location, location, particles, 1));
+		projectiles.add(new AbilityProjectile(offset2.getDirection(), location, location, particles, 1));
+
+		new BukkitRunnable() {
+			int ticksElapsed = 0;
+
+			@Override
+			public void run() {
+				ticksElapsed++;
+				if (ticksElapsed > 80 || projectiles.isEmpty()) {
+					this.cancel();
+					return;
+				}
+				for (Iterator<AbilityProjectile> it = projectiles.iterator(); it.hasNext(); ) {
+					AbilityProjectile projectile = it.next();
+					Location loc = projectile.LightningAdvance().clone();
+					for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1)) {
+						if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
+							((LivingEntity) entity).damage(1,player);
+						}
+					}
+
+					if (loc.distance(origin) > 10 || loc.getBlock().getType().isSolid()) {
+						it.remove();
+					}
+				}
+			}
+		}.runTaskTimer(AmonPackPlugin.plugin, 0, 4);
+	}
+
+
 	public static void CreateSmokeZone(Player player, Location loc, Ability abi, double range, long duration) {
 		int i = 0;
 		CreateSmokeZoneSub(player,loc,abi,range,duration);

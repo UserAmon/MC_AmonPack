@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+import AvatarSystems.Crafting.CraftingMenager;
+import AvatarSystems.Crafting.Objects.CraftedWeapon;
+import AvatarSystems.Crafting.Objects.MagicEffects;
 import AvatarSystems.Levels.PlayerBendingBranch;
 import AvatarSystems.Util_Objects.LevelSkill;
 //import Mechanics.MMORPG.GuiMenu;
@@ -20,6 +23,8 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import static AvatarSystems.Crafting.CraftingMenager.AllCraftableWeapons;
 
 
 public class Commands implements CommandExecutor {
@@ -79,13 +84,39 @@ public class Commands implements CommandExecutor {
 					}
 				}
 				break;
+			case "reload":
+				AmonPackPlugin.reloadAllConfigs();
+				break;
 		}
 		if (sender instanceof Player) {
 			Player player = (Player) sender;
 			switch (cmd.getName().toLowerCase()) {
-				case "reload":
-					AmonPackPlugin.reloadAllConfigs();
-					break;
+				/*case "craft":
+					ItemStack item = player.getInventory().getItemInMainHand();
+					CraftedWeapon Mold= CraftingMenager.getCraftedWeaponByItem(item);
+					if(args.length!=0 && Mold!=null) {
+						if(args[0].equalsIgnoreCase("ogien")){
+							List<MagicEffects> ListOfEffects = new ArrayList<>(List.of(new MagicEffects("Podpalenie_1")));
+							Mold.Craft(player,ListOfEffects,item,false);
+						}
+						if(args[0].equalsIgnoreCase("earth")){
+							List<MagicEffects> ListOfEffects = new ArrayList<>(List.of(new MagicEffects("Earth_1")));
+							Mold.Craft(player,ListOfEffects,item,false);
+						}
+						if(args[0].equalsIgnoreCase("fire")){
+							List<MagicEffects> ListOfEffects = new ArrayList<>(List.of(new MagicEffects("Agility_1")));
+							Mold.Craft(player,ListOfEffects,item,false);
+						}
+						if(args[0].equalsIgnoreCase("craft")){
+							List<MagicEffects> ListOfEffects = new ArrayList<>();
+							Mold.Craft(player,ListOfEffects,item,true);
+						}
+					}else{
+						for (CraftedWeapon w : AllCraftableWeapons){
+							player.getInventory().addItem(w.to_Empty_Mold_ItemStack());
+						}
+					}
+					break;*/
 				case "menagerie":
 					List<Player> listofplayers = new ArrayList<>();
 					for(String s: args){

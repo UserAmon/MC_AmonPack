@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 
 //import AvatarSystems.ForestMenager;
+import AvatarSystems.Crafting.CraftingMenager;
+import AvatarSystems.Crafting.Objects.Craftable_Tool;
 import AvatarSystems.Gathering.CombatMenager;
 import AvatarSystems.Gathering.FarmMenager;
 import AvatarSystems.Gathering.ForestMenager;
@@ -21,6 +23,13 @@ import Mechanics.Listeners;
 import Mechanics.PVE.Menagerie.MenagerieMenager;
 import Mechanics.PVE.SimpleWorldGenerator;
 import Mechanics.Skills.UpgradesMenager;
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.BlockPosition;
+import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.projectkorra.projectkorra.ProjectKorra;
 import com.projectkorra.projectkorra.ability.Ability;
 import com.projectkorra.projectkorra.storage.SQLite;
@@ -29,6 +38,7 @@ import methods_plugins.Abilities.AbilitiesListener;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -47,7 +57,6 @@ import static methods_plugins.Abilities.SoundAbility.StartDeafnessTimer;
 
 public class AmonPackPlugin extends JavaPlugin {
 	public static Plugin plugin;
-	JavaPlugin jp = this;
 	public static boolean BuildingOnArenas;
 	public static SQLite sqlite;
     private static Element BladesElement;
@@ -55,32 +64,24 @@ public class AmonPackPlugin extends JavaPlugin {
 	public FileConfiguration config = getConfig();
 	static List<File> MenagerieConfigFile;
 	//static File PvPFile;
-	static File MinesConfigFile;
 	static File LevelConfigFile;
-	static File ForestConfigFile;
 	static File AbilitiesConfigFile;
 	static File SkillTreeFile;
 	static File CombatConfigFile;
-	static File PerksConfigFile;
 	private static PlayerLevelMenager PlayerMenager;
 	private static List<FileConfiguration> MenagerieConfig = new ArrayList<>();
 	//private static FileConfiguration PvPConfig;
-	private static FileConfiguration ForestConfig;
 	private static FileConfiguration LevelConfig;
 	private static FileConfiguration AbilitiesConfig;
-	private static FileConfiguration MinesConfig;
 	private static FileConfiguration SkillTreeConfig;
 	private static FileConfiguration CombatConfig;
-	private static FileConfiguration PerksConfig;
 	private static MenagerieMenager MenaMenager;
 	private static NamespacedKey upgradeKey;
 	static File configpath;
 	public static Levels_Bending levelsBending;
-	public static MiningMenager miningMenager;
 	public static FarmMenager farmmenager;
-	public static ForestMenager forestMenager;
 	public static CombatMenager combatMenager;
-	public static PerksMenager perksMenager;
+	private static ConfigsMenager configs_menager;
 
 
     @Override
@@ -88,7 +89,11 @@ public class AmonPackPlugin extends JavaPlugin {
 		BuildingOnArenas = false;
     	plugin = this;
         getLogger().info("AmonPack włączony");
-        CoreAbility.registerPluginAbilities(jp, "abilities");
+
+		configs_menager = new ConfigsMenager(getDataFolder());
+		configs_menager.CreateMenagers();
+
+		CoreAbility.registerPluginAbilities(this, "abilities");
         //BladesElement = new SubElement("Blades", Element.CHI, ElementType.BLOCKING, this);
         SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
 		createconf();
@@ -97,7 +102,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		//setPvPConfig(YamlConfiguration.loadConfiguration(PvPFile));
 
 		MenagerieConfigFile = getMenagerieFiles();
-		MinesConfigFile = new File(getDataFolder(), "MinesConfigFile.yml");
 		SkillTreeFile = new File(getDataFolder(), "SkillTreeConfig.yml");
 		setDungeonsConfig(MenagerieConfigFile);
 		configpath = getDataFolder();
@@ -105,11 +109,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 
 
-		ForestConfigFile = new File(new File(getDataFolder(), "RPG"), "Forest.yml");
-		ForestConfig = YamlConfiguration.loadConfiguration(ForestConfigFile);
-
-		PerksConfigFile = new File(new File(getDataFolder(), "RPG"), "Perks.yml");
-		PerksConfig = YamlConfiguration.loadConfiguration(PerksConfigFile);
 
 		CombatConfigFile = new File(new File(getDataFolder(), "RPG"), "Combat.yml");
 		CombatConfig = YamlConfiguration.loadConfiguration(CombatConfigFile);
@@ -120,7 +119,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		AbilitiesConfigFile = new File(getDataFolder(), "AbilitiesConfig.yml");
 		AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
 		sqlConnection();
-		setMinesConfigFile(YamlConfiguration.loadConfiguration(MinesConfigFile));
 		setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
 		//setGuiConfig(YamlConfiguration.loadConfiguration(GuiFile));
 		SaveConfigs();
@@ -130,12 +128,14 @@ public class AmonPackPlugin extends JavaPlugin {
 		SimpleWorldGenerator.loadAllWorlds();
 		//saveMinesConfig();
 		levelsBending=new Levels_Bending();
-		miningMenager = new MiningMenager();
 		farmmenager = new FarmMenager();
-		forestMenager = new ForestMenager();
 		combatMenager = new CombatMenager();
-		perksMenager = new PerksMenager();
+
+
+
+
 		upgradeKey = new NamespacedKey(this, "playerUpgrade");
+        this.getCommand("Craft").setExecutor(new Commands());
         this.getCommand("Level").setExecutor(new Commands());
 		this.getCommand("ArenaBuilding").setExecutor(new Commands());
 		this.getCommand("Menagerie").setExecutor(new Commands());
@@ -145,6 +145,14 @@ public class AmonPackPlugin extends JavaPlugin {
 		this.getCommand("Reload").setExecutor(new Commands());
 		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
+		ProtocolLibrary.getProtocolManager().addPacketListener(
+				new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Client.BLOCK_DIG) {
+					@Override
+					public void onPacketReceiving(PacketEvent event) {
+						handleDigPacket(event);
+					}
+				}
+		);
 		//new newPvP();
 		try {
 			StartDeafnessTimer();
@@ -158,6 +166,24 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 		System.out.println("Amonpack Załadowany");
 	}
+
+	private void handleDigPacket(PacketEvent event) {
+		Player player = event.getPlayer();
+		EnumWrappers.PlayerDigType digType = event.getPacket().getPlayerDigTypes().read(0);
+		BlockPosition pos = event.getPacket().getBlockPositionModifier().read(0);
+		Block block = player.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+
+		if (digType == EnumWrappers.PlayerDigType.ABORT_DESTROY_BLOCK
+				|| digType == EnumWrappers.PlayerDigType.STOP_DESTROY_BLOCK) {
+			Craftable_Tool tool = CraftingMenager.getCraftedToolByItem(
+					player.getInventory().getItemInMainHand()
+			);
+			if (tool != null) {
+				tool.cancelMining(player, block, pos, player.getEntityId() * -1);
+			}
+		}
+	}
+
 	public static void setPlayerUpgrade(Player player, List<String> upgrades) {
 		String upgradesString = String.join(",", upgrades);
 		player.getPersistentDataContainer().set(upgradeKey, PersistentDataType.STRING, upgradesString);
@@ -256,48 +282,10 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 			LevelConfig.save(LevelConfigFile);
 			AbilitiesConfig.save(AbilitiesConfigFile);
-			ForestConfig.save(ForestConfigFile);
 			CombatConfig.save(CombatConfigFile);
-			PerksConfig.save(PerksConfigFile);
 			//ForestConfig.save(ForestConfigFile);
 		}catch(Exception e){
 			System.out.println("Błąd z konfigiem! "+e.getMessage());
-		}}
-	public static void saveMinesConfig(){
-		try{
-			if (!getMinesConfig().contains("AmonPack")) {
-				getMinesConfig().set("AmonPack.MiningOresDrops.COAL_ORE", "coal");
-				getMinesConfig().set("AmonPack.MiningOresDrops.IRON_ORE", "iron");
-				getMinesConfig().set("AmonPack.MiningOresDrops.STONE", "cobblestone");
-				getMinesConfig().set("AmonPack.MiningOresDrops.DEEPSLATE", "cobblestone");
-				getMinesConfig().set("AmonPack.MiningOresDrops.GLOWSTONE", "Ksymil");
-				getMinesConfig().set("AmonPack.MiningOresDrops.CRIMSON_HYPHAE", "Skyrim");
-				getMinesConfig().set("AmonPack.MiningOresDrops.PRISMARINE", "Celestyn");
-				getMinesConfig().set("AmonPack.MiningOresDrops.GRAVEL", "gravel");
-				getMinesConfig().set("AmonPack.MiningOresDrops.SAND", "sand");
-				getMinesConfig().set("AmonPack.MiningOresDrops.CLAY", "clayball");
-				getMinesConfig().set("AmonPack.MiningOresDrops.DIRT", "dirt");
-
-				/*getNewConfigz().set("AmonPack.Mining.Kopalnia1.X",2880);
-				getNewConfigz().set("AmonPack.Mining.Kopalnia1.Y",40);
-				getNewConfigz().set("AmonPack.Mining.Kopalnia1.Z", 566);
-				getNewConfigz().set("AmonPack.Mining.Kopalnia1.World", "AvatarServGlownyNowy");*/
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.X",-90);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Y",-50);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Z", -86);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.World", "PodZadaniowy");
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Y-Offset-Up", -40);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Radius", 100);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.RestoreTime", 30);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.RevertBlock", "DEEPSLATE");
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Loot.Skyrim", 1);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Ores.GLOWSTONE", 1);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Ores.IRON_ORE", 4);
-				getMinesConfig().set("AmonPack.Mining.Kopalnia1.Ores.COAL_ORE", 4);
-			}
-			getMinesConfig().save(MinesConfigFile);
-		}catch(Exception e){
-			e.printStackTrace();
 		}}
 	public static void saveDungeonConfig() {
 		try {
@@ -699,25 +687,19 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static void reloadAllConfigs() {
 		try {
 			LevelConfig = YamlConfiguration.loadConfiguration(new File(configpath, "Levels.yml"));
-			ForestConfig = YamlConfiguration.loadConfiguration(new File(new File(configpath,"RPG"), "Forest.yml"));
 			CombatConfig = YamlConfiguration.loadConfiguration(new File(new File(configpath,"RPG"), "Combat.yml"));
-			PerksConfig = YamlConfiguration.loadConfiguration(new File(new File(configpath,"RPG"), "Perks.yml"));
 			AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "AbilitiesConfig.yml"));
 			//ForestConfig = YamlConfiguration.loadConfiguration(new File(configpath + File.separator + "RPG", "Forest.yml"));
-			MinesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "MinesConfigFile.yml"));
-			MinesConfigFile = new File(configpath, "MinesConfigFile.yml");
-			setMinesConfigFile(YamlConfiguration.loadConfiguration(MinesConfigFile));
 			setDungeonsConfig(getMenagerieFilesReload());
 			// = YamlConfiguration.loadConfiguration(new File(configpath, "PvPConfig.yml"));
 			//MenaMenager.ReloadMenageries();
 			//ForestMenager.LoadData();
 			SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(configpath, "SkillTreeConfig.yml"));
 			levelsBending.LoadData();
-			miningMenager.ReloadConfig();
 			farmmenager.ReloadConfig();
-			forestMenager.ReloadConfig();
 			combatMenager.ReloadConfig();
-			perksMenager.ReloadConfig();
+			configs_menager.LoadAllConfigs();
+			configs_menager.ReloadMenagers();
 			System.out.println("pomyślnie zrobiono reload!");
 		} catch (Exception e) {
 			System.out.println("ERROR!!!  "+e);
@@ -728,17 +710,8 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static List<FileConfiguration> GetMenagerieConfig() {
 		return MenagerieConfig;
 	}
-	public static FileConfiguration getMinesConfig() {
-		return MinesConfig;
-	}
-	public static FileConfiguration getForestConfig() {
-		return ForestConfig;
-	}
 	public static FileConfiguration getCombatConfig() {
 		return CombatConfig;
-	}
-	public static FileConfiguration getPerksConfig() {
-		return PerksConfig;
 	}
 	public static FileConfiguration getSkillTreeConfig() {
 		return SkillTreeConfig;
@@ -748,9 +721,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		for(File f : DungeonsConfig){
 			MenagerieConfig.add(YamlConfiguration.loadConfiguration(f));
 		}
-	}
-	public static void setMinesConfigFile(FileConfiguration MinesConfig) {
-		AmonPackPlugin.MinesConfig = MinesConfig;
 	}
 	public void setSkillTreeConfig(FileConfiguration SkillTreeConfig) {
 		AmonPackPlugin.SkillTreeConfig = SkillTreeConfig;
@@ -818,6 +788,16 @@ public class AmonPackPlugin extends JavaPlugin {
 		TempItem.setItemMeta(IMeta);
 		return TempItem;
 	}
+
+	public static ItemStack FastEasyStackWithLoreModelData(Material mat, String name,List<String> lore, int modeldata){
+		ItemStack TempItem = new ItemStack(mat);
+		ItemMeta IMeta = TempItem.getItemMeta();
+		IMeta.setDisplayName(name);
+		IMeta.setCustomModelData(modeldata);
+		IMeta.setLore(lore);
+		TempItem.setItemMeta(IMeta);
+		return TempItem;
+	}
 	public static Element ElementBasedOnSubElement(Element SubElement){
 		for (Element element:Element.getAllElements()) {
 			if (element.equals(SubElement)){
@@ -829,18 +809,8 @@ public class AmonPackPlugin extends JavaPlugin {
 				}}}
 		return null;
 	}
-	public static boolean SubElementByElement(Element MElement, Ability abi){
-		if(abi==null){
-			return false;
-		}
-		if (abi.getElement().equals(MElement)) {
-			return true;
-		}
-		for (Element element:Element.getSubElements(MElement)) {
-			if (abi.getElement().equals(element)) {
-				return true;
-			}}
-		return false;
-	}
 
+	public static ConfigsMenager getConfigs_menager() {
+		return configs_menager;
+	}
 }

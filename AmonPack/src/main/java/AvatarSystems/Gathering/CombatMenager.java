@@ -32,12 +32,12 @@ public class CombatMenager {
         }
     }
 
-    public static void ExecuteKill(Player player, Entity victim){
+    public static void ExecuteKill(Player player, Entity victim, int expModifier){
         int ExpAmount = 1;
         if(ExpList.containsKey(victim.getType())){
             ExpAmount= ExpList.get(victim.getType());
         }
-        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT, player, ExpAmount);
+        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT, player, (ExpAmount+expModifier));
 
     }
 }

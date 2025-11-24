@@ -31,7 +31,7 @@ public class ForestMenager {
 
     public void ReloadConfig(){
         ForestWorlds=new ArrayList<>();
-        FileConfiguration Config = AmonPackPlugin.getForestConfig();
+        FileConfiguration Config = AmonPackPlugin.getConfigs_menager().getForest_Config();
         for(String key : Objects.requireNonNull(Config.getConfigurationSection("AmonPack.Forest")).getKeys(false)) {
             String World = Config.getString("AmonPack.Forest." + key + ".World");
             HashMap<Material, Double> ExpMap = new HashMap<>();

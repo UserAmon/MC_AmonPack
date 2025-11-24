@@ -1,6 +1,8 @@
 package Mechanics;
 
 //import AvatarSystems.ForestMenager;
+import AvatarSystems.Crafting.CraftingMenager;
+import AvatarSystems.Crafting.Objects.*;
 import AvatarSystems.Gathering.CombatMenager;
 import AvatarSystems.Gathering.FarmMenager;
 import AvatarSystems.Gathering.ForestMenager;
@@ -18,8 +20,13 @@ import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.Element;
 import com.projectkorra.projectkorra.ability.CoreAbility;
+import com.projectkorra.projectkorra.attribute.Attribute;
+import com.projectkorra.projectkorra.attribute.AttributePriority;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
 import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
+import com.projectkorra.projectkorra.event.AbilityStartEvent;
+import com.projectkorra.projectkorra.event.PlayerCooldownChangeEvent;
+import commands.Commands;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
 import methods_plugins.Methods;
@@ -30,17 +37,27 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 
 
+import static AvatarSystems.Crafting.CraftingMenager.AllCraftableWeapons;
+import static com.projectkorra.projectkorra.attribute.AttributeModifier.ADDITION;
 import static methods_plugins.AmonPackPlugin.ElementBasedOnSubElement;
+import static methods_plugins.AmonPackPlugin.plugin;
+import static methods_plugins.Methods.getRandom;
 
 public class Listeners implements Listener {
     /*
@@ -271,25 +288,62 @@ public class Listeners implements Listener {
     }*/
 
     @EventHandler
-    public void onRightClick(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+    public void onBlockDamage(BlockDamageEvent event) {
         Player player = event.getPlayer();
-        if(player.getGameMode().equals(GameMode.CREATIVE)){
-            return;
+        Block block = event.getBlock();
+
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()
+                && item.getItemMeta().getCustomModelData() == 10000) {
+            event.setCancelled(true);
+            player.sendMessage("blokowanie");
+            //Craftable_Tool tool = CraftingMenager.getCraftedToolByItem(item);
+            //if(tool==null){
+              //  System.out.println("Ten item pownien zostac zcraftowany");
+                return;
+            //}
+            //tool.startMining(player, block);
         }
-        Block block = event.getClickedBlock();
-        FarmMenager.CheckFarmBlock(block,player,true);
+    }
+
+
+    @EventHandler
+    public void onRightClick(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
+            Block block = event.getClickedBlock();
+            //1067,24,703-Avatar-Main
+            //Location blacksmith = new Location(Bukkit.getWorld("Avatar-Main"), 1058, 20, 694);
+            Location blacksmith = new Location(Bukkit.getWorld("world"), 0, 100, 0);
+            if (block.getType() == Material.CRAFTING_TABLE && block.getLocation().distance(blacksmith) < 10) {
+                event.setCancelled(true);
+                //CraftingMenager.OpenMoldCrafting(player);
+                CraftingMenager.OpenMoldCategory(player);
+            } else {
+                if (block.getType() == Material.ENCHANTING_TABLE || block.getType() == Material.ANVIL) {
+                    event.setCancelled(true);
+                    player.sendMessage("§c✖ §7Ta funkcja jest §lwyłączona§7! Udaj się do §6Kowala§7, aby z niej skorzystać.");
+                }
+            }
+        } else {
+            if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+            if (player.getGameMode().equals(GameMode.CREATIVE)) {
+                return;
+            }
+            Block block = event.getClickedBlock();
+            FarmMenager.CheckFarmBlock(block, player, true);
+        }
     }
 
 
     @EventHandler
     public void BlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
-        if(player.getGameMode().equals(GameMode.CREATIVE)){
+        if (player.getGameMode().equals(GameMode.CREATIVE)) {
             return;
         }
         Block b = event.getBlock();
-        MiningMenager.PlayerPlaceBlock(player,b);
+        MiningMenager.PlayerPlaceBlock(player, b);
         /*if (!AmonPackPlugin.BuildingOnArenas && event.getBlock().getWorld().equals(event.getPlayer().getWorld())){
             for (Mine mine:Mining.ListOfMines) {
                 if(event.getBlock().getWorld().equals(mine.getLoc().getWorld())&&event.getBlock().getLocation().distance(mine.getLoc())<= mine.getRadius()){
@@ -303,16 +357,17 @@ public class Listeners implements Listener {
                 }}
         }*/
     }
+
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if(player.getGameMode().equals(GameMode.CREATIVE)){
+        if (player.getGameMode().equals(GameMode.CREATIVE)) {
             return;
         }
         Block b = event.getBlock();
-        if(FarmMenager.CheckFarmBlock(b,player,false)
-                ||MiningMenager.PlayerBreakBlock(player,b)
-                || ForestMenager.PlayerBreakBlock(player,b)){
+        if (FarmMenager.CheckFarmBlock(b, player, false)
+                || MiningMenager.PlayerBreakBlock(player, b, event.getExpToDrop())
+                || ForestMenager.PlayerBreakBlock(player, b)) {
             event.setCancelled(true);
         }
         /*if (event.getBlock().getWorld().equals(newPvP.Loc.getWorld())){
@@ -330,132 +385,214 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        if(event.getEntity().getKiller() != null){
-        Player player = event.getEntity().getKiller();
-        if (player.getGameMode().equals(GameMode.CREATIVE)) {
-            return;
-        }
+        if (event.getEntity().getKiller() != null) {
+            Player player = event.getEntity().getKiller();
             List<ItemStack> drops = new ArrayList<>(event.getDrops());
-         event.getDrops().clear();
-          for (ItemStack item : drops) {
+            event.getDrops().clear();
+            for (ItemStack item : drops) {
                 HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(item);
                 for (ItemStack leftover : leftovers.values()) {
                     player.getWorld().dropItemNaturally(player.getLocation(), leftover);
                 }
             }
-        Entity victim = event.getEntity();
-        CombatMenager.ExecuteKill(player,victim);
-
-           /* if(PerksMenager.PlayerConditionPerk(player,"TestowyPerk", Perk.PerkType.PASSIVE)) {
-                player.sendMessage("Pomyslnie perk TESTOWY wporowadzono!");
+            ItemStack item = player.getInventory().getItemInMainHand();
+            if (item.getType() != Material.AIR && item.hasItemMeta() && CraftingMenager.getItemMoldByItem(item) != null) {
+                if (CraftingMenager.HaveEffect(item, "Looting")) {
+                    for (ItemStack itemdrops : drops) {
+                        HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(itemdrops);
+                        for (ItemStack leftover : leftovers.values()) {
+                            player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                        }
+                    }
+                }
+                if (CraftingMenager.HaveEffect(item, "Expierience")) {
+                    player.giveExp((event.getDroppedExp() * 2));
+                }
+                if (CraftingMenager.HaveEffect(item, "Earth_Health_Boost")) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 200, 1, false, false));
+                }
+                if (CraftingMenager.HaveEffect(item, "Monster_Hunter")) {
+                    if (event.getEntity() instanceof Monster) {
+                        for (ItemStack itemdrops : drops) {
+                            HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(itemdrops);
+                            for (ItemStack leftover : leftovers.values()) {
+                                player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                            }
+                        }
+                    }
+                }
+                if (CraftingMenager.HaveEffect(item, "Midas")) {
+                    if (getRandom(0, 10) > 5) {
+                        Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
+                        example.executeCommand("money give " + player.getName() + " " + (event.getDroppedExp() * 0.1));
+                    }
+                }
             }
-            if(PerksMenager.PlayerConditionPerk(player,"MiningKill", Perk.PerkType.PASSIVE)) {
-                player.sendMessage("Pomyslnie perk MINING wporowadzono!");
-            }*/
-
-                if(PerksMenager.PlayerConditionPerk(player,"Combat_1_Explosion", Perk.PerkType.PASSIVE)){
-            Location location = victim.getLocation();
-            /*List<Entity> entities =
-                    (List<Entity>) Objects.requireNonNull(location.getWorld()).getNearbyEntities(location,5,5,5,
-                            (entity) -> {
-                                return !entity.isDead() && entity!=player&& (!(entity instanceof Player) || !((Player)entity).getGameMode().equals(GameMode.SPECTATOR)) || entity instanceof ArmorStand && ((ArmorStand)entity).isMarker();
-                            });*/
-                    Methods.spawnFallingBlocks(location,Material.DIRT,6,1.5,player);
+            if (player.getGameMode().equals(GameMode.CREATIVE)) {
+                return;
+            }
+            Entity victim = event.getEntity();
+            int expmodifier = 0;
+            if (CraftingMenager.HaveEffect(item, "Monster_Hunter") && event.getEntity() instanceof Monster) {
+                expmodifier += 1;
+            }
+            CombatMenager.ExecuteKill(player, victim, expmodifier);
 
         }
+    }
 
-    }}
+/*
+    @EventHandler
+    public void onItemDamage(PlayerItemDamageEvent event) {
+        ItemStack item = event.getItem();
+        if (PerksMenager.PlayerConditionPerk(event.getPlayer(), "Unbreaking_Tools", Perk.PerkType.PASSIVE)) {
+            event.setCancelled(true);
+        } else {
+            if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+                CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
+                if (weapon != null) {
+                    event.setCancelled(true);
+                }
+            }
+        }
 
+    }*/
 
+    @EventHandler
+    public void onDamage(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player p) {
+            ItemStack item = p.getInventory().getItemInMainHand();
+            if (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
+                if(CraftingMenager.IsArmor(item)){
+                Craftable_Armor armor = CraftingMenager.GetCraftedArmorByItem(item);
+                p.sendMessage("Sukcesywnie zablokowano obrazenia!");
+                p.sendMessage("Dmg: "+event.getDamage());
+                p.sendMessage("Dmg2: "+event.getFinalDamage());
+                p.sendMessage("Dmg3: "+(event.getDamage()-armor.getDmgReduction()));
+                    event.setDamage(event.getDamage()-armor.getDmgReduction());
+            }
+            }
+        }
+        if (event.getDamager() instanceof Player p) {
+            ItemStack item = p.getInventory().getItemInMainHand();
+            if (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
+                if(CraftingMenager.IsWeapon(item)) {
+                    CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
+                    double DamageModifier = weapon.ExecuteEffectsOnHitByPlayer(event.getEntity(), p.getInventory().getItemInMainHand(), p);
+                    event.setDamage(weapon.getDamage() + DamageModifier);
+                }
+            }
+        }
+    }
+/*
+    @EventHandler
+    public void onFallDamage(EntityDamageEvent event) {
+        if (event.getEntityType() != EntityType.PLAYER) return;
+        Player player= (Player) event.getEntity();
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            CraftedWeapon weapon= CraftingMenager.getCraftedWeaponByItem(item);
+            if(weapon==null && !weapon.getWeaponID().equalsIgnoreCase("3")) return;
+            weapon.ExecuteEffects(event.getEntity(),player.getInventory().getItemInMainHand(),player,true);
+        }
+        /*(PerksMenager.PlayerConditionPerk((Player) event.getEntity(),"Anty_Fall_Dmg", Perk.PerkType.PASSIVE)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
+                event.setCancelled(true);
+            }
+        }*/
+
+    //}
+
+/*
     @EventHandler
     public void onCropTrample(EntityInteractEvent event) {
         if (event.getEntityType() != EntityType.PLAYER) return;
-        if(PerksMenager.PlayerConditionPerk((Player) event.getEntity(),"Farming_1_Jumping", Perk.PerkType.PASSIVE)){
+        if (PerksMenager.PlayerConditionPerk((Player) event.getEntity(), "Farming_1_Jumping", Perk.PerkType.PASSIVE)) {
             Block block = event.getBlock();
             if (block.getType() == Material.FARMLAND || block.getBlockData() instanceof Ageable) {
                 System.out.println("Zablokowano zniszczenie");
                 event.setCancelled(true);
             }
-        }else {
+        } else {
             Block block = event.getBlock();
             if (block.getType() == Material.FARMLAND || block.getBlockData() instanceof Ageable) {
-                    event.getEntity().sendMessage("powinno zniszczyć boki");
-        }
+                event.getEntity().sendMessage("powinno zniszczyć boki");
+            }
         }
     }
 
-        /*else{
+    /*else{
 /*
-        for (Menagerie mena:ListOfAllMenageries) {
-            if (mena.IsInMenagerie(event.getEntity().getLocation())){
-                if(event.getEntity().getKiller() != null){
-                    Player p = event.getEntity().getKiller();
-                    Entity Victim = event.getEntity();
-                    for (Objectives obj:mena.getActiveEncounter().getActiveObjectivesList()) {
-                        if(obj.isItemDropBoolean()){
-                            Victim.getWorld().dropItem(Victim.getLocation(), obj.getItemDrop());
-                        }}
-                    List<String> upgrade = AmonPackPlugin.getPlayerUpgrades(p);
-                        if (upgrade.contains("Overshield_1_Kill")){
-                            Menagerie.addTemporaryHealth(p,2,15);
+    for (Menagerie mena:ListOfAllMenageries) {
+        if (mena.IsInMenagerie(event.getEntity().getLocation())){
+            if(event.getEntity().getKiller() != null){
+                Player p = event.getEntity().getKiller();
+                Entity Victim = event.getEntity();
+                for (Objectives obj:mena.getActiveEncounter().getActiveObjectivesList()) {
+                    if(obj.isItemDropBoolean()){
+                        Victim.getWorld().dropItem(Victim.getLocation(), obj.getItemDrop());
+                    }}
+                List<String> upgrade = AmonPackPlugin.getPlayerUpgrades(p);
+                    if (upgrade.contains("Overshield_1_Kill")){
+                        Menagerie.addTemporaryHealth(p,2,15);
+                    }
+                    if (upgrade.contains("SpiritOrbs_1_Kill")){
+                        for (int i = 0; i <= new Random().nextInt(5); i++) {
+                            Victim.getWorld().dropItem(Victim.getLocation(), SpiritOrb);
                         }
-                        if (upgrade.contains("SpiritOrbs_1_Kill")){
-                            for (int i = 0; i <= new Random().nextInt(5); i++) {
-                                Victim.getWorld().dropItem(Victim.getLocation(), SpiritOrb);
-                            }
-                    }
-                        if (upgrade.contains("Sword_1_Kill")){
-                            if(!p.getInventory().contains(MoonBlade)){
-                            if(new Random().nextBoolean()){
-                                Victim.getWorld().dropItem(Victim.getLocation(), MoonBlade);
-                                Victim.getWorld().dropItem(Victim.getLocation(), MoonBow);
-                            }}}
-                    }
-                mena.ActivateByKill(event.getEntity());
-                break;
                 }
+                    if (upgrade.contains("Sword_1_Kill")){
+                        if(!p.getInventory().contains(MoonBlade)){
+                        if(new Random().nextBoolean()){
+                            Victim.getWorld().dropItem(Victim.getLocation(), MoonBlade);
+                            Victim.getWorld().dropItem(Victim.getLocation(), MoonBow);
+                        }}}
+                }
+            mena.ActivateByKill(event.getEntity());
+            break;
+            }
 
-            }}
-        /*if (playerinzone(PvPLoc, Radius+1700, event.getEntity().getLocation())) {
-            if (event.getEntity() instanceof Player) {
-                Player killedPlayer = (Player) event.getEntity();
-                if (killedPlayer.getKiller() != null) {
-                    Player killer = killedPlayer.getKiller();
-                    for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.sendMessage(ChatColor.GREEN+ killedPlayer.getName() + ChatColor.GREEN+" Został zabity przez Gracza: " + killer.getName());
-                    }
-                    for (String st : ChestList.get(0).getLoot()) {
-                        killer.getInventory().addItem(Commands.QuestItemConfig(st));
-                    }
-                    if (fightParticipants.containsKey(killedPlayer) && playerBossBars.containsKey(killedPlayer)){
-                        fightParticipants.remove(killedPlayer);
-                        lastAttackTimes.remove(killedPlayer);
-                        removePrivateBossBar(killedPlayer);
-                        if (!fightParticipants.containsValue(killer)){
-                            removePrivateBossBar(killer);
-                        }
+        }}
+    /*if (playerinzone(PvPLoc, Radius+1700, event.getEntity().getLocation())) {
+        if (event.getEntity() instanceof Player) {
+            Player killedPlayer = (Player) event.getEntity();
+            if (killedPlayer.getKiller() != null) {
+                Player killer = killedPlayer.getKiller();
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    p.sendMessage(ChatColor.GREEN+ killedPlayer.getName() + ChatColor.GREEN+" Został zabity przez Gracza: " + killer.getName());
+                }
+                for (String st : ChestList.get(0).getLoot()) {
+                    killer.getInventory().addItem(Commands.QuestItemConfig(st));
+                }
+                if (fightParticipants.containsKey(killedPlayer) && playerBossBars.containsKey(killedPlayer)){
+                    fightParticipants.remove(killedPlayer);
+                    lastAttackTimes.remove(killedPlayer);
+                    removePrivateBossBar(killedPlayer);
+                    if (!fightParticipants.containsValue(killer)){
+                        removePrivateBossBar(killer);
                     }
                 }
             }
-            if (ActEvent.equalsIgnoreCase("Boss")){
-                for (Location loc:RDLocList) {
-                    for (RandomEvents re: REventsList) {
-                        if (re.getType().equalsIgnoreCase("RaidBoss")){
-                            if ((event.getEntity().getType() == EntityType.VINDICATOR|| event.getEntity().getType() == EntityType.SKELETON|| event.getEntity().getType() == EntityType.HUSK) && playerinzone(loc,re.getArenaS(),event.getEntity().getLocation())){
-                                for (Player p:Bukkit.getOnlinePlayers()) {
-                                    if (p.getWorld().getName().equals(re.getBossLoc().getWorld().getName()) && playerinzone(loc,re.getArenaS(),p.getLocation())){
-                                        for (int i = 0; i < re.getLoot().size(); i++) {
-                                            if (re.getLootchance().get(i) >= Math.random()) {
-                                                p.getInventory().addItem(Commands.QuestItemConfig(re.getLoot().get(i)));
-                                            }}
-                                        p.sendMessage(ChatColor.RED+"[Ogłoszenie]  "+ChatColor.DARK_PURPLE+"Udało wam się zabić Czempiona Króla! Rozkoszujcie się nagrodami!");
-                                        //p.teleport(RTP());
-                                        p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 10));
-                                        p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 10));
-                                    }}
-                                break;
-                            }}}
-                }}}*/
+        }
+        if (ActEvent.equalsIgnoreCase("Boss")){
+            for (Location loc:RDLocList) {
+                for (RandomEvents re: REventsList) {
+                    if (re.getType().equalsIgnoreCase("RaidBoss")){
+                        if ((event.getEntity().getType() == EntityType.VINDICATOR|| event.getEntity().getType() == EntityType.SKELETON|| event.getEntity().getType() == EntityType.HUSK) && playerinzone(loc,re.getArenaS(),event.getEntity().getLocation())){
+                            for (Player p:Bukkit.getOnlinePlayers()) {
+                                if (p.getWorld().getName().equals(re.getBossLoc().getWorld().getName()) && playerinzone(loc,re.getArenaS(),p.getLocation())){
+                                    for (int i = 0; i < re.getLoot().size(); i++) {
+                                        if (re.getLootchance().get(i) >= Math.random()) {
+                                            p.getInventory().addItem(Commands.QuestItemConfig(re.getLoot().get(i)));
+                                        }}
+                                    p.sendMessage(ChatColor.RED+"[Ogłoszenie]  "+ChatColor.DARK_PURPLE+"Udało wam się zabić Czempiona Króla! Rozkoszujcie się nagrodami!");
+                                    //p.teleport(RTP());
+                                    p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 10));
+                                    p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 10));
+                                }}
+                            break;
+                        }}}
+            }}}*/
 /*
     @EventHandler
     public void onPlayerItemDamage(PlayerItemDamageEvent event) {
@@ -468,8 +605,10 @@ public class Listeners implements Listener {
     }*/
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if(event.getCurrentItem()!=null){
+        if (event.getCurrentItem() != null) {
             Player p = (Player) event.getWhoClicked();
+            Inventory inv = p.getInventory();
+            ItemStack clickeditem = event.getCurrentItem();
             /*
             if(Objects.equals(event.getInventory().getHolder(), ForestMenager.ForestHolder)){
                 event.setCancelled(true);
@@ -481,54 +620,139 @@ public class Listeners implements Listener {
                         event.setCancelled(true);
                     }}
             }else*/
-        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SkillDetails)){
-            event.setCancelled(true);
-            if(event.getCurrentItem().getType()==Material.BARRIER){
-                PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
-            }
-            if(event.getCurrentItem().getItemMeta().getDisplayName().contains("Poziom") && event.getCurrentItem().getType()!=Material.PLAYER_HEAD){
-                LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
-                PlayerLevelMenager.ClaimReward(sktype,(Player) event.getWhoClicked(),event.getCurrentItem().getItemMeta().getDisplayName());
-            }
-        }else
-        if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.Holder1)){
-            event.setCancelled(true);
-            LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
-            if(sktype!=null){
-                PlayerLevel Level = PlayerLevelMenager.GetPlayerLevelFromList(event.getWhoClicked().getName());
-                if(Level!=null){
-                    PlayerLevelMenager.OpenSkillDetails(Level.GetSkillByType(sktype), (Player) event.getWhoClicked());
-                }}
-            Element ele = PlayerLevelMenager.GetElementByPlace(event.getSlot());
-            if(ele!=null){
-
-                PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
-                if(playersBranch==null){
-                    p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
-                    return;
+            if (Objects.equals(event.getInventory().getHolder(), CraftingMenager.CategoryGui)) {
+                if(clickeditem.getItemMeta().getDisplayName().contains("Bronie")){
+                    CraftingMenager.OpenMoldCrafting(p,0);
                 }
-                Element element = playersBranch.getCurrentElement();
+                if(clickeditem.getItemMeta().getDisplayName().contains("Zbroje")){
+                    CraftingMenager.OpenMoldCrafting(p,1);
 
-                if (element==ele) {
-                    AmonPackPlugin.levelsBending.OpenBendingSkillMenu(playersBranch.getName());
-                }else{
-                    event.getWhoClicked().sendMessage(ChatColor.RED+"Nie masz wybranego tego zywiołu! Twój zywioł to: "+playersBranch.getCurrentElement());
-                }}
-        }else
-            if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillMenu)){
+                }
+                if(clickeditem.getItemMeta().getDisplayName().contains("Narzedzia")){
+                    CraftingMenager.OpenMoldCrafting(p,2);
+
+                }
+                event.setCancelled(true);
+            }
+            if (Objects.equals(event.getInventory().getHolder(), CraftingMenager.EffectsGui)) {
+                event.setCancelled(true);
+                if (event.getSlot() != 53) {
+                    String effectName = ChatColor.stripColor(clickeditem.getItemMeta().getDisplayName());
+                    MagicEffects effect = CraftingMenager.GetMagicEfectByDisplayName(effectName);
+                    if (effect == null) {
+                        System.out.println(ChatColor.RED + "❌ Wystąpił błąd: nie znaleziono efektu!");
+                        return;
+                    }
+                    if (!PlayerLevelMenager.CheckPlayerMagicEffectsCondition(effect, p)) {
+                        p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "Nie spełniasz wymaganych warunków, aby użyć tej Runy!");
+                        return;
+                    }
+                    if (!CraftingMenager.HaveItems(p, false, effect.getCost())) {
+                        p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "Nie posiadasz wymaganych przedmiotów!");
+                        return;
+                    }
+                    ItemStack previewItem = event.getInventory().getItem(53);
+                    ItemMold mold = CraftingMenager.getItemMoldByItem(previewItem);
+                    if (effect.isMajorRune()) {
+                        if (mold == null) {
+                            System.out.println(ChatColor.RED + "❌ Nie znaleziono wzorca przedmiotu! " + previewItem);
+                            return;
+                        }
+                        if (CraftingMenager.HaveMajor(previewItem)) {
+                            p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "Już wybrałeś " + ChatColor.ITALIC + "Większą Runę!");
+                            return;
+                        }
+                    }
+                    CraftingMenager.OpenMagicEffectsGui(p, previewItem, clickeditem);
+                } else {
+                    ItemMold item = CraftingMenager.getItemMoldByItem(event.getInventory().getItem(53));
+                    if(item==null) return;
+                    List<ItemStack> requiredItems = new ArrayList<>(item.getItemsRequiredToShapeMold());
+                    List<MagicEffects> chosenEffects = CraftingMenager.getEffectsFromItem(event.getInventory().getItem(53));
+                    for (MagicEffects effect : chosenEffects) {
+                        requiredItems.addAll(effect.getCost());
+                    }
+                    if (CraftingMenager.HaveItems(p, true, requiredItems)) {
+                        if(item.getTypeOfMold()== ItemMold.ItemType.WEAPON){
+                            CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item.toItemStack());
+                            item.Craft(p, new ArrayList<>(), event.getInventory().getItem(53), true, weapon.getDamage());
+                        }else{
+                            item.Craft(p, new ArrayList<>(), event.getInventory().getItem(53), true, 1);
+                        }
+
+                        p.closeInventory();
+                    } else {
+                        p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "Nie posiadasz wymaganych przedmiotów do stworzenia tego przedmiotu!");
+                    }
+
+                }
+            }
+            if (Objects.equals(event.getInventory().getHolder(), CraftingMenager.CraftingGui)) {
+                event.setCancelled(true);
+                ItemMold mold = CraftingMenager.getItemMoldByItem(clickeditem);
+                List<ItemStack> requiredItems = mold.getItemsRequiredToShapeMold();
+                boolean hasAll = true;
+                for (ItemStack required : requiredItems) {
+                    if (!inv.containsAtLeast(required, required.getAmount())) {
+                        hasAll = false;
+                        break;
+                    }
+                }
+                if (hasAll) {
+                    CraftingMenager.OpenMagicEffectsGui(p, clickeditem, null);
+                } else {
+                    p.closeInventory();
+                    p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "Nie posiadasz wymaganych przedmiotów do stworzenia tego przedmiotu!");
+                }
+
+            }
+            if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SkillDetails)) {
+                event.setCancelled(true);
+                if (event.getCurrentItem().getType() == Material.BARRIER) {
+                    PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
+                }
+                if (event.getCurrentItem().getItemMeta().getDisplayName().contains("Poziom") && event.getCurrentItem().getType() != Material.PLAYER_HEAD) {
+                    LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
+                    PlayerLevelMenager.ClaimReward(sktype, (Player) event.getWhoClicked(), event.getCurrentItem().getItemMeta().getDisplayName());
+                }
+            } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.Holder1)) {
+                event.setCancelled(true);
+                LevelSkill.SkillType sktype = PlayerLevelMenager.GetSkillTypeByMaterial(event.getCurrentItem().getType());
+                if (sktype != null) {
+                    PlayerLevel Level = PlayerLevelMenager.GetPlayerLevelFromList(event.getWhoClicked().getName());
+                    if (Level != null) {
+                        PlayerLevelMenager.OpenSkillDetails(Level.GetSkillByType(sktype), (Player) event.getWhoClicked());
+                    }
+                }
+                Element ele = PlayerLevelMenager.GetElementByPlace(event.getSlot());
+                if (ele != null) {
+
+                    PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+                    if (playersBranch == null) {
+                        p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
+                        return;
+                    }
+                    Element element = playersBranch.getCurrentElement();
+
+                    if (element == ele) {
+                        AmonPackPlugin.levelsBending.OpenBendingSkillMenu(playersBranch.getName());
+                    } else {
+                        event.getWhoClicked().sendMessage(ChatColor.RED + "Nie masz wybranego tego zywiołu! Twój zywioł to: " + playersBranch.getCurrentElement());
+                    }
+                }
+            } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillMenu)) {
                 event.setCancelled(true);
                 if (event.getCurrentItem().getType() == Material.CHEST) {
-                    AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,0);
+                    AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, 0);
                 }
                 if (event.getCurrentItem().getType() == Material.PAPER) {
-                    AmonPackPlugin.levelsBending.OpenBindingMenu(p.getName(),event.getCurrentItem().getItemMeta().getDisplayName());
+                    AmonPackPlugin.levelsBending.OpenBindingMenu(p.getName(), event.getCurrentItem().getItemMeta().getDisplayName());
                 }
                 if (event.getCurrentItem().getType() == Material.PAPER && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
                     PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
                 }
-            } else
-                if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BindingAbilitiesMenu)) {
-                    event.setCancelled(true);
+            } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BindingAbilitiesMenu)) {
+                event.setCancelled(true);
                 Material clickedItem = event.getCurrentItem().getType();
                 BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
                 if (clickedItem.equals(Material.PAPER)) {
@@ -539,53 +763,52 @@ public class Listeners implements Listener {
                 if (event.getCurrentItem().getType() == Material.PAPER && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
                     AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                 }
-            }
-
-            else if(Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillTree)){
-                    event.setCancelled(true);
+            } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillTree)) {
+                event.setCancelled(true);
                 PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
-                    if(playersBranch==null){
-                        p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
-                        return;
-                    }
+                if (playersBranch == null) {
+                    p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
+                    return;
+                }
                 Element element = playersBranch.getCurrentElement();
                 ElementTree SelectedElement = AmonPackPlugin.levelsBending.GetElement(element);
                 Material ClickedItem = event.getCurrentItem().getType();
                 BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
 
-                    if (ClickedItem == Material.PAPER && event.getCurrentItem().getItemMeta().getDisplayName().contains("Powrot")) {
-                        AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
-                    }else
-                    if (ClickedItem.equals(Material.CHEST)) {
-                        for (int i = 0; i <= 9; i++) {
-                            if(CoreAbility.getAbility(bPlayer.getAbilities().get(i))!=null&&(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement().equals(SelectedElement.getElement())
-                                    || Objects.equals(ElementBasedOnSubElement(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()), SelectedElement.getElement()))){
-                                BendingBoardManager.getBoard(p).get().clearSlot(i);
-                                bPlayer.getAbilities().remove(i);
-                            }}
-                        playersBranch.ClearAbilities(SelectedElement);
-                        AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,0);
-                        bPlayer.removeUnusableAbilities();
-                    }else
-                    if (event.getSlot()==26) {
-                        if (playersBranch.getCurrentPage()<(SelectedElement.getRows()/54)){
-                            AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage()+1);
-                        }}else
-                if (event.getSlot()==35) {
-                        if (playersBranch.getCurrentPage()>0){
-                            AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage()-1);
-                        }}else
-                    if (ClickedItem.equals(Material.PAPER)) {
-                        SkillTree_Ability STA = SelectedElement.getAbilities().stream().filter(abi->abi.getName().equalsIgnoreCase(event.getCurrentItem().getItemMeta().getDisplayName())).findFirst().orElse(null);
-                        if (STA!=null) {
-                                if (playersBranch.GetPoints(element) >= STA.getCost()) {
-                                    if (new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().size()==0) {
-                                        playersBranch.UnlockAbility(STA.getElement(),STA.getCost(),STA.getName());
-                                        AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage());
-                                    }}}
+                if (ClickedItem == Material.PAPER && event.getCurrentItem().getItemMeta().getDisplayName().contains("Powrot")) {
+                    AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
+                } else if (ClickedItem.equals(Material.CHEST)) {
+                    for (int i = 0; i <= 9; i++) {
+                        if (CoreAbility.getAbility(bPlayer.getAbilities().get(i)) != null && (CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement().equals(SelectedElement.getElement())
+                                || Objects.equals(ElementBasedOnSubElement(CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()), SelectedElement.getElement()))) {
+                            BendingBoardManager.getBoard(p).get().clearSlot(i);
+                            bPlayer.getAbilities().remove(i);
+                        }
+                    }
+                    playersBranch.ClearAbilities(SelectedElement);
+                    AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, 0);
+                    bPlayer.removeUnusableAbilities();
+                } else if (event.getSlot() == 26) {
+                    if (playersBranch.getCurrentPage() < (SelectedElement.getRows() / 54)) {
+                        AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage() + 1);
+                    }
+                } else if (event.getSlot() == 35) {
+                    if (playersBranch.getCurrentPage() > 0) {
+                        AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage() - 1);
+                    }
+                } else if (ClickedItem.equals(Material.PAPER)) {
+                    SkillTree_Ability STA = SelectedElement.getAbilities().stream().filter(abi -> abi.getName().equalsIgnoreCase(event.getCurrentItem().getItemMeta().getDisplayName())).findFirst().orElse(null);
+                    if (STA != null) {
+                        if (playersBranch.GetPoints(element) >= STA.getCost()) {
+                            if (new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().size() == 0) {
+                                playersBranch.UnlockAbility(STA.getElement(), STA.getCost(), STA.getName());
+                                AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage());
+                            }
+                        }
+                    }
                 }
             }
-        //else
+            //else
         /*if(newPvP.playerinzone(event.getWhoClicked().getLocation())) {
             for (FallingChest fc : newPvP.ChestList) {
                 if (event.getView().getTitle().equalsIgnoreCase(fc.getName())) {
@@ -610,28 +833,30 @@ public class Listeners implements Listener {
                     break;
                 }}
             }*/
-        }}
-/*
-    @EventHandler
-    public void onPlayerDropItem(PlayerDropItemEvent event) {
-        for (Menagerie mena:ListOfAllMenageries) {
-            if (mena.IsInMenagerie(event.getPlayer().getLocation())){
-                event.setCancelled(true);
-                event.getPlayer().sendMessage("Nie możesz wyrzucić tego przedmiotu!");
-                break;
-            }}
-    /*if(newPvP.playerinzone(event.getPlayer().getLocation())){
-            ItemStack item = event.getItemDrop().getItemStack();
-            if(QuestItems.ListOfAllQuestItems.contains(item) || item.getType()==Material.STONE){
-                event.setCancelled(true);
-                event.getPlayer().sendMessage(ChatColor.RED+"Nie mozesz wyrzucac tego przedmiotu na pvp");
-            }
+        }
     }
-    }*/
+
+    /*
+        @EventHandler
+        public void onPlayerDropItem(PlayerDropItemEvent event) {
+            for (Menagerie mena:ListOfAllMenageries) {
+                if (mena.IsInMenagerie(event.getPlayer().getLocation())){
+                    event.setCancelled(true);
+                    event.getPlayer().sendMessage("Nie możesz wyrzucić tego przedmiotu!");
+                    break;
+                }}
+        /*if(newPvP.playerinzone(event.getPlayer().getLocation())){
+                ItemStack item = event.getItemDrop().getItemStack();
+                if(QuestItems.ListOfAllQuestItems.contains(item) || item.getType()==Material.STONE){
+                    event.setCancelled(true);
+                    event.getPlayer().sendMessage(ChatColor.RED+"Nie mozesz wyrzucac tego przedmiotu na pvp");
+                }
+        }
+        }*/
     @EventHandler
     public void onFallingBlockLand(EntityChangeBlockEvent event) {
         if (event.getEntity() instanceof FallingBlock) {
-            if(Methods.SpawnedByMe.contains(event.getEntity())){
+            if (Methods.SpawnedByMe.contains(event.getEntity())) {
                 event.setCancelled(true);
                 event.getEntity().remove();
             }
@@ -854,10 +1079,47 @@ public class Listeners implements Listener {
         return false;
     }
 */
-/*
+
+//    @EventHandler
+//    public void cooldown(PlayerCooldownChangeEvent event) {
+//        if(event !=null && MagicEffects.AffectedAbilities.contains(event.getAbility())) {
+//            if (event.getPlayer() != null && event.getCooldown() > 0) {
+//                Player player = event.getPlayer();
+//                ItemStack item = player.getInventory().getItemInMainHand();
+//                if (item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+//                    CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
+//                    if (weapon == null) return;
+//                    CoreAbility coreAbility = CoreAbility.getAbility(event.getAbility());
+//                    event.setCooldown(weapon.ExecuteEffectsMagicModify(player, coreAbility));
+//                }
+//            }
+//        }
+//    }
+
     @EventHandler
-    public void cooldown(PlayerCooldownChangeEvent event) {
-        if (event.getCooldown()>0 && (event.getAbility().equalsIgnoreCase("FireBlast")||event.getAbility().equalsIgnoreCase("AirSwipe"))){
+    public void test(AbilityDamageEntityEvent event) {
+        if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")) {
+            event.setCancelled(true);
+            SoundAbility.HandleDamage(event.getEntity(), 10);
+        }
+//        if(MagicEffects.AffectedAbilities.contains(event.getAbility().getName())){
+//            if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")) {
+//                event.setCancelled(true);
+//                SoundAbility.HandleDamage(event.getEntity(), 10);
+//            }else{
+//                Player player = event.getSource();
+//                ItemStack item = player.getInventory().getItemInMainHand();
+//                if (item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+//                    CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
+//                    if (weapon == null) return;
+//                    event.setDamage(weapon.ExecuteEffectsMagicDamage(player, event.getAbility(), event.getDamage()));
+//                }
+//            }
+//        }
+
+    }
+
+}
             /*for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
             if (InArenaRange(event.getPlayer().getLocation(),A.getArenaLocation(),A.getRange(),A.getRange())) {
                 Player player = event.getPlayer();
@@ -881,9 +1143,33 @@ public class Listeners implements Listener {
                             bp.addCooldown("AirSwipe",5000);
                         }}}}
             }break;
-            }*///}
+            }}
     //}
 
+
+    //Atrybuty nie działają :<
+    /*
+    @EventHandler
+    public void AbilityStart(AbilityStartEvent event) {
+        Player player = event.getAbility().getPlayer();
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
+            if (weapon == null) return;
+            CoreAbility coreAbility = (CoreAbility) event.getAbility();
+            weapon.ExecuteEffectsMagicModify(player,coreAbility);
+        }
+        CoreAbility coreAbility = (CoreAbility) event.getAbility();
+        if(coreAbility.getName().equalsIgnoreCase("EarthBlast")){
+            coreAbility.addAttributeModifier(Attribute.DAMAGE, 20, ADDITION, AttributePriority.HIGH);
+            coreAbility.addAttributeModifier(Attribute.COOLDOWN, 20000, ADDITION, AttributePriority.LOW);
+        }
+        if(coreAbility.getName().equalsIgnoreCase("WaterManipulation")){
+            coreAbility.addAttributeModifier(Attribute.DAMAGE, 20, ADDITION, AttributePriority.LOW);
+            coreAbility.addAttributeModifier(Attribute.COOLDOWN, 20000, ADDITION, AttributePriority.MEDIUM);
+        }
+    }
+    */
 /*
     @EventHandler
     public void test(AbilityStartEvent event) {
@@ -939,13 +1225,8 @@ public class Listeners implements Listener {
             System.out.println("Error   "+ex.getMessage());
         }}}*/
 
-    //}
-    @EventHandler
-    public void test(AbilityDamageEntityEvent event) {
-        if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")){
-            event.setCancelled(true);
-            SoundAbility.HandleDamage(event.getEntity(),10);
-        }
+        //}
+
             /*for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
                 if (InArenaRange(event.getAbility().getPlayer().getLocation(),A.getArenaLocation(),A.getRange(),A.getRange())) {
                     Player player = event.getAbility().getPlayer();
@@ -963,7 +1244,3 @@ public class Listeners implements Listener {
                     }}
                 }break;
             }*/
-    }
-
-
-}

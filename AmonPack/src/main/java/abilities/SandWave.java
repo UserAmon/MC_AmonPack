@@ -2,6 +2,7 @@ package abilities;
 
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.*;
+import com.projectkorra.projectkorra.ability.util.ComboManager;
 import com.projectkorra.projectkorra.ability.util.ComboManager.AbilityInformation;
 import com.projectkorra.projectkorra.util.ClickType;
 import com.projectkorra.projectkorra.util.DamageHandler;
@@ -186,6 +187,27 @@ public ArrayList<AbilityInformation> getCombination() {
 	@Override
 	public Location getLocation() {
 		return null;
+	}
+
+	public SandWave(Player player, boolean IsEffect, Entity victim) {
+		super(player);
+		if (bPlayer.isOnCooldown("SandBurrow")) {
+			return;
+		}
+		if (!victim.isOnGround()) {
+			return;
+		}
+		for (Block b : GeneralMethods.getBlocksAroundPoint(victim.getLocation().subtract(0,1,0), 1)){
+			if(EarthAbility.isEarthbendable(player, b)){
+				TempBlock tb2 = new TempBlock(b, Material.SAND);
+				tb2.setRevertTime(time);
+			}
+		}
+		Methods.spawnFallingBlocks(victim.getLocation(),Material.SAND,4,0.5,player);
+		victim.teleport(victim.getLocation().clone().subtract(0,1.5,0));
+		((LivingEntity) victim).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, SandWave.DeBuffsDuration , SandWave.DeBuffsPower , false , false));
+		((LivingEntity) victim).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, SandWave.DeBuffsDuration, SandWave.DeBuffsPower , false , false));
+		bPlayer.addCooldown("SandBurrow",5000);
 	}
 
 	}

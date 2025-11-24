@@ -168,4 +168,14 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 	public void stop() {
 		super.remove();
 	}
+
+	public SmokeSurge(Player player, boolean IsEffect) {
+		super(player);
+		if (bPlayer.isOnCooldown("SmokeSurgeEffect")) {
+			return;
+		}
+		SmokeSource Source = new SmokeSource(player.getLocation(),60,2,1,player);
+		bPlayer.addCooldown("SmokeSurgeEffect",5000);
+	}
+
 }

@@ -141,4 +141,32 @@ public class AirPressure extends AirAbility implements AddonAbility {
 	public void stop() {
 		super.remove();
 	}
+	public AirPressure(Player player, Entity victim, int use) {
+		super(player);
+		switch (use){
+			case 0:
+				if (victim.isOnGround() && !bPlayer.isOnCooldown("UpThrust")) {
+					Location loc = player.getLocation().clone();
+					loc.setPitch(0);
+					Vector dir = loc.getDirection().clone();
+					double forward = 1;
+					double upward = 0.85;
+					player.setVelocity(new Vector(
+							dir.getX() * (forward / 2),
+							upward,
+							dir.getZ() * (forward / 2)
+					));
+					ParticleEffect.CLOUD.display(player.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
+					bPlayer.addCooldown("UpThrust", 5000);
+				}
+				break;
+			case 1:
+				if (!victim.isOnGround() &&!bPlayer.isOnCooldown("DownThrust")) {
+					victim.setVelocity(new Vector(0,-1,0));
+					ParticleEffect.CLOUD.display(victim.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
+					bPlayer.addCooldown("DownThrust", 5000);
+				}
+				break;
+
+	}}
 }

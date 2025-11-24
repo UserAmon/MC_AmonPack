@@ -1,5 +1,7 @@
 package AvatarSystems.Perks;
 
+import AvatarSystems.Crafting.Objects.MagicEffects;
+import AvatarSystems.Crafting.Objects.MagicEffectsConditions;
 import AvatarSystems.Perks.Objects.Perk;
 import AvatarSystems.Perks.Objects.PerkCondition;
 import AvatarSystems.Util_Objects.LevelSkill;
@@ -20,7 +22,7 @@ public class PerksMenager {
 
     public void ReloadConfig(){
         ListOfPerks=new ArrayList<>();
-        FileConfiguration Config = AmonPackPlugin.getPerksConfig();
+        FileConfiguration Config = AmonPackPlugin.getConfigs_menager().getPerks_Config();
         for(String PerkName : Objects.requireNonNull(Config.getConfigurationSection("Perks.Passive")).getKeys(false)) {
             List<PerkCondition> Conditions = new ArrayList<>();
             for(String ConditionName : Objects.requireNonNull(Config.getConfigurationSection("Perks.Passive."+PerkName)).getKeys(false)) {

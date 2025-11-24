@@ -1,5 +1,7 @@
 package AvatarSystems.Levels;
 
+import AvatarSystems.Crafting.Objects.MagicEffects;
+import AvatarSystems.Crafting.Objects.MagicEffectsConditions;
 import AvatarSystems.Util_Objects.InventoryXHolder;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
@@ -490,6 +492,18 @@ public class PlayerLevelMenager {
             case CRAFTING -> "🛠";     // Crafting
             default -> "✦";           // Domyślna ikona
         };
+    }
+
+    public static boolean CheckPlayerMagicEffectsCondition(MagicEffects effect, Player player){
+        boolean Check = true;
+        for (MagicEffectsConditions conditions : effect.getConditions()){
+            if(conditions.isSkillRequired()){
+                if(conditions.getRequiredSkillLevel()>GetSkillByPlayer(conditions.getType(),player)){
+                    Check=false;
+                }
+            }
+        }
+        return Check;
     }
 
 }

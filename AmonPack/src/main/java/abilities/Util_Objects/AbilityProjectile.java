@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import java.util.List;
+import java.util.Random;
 
 
 public class AbilityProjectile {
@@ -30,6 +31,26 @@ public class AbilityProjectile {
         location.add(direction).multiply(speed);
         return location;
     }
+    public Location LightningAdvance() {
+        Random random = new Random();
+
+        double offsetX = ((random.nextDouble() * 2) - 1);
+        double offsetZ = ((random.nextDouble() * 2) - 1);
+
+        Vector randomOffset = new Vector(offsetX, -0.01, offsetZ);
+
+        Vector forward = direction.clone().normalize();
+
+        Vector move = forward.add(randomOffset.multiply(1.4));
+
+        for (BetterParticles particle : Particles) {
+            particle.DisplayDustOption(location);
+        }
+
+        location.add(move);
+        return location;
+    }
+
     public Location Revert(){
         for (BetterParticles particle : Particles){
             particle.Display(location);
