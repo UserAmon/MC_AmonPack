@@ -195,7 +195,7 @@ public class PlayerLevelMenager {
     }
     private static void OpenPlayerLevelWindow(PlayerLevel level){
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(Holder1,
-                Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amon:first_gui")
+                Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amonpack:first_gui")
         );
         Inventory inv = inventory.getInternal();
         /*for (int i = 0; i < inv.getSize(); i++) {

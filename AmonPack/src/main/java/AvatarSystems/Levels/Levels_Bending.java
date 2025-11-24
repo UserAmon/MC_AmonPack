@@ -46,7 +46,7 @@ public class Levels_Bending {
         if(branch==null)return;
         Element element=branch.getCurrentElement();
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BindingAbilitiesMenu,
-                BindingAbilitiesMenu.getSize(), BindingAbilitiesMenu.getTitle(), new FontImageWrapper("amon:bending_skills_binding")
+                BindingAbilitiesMenu.getSize(), BindingAbilitiesMenu.getTitle(), new FontImageWrapper("amonpack:bending_skills_binding")
         );
         Inventory inv = inventory.getInternal();
         int modelid=SkillTreeConfig.getInt("AmonPack.Menu." + element.getName().toString().toLowerCase() + ".Green");
@@ -56,7 +56,7 @@ public class Levels_Bending {
             inv.setItem(i, FastEasyStack(Material.PAPER,""+(i-8),baseint));
             baseint++;
         }
-        inv.setItem(8, FastEasyStack(Material.PAPER, ChatColor.RED+"Zamknij",10036));
+        inv.setItem(8, FastEasyStack(Material.PAPER, ChatColor.RED+"Zamknij",10013));
         inventory.showInventory(Bukkit.getPlayer(name));
     }
     public void OpenSkillTreeMenuByElement(Player p, int page){
@@ -70,7 +70,7 @@ public class Levels_Bending {
         String ElementName = element.getName().toLowerCase();
         //                Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amon:first_gui")
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BendingSkillTree,
-                BendingSkillTree.getSize(), BendingSkillTree.getTitle(), new FontImageWrapper("amon:bending_skills_tree_"+ElementName)
+                BendingSkillTree.getSize(), BendingSkillTree.getTitle(), new FontImageWrapper("amonpack:bending_skills_tree_"+ElementName)
         );
 
         Inventory inv = inventory.getInternal();
@@ -121,14 +121,14 @@ public class Levels_Bending {
                 }}
 
         inv.setItem(44, FastEasyStack(Material.CHEST,ChatColor.RED + "Twoje Punkty: " + playersBranch.GetPoints(element)));
-        inv.setItem(53, FastEasyStack(Material.PAPER,ChatColor.RED + "Powrot",10036));
-        inv.setItem(26, FastEasyStack(Material.PAPER,ChatColor.RED + "/\\",10071));
-        inv.setItem(35, FastEasyStack(Material.PAPER,ChatColor.RED + "\\/",10072));
+        inv.setItem(53, FastEasyStack(Material.PAPER,ChatColor.RED + "Powrot",10013));
+        inv.setItem(26, FastEasyStack(Material.PAPER,ChatColor.RED + "/\\",10011));
+        inv.setItem(35, FastEasyStack(Material.PAPER,ChatColor.RED + "\\/",10012));
         inventory.showInventory(Bukkit.getPlayer(p.getName()));
     }
     public void OpenBendingSkillMenu(String name){
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BendingSkillMenu,
-                BendingSkillMenu.getSize(), BendingSkillMenu.getTitle(), new FontImageWrapper("amon:bending_abilities_list")
+                BendingSkillMenu.getSize(), BendingSkillMenu.getTitle(), new FontImageWrapper("amonpack:bending_abilities_list")
         );
         Inventory inv = inventory.getInternal();
 

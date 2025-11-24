@@ -21,23 +21,24 @@ public class CombatMenager {
         ReloadConfig();
     }
 
-    public void ReloadConfig(){
-        FileConfiguration Config = AmonPackPlugin.getCombatConfig();
-        for(String key : Objects.requireNonNull(Config.getConfigurationSection("Combat")).getKeys(false)) {
+    public void ReloadConfig() {
+        FileConfiguration Config = AmonPackPlugin.getConfigs_menager().getCombat_Config();
+        for (String key : Objects.requireNonNull(Config.getConfigurationSection("Combat")).getKeys(false)) {
             String World = Config.getString("Combat." + key + ".World");
-            if (Config.getConfigurationSection("Combat."+key+".Exp") != null){
-                for(String MobType : Config.getConfigurationSection("Combat."+key+".Exp").getKeys(false)) {
-                    ExpList.put(EntityType.valueOf(MobType),Config.getInt("Combat." + key + ".Exp."+MobType));
-                }}
+            if (Config.getConfigurationSection("Combat." + key + ".Exp") != null) {
+                for (String MobType : Config.getConfigurationSection("Combat." + key + ".Exp").getKeys(false)) {
+                    ExpList.put(EntityType.valueOf(MobType), Config.getInt("Combat." + key + ".Exp." + MobType));
+                }
+            }
         }
     }
 
-    public static void ExecuteKill(Player player, Entity victim, int expModifier){
+    public static void ExecuteKill(Player player, Entity victim, int expModifier) {
         int ExpAmount = 1;
-        if(ExpList.containsKey(victim.getType())){
-            ExpAmount= ExpList.get(victim.getType());
+        if (ExpList.containsKey(victim.getType())) {
+            ExpAmount = ExpList.get(victim.getType());
         }
-        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT, player, (ExpAmount+expModifier));
+        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.COMBAT, player, (ExpAmount + expModifier));
 
     }
 }

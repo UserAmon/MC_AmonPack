@@ -69,7 +69,7 @@ public class CraftingMenager {
 
     public static void OpenMoldCrafting(Player player, int Category){
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(CraftingGui,
-                CraftingGui.getSize(), CraftingGui.getTitle(), new FontImageWrapper("amon:bending_abilities_list")
+                CraftingGui.getSize(), CraftingGui.getTitle(), new FontImageWrapper("amonpack:bending_abilities_list")
         );
         List<ItemMold> ChosenMolds = new ArrayList<>();
         switch (Category){
@@ -105,7 +105,7 @@ public class CraftingMenager {
 
     public static void OpenMagicEffectsGui(Player player, ItemStack item, ItemStack clickeditem){
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(EffectsGui,
-                EffectsGui.getSize(), EffectsGui.getTitle(), new FontImageWrapper("amon:bending_abilities_list")
+                EffectsGui.getSize(), EffectsGui.getTitle(), new FontImageWrapper("amonpack:bending_abilities_list")
         );
         ItemMold moldItem = getItemMoldByItem(item);
         Inventory inv = inventory.getInternal();
@@ -318,7 +318,9 @@ public class CraftingMenager {
         Craftable_Tool tool1 = new Craftable_Tool("100",new ArrayList<>(),ChatColor.DARK_GREEN+"Kilof z Meteorytu", Material.NETHERITE_PICKAXE,new ArrayList<>(),10000,new ArrayList<>());
         Craftable_Armor armor_1 = new Craftable_Armor("200",new ArrayList<>(),ChatColor.DARK_GREEN+"Kryształowy Hełm z Omashu", Material.IRON_HELMET,new ArrayList<>(),0,new ArrayList<>(),1.5);
         AllTools.add(tool1);
+        AllArmor.add(armor_1);
         AllMolds.addAll(AllTools);
+        AllMolds.addAll(AllArmor);
     }
     public static boolean IsWeapon(ItemStack item){
         if(getCraftedWeaponByItem(item)!=null){
