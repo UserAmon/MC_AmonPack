@@ -722,6 +722,9 @@ public class Listeners implements Listener {
                     CraftingMenager.OpenMoldCrafting(p, 2);
 
                 }
+                if (clickeditem.getItemMeta().getDisplayName().contains("Przedmioty")) {
+                    CraftingMenager.OpenMoldCrafting(p, 3);
+                }
                 event.setCancelled(true);
             }
             if (Objects.equals(event.getInventory().getHolder(), CraftingMenager.EffectsGui)) {
@@ -772,6 +775,8 @@ public class Listeners implements Listener {
                             CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item.toItemStack());
                             item.Craft(p, new ArrayList<>(), event.getInventory().getItem(53), true,
                                     weapon.getDamage());
+                        } else if (item.getTypeOfMold() == ItemMold.ItemType.ITEM) {
+                            item.Craft(p, new ArrayList<>(), event.getInventory().getItem(53), true, 0);
                         } else {
                             item.Craft(p, new ArrayList<>(), event.getInventory().getItem(53), true, 1);
                         }

@@ -61,9 +61,15 @@ public class CraftingMenager {
                 List.of(ChatColor.DARK_GREEN + "Kliknij mnie aby otworzyć menu z wyborem Zbroi"),
                 1001);
 
+        ItemStack Items = FastEasyStackWithLoreModelData(Material.PAPER,
+                ChatColor.LIGHT_PURPLE + " Przedmioty",
+                List.of(ChatColor.DARK_GREEN + "Kliknij mnie aby otworzyć menu z wyborem Przedmiotów"),
+                1001);
+
         inv.setItem(1, Weapon);
-        inv.setItem(4, Tool);
-        inv.setItem(7, Armor);
+        inv.setItem(3, Tool);
+        inv.setItem(5, Armor);
+        inv.setItem(7, Items);
 
         player.openInventory(inv);
     }
@@ -81,6 +87,9 @@ public class CraftingMenager {
                 break;
             case 2:
                 ChosenMolds.addAll(AllTools);
+                break;
+            case 3:
+                ChosenMolds.addAll(AllCraftableItems);
                 break;
         }
         Inventory inv = inventory.getInternal();
@@ -110,6 +119,12 @@ public class CraftingMenager {
         Inventory inv = inventory.getInternal();
 
         for (MagicEffects effect : moldItem.getAllowedMagicEffects()) {
+            if (moldItem instanceof Craftable_Item && !effect.isItemEffect()) {
+                continue;
+            }
+            if (!(moldItem instanceof Craftable_Item) && effect.isItemEffect()) {
+                continue;
+            }
             ItemStack effectItem = new ItemStack(Material.BOOK);
             List<String> Lore = new ArrayList<>();
             if (effect.isMajorRune()) {
