@@ -25,6 +25,8 @@ public class ConfigsMenager {
     private File mining_File;
     private File forest_File;
     private File combat_File;
+    private File bounties_File;
+    private FileConfiguration bounties_Config;
 
     public CraftingMenager craftingMenager;
     public PerksMenager perks_menager;
@@ -63,14 +65,11 @@ public class ConfigsMenager {
             addDefaultCombatValues(combat_Config);
             changed = true;
         }
-        /*
-         * if (perks_Config.getKeys(false).isEmpty()) {
-         * System.out.println("Perks.yml jest pusty! Tworzenie wartości domyślnych...");
-         * addDefaultPerksValues(perks_Config);
-         * changed = true;
-         * }
-         */
-
+        if (bounties_Config.getKeys(false).isEmpty()) {
+            System.out.println("Bounties.yml jest pusty! Tworzenie wartości domyślnych...");
+            addDefaultBountiesValues(bounties_Config);
+            changed = true;
+        }
         if (changed) {
             SaveConfigs();
             ReloadMenagers();
@@ -125,6 +124,12 @@ public class ConfigsMenager {
             combat_Config = YamlConfiguration.loadConfiguration(combat_File);
             // perks_Config = YamlConfiguration.loadConfiguration(perks_File);
 
+            bounties_File = new File(rpgFolder, "Bounties.yml");
+            if (!bounties_File.exists()) {
+                bounties_File.createNewFile();
+            }
+            bounties_Config = YamlConfiguration.loadConfiguration(bounties_File);
+
             System.out.println("pomyślnie zrobiono reload!");
         } catch (Exception e) {
             System.out.println("ERROR przy ładowaniu configów!!! " + e.getMessage());
@@ -137,6 +142,7 @@ public class ConfigsMenager {
             mining_Config.save(mining_File);
             forest_Config.save(forest_File);
             combat_Config.save(combat_File);
+            bounties_Config.save(bounties_File);
             // perks_Config.save(perks_File);
         } catch (IOException e) {
             System.out.println("Błąd z konfigiem! " + e.getMessage());
@@ -161,6 +167,10 @@ public class ConfigsMenager {
 
     public FileConfiguration getCombat_Config() {
         return combat_Config;
+    }
+
+    public FileConfiguration getBounties_Config() {
+        return bounties_Config;
     }
 
     private void addDefaultPerksValues(FileConfiguration cfg) {
@@ -270,6 +280,22 @@ public class ConfigsMenager {
                 "SEAGRASS",
                 "SWEET_BERRY_BUSH"));
 
+    }
+
+    private void addDefaultBountiesValues(FileConfiguration cfg) {
+        cfg.set("Bounties.bounty_zombie_slayer.Name", "&cPogromca Zombie");
+        cfg.set("Bounties.bounty_zombie_slayer.Lore", Arrays.asList("&7Zabij 10 Zombie aby oczyścić okolicę."));
+        cfg.set("Bounties.bounty_zombie_slayer.Type", "KILL_MOB");
+        cfg.set("Bounties.bounty_zombie_slayer.Target", "ZOMBIE");
+        cfg.set("Bounties.bounty_zombie_slayer.Amount", 10);
+        cfg.set("Bounties.bounty_zombie_slayer.Rewards", Arrays.asList("command:money give %player% 100", "xp:10"));
+
+        cfg.set("Bounties.bounty_skeleton_hunter.Name", "&fŁowca Szkieletów");
+        cfg.set("Bounties.bounty_skeleton_hunter.Lore", Arrays.asList("&7Zabij 15 Szkieletów."));
+        cfg.set("Bounties.bounty_skeleton_hunter.Type", "KILL_MOB");
+        cfg.set("Bounties.bounty_skeleton_hunter.Target", "SKELETON");
+        cfg.set("Bounties.bounty_skeleton_hunter.Amount", 15);
+        cfg.set("Bounties.bounty_skeleton_hunter.Rewards", Arrays.asList("command:money give %player% 150", "xp:15"));
     }
 
     private void addDefaultCraftingValues(FileConfiguration cfg) {
@@ -529,6 +555,31 @@ public class ConfigsMenager {
         cfg.set("MagicEffects.Item_Effect_Test.Conditions.req1.Skill_Level", 1);
         cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Material", "STONE");
         cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Amount", 1);
+
+        // Summon Undead Effect
+        cfg.set("MagicEffects.Summon_Undead.Name", "§5Przyzwanie Nieumarłych");
+        cfg.set("MagicEffects.Summon_Undead.Lore.l1", "§7Przyzywa 3 Zombie po krótkim rytuale.");
+        cfg.set("MagicEffects.Summon_Undead.IsMajor", false);
+        cfg.set("MagicEffects.Summon_Undead.IsItemEffect", true);
+        cfg.set("MagicEffects.Summon_Undead.Conditions.req1.Skill_Type", "BOUNTY");
+        cfg.set("MagicEffects.Summon_Undead.Conditions.req1.Skill_Level", 1);
+        cfg.set("MagicEffects.Summon_Undead.Cost.c1.Material", "ROTTEN_FLESH");
+        cfg.set("MagicEffects.Summon_Undead.Cost.c1.Amount", 5);
+
+        // Scroll of Undead
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Material", "PAPER");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Name", "§5Zwój Przyzwania Nieumarłych");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Custom_Model_ID", 10001);
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m1.Material", "ROTTEN_FLESH");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m1.Amount", 10);
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m2.Material", "BONE");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m2.Amount", 5);
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m3.Material", "PAPER");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m3.Amount", 1);
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.AllowedMagicEffects", Arrays.asList("Summon_Undead"));
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l1", "§7Starożytny zwój używany do");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l2", "§7przyzywania nieumarłych sług.");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l3", "§eKliknij PPM aby użyć.");
     }
 
 }

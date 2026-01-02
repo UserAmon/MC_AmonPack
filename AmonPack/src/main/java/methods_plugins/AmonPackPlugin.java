@@ -13,14 +13,13 @@ import AvatarSystems.Crafting.CraftingMenager;
 import AvatarSystems.Crafting.Objects.Craftable_Tool;
 import AvatarSystems.Gathering.CombatMenager;
 import AvatarSystems.Gathering.FarmMenager;
-import AvatarSystems.Gathering.ForestMenager;
-import AvatarSystems.Gathering.MiningMenager;
+
 import AvatarSystems.Levels.Levels_Bending;
 import AvatarSystems.Levels.PlayerLevelMenager;
-import AvatarSystems.Perks.PerksMenager;
+
 import Mechanics.Listeners;
 //import Mechanics.MMORPG.GuiMenu;
-import Mechanics.PVE.Menagerie.MenagerieMenager;
+
 import Mechanics.PVE.SimpleWorldGenerator;
 import Mechanics.Skills.UpgradesMenager;
 import com.comphenix.protocol.PacketType;
@@ -31,7 +30,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.projectkorra.projectkorra.ProjectKorra;
-import com.projectkorra.projectkorra.ability.Ability;
+
 import com.projectkorra.projectkorra.storage.SQLite;
 import commands.*;
 import methods_plugins.Abilities.AbilitiesListener;
@@ -66,25 +65,19 @@ public class AmonPackPlugin extends JavaPlugin {
 	static File LevelConfigFile;
 	static File AbilitiesConfigFile;
 	static File SkillTreeFile;
-
-	private static PlayerLevelMenager PlayerMenager;
-	private static List<FileConfiguration> MenagerieConfig = new ArrayList<>();
-	// private static FileConfiguration PvPConfig;
-	private static FileConfiguration LevelConfig;
-	private static FileConfiguration AbilitiesConfig;
-	private static FileConfiguration SkillTreeConfig;
-
-	private static MenagerieMenager MenaMenager;
-	private static NamespacedKey upgradeKey;
 	static File configpath;
+
 	public static Levels_Bending levelsBending;
 	public static FarmMenager farmmenager;
 	public static CombatMenager combatMenager;
+	public static AvatarSystems.Bounties.BountiesMenager bountiesMenager;
 	private static ConfigsMenager configs_menager;
-
-	public static ConfigsMenager getConfigs_menager() {
-		return configs_menager;
-	}
+	private static PlayerLevelMenager PlayerMenager;
+	private static List<FileConfiguration> MenagerieConfig = new ArrayList<>();
+	private static FileConfiguration LevelConfig;
+	private static FileConfiguration AbilitiesConfig;
+	private static FileConfiguration SkillTreeConfig;
+	private static NamespacedKey upgradeKey;
 
 	@Override
 	public void onEnable() {
@@ -129,6 +122,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		levelsBending = new Levels_Bending();
 		farmmenager = new FarmMenager();
 		combatMenager = new CombatMenager();
+		bountiesMenager = new AvatarSystems.Bounties.BountiesMenager();
 
 		upgradeKey = new NamespacedKey(this, "playerUpgrade");
 		this.getCommand("Craft").setExecutor(new Commands());
@@ -139,8 +133,10 @@ public class AmonPackPlugin extends JavaPlugin {
 		// this.getCommand("ArenaBuilding").setTabCompleter(new CommandsTabMenager());
 		// this.getCommand("PvP").setExecutor(new Commands());
 		this.getCommand("Reload").setExecutor(new Commands());
+		this.getCommand("Bounties").setExecutor(new Commands());
 		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
+		this.getServer().getPluginManager().registerEvents(bountiesMenager, this);
 		ProtocolLibrary.getProtocolManager().addPacketListener(
 				new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Client.BLOCK_DIG) {
 					@Override
@@ -550,10 +546,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		sqlite = new SQLite(plugin.getLogger(), "AmonPackSQL.db", plugin.getDataFolder().getAbsolutePath());
 		try {
 			sqlite.open();
-		} catch (Exception e) {
-			plugin.getLogger().info(e.getMessage());
-			getPluginLoader().disablePlugin(plugin);
-		}
+
 		if (sqlite.open() != null) {
 			getLogger().info("Baza danych połączona!");
 		}
@@ -576,6 +569,10 @@ public class AmonPackPlugin extends JavaPlugin {
 			ExecuteQuery("CREATE TABLE IF NOT EXISTS Level" + key
 					+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
 		}
+		} catch (Exception e) {
+			plugin.getLogger().info(e.getMessage());
+			getPluginLoader().disablePlugin(plugin);
+		}
 	}
 
 	public static void ExecuteQuery(String query) {
@@ -587,20 +584,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			PrintStream var10000 = System.err;
 			String var10001 = var3.getClass().getName();
 			var10000.println(var10001 + ": " + var3.getMessage());
-			System.out.println("problem " + var3);
 		}
-
-	}
-
-	@Override
-	public void onDisable() {
-		try {
-			PlayerMenager.LoadIntoDatabase();
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-		sqlite.close();
-		getLogger().info("AmonPack dezaktywowany");
 	}
 
 	public static Element getBladesElement() {
@@ -865,6 +849,10 @@ public class AmonPackPlugin extends JavaPlugin {
 
 	public static FileConfiguration getAbilitiesConfig() {
 		return AbilitiesConfig;
+	}
+
+	public static ConfigsMenager getConfigs_menager() {
+		return configs_menager;
 	}
 
 	/*

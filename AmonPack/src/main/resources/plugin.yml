@@ -18,3 +18,5 @@ commands:
     usage: /<command>
   Craft:
     usage: /<command>
+  bounties:
+    usage: /<command>

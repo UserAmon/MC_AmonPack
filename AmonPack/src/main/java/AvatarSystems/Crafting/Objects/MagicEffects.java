@@ -21,6 +21,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+import org.bukkit.Color;
+import org.bukkit.Particle;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.entity.EntityType;
+import org.bukkit.World;
+import org.bukkit.Location;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +57,6 @@ public class MagicEffects {
                 }
                 break;
             case "Earth_Resolve_Dmg_Taking":
-
                 List<Block> NearBlocks = new ArrayList<>();
                 for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 3)) {
                     if (b.getLocation().getY() <= player.getLocation().getY() + 1
@@ -245,9 +250,65 @@ public class MagicEffects {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 200, 1));
                 break;
             case "Ice_Wall":
-                // Example implementation for Ice Wall
+                Location location = player.getLocation().clone();
+                StartRitual(location, () -> IceThorns(location,player));
+                break;
+            case "Summon_Undead":
+                Location location1 = player.getLocation().clone();
+                StartRitual(location1, () -> SummonZombies(location1));
                 break;
         }
         return value;
+    }
+    private void IceThorns(Location location, Player p){
+        for (Entity entity: GeneralMethods.getEntitiesAroundPoint(location,4)){
+            new IceThorn(p, entity, 0);
+        }
+    }
+
+    private void StartRitual(Location loc, Runnable onComplete) {
+        new BukkitRunnable() {
+            int ticks = 0;
+            double angle = 0;
+            double angle_2 = 60;
+
+            @Override
+            public void run() {
+                if (ticks >= 80) {
+                    onComplete.run();
+                    cancel();
+                    return;
+                }
+                double radius = 5;
+                for (int i = 0; i < 3; i++) {
+                    double currentAngle = angle + (i * (Math.PI * 2 / 3));
+                    double currentAngle2 = angle_2 + (i * (Math.PI * 2 / 3));
+                    double x = radius * Math.cos(currentAngle);
+                    double z = radius * Math.sin(currentAngle);
+                    Location particleLoc = loc.clone().add(x, 0.1, z);
+                    Location particleLoc2 = loc.clone().add(radius * Math.cos(currentAngle2), 0.1, radius * Math.sin(currentAngle2));
+
+                    Particle.DustOptions dustOptions = new Particle.DustOptions(Color.PURPLE, 1);
+                    loc.getWorld().spawnParticle(Particle.DUST, particleLoc, 3, 0.1, 0.1, 0.1, 0, dustOptions);
+                    loc.getWorld().spawnParticle(Particle.DUST, particleLoc2, 3, 0.1, 0.1, 0.1, 0, new Particle.DustOptions(Color.RED, 2));
+                }
+                angle += 0.1;
+                ticks++;
+            }
+        }.runTaskTimer(methods_plugins.AmonPackPlugin.plugin, 0L, 1L);
+    }
+
+    private void SummonZombies(Location loc) {
+        World world = loc.getWorld();
+        if (world == null)
+            return;
+
+        for (int i = 0; i < 3; i++) {
+            Location spawnLoc = loc.clone().add((Math.random() - 0.5) * 4, 0, (Math.random() - 0.5) * 4);
+            // Emerging animation
+            world.spawnParticle(Particle.EXPLOSION, spawnLoc, 1);
+            world.spawnParticle(Particle.SOUL_FIRE_FLAME, spawnLoc, 10, 0.5, 0.5, 0.5, 0.1);
+            world.spawnEntity(spawnLoc, EntityType.ZOMBIE);
+        }
     }
 }

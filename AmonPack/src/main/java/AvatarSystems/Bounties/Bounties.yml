@@ -1,0 +1,41 @@
+Bounties:
+  bounty_zombie_slayer:
+    Name: "&cPogromca Zombie"
+    Lore:
+      - "&7Zabij 10 Zombie aby oczyścić okolicę."
+    Type: KILL_MOB
+    Target: ZOMBIE
+    Amount: 10
+    Rewards:
+      - "command:money give %player% 100"
+      - "xp:10"
+  bounty_skeleton_hunter:
+    Name: "&fŁowca Szkieletów"
+    Lore:
+      - "&7Zabij 15 Szkieletów."
+    Type: KILL_MOB
+    Target: SKELETON
+    Amount: 15
+    Rewards:
+      - "command:money give %player% 150"
+      - "xp:15"
+  bounty_spider_crusher:
+    Name: "&4Zgniatacz Pająków"
+    Lore:
+      - "&7Zabij 10 Pająków."
+    Type: KILL_MOB
+    Target: SPIDER
+    Amount: 10
+    Rewards:
+      - "command:money give %player% 100"
+      - "xp:10"
+  bounty_creeper_diffuser:
+    Name: "&aSaper"
+    Lore:
+      - "&7Zabij 5 Creeperów zanim wybuchną."
+    Type: KILL_MOB
+    Target: CREEPER
+    Amount: 5
+    Rewards:
+      - "command:money give %player% 200"
+      - "xp:20"

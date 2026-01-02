@@ -8,16 +8,18 @@ public class LevelSkill {
     private SkillType Type;
     private List<Integer> UsedRewards = new ArrayList<>();
     private double UpgradePercent;
-    public enum SkillType{
-        MINING,//Kopalnie
-        LUMBERING,//Drzewa
-        FARMING,//Uprawianie pól
-        MAGIC,//Bending
-        COMBAT,//Zabijanie mobów
-        GENERAL,//Postęp serworowy
-        SMITHING,//Przepalanie
-        BUILDING,//Budowanie
-        CRAFTING//Craftowanie
+
+    public enum SkillType {
+        MINING, // Kopalnie
+        LUMBERING, // Drzewa
+        FARMING, // Uprawianie pól
+        MAGIC, // Bending
+        COMBAT, // Zabijanie mobów
+        GENERAL, // Postęp serworowy
+        SMITHING, // Przepalanie
+        BUILDING, // Budowanie
+        CRAFTING, // Craftowanie
+        BOUNTY // Zlecenia
 
     }
 
@@ -31,21 +33,27 @@ public class LevelSkill {
     public double getExpPoints() {
         return ExpPoints;
     }
+
     public void setExpPoints(double expPoints) {
         ExpPoints = expPoints;
     }
+
     public SkillType getType() {
         return Type;
     }
+
     public List<Integer> getUsedRewards() {
         return UsedRewards;
     }
+
     public void setUsedRewards(List<Integer> usedRewards) {
         UsedRewards = usedRewards;
     }
+
     public double getUpgradePercent() {
         return UpgradePercent;
     }
+
     public void setUpgradePercent(double upgradePercent) {
         UpgradePercent = upgradePercent;
     }
