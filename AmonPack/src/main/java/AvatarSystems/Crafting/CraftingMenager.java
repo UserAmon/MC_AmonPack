@@ -109,6 +109,7 @@ public class CraftingMenager {
             stack.setItemMeta(meta);
             inv.addItem(stack);
         }
+
         inventory.showInventory(player);
     }
 
@@ -280,10 +281,10 @@ public class CraftingMenager {
 
         try {
             int IdCounter = 10;
-            if (Config.getConfigurationSection("Craftable_Items_Molds") != null) {
-                for (String WeaponName : Objects.requireNonNull(Config.getConfigurationSection("Craftable_Items_Molds"))
+            if (Config.getConfigurationSection("Craftable_Weapons") != null) {
+                for (String WeaponName : Objects.requireNonNull(Config.getConfigurationSection("Craftable_Weapons"))
                         .getKeys(false)) {
-                    String path = "Craftable_Items_Molds." + WeaponName + ".";
+                    String path = "Craftable_Weapons." + WeaponName + ".";
                     Material material = Material
                             .getMaterial(Objects.requireNonNull(Config.getString(path + "Material")));
                     String DisplayName = Objects.requireNonNull(Config.getString(path + "Name"));
@@ -342,10 +343,6 @@ public class CraftingMenager {
                             }
                         }
                     }
-                    // Note: CraftedWeapon constructor usage assumed based on context.
-                    // If CraftedWeapon expects BaseDmg, it should be passed.
-                    // Previous code had: new CraftedWeapon("" + IdCounter, ItemToShapeMold,
-                    // DisplayName, material, ItemLoreList, CustomModelId, AllowedEffects, BaseDmg);
                     CraftedWeapon w = new CraftedWeapon("" + IdCounter, ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects, BaseDmg);
                     AllCraftableWeapons.add(w);
@@ -353,7 +350,152 @@ public class CraftingMenager {
                 }
             }
         } catch (Exception e) {
-            System.out.println("error w reloadu craftingu " + e);
+            System.out.println("error w reloadu craftingu weapons " + e);
+        }
+
+        try {
+            int IdCounter = 100;
+            if (Config.getConfigurationSection("Craftable_Tools") != null) {
+                for (String ToolName : Objects.requireNonNull(Config.getConfigurationSection("Craftable_Tools"))
+                        .getKeys(false)) {
+                    String path = "Craftable_Tools." + ToolName + ".";
+                    Material material = Material
+                            .getMaterial(Objects.requireNonNull(Config.getString(path + "Material")));
+                    String DisplayName = Objects.requireNonNull(Config.getString(path + "Name"));
+                    Integer CustomModelId = Config.getInt(path + "Custom_Model_ID");
+
+                    String MoldPath = path + "Mold.";
+                    List<ItemStack> ItemToShapeMold = new ArrayList<>();
+                    if (Config.getConfigurationSection(MoldPath + "Items_To_Craft") != null) {
+                        for (String MoldCraftItem : Objects
+                                .requireNonNull(Config.getConfigurationSection(MoldPath + "Items_To_Craft"))
+                                .getKeys(false)) {
+                            String matName = Config
+                                    .getString(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Material");
+                            int amount = Config.getInt(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Amount");
+
+                            Material mat = Material.getMaterial(matName);
+                            if (mat != null) {
+                                ItemToShapeMold.add(new ItemStack(mat, amount));
+                            } else {
+                                dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack
+                                        .getInstance(matName);
+                                if (custom != null) {
+                                    ItemStack iaItem = custom.getItemStack().clone();
+                                    iaItem.setAmount(amount);
+                                    ItemToShapeMold.add(iaItem);
+                                }
+                            }
+                        }
+                    }
+
+                    List<MagicEffects> AllowedEffects = new ArrayList<>();
+                    if (!Config.getStringList(MoldPath + "AllowedMagicEffects").isEmpty()) {
+                        for (String effectId : Config.getStringList(MoldPath + "AllowedMagicEffects")) {
+                            for (MagicEffects effect : AllMagicEffects) {
+                                if (effect.getName().equalsIgnoreCase(effectId)) {
+                                    AllowedEffects.add(effect);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        AllowedEffects.addAll(AllMagicEffects);
+                    }
+
+                    String ItemPath = path + "Item.";
+                    List<String> ItemLoreList = new ArrayList<>();
+                    if (Config.getConfigurationSection(ItemPath + "Lore") != null) {
+                        for (String key : Objects.requireNonNull(Config.getConfigurationSection(ItemPath + "Lore"))
+                                .getKeys(false)) {
+                            String loreLine = Config.getString(ItemPath + "Lore." + key);
+                            if (loreLine != null) {
+                                ItemLoreList.add(loreLine);
+                            }
+                        }
+                    }
+
+                    Craftable_Tool tool = new Craftable_Tool("" + IdCounter, ItemToShapeMold, DisplayName, material,
+                            ItemLoreList, CustomModelId, AllowedEffects);
+                    AllTools.add(tool);
+                    IdCounter++;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("error w reloadu craftingu tools " + e);
+        }
+
+        try {
+            int IdCounter = 200;
+            if (Config.getConfigurationSection("Craftable_Armor") != null) {
+                for (String ArmorName : Objects.requireNonNull(Config.getConfigurationSection("Craftable_Armor"))
+                        .getKeys(false)) {
+                    String path = "Craftable_Armor." + ArmorName + ".";
+                    Material material = Material
+                            .getMaterial(Objects.requireNonNull(Config.getString(path + "Material")));
+                    String DisplayName = Objects.requireNonNull(Config.getString(path + "Name"));
+                    Integer CustomModelId = Config.getInt(path + "Custom_Model_ID");
+                    double DmgReduction = Config.getDouble(path + "Dmg_Reduction");
+
+                    String MoldPath = path + "Mold.";
+                    List<ItemStack> ItemToShapeMold = new ArrayList<>();
+                    if (Config.getConfigurationSection(MoldPath + "Items_To_Craft") != null) {
+                        for (String MoldCraftItem : Objects
+                                .requireNonNull(Config.getConfigurationSection(MoldPath + "Items_To_Craft"))
+                                .getKeys(false)) {
+                            String matName = Config
+                                    .getString(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Material");
+                            int amount = Config.getInt(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Amount");
+
+                            Material mat = Material.getMaterial(matName);
+                            if (mat != null) {
+                                ItemToShapeMold.add(new ItemStack(mat, amount));
+                            } else {
+                                dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack
+                                        .getInstance(matName);
+                                if (custom != null) {
+                                    ItemStack iaItem = custom.getItemStack().clone();
+                                    iaItem.setAmount(amount);
+                                    ItemToShapeMold.add(iaItem);
+                                }
+                            }
+                        }
+                    }
+
+                    List<MagicEffects> AllowedEffects = new ArrayList<>();
+                    if (!Config.getStringList(MoldPath + "AllowedMagicEffects").isEmpty()) {
+                        for (String effectId : Config.getStringList(MoldPath + "AllowedMagicEffects")) {
+                            for (MagicEffects effect : AllMagicEffects) {
+                                if (effect.getName().equalsIgnoreCase(effectId)) {
+                                    AllowedEffects.add(effect);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        AllowedEffects.addAll(AllMagicEffects);
+                    }
+
+                    String ItemPath = path + "Item.";
+                    List<String> ItemLoreList = new ArrayList<>();
+                    if (Config.getConfigurationSection(ItemPath + "Lore") != null) {
+                        for (String key : Objects.requireNonNull(Config.getConfigurationSection(ItemPath + "Lore"))
+                                .getKeys(false)) {
+                            String loreLine = Config.getString(ItemPath + "Lore." + key);
+                            if (loreLine != null) {
+                                ItemLoreList.add(loreLine);
+                            }
+                        }
+                    }
+
+                    Craftable_Armor armor = new Craftable_Armor("" + IdCounter, ItemToShapeMold, DisplayName, material,
+                            ItemLoreList, CustomModelId, AllowedEffects, DmgReduction);
+                    AllArmor.add(armor);
+                    IdCounter++;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("error w reloadu craftingu armor " + e);
         }
 
         try {
@@ -429,17 +571,6 @@ public class CraftingMenager {
         }
 
         AllMolds.addAll(AllCraftableWeapons);
-        Craftable_Tool tool1 = new Craftable_Tool("100", new ArrayList<>(), ChatColor.DARK_GREEN + "Kilof z Meteorytu",
-                Material.NETHERITE_PICKAXE, new ArrayList<>(), 10000, new ArrayList<>());
-        Craftable_Armor armor_1 = new Craftable_Armor("200", new ArrayList<>(),
-                ChatColor.DARK_GREEN + "Kryształowy Hełm z Omashu", Material.IRON_HELMET, new ArrayList<>(), 0,
-                new ArrayList<>(), 1.5);
-        Craftable_Item item1 = new Craftable_Item("300", new ArrayList<>(),
-                ChatColor.LIGHT_PURPLE + "Magiczny Zwój", Material.PAPER,
-                new ArrayList<>(), 10002, new ArrayList<>());
-        AllCraftableItems.add(item1);
-        AllTools.add(tool1);
-        AllArmor.add(armor_1);
         AllMolds.addAll(AllTools);
         AllMolds.addAll(AllArmor);
         AllMolds.addAll(AllCraftableItems);

@@ -718,9 +718,8 @@ public class Listeners implements Listener {
                     CraftingMenager.OpenMoldCrafting(p, 1);
 
                 }
-                if (clickeditem.getItemMeta().getDisplayName().contains("Narzedzia")) {
+                if (clickeditem.getItemMeta().getDisplayName().contains("Narzędzia")) {
                     CraftingMenager.OpenMoldCrafting(p, 2);
-
                 }
                 if (clickeditem.getItemMeta().getDisplayName().contains("Przedmioty")) {
                     CraftingMenager.OpenMoldCrafting(p, 3);
