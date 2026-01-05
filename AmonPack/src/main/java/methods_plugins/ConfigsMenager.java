@@ -300,212 +300,238 @@ public class ConfigsMenager {
 
     private void addDefaultCraftingValues(FileConfiguration cfg) {
         // Magic Effects
-        cfg.set("MagicEffects.Monster_Hunter.Name", "§cŁowca Potworów");
+        cfg.set("MagicEffects.Monster_Hunter.Name", "§c⚔ Łowca Potworów");
         cfg.set("MagicEffects.Monster_Hunter.Lore.l1", "§7Zadaje dodatkowe obrażenia potworom.");
         cfg.set("MagicEffects.Monster_Hunter.IsMajor", false);
+
         cfg.set("MagicEffects.Monster_Hunter.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Monster_Hunter.Conditions.req1.Skill_Level", 1);
         cfg.set("MagicEffects.Monster_Hunter.Cost.c1.Material", "ROTTEN_FLESH");
         cfg.set("MagicEffects.Monster_Hunter.Cost.c1.Amount", 10);
 
-        cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.Name", "§aDeterminacja Ziemi");
+        cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.Name", "§a⛰ Determinacja Ziemi");
         cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.Lore.l1", "§7Redukuje obrażenia gdy jesteś blisko ziemi.");
         cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.IsMajor", true);
+
         cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.Conditions.req1.Skill_Level", 5);
         cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.Cost.c1.Material", "COBBLESTONE");
         cfg.set("MagicEffects.Earth_Resolve_Dmg_Taking.Cost.c1.Amount", 64);
 
-        cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.Name", "§aWzmocnienie Absorpcji");
+        cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.Name", "§a⛰ Wzmocnienie Absorpcji");
         cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.Lore.l1",
                 "§7Zwiększa obrażenia gdy posiadasz efekt absorpcji.");
         cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.IsMajor", false);
+
         cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.Conditions.req1.Skill_Level", 3);
         cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.Cost.c1.Material", "GOLDEN_APPLE");
         cfg.set("MagicEffects.Earth_Damage_Boost_Absorb.Cost.c1.Amount", 1);
 
-        cfg.set("MagicEffects.Earth_Damage_Boost_Hight.Name", "§aPrzewaga Wysokości");
+        cfg.set("MagicEffects.Earth_Damage_Boost_Hight.Name", "§a⛰ Przewaga Wysokości");
         cfg.set("MagicEffects.Earth_Damage_Boost_Hight.Lore.l1", "§7Zadajesz więcej obrażeń będąc wyżej od celu.");
         cfg.set("MagicEffects.Earth_Damage_Boost_Hight.IsMajor", false);
+
         cfg.set("MagicEffects.Earth_Damage_Boost_Hight.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Earth_Damage_Boost_Hight.Conditions.req1.Skill_Level", 3);
         cfg.set("MagicEffects.Earth_Damage_Boost_Hight.Cost.c1.Material", "DIRT");
         cfg.set("MagicEffects.Earth_Damage_Boost_Hight.Cost.c1.Amount", 32);
 
-        cfg.set("MagicEffects.Fire_Damage_Boost.Name", "§cOgniste Wzmocnienie");
+        cfg.set("MagicEffects.Fire_Damage_Boost.Name", "§c🔥 Ogniste Wzmocnienie");
         cfg.set("MagicEffects.Fire_Damage_Boost.Lore.l1", "§7Zadajesz więcej obrażeń płonącym celom.");
         cfg.set("MagicEffects.Fire_Damage_Boost.IsMajor", false);
+
         cfg.set("MagicEffects.Fire_Damage_Boost.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Fire_Damage_Boost.Conditions.req1.Skill_Level", 3);
         cfg.set("MagicEffects.Fire_Damage_Boost.Cost.c1.Material", "BLAZE_POWDER");
         cfg.set("MagicEffects.Fire_Damage_Boost.Cost.c1.Amount", 5);
 
-        cfg.set("MagicEffects.Fire_Speed_Boost.Name", "§cOgnista Prędkość");
+        cfg.set("MagicEffects.Fire_Speed_Boost.Name", "§c🔥 Ognista Prędkość");
         cfg.set("MagicEffects.Fire_Speed_Boost.Lore.l1", "§7Otrzymujesz prędkość po uderzeniu płonącego celu.");
         cfg.set("MagicEffects.Fire_Speed_Boost.IsMajor", false);
+
         cfg.set("MagicEffects.Fire_Speed_Boost.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Fire_Speed_Boost.Conditions.req1.Skill_Level", 4);
         cfg.set("MagicEffects.Fire_Speed_Boost.Cost.c1.Material", "SUGAR");
         cfg.set("MagicEffects.Fire_Speed_Boost.Cost.c1.Amount", 10);
 
-        cfg.set("MagicEffects.Knockback.Name", "§fOdrzut");
+        cfg.set("MagicEffects.Knockback.Name", "§f💨 Odrzut");
         cfg.set("MagicEffects.Knockback.Lore.l1", "§7Odrzuca wrogów przy uderzeniu.");
         cfg.set("MagicEffects.Knockback.IsMajor", false);
+
         cfg.set("MagicEffects.Knockback.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Knockback.Conditions.req1.Skill_Level", 2);
         cfg.set("MagicEffects.Knockback.Cost.c1.Material", "PISTON");
         cfg.set("MagicEffects.Knockback.Cost.c1.Amount", 1);
 
-        cfg.set("MagicEffects.Burrow.Name", "§aZakopanie");
+        cfg.set("MagicEffects.Burrow.Name", "§a⛰ Zakopanie");
         cfg.set("MagicEffects.Burrow.Lore.l1", "§7Szansa na zakopanie wroga w ziemi.");
         cfg.set("MagicEffects.Burrow.IsMajor", true);
+
         cfg.set("MagicEffects.Burrow.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Burrow.Conditions.req1.Skill_Level", 6);
         cfg.set("MagicEffects.Burrow.Cost.c1.Material", "SAND");
         cfg.set("MagicEffects.Burrow.Cost.c1.Amount", 32);
 
-        cfg.set("MagicEffects.Fire_Aspect.Name", "§cZaklęty Ogień");
+        cfg.set("MagicEffects.Fire_Aspect.Name", "§c🔥 Zaklęty Ogień");
         cfg.set("MagicEffects.Fire_Aspect.Lore.l1", "§7Podpala wrogów przy uderzeniu.");
         cfg.set("MagicEffects.Fire_Aspect.IsMajor", false);
+
         cfg.set("MagicEffects.Fire_Aspect.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Fire_Aspect.Conditions.req1.Skill_Level", 3);
         cfg.set("MagicEffects.Fire_Aspect.Cost.c1.Material", "FLINT_AND_STEEL");
         cfg.set("MagicEffects.Fire_Aspect.Cost.c1.Amount", 1);
 
-        cfg.set("MagicEffects.Smoke_Aspect.Name", "§8Dymna Zasłona");
+        cfg.set("MagicEffects.Smoke_Aspect.Name", "§8💨 Dymna Zasłona");
         cfg.set("MagicEffects.Smoke_Aspect.Lore.l1", "§7Tworzy dym wokół ciebie.");
         cfg.set("MagicEffects.Smoke_Aspect.IsMajor", false);
+
         cfg.set("MagicEffects.Smoke_Aspect.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Smoke_Aspect.Conditions.req1.Skill_Level", 2);
         cfg.set("MagicEffects.Smoke_Aspect.Cost.c1.Material", "COAL");
         cfg.set("MagicEffects.Smoke_Aspect.Cost.c1.Amount", 10);
 
-        cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.Name", "§fDźwiękowe Wzmocnienie");
+        cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.Name", "§f💨 Dźwiękowe Wzmocnienie");
         cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.Lore.l1",
                 "§7Zwiększa obrażenia od umiejętności dźwiękowych.");
         cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.IsMajor", false);
+
         cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.Conditions.req1.Skill_Level", 4);
         cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.Cost.c1.Material", "NOTE_BLOCK");
         cfg.set("MagicEffects.Minor_Air_Sound_Damage_Buff.Cost.c1.Amount", 5);
 
-        cfg.set("MagicEffects.Major_Air_Sound_Hit.Name", "§fUderzenie Dźwięku");
+        cfg.set("MagicEffects.Major_Air_Sound_Hit.Name", "§f💨 Uderzenie Dźwięku");
         cfg.set("MagicEffects.Major_Air_Sound_Hit.Lore.l1", "§7Wywołuje potężną falę dźwiękową przy uderzeniu.");
         cfg.set("MagicEffects.Major_Air_Sound_Hit.IsMajor", true);
+
         cfg.set("MagicEffects.Major_Air_Sound_Hit.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Major_Air_Sound_Hit.Conditions.req1.Skill_Level", 7);
         cfg.set("MagicEffects.Major_Air_Sound_Hit.Cost.c1.Material", "JUKEBOX");
         cfg.set("MagicEffects.Major_Air_Sound_Hit.Cost.c1.Amount", 1);
 
-        cfg.set("MagicEffects.Earth_Hammer_Aspect.Name", "§aMłot Ziemi");
+        cfg.set("MagicEffects.Earth_Hammer_Aspect.Name", "§a⛰ Młot Ziemi");
         cfg.set("MagicEffects.Earth_Hammer_Aspect.Lore.l1", "§7Twoje ataki wstrząsają ziemią.");
         cfg.set("MagicEffects.Earth_Hammer_Aspect.IsMajor", true);
+
         cfg.set("MagicEffects.Earth_Hammer_Aspect.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Earth_Hammer_Aspect.Conditions.req1.Skill_Level", 7);
         cfg.set("MagicEffects.Earth_Hammer_Aspect.Cost.c1.Material", "ANVIL");
         cfg.set("MagicEffects.Earth_Hammer_Aspect.Cost.c1.Amount", 1);
 
-        cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.Name", "§bLodowe Spowolnienie");
+        cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.Name", "§b❄ Lodowe Spowolnienie");
         cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.Lore.l1", "§7Spowalnia wrogów przy uderzeniu.");
         cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.IsMajor", false);
+
         cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.Conditions.req1.Skill_Level", 3);
         cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.Cost.c1.Material", "ICE");
         cfg.set("MagicEffects.Minor_Water_Icy_Slowness_Hit.Cost.c1.Amount", 10);
 
-        cfg.set("MagicEffects.Air_Thrust.Name", "§fPowietrzne Pchnięcie");
+        cfg.set("MagicEffects.Air_Thrust.Name", "§f💨 Powietrzne Pchnięcie");
         cfg.set("MagicEffects.Air_Thrust.Lore.l1", "§7Wyrzuca wrogów w powietrze.");
         cfg.set("MagicEffects.Air_Thrust.IsMajor", false);
+
         cfg.set("MagicEffects.Air_Thrust.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Air_Thrust.Conditions.req1.Skill_Level", 4);
         cfg.set("MagicEffects.Air_Thrust.Cost.c1.Material", "FEATHER");
         cfg.set("MagicEffects.Air_Thrust.Cost.c1.Amount", 10);
 
-        cfg.set("MagicEffects.Air_Damage_Boost_Downward.Name", "§fPowietrzna Dominacja");
+        cfg.set("MagicEffects.Air_Damage_Boost_Downward.Name", "§f💨 Powietrzna Dominacja");
         cfg.set("MagicEffects.Air_Damage_Boost_Downward.Lore.l1", "§7Zadajesz więcej obrażeń spadając na wroga.");
         cfg.set("MagicEffects.Air_Damage_Boost_Downward.IsMajor", false);
+
         cfg.set("MagicEffects.Air_Damage_Boost_Downward.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Air_Damage_Boost_Downward.Conditions.req1.Skill_Level", 5);
         cfg.set("MagicEffects.Air_Damage_Boost_Downward.Cost.c1.Material", "PHANTOM_MEMBRANE");
         cfg.set("MagicEffects.Air_Damage_Boost_Downward.Cost.c1.Amount", 5);
 
-        cfg.set("MagicEffects.Earth_1.Name", "§aZiemne Odłamki");
+        cfg.set("MagicEffects.Earth_1.Name", "§a⛰ Ziemne Odłamki");
         cfg.set("MagicEffects.Earth_1.Lore.l1", "§7Przyzywa spadające bloki ziemi.");
         cfg.set("MagicEffects.Earth_1.IsMajor", false);
+
         cfg.set("MagicEffects.Earth_1.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Earth_1.Conditions.req1.Skill_Level", 4);
         cfg.set("MagicEffects.Earth_1.Cost.c1.Material", "DIRT");
         cfg.set("MagicEffects.Earth_1.Cost.c1.Amount", 16);
 
-        cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.Name", "§bLodowy Kolec");
+        cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.Name", "§b❄ Lodowy Kolec");
         cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.Lore.l1", "§7Wystrzeliwuje lodowe kolce.");
         cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.IsMajor", true);
+
         cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.Conditions.req1.Skill_Level", 6);
         cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.Cost.c1.Material", "PACKED_ICE");
         cfg.set("MagicEffects.Ice_Thorn_Ability_Aspect.Cost.c1.Amount", 10);
 
-        cfg.set("MagicEffects.Ice_Encase.Name", "§bZamrożenie");
+        cfg.set("MagicEffects.Ice_Encase.Name", "§b❄ Zamrożenie");
         cfg.set("MagicEffects.Ice_Encase.Lore.l1", "§7Zamraża wroga w lodzie.");
         cfg.set("MagicEffects.Ice_Encase.IsMajor", true);
+
         cfg.set("MagicEffects.Ice_Encase.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Ice_Encase.Conditions.req1.Skill_Level", 8);
         cfg.set("MagicEffects.Ice_Encase.Cost.c1.Material", "BLUE_ICE");
         cfg.set("MagicEffects.Ice_Encase.Cost.c1.Amount", 5);
 
-        cfg.set("MagicEffects.Lightning_Aspect.Name", "§ePiorun");
+        cfg.set("MagicEffects.Lightning_Aspect.Name", "§e⚡ Piorun");
         cfg.set("MagicEffects.Lightning_Aspect.Lore.l1", "§7Uderza piorunem przy ataku.");
         cfg.set("MagicEffects.Lightning_Aspect.IsMajor", true);
+
         cfg.set("MagicEffects.Lightning_Aspect.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.Lightning_Aspect.Conditions.req1.Skill_Level", 8);
         cfg.set("MagicEffects.Lightning_Aspect.Cost.c1.Material", "LIGHTNING_ROD");
         cfg.set("MagicEffects.Lightning_Aspect.Cost.c1.Amount", 1);
 
-        cfg.set("MagicEffects.Looting.Name", "§eGrabież");
+        cfg.set("MagicEffects.Looting.Name", "§e💰 Grabież");
         cfg.set("MagicEffects.Looting.Lore.l1", "§7Zwiększa szansę na drop przedmiotów.");
         cfg.set("MagicEffects.Looting.IsMajor", false);
+
         cfg.set("MagicEffects.Looting.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Looting.Conditions.req1.Skill_Level", 5);
         cfg.set("MagicEffects.Looting.Cost.c1.Material", "EMERALD");
         cfg.set("MagicEffects.Looting.Cost.c1.Amount", 5);
 
-        cfg.set("MagicEffects.Expierience.Name", "§aDoświadczenie");
+        cfg.set("MagicEffects.Expierience.Name", "§a✨ Doświadczenie");
         cfg.set("MagicEffects.Expierience.Lore.l1", "§7Zwiększa zdobywane doświadczenie.");
         cfg.set("MagicEffects.Expierience.IsMajor", false);
+
         cfg.set("MagicEffects.Expierience.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Expierience.Conditions.req1.Skill_Level", 3);
         cfg.set("MagicEffects.Expierience.Cost.c1.Material", "EXPERIENCE_BOTTLE");
         cfg.set("MagicEffects.Expierience.Cost.c1.Amount", 10);
 
-        cfg.set("MagicEffects.Earth_Health_Boost.Name", "§aWitalność Ziemi");
+        cfg.set("MagicEffects.Earth_Health_Boost.Name", "§a⛰ Witalność Ziemi");
         cfg.set("MagicEffects.Earth_Health_Boost.Lore.l1", "§7Otrzymujesz absorpcję po zabiciu wroga.");
         cfg.set("MagicEffects.Earth_Health_Boost.IsMajor", false);
+
         cfg.set("MagicEffects.Earth_Health_Boost.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Earth_Health_Boost.Conditions.req1.Skill_Level", 4);
         cfg.set("MagicEffects.Earth_Health_Boost.Cost.c1.Material", "APPLE");
         cfg.set("MagicEffects.Earth_Health_Boost.Cost.c1.Amount", 5);
 
-        cfg.set("MagicEffects.Midas.Name", "§6Dotyk Midasa");
+        cfg.set("MagicEffects.Midas.Name", "§6💰 Dotyk Midasa");
         cfg.set("MagicEffects.Midas.Lore.l1", "§7Szansa na zdobycie pieniędzy przy zabiciu.");
         cfg.set("MagicEffects.Midas.IsMajor", true);
+
         cfg.set("MagicEffects.Midas.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Midas.Conditions.req1.Skill_Level", 8);
         cfg.set("MagicEffects.Midas.Cost.c1.Material", "GOLD_INGOT");
         cfg.set("MagicEffects.Midas.Cost.c1.Amount", 20);
 
-        cfg.set("MagicEffects.fire_burst.Name", "Ognisty Wybuch");
+        cfg.set("MagicEffects.fire_burst.Name", "§c🔥 Ognisty Wybuch");
         cfg.set("MagicEffects.fire_burst.Lore.l1", "§cSilne rozgrzanie broni");
         cfg.set("MagicEffects.fire_burst.Lore.l2", "§6Szansa na podpalenie wroga");
         cfg.set("MagicEffects.fire_burst.IsMajor", true);
+
         cfg.set("MagicEffects.fire_burst.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.fire_burst.Conditions.req1.Skill_Level", 2);
         cfg.set("MagicEffects.fire_burst.Cost.c1.Material", "BLAZE_POWDER");
         cfg.set("MagicEffects.fire_burst.Cost.c1.Amount", 5);
 
-        cfg.set("MagicEffects.frost_touch.Name", "Mroźny Dotyk");
+        cfg.set("MagicEffects.frost_touch.Name", "§b❄ Mroźny Dotyk");
         cfg.set("MagicEffects.frost_touch.Lore.l1", "§bZamraża cel na chwilę");
         cfg.set("MagicEffects.frost_touch.IsMajor", false);
+
         cfg.set("MagicEffects.frost_touch.Conditions.req1.Skill_Type", "COMBAT");
         cfg.set("MagicEffects.frost_touch.Conditions.req1.Skill_Level", 2);
         cfg.set("MagicEffects.frost_touch.Cost.c1.Material", "SNOWBALL");
@@ -550,17 +576,22 @@ public class ConfigsMenager {
         cfg.set("MagicEffects.Item_Effect_Test.Name", "§bItem Effect");
         cfg.set("MagicEffects.Item_Effect_Test.Lore.l1", "§7Does something magical.");
         cfg.set("MagicEffects.Item_Effect_Test.IsMajor", false);
-        cfg.set("MagicEffects.Item_Effect_Test.IsItemEffect", true);
+
+        cfg.set("MagicEffects.Item_Effect_Test." +
+                "IsItemEffect", true);
         cfg.set("MagicEffects.Item_Effect_Test.Conditions.req1.Skill_Type", "MINING");
         cfg.set("MagicEffects.Item_Effect_Test.Conditions.req1.Skill_Level", 1);
         cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Material", "STONE");
         cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Amount", 1);
 
         // Summon Undead Effect
-        cfg.set("MagicEffects.Summon_Undead.Name", "§5Przyzwanie Nieumarłych");
+        cfg.set("MagicEffects.Summon_Undead.Name", "§5💀 Przyzwanie Nieumarłych");
         cfg.set("MagicEffects.Summon_Undead.Lore.l1", "§7Przyzywa 3 Zombie po krótkim rytuale.");
-        cfg.set("MagicEffects.Summon_Undead.IsMajor", false);
+        cfg.set("MagicEffects.Summon_Undead.IsMajor", true);
+
         cfg.set("MagicEffects.Summon_Undead.IsItemEffect", true);
+        cfg.set("MagicEffects.Summon_Undead.ScrollName", "§5💀 Zwój Nieumarłych");
+        cfg.set("MagicEffects.Summon_Undead.ScrollModelID", 10007);
         cfg.set("MagicEffects.Summon_Undead.Conditions.req1.Skill_Type", "BOUNTY");
         cfg.set("MagicEffects.Summon_Undead.Conditions.req1.Skill_Level", 1);
         cfg.set("MagicEffects.Summon_Undead.Cost.c1.Material", "ROTTEN_FLESH");
@@ -568,7 +599,7 @@ public class ConfigsMenager {
 
         // Scroll of Undead
         cfg.set("Craftable_Items.Scroll_Of_Undead.Material", "PAPER");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Name", "§5Zwój Przyzwania Nieumarłych");
+        cfg.set("Craftable_Items.Scroll_Of_Undead.Name", "§5💀 Zwój Przyzwania Nieumarłych");
         cfg.set("Craftable_Items.Scroll_Of_Undead.Custom_Model_ID", 10001);
         cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m1.Material", "ROTTEN_FLESH");
         cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m1.Amount", 10);

@@ -40,12 +40,10 @@ public class Methods {
 		offset1.setYaw(location.getYaw()+30);
 		offset2.setYaw(location.getYaw()-30);
 
-		particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(0, 153, 255)));
-		particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(0, 255, 235)));
-		particles.add(new BetterParticles(2, ParticleEffect.CRIT_MAGIC, 0.3, 0.01, 0.15));
-		particles.add(new BetterParticles(2, ParticleEffect.FIREWORKS_SPARK, 0.3, 0.01, 0.15));
-
-
+		particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(135, 206, 250)));
+		particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(135, 206, 250)));
+		particles.add(new BetterParticles(1, ParticleEffect.CRIT_MAGIC, 0.2, 0.01, 0.15));
+		particles.add(new BetterParticles(1, ParticleEffect.FIREWORKS_SPARK, 0.2, 0.01, 0.15));
 
 
 		projectiles.add(new AbilityProjectile(player.getLocation().getDirection(), location, location, particles, 1));

@@ -20,7 +20,6 @@ import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.Element;
 import com.projectkorra.projectkorra.ability.CoreAbility;
-import com.projectkorra.projectkorra.attribute.Attribute;
 import com.projectkorra.projectkorra.attribute.AttributePriority;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
 import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
@@ -31,6 +30,8 @@ import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
 import methods_plugins.Methods;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -43,6 +44,7 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -59,6 +61,8 @@ import static methods_plugins.AmonPackPlugin.plugin;
 import static methods_plugins.Methods.getRandom;
 
 public class Listeners implements Listener {
+    private static final Map<UUID, Long> chargingPlayers = new HashMap<>();
+    private static final Map<UUID, Integer> chargingTasks = new HashMap<>();
     /*
      * @EventHandler
      * public void onEntityDamage(EntityDamageEvent event) {
@@ -363,6 +367,10 @@ public class Listeners implements Listener {
             ItemStack item = player.getInventory().getItemInMainHand();
             Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
             if (craftItem != null) {
+                if (craftItem.getWeaponID().equals("1000")) {
+                    // Scrolls are now used by sneaking
+                    return;
+                }
                 craftItem.Use(player);
                 return;
             }
@@ -377,21 +385,16 @@ public class Listeners implements Listener {
                 event.setCancelled(true);
                 // CraftingMenager.OpenMoldCrafting(player);
                 CraftingMenager.OpenMoldCategory(player);
-            } else {
-                if (block.getType() == Material.ENCHANTING_TABLE || block.getType() == Material.ANVIL) {
+            } else if (block.getType() == Material.ENCHANTING_TABLE || block.getType() == Material.ANVIL) {
                     event.setCancelled(true);
                     player.sendMessage(
                             "§c✖ §7Ta funkcja jest §lwyłączona§7! Udaj się do §6Kowala§7, aby z niej skorzystać.");
+
+            }else{
+                if (FarmMenager.CheckFarmBlock(block, player, true)) {
+                    event.setCancelled(true);
                 }
             }
-        } else {
-            if (event.getAction() != Action.RIGHT_CLICK_BLOCK)
-                return;
-            if (player.getGameMode().equals(GameMode.CREATIVE)) {
-                return;
-            }
-            Block block = event.getClickedBlock();
-            FarmMenager.CheckFarmBlock(block, player, true);
         }
     }
 
@@ -530,23 +533,61 @@ public class Listeners implements Listener {
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player p) {
-            ItemStack item = p.getInventory().getItemInMainHand();
-            if (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
-                if (CraftingMenager.IsArmor(item)) {
-                    Craftable_Armor armor = CraftingMenager.GetCraftedArmorByItem(item);
-                    p.sendMessage("Sukcesywnie zablokowano obrazenia!");
-                    p.sendMessage("Dmg: " + event.getDamage());
-                    p.sendMessage("Dmg2: " + event.getFinalDamage());
-                    p.sendMessage("Dmg3: " + (event.getDamage() - armor.getDmgReduction()));
-                    event.setDamage(event.getDamage() - armor.getDmgReduction());
+            // Disable Vanilla Armor Protection
+            double armorPoints = p.getAttribute(Attribute.ARMOR).getValue();
+            double toughnessPoints = p.getAttribute(Attribute.ARMOR_TOUGHNESS).getValue();
+            if(armorPoints>0){
+                p.getAttribute(Attribute.ARMOR).setBaseValue(0);
+            }
+            if(toughnessPoints>0){
+                p.getAttribute(Attribute.ARMOR_TOUGHNESS).setBaseValue(0);
+
+            }
+
+            double totalReduction = 0;
+            for (ItemStack item : p.getInventory().getArmorContents()) {
+                if (item != null && item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
+                    if (CraftingMenager.IsArmor(item)) {
+                        Craftable_Armor armor = CraftingMenager.GetCraftedArmorByItem(item);
+                        totalReduction += armor.getDmgReduction();
+
+                        if (CraftingMenager.HaveEffect(item, "MoltenShell")) {
+                            if (event.getDamager() instanceof LivingEntity attacker) {
+                                if (getRandom(0, 100) < 25) {
+                                    attacker.setFireTicks(60);
+                                }
+                            }
+                        }
+                        if (CraftingMenager.HaveEffect(item, "Adrenaline")) {
+                            if (getRandom(0, 100) < 20) { // 20% chance
+                                p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 1));
+                            }
+                        }
+                        if (CraftingMenager.HaveEffect(item, "Repulse")) {
+                            if (event.getDamager() instanceof LivingEntity attacker && attacker!=p) {
+                                attacker.setVelocity(attacker.getLocation().toVector()
+                                        .subtract(p.getLocation().toVector()).normalize().multiply(1).setY(0.5));
+                            }
+                        }
+                    }
                 }
             }
+
+            if (totalReduction > 0) {
+                double newDamage = Math.max(1, event.getDamage() - totalReduction);
+                 p.sendMessage("§aPowinno byc "+event.getDamage()+" ale Blocked " + (event.getDamage() - newDamage) + " damage! Taken: " + newDamage + ")");
+                event.setDamage(newDamage);
+            }
         }
+
         if (event.getDamager() instanceof Player p) {
             ItemStack item = p.getInventory().getItemInMainHand();
             if (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
                 if (CraftingMenager.IsWeapon(item)) {
                     CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
+                    if (!weapon.isRange() && p.getLocation().distance(event.getEntity().getLocation()) > 6) {
+                        return;
+                    }
                     double DamageModifier = weapon.ExecuteEffectsOnHitByPlayer(event.getEntity(),
                             p.getInventory().getItemInMainHand(), p);
                     event.setDamage(weapon.getDamage() + DamageModifier);
@@ -1299,164 +1340,267 @@ public class Listeners implements Listener {
 
     }
 
+    /*
+     * for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
+     * if
+     * (InArenaRange(event.getPlayer().getLocation(),A.getArenaLocation(),A.getRange
+     * (),A.getRange())) {
+     * Player player = event.getPlayer();
+     * BendingPlayer bp = BendingPlayer.getBendingPlayer(event.getPlayer());
+     * List<Upgrades> PlayerUpgrades = new ArrayList<>();
+     * if (A.IndividualUpgrades.get(player)!=null){
+     * PlayerUpgrades = A.IndividualUpgrades.get(player);
+     * }
+     * if (event.getAbility().equalsIgnoreCase("FireBlast")){
+     * if (event.getCooldown()!= 2500){
+     * if (GetUpgradeByNameFromPlayer("FireBlastUpgrade1", PlayerUpgrades)!=null){
+     * if
+     * (GetUpgradeByNameFromPlayer("FireBlastUpgrade1",PlayerUpgrades).isUnlocked())
+     * {
+     * event.setCancelled(true);
+     * bp.addCooldown("FireBlast",2500);
+     * }}}}
+     * if (event.getAbility().equalsIgnoreCase("AirSwipe")){
+     * if (event.getCooldown()!= 5000){
+     * if (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1", PlayerUpgrades)!=null){
+     * if
+     * (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1",PlayerUpgrades).isUnlocked()){
+     * event.setCancelled(true);
+     * bp.addCooldown("AirSwipe",5000);
+     * }}}}
+     * }break;
+     * }}
+     * //}
+     * 
+     * 
+     * //Atrybuty nie działają :<
+     * /*
+     * 
+     * @EventHandler
+     * public void AbilityStart(AbilityStartEvent event) {
+     * Player player = event.getAbility().getPlayer();
+     * ItemStack item = player.getInventory().getItemInMainHand();
+     * if (item.getType() != Material.AIR && item.hasItemMeta() &&
+     * item.getItemMeta().hasDisplayName()) {
+     * CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
+     * if (weapon == null) return;
+     * CoreAbility coreAbility = (CoreAbility) event.getAbility();
+     * weapon.ExecuteEffectsMagicModify(player,coreAbility);
+     * }
+     * CoreAbility coreAbility = (CoreAbility) event.getAbility();
+     * if(coreAbility.getName().equalsIgnoreCase("EarthBlast")){
+     * coreAbility.addAttributeModifier(Attribute.DAMAGE, 20, ADDITION,
+     * AttributePriority.HIGH);
+     * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 20000, ADDITION,
+     * AttributePriority.LOW);
+     * }
+     * if(coreAbility.getName().equalsIgnoreCase("WaterManipulation")){
+     * coreAbility.addAttributeModifier(Attribute.DAMAGE, 20, ADDITION,
+     * AttributePriority.LOW);
+     * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 20000, ADDITION,
+     * AttributePriority.MEDIUM);
+     * }
+     * }
+     */
+    /*
+     * @EventHandler
+     * public void test(AbilityStartEvent event) {
+     * Player p = event.getAbility().getPlayer();
+     * List<String> upgrade = AmonPackPlugin.getPlayerUpgrades(p);
+     * for (Menagerie mena:ListOfAllMenageries) {
+     * if (mena.IsInMenagerie(event.getAbility().getPlayer().getLocation())){
+     * for (Mechanics.Skills.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
+     * if (upgrade.contains(UPV.getName()) &&
+     * event.getAbility().getName().equalsIgnoreCase(UPV.getAbilityName())){
+     * if (UPV.getType() ==
+     * Mechanics.Skills.Upgrades.MenagerieUpgradeType.ABILITYBUFF){
+     * UPV.ApplyEffects((CoreAbility) event.getAbility());
+     * break;
+     * }}}
+     * break;
+     * }}
+     * /*
+     * for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
+     * if
+     * (InArenaRange(event.getAbility().getPlayer().getLocation(),A.getArenaLocation
+     * (),A.getRange(),A.getRange())) {
+     * try{
+     * Player player = event.getAbility().getPlayer();
+     * List<Upgrades> PlayerUpgrades = new ArrayList<>();
+     * if (A.IndividualUpgrades.get(player)!=null){
+     * PlayerUpgrades = A.IndividualUpgrades.get(player);
+     * }
+     * if (event.getAbility().getName().equalsIgnoreCase("Torrent")){
+     * if (GetUpgradeByNameFromPlayer("TorrentUpgrade1", PlayerUpgrades)!=null){
+     * if
+     * (GetUpgradeByNameFromPlayer("TorrentUpgrade1",PlayerUpgrades).isUnlocked()){
+     * CoreAbility coreAbility = (CoreAbility) event.getAbility();
+     * coreAbility.addAttributeModifier(Attribute.DAMAGE, 3, ADDITION,
+     * AttributePriority.LOW);
+     * coreAbility.addAttributeModifier(Attribute.RANGE, 5, ADDITION,
+     * AttributePriority.LOW);
+     * }}}
+     * if (event.getAbility().getName().equalsIgnoreCase("FireBlast")){
+     * if (GetUpgradeByNameFromPlayer("FireBlastUpgrade1", PlayerUpgrades)!=null){
+     * if
+     * (GetUpgradeByNameFromPlayer("FireBlastUpgrade1",PlayerUpgrades).isUnlocked())
+     * {
+     * CoreAbility coreAbility = (CoreAbility) event.getAbility();
+     * try {
+     * coreAbility.addAttributeModifier(Attribute.CHARGE_DURATION, 3,
+     * AttributeModifier.DIVISION, AttributePriority.LOW);
+     * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 5000,
+     * AttributeModifier.ADDITION, AttributePriority.HIGH);
+     * }catch (Exception ex){
+     * coreAbility.addAttributeModifier(Attribute.DAMAGE, 2, ADDITION,
+     * AttributePriority.HIGH);
+     * }
+     * }}}
+     * if (event.getAbility().getName().equalsIgnoreCase("AirSwipe")){
+     * if (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1", PlayerUpgrades)!=null){
+     * if
+     * (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1",PlayerUpgrades).isUnlocked()){
+     * CoreAbility coreAbility = (CoreAbility) event.getAbility();
+     * coreAbility.addAttributeModifier(Attribute.RANGE, 5,
+     * AttributeModifier.ADDITION, AttributePriority.LOW);
+     * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 5000,
+     * AttributeModifier.ADDITION, AttributePriority.HIGH);
+     * coreAbility.addAttributeModifier(Attribute.DAMAGE, 2, ADDITION,
+     * AttributePriority.HIGH);
+     * coreAbility.addAttributeModifier(Attribute.CHARGE_DURATION, 1500,
+     * SUBTRACTION, AttributePriority.LOW);
+     * }}}
+     * }catch(Exception ex){
+     * System.out.println("Error   "+ex.getMessage());
+     * }}}
+     */
+
+    @EventHandler
+    public void onSneak(org.bukkit.event.player.PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+        if (event.isSneaking()) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+            Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
+            if (craftItem != null && craftItem.getWeaponID().equals("1000")) {
+                // Start charging
+                chargingPlayers.put(player.getUniqueId(), System.currentTimeMillis());
+
+                // Start visual task
+                int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(AmonPackPlugin.plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!player.isSneaking() || !player.isOnline()) {
+                            if (chargingTasks.containsKey(player.getUniqueId())) {
+                                Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
+                                chargingTasks.remove(player.getUniqueId());
+                            }
+                            chargingPlayers.remove(player.getUniqueId());
+                            return;
+                        }
+
+                        ItemStack currentItem = player.getInventory().getItemInMainHand();
+                        Craftable_Item currentCraftItem = CraftingMenager.getCraftableItemByItem(currentItem);
+                        if (currentCraftItem == null || !currentCraftItem.getWeaponID().equals("1000")) {
+                            if (chargingTasks.containsKey(player.getUniqueId())) {
+                                Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
+                                chargingTasks.remove(player.getUniqueId());
+                            }
+                            chargingPlayers.remove(player.getUniqueId());
+                            return;
+                        }
+
+                        // Get charge time from effect
+                        long chargeTime = 2500;
+                        List<MagicEffects> effects = CraftingMenager.getEffectsFromItem(currentItem);
+                        if (!effects.isEmpty()) {
+                            chargeTime = effects.get(0).getChargeTime();
+                        }
+
+                        long startTime = chargingPlayers.get(player.getUniqueId());
+                        long elapsed = System.currentTimeMillis() - startTime;
+
+                        if (elapsed >= chargeTime) {
+                            // Fully charged particles
+                            player.spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 5, 0.5,
+                                    0.5, 0.5, 0);
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 2.0f);
+                        } else {
+                            // Charging particles
+                            player.spawnParticle(Particle.ENCHANTED_HIT, player.getLocation().add(0, 1, 0), 5, 0.5,
+                                    0.5, 0.5, 0);
+                        }
+                    }
+                }, 0L, 5L);
+
+                chargingTasks.put(player.getUniqueId(), taskId);
+            }
+        } else {
+            // Stop sneaking - check if charged
+            if (chargingPlayers.containsKey(player.getUniqueId())) {
+                long startTime = chargingPlayers.get(player.getUniqueId());
+
+                // Cancel task
+                if (chargingTasks.containsKey(player.getUniqueId())) {
+                    Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
+                    chargingTasks.remove(player.getUniqueId());
+                }
+                chargingPlayers.remove(player.getUniqueId());
+
+                ItemStack item = player.getInventory().getItemInMainHand();
+                Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
+
+                if (craftItem != null && craftItem.getWeaponID().equals("1000")) {
+                    // Get charge time
+                    long chargeTime = 2500;
+                    List<MagicEffects> effects = CraftingMenager.getEffectsFromItem(item);
+                    if (!effects.isEmpty()) {
+                        chargeTime = effects.get(0).getChargeTime();
+                    }
+
+                    if (System.currentTimeMillis() - startTime >= chargeTime) {
+                        craftItem.Use(player);
+                    } else {
+                        player.sendMessage(ChatColor.RED + "Rytuał przerwany!");
+                        player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 1.0f);
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onItemHeld(org.bukkit.event.player.PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        if (chargingPlayers.containsKey(player.getUniqueId())) {
+            if (chargingTasks.containsKey(player.getUniqueId())) {
+                Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
+                chargingTasks.remove(player.getUniqueId());
+            }
+            chargingPlayers.remove(player.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onDrop(org.bukkit.event.player.PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        if (chargingPlayers.containsKey(player.getUniqueId())) {
+            if (chargingTasks.containsKey(player.getUniqueId())) {
+                Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
+                chargingTasks.remove(player.getUniqueId());
+            }
+            chargingPlayers.remove(player.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        if (chargingPlayers.containsKey(player.getUniqueId())) {
+            if (chargingTasks.containsKey(player.getUniqueId())) {
+                Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
+                chargingTasks.remove(player.getUniqueId());
+            }
+            chargingPlayers.remove(player.getUniqueId());
+        }
+    }
 }
-/*
- * for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
- * if
- * (InArenaRange(event.getPlayer().getLocation(),A.getArenaLocation(),A.getRange
- * (),A.getRange())) {
- * Player player = event.getPlayer();
- * BendingPlayer bp = BendingPlayer.getBendingPlayer(event.getPlayer());
- * List<Upgrades> PlayerUpgrades = new ArrayList<>();
- * if (A.IndividualUpgrades.get(player)!=null){
- * PlayerUpgrades = A.IndividualUpgrades.get(player);
- * }
- * if (event.getAbility().equalsIgnoreCase("FireBlast")){
- * if (event.getCooldown()!= 2500){
- * if (GetUpgradeByNameFromPlayer("FireBlastUpgrade1", PlayerUpgrades)!=null){
- * if
- * (GetUpgradeByNameFromPlayer("FireBlastUpgrade1",PlayerUpgrades).isUnlocked())
- * {
- * event.setCancelled(true);
- * bp.addCooldown("FireBlast",2500);
- * }}}}
- * if (event.getAbility().equalsIgnoreCase("AirSwipe")){
- * if (event.getCooldown()!= 5000){
- * if (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1", PlayerUpgrades)!=null){
- * if
- * (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1",PlayerUpgrades).isUnlocked()){
- * event.setCancelled(true);
- * bp.addCooldown("AirSwipe",5000);
- * }}}}
- * }break;
- * }}
- * //}
- * 
- * 
- * //Atrybuty nie działają :<
- * /*
- * 
- * @EventHandler
- * public void AbilityStart(AbilityStartEvent event) {
- * Player player = event.getAbility().getPlayer();
- * ItemStack item = player.getInventory().getItemInMainHand();
- * if (item.getType() != Material.AIR && item.hasItemMeta() &&
- * item.getItemMeta().hasDisplayName()) {
- * CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item);
- * if (weapon == null) return;
- * CoreAbility coreAbility = (CoreAbility) event.getAbility();
- * weapon.ExecuteEffectsMagicModify(player,coreAbility);
- * }
- * CoreAbility coreAbility = (CoreAbility) event.getAbility();
- * if(coreAbility.getName().equalsIgnoreCase("EarthBlast")){
- * coreAbility.addAttributeModifier(Attribute.DAMAGE, 20, ADDITION,
- * AttributePriority.HIGH);
- * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 20000, ADDITION,
- * AttributePriority.LOW);
- * }
- * if(coreAbility.getName().equalsIgnoreCase("WaterManipulation")){
- * coreAbility.addAttributeModifier(Attribute.DAMAGE, 20, ADDITION,
- * AttributePriority.LOW);
- * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 20000, ADDITION,
- * AttributePriority.MEDIUM);
- * }
- * }
- */
-/*
- * @EventHandler
- * public void test(AbilityStartEvent event) {
- * Player p = event.getAbility().getPlayer();
- * List<String> upgrade = AmonPackPlugin.getPlayerUpgrades(p);
- * for (Menagerie mena:ListOfAllMenageries) {
- * if (mena.IsInMenagerie(event.getAbility().getPlayer().getLocation())){
- * for (Mechanics.Skills.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
- * if (upgrade.contains(UPV.getName()) &&
- * event.getAbility().getName().equalsIgnoreCase(UPV.getAbilityName())){
- * if (UPV.getType() ==
- * Mechanics.Skills.Upgrades.MenagerieUpgradeType.ABILITYBUFF){
- * UPV.ApplyEffects((CoreAbility) event.getAbility());
- * break;
- * }}}
- * break;
- * }}
- * /*
- * for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
- * if
- * (InArenaRange(event.getAbility().getPlayer().getLocation(),A.getArenaLocation
- * (),A.getRange(),A.getRange())) {
- * try{
- * Player player = event.getAbility().getPlayer();
- * List<Upgrades> PlayerUpgrades = new ArrayList<>();
- * if (A.IndividualUpgrades.get(player)!=null){
- * PlayerUpgrades = A.IndividualUpgrades.get(player);
- * }
- * if (event.getAbility().getName().equalsIgnoreCase("Torrent")){
- * if (GetUpgradeByNameFromPlayer("TorrentUpgrade1", PlayerUpgrades)!=null){
- * if
- * (GetUpgradeByNameFromPlayer("TorrentUpgrade1",PlayerUpgrades).isUnlocked()){
- * CoreAbility coreAbility = (CoreAbility) event.getAbility();
- * coreAbility.addAttributeModifier(Attribute.DAMAGE, 3, ADDITION,
- * AttributePriority.LOW);
- * coreAbility.addAttributeModifier(Attribute.RANGE, 5, ADDITION,
- * AttributePriority.LOW);
- * }}}
- * if (event.getAbility().getName().equalsIgnoreCase("FireBlast")){
- * if (GetUpgradeByNameFromPlayer("FireBlastUpgrade1", PlayerUpgrades)!=null){
- * if
- * (GetUpgradeByNameFromPlayer("FireBlastUpgrade1",PlayerUpgrades).isUnlocked())
- * {
- * CoreAbility coreAbility = (CoreAbility) event.getAbility();
- * try {
- * coreAbility.addAttributeModifier(Attribute.CHARGE_DURATION, 3,
- * AttributeModifier.DIVISION, AttributePriority.LOW);
- * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 5000,
- * AttributeModifier.ADDITION, AttributePriority.HIGH);
- * }catch (Exception ex){
- * coreAbility.addAttributeModifier(Attribute.DAMAGE, 2, ADDITION,
- * AttributePriority.HIGH);
- * }
- * }}}
- * if (event.getAbility().getName().equalsIgnoreCase("AirSwipe")){
- * if (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1", PlayerUpgrades)!=null){
- * if
- * (GetUpgradeByNameFromPlayer("AirSwipeUpgrade1",PlayerUpgrades).isUnlocked()){
- * CoreAbility coreAbility = (CoreAbility) event.getAbility();
- * coreAbility.addAttributeModifier(Attribute.RANGE, 5,
- * AttributeModifier.ADDITION, AttributePriority.LOW);
- * coreAbility.addAttributeModifier(Attribute.COOLDOWN, 5000,
- * AttributeModifier.ADDITION, AttributePriority.HIGH);
- * coreAbility.addAttributeModifier(Attribute.DAMAGE, 2, ADDITION,
- * AttributePriority.HIGH);
- * coreAbility.addAttributeModifier(Attribute.CHARGE_DURATION, 1500,
- * SUBTRACTION, AttributePriority.LOW);
- * }}}
- * }catch(Exception ex){
- * System.out.println("Error   "+ex.getMessage());
- * }}}
- */
-
-// }
-
-/*
- * for (AssaultDef A:AssaultMenager.listOfAssaultDef) {
- * if
- * (InArenaRange(event.getAbility().getPlayer().getLocation(),A.getArenaLocation
- * (),A.getRange(),A.getRange())) {
- * Player player = event.getAbility().getPlayer();
- * List<Upgrades> PlayerUpgrades = new ArrayList<>();
- * if (A.IndividualUpgrades.get(player)!=null){
- * PlayerUpgrades = A.IndividualUpgrades.get(player);
- * }
- * if (event.getAbility().getNagme().equalsIgnoreCase("FireBlast")){
- * if (GetUpgradeByNameFromPlayer("FireBlastUpgrade1", PlayerUpgrades)!=null){
- * if
- * (GetUpgradeByNameFromPlayer("FireBlastUpgrade1",PlayerUpgrades).isUnlocked())
- * {
- * if (!event.getEntity().isVisualFire() && event.getDamage()>2){
- * event.getEntity().setFireTicks(40);
- * }
- * }
- * }}
- * }break;
- * }
- */

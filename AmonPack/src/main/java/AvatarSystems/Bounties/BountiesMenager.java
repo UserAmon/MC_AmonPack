@@ -10,14 +10,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.block.data.Ageable;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -59,7 +62,7 @@ public class BountiesMenager implements Listener {
                 lore.add(ChatColor.translateAlternateColorCodes('&', l));
             }
             Bounty.BountyType type = Bounty.BountyType.valueOf(config.getString(path + "Type"));
-            EntityType target = EntityType.valueOf(config.getString(path + "Target"));
+            String target = config.getString(path + "Target");
             int amount = config.getInt(path + "Amount");
             List<String> rewards = config.getStringList(path + "Rewards");
 
@@ -99,15 +102,18 @@ public class BountiesMenager implements Listener {
 
                 List<String> lore = new ArrayList<>(bounty.getLore());
                 lore.add("");
-                lore.add("&7Postęp: &f" + progress + "/" + bounty.getAmount());
-                lore.add("&7Status: " + status);
+                lore.add(ChatColor.translateAlternateColorCodes('&',
+                        "&7Postęp: &f" + progress + "/" + bounty.getAmount()));
+                lore.add(ChatColor.translateAlternateColorCodes('&', "&7Status: " + status));
                 lore.add("");
-                lore.add("&7Nagrody:");
+                lore.add(ChatColor.translateAlternateColorCodes('&', "&7Nagrody:"));
                 for (String reward : bounty.getRewards()) {
                     if (reward.startsWith("xp:")) {
-                        lore.add("&8- &b" + reward.replace("xp:", "") + " XP Zleceń");
+                        lore.add(ChatColor.translateAlternateColorCodes('&',
+                                "&8- &b" + reward.replace("xp:", "") + " XP Zleceń"));
                     } else if (reward.startsWith("command:money")) {
-                        lore.add("&8- &6" + reward.replaceAll(".*\\s", "") + " Monet");
+                        lore.add(ChatColor.translateAlternateColorCodes('&',
+                                "&8- &6" + reward.replaceAll(".*\\s", "") + " Monet"));
                     }
                 }
 
@@ -139,10 +145,29 @@ public class BountiesMenager implements Listener {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
                 } else if (reward.startsWith("xp:")) {
                     int xp = Integer.parseInt(reward.replace("xp:", ""));
-                    // Assuming PlayerLevelMenager handles adding XP to skills
-                    // We need to ensure BOUNTY skill type exists in LevelSkill enum first
                     try {
+                        // Add to BOUNTY skill
                         AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.BOUNTY, player, xp);
+
+                        // Add to specific skill based on bounty type
+                        LevelSkill.SkillType type = null;
+                        switch (bounty.getType()) {
+                            case KILL_MOB:
+                                type = LevelSkill.SkillType.COMBAT;
+                                break;
+                            case MINING:
+                                type = LevelSkill.SkillType.MINING;
+                                break;
+                            case LUMBERING:
+                                type = LevelSkill.SkillType.LUMBERING;
+                                break;
+                            case FARMING:
+                                type = LevelSkill.SkillType.FARMING;
+                                break;
+                        }
+                        if (type != null) {
+                            AmonPackPlugin.getPlayerMenager().AddPoints(type, player, xp);
+                        }
                     } catch (Exception e) {
                         player.sendMessage(ChatColor.RED + "Błąd przy dodawaniu XP: " + e.getMessage());
                     }
@@ -160,7 +185,7 @@ public class BountiesMenager implements Listener {
         LocalDate lastReset = LocalDate.ofEpochDay(data.getLastResetTime() / (24 * 60 * 60 * 1000));
         LocalDate today = LocalDate.now();
 
-        if (lastReset.isBefore(today)) {
+        if (data.getActiveBounties().isEmpty() || lastReset.isBefore(today)) {
             data.getActiveBounties().clear();
             data.getCompletedBounties().clear();
 
@@ -174,6 +199,16 @@ public class BountiesMenager implements Listener {
             data.setLastResetTime(System.currentTimeMillis());
             SavePlayerToDatabase(data);
         }
+    }
+
+    public static void ForceReset(Player player) {
+        PlayerBountyData data = GetPlayerData(player.getName());
+        data.getActiveBounties().clear();
+        data.getCompletedBounties().clear();
+        data.setLastResetTime(0); // Force reset time to 0
+        CheckAndResetDaily(data); // This will trigger the reset logic
+        player.sendMessage(ChatColor.GREEN + "Twoje zlecenia zostały zresetowane!");
+        OpenBountiesGui(player);
     }
 
     public static PlayerBountyData GetPlayerData(String name) {
@@ -203,11 +238,17 @@ public class BountiesMenager implements Listener {
 
                 Bounty bounty = GetBountyById(bountyId);
                 if (bounty != null && bounty.getType() == Bounty.BountyType.KILL_MOB
-                        && bounty.getTarget() == event.getEntityType()) {
+                        && bounty.getTarget().equalsIgnoreCase(event.getEntityType().toString())) {
                     if (entry.getValue() < bounty.getAmount()) {
                         data.addProgress(bountyId, 1);
                         updated = true;
-                        // Optional: Action bar message
+
+                        int current = entry.getValue();
+                        if (current >= bounty.getAmount()) {
+                            sendCompletionNotification(player, bounty.getDisplayName());
+                        } else {
+                            sendProgressNotification(player, bounty.getDisplayName(), current, bounty.getAmount());
+                        }
                     }
                 }
             }
@@ -215,6 +256,92 @@ public class BountiesMenager implements Listener {
                 SavePlayerToDatabase(data);
             }
         }
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        PlayerBountyData data = GetPlayerData(player.getName());
+
+        boolean updated = false;
+        for (Map.Entry<String, Integer> entry : data.getActiveBounties().entrySet()) {
+            String bountyId = entry.getKey();
+            if (data.isCompleted(bountyId))
+                continue;
+
+            Bounty bounty = GetBountyById(bountyId);
+            if (bounty != null) {
+                boolean match = false;
+                if (bounty.getType() == Bounty.BountyType.MINING || bounty.getType() == Bounty.BountyType.LUMBERING) {
+                    if (isMatchingBlock(event.getBlock().getType(), bounty.getTarget())) {
+                        match = true;
+                    }
+                } else if (bounty.getType() == Bounty.BountyType.FARMING) {
+                    if (bounty.getTarget().equalsIgnoreCase(event.getBlock().getType().toString())) {
+                        if (event.getBlock().getBlockData() instanceof Ageable) {
+                            Ageable ageable = (Ageable) event.getBlock().getBlockData();
+                            if (ageable.getAge() == ageable.getMaximumAge()) {
+                                match = true;
+                            }
+                        } else {
+                            match = true; // Not ageable (e.g. Melon), just break
+                        }
+                    }
+                }
+
+                if (match) {
+                    if (entry.getValue() < bounty.getAmount()) {
+                        data.addProgress(bountyId, 1);
+                        updated = true;
+
+                        int current = entry.getValue() + 1;
+                        if (current >= bounty.getAmount()) {
+                            sendCompletionNotification(player, bounty.getDisplayName());
+                        } else {
+                            sendProgressNotification(player, bounty.getDisplayName(), current, bounty.getAmount());
+                        }
+                    }
+                }
+            }
+        }
+        if (updated) {
+            SavePlayerToDatabase(data);
+        }
+    }
+
+    private boolean isMatchingBlock(Material block, String target) {
+        String blockName = block.toString();
+        if (blockName.equalsIgnoreCase(target))
+            return true;
+
+        // Ore variants (e.g. IRON_ORE -> DEEPSLATE_IRON_ORE)
+        if (target.endsWith("_ORE")) {
+            if (blockName.equals("DEEPSLATE_" + target))
+                return true;
+        }
+
+        // Log variants (e.g. OAK_LOG -> OAK_WOOD, STRIPPED_OAK_LOG, STRIPPED_OAK_WOOD)
+        if (target.endsWith("_LOG")) {
+            String base = target.replace("_LOG", "");
+            if (blockName.equals(base + "_WOOD"))
+                return true;
+            if (blockName.equals("STRIPPED_" + target))
+                return true;
+            if (blockName.equals("STRIPPED_" + base + "_WOOD"))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void sendProgressNotification(Player player, String bountyName, int current, int max) {
+        String message = ChatColor.translateAlternateColorCodes('&', "&a" + bountyName + ": &f" + current + "/" + max);
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
+    }
+
+    private void sendCompletionNotification(Player player, String bountyName) {
+        player.sendTitle(ChatColor.GOLD + "Zlecenie Ukończone!", ChatColor.YELLOW + bountyName, 10, 70, 20);
+        player.playSound(player.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
     }
 
     @EventHandler
@@ -240,7 +367,34 @@ public class BountiesMenager implements Listener {
                         int i = 0;
                         for (Map.Entry<String, Integer> entry : data.getActiveBounties().entrySet()) {
                             if (i == index) {
-                                ClaimBounty(player, entry.getKey());
+                                String bountyId = entry.getKey();
+                                if (data.isCompleted(bountyId)) {
+                                    // Reroll logic
+                                    if (player.getInventory().containsAtLeast(new ItemStack(Material.DIAMOND), 5)) {
+                                        player.getInventory().removeItem(new ItemStack(Material.DIAMOND, 5));
+
+                                        data.getActiveBounties().remove(bountyId);
+                                        data.getCompletedBounties().remove(bountyId);
+
+                                        List<Bounty> available = new ArrayList<>(AllBounties);
+                                        available.removeIf(b -> data.getActiveBounties().containsKey(b.getId()));
+                                        Collections.shuffle(available);
+
+                                        if (!available.isEmpty()) {
+                                            data.getActiveBounties().put(available.get(0).getId(), 0);
+                                            player.sendMessage(ChatColor.GREEN + "Wylosowano nowe zlecenie!");
+                                        } else {
+                                            player.sendMessage(ChatColor.RED + "Brak dostępnych nowych zleceń!");
+                                        }
+                                        SavePlayerToDatabase(data);
+                                        OpenBountiesGui(player);
+                                    } else {
+                                        player.sendMessage(ChatColor.RED
+                                                + "Potrzebujesz 5 diamentów, aby wylosować nowe zlecenie!");
+                                    }
+                                } else {
+                                    ClaimBounty(player, bountyId);
+                                }
                                 break;
                             }
                             i++;

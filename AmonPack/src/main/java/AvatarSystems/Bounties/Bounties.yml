@@ -39,3 +39,43 @@ Bounties:
     Rewards:
       - "command:money give %player% 200"
       - "xp:20"
+  bounty_miner_stone:
+    Name: "&7Górnik: Kamień"
+    Lore:
+      - "&7Wykop 64 Kamienia."
+    Type: MINING
+    Target: STONE
+    Amount: 64
+    Rewards:
+      - "command:money give %player% 50"
+      - "xp:15"
+  bounty_miner_iron:
+    Name: "&7Górnik: Żelazo"
+    Lore:
+      - "&7Wykop 10 Rud Żelaza."
+    Type: MINING
+    Target: IRON_ORE
+    Amount: 10
+    Rewards:
+      - "command:money give %player% 100"
+      - "xp:25"
+  bounty_lumberjack_oak:
+    Name: "&6Drwal: Dąb"
+    Lore:
+      - "&7Zetnij 32 Dębowe Kłody."
+    Type: LUMBERING
+    Target: OAK_LOG
+    Amount: 32
+    Rewards:
+      - "command:money give %player% 80"
+      - "xp:20"
+  bounty_farmer_wheat:
+    Name: "&eRolnik: Pszenica"
+    Lore:
+      - "&7Zbierz 32 Pszenicy."
+    Type: FARMING
+    Target: WHEAT
+    Amount: 32
+    Rewards:
+      - "command:money give %player% 60"
+      - "xp:15"

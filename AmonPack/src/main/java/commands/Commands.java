@@ -87,7 +87,15 @@ public class Commands implements CommandExecutor {
                 break;
             case "bounties":
                 if (sender instanceof Player) {
-                    BountiesMenager.OpenBountiesGui((Player) sender);
+                    if (args.length > 0 && args[0].equalsIgnoreCase("reset")) {
+                        if (sender.isOp()) {
+                            BountiesMenager.ForceReset((Player) sender);
+                        } else {
+                            sender.sendMessage(ChatColor.RED + "Nie masz uprawnień do tej komendy!");
+                        }
+                    } else {
+                        BountiesMenager.OpenBountiesGui((Player) sender);
+                    }
                 }
                 break;
         }

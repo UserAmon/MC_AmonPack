@@ -295,8 +295,13 @@ public class PlayerLevelMenager {
 
     public static int GetSkillByPlayer(LevelSkill.SkillType type, Player player) {
         PlayerLevel Level = AllPlayerLevels.stream()
-                .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst().get();
-        LevelSkill skill = Level.getPlayerSkills().stream().filter(sk -> sk.getType().equals(type)).findFirst().get();
+                .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst().orElse(null);
+        if (Level == null)
+            return 0;
+        LevelSkill skill = Level.getPlayerSkills().stream().filter(sk -> sk.getType().equals(type)).findFirst()
+                .orElse(null);
+        if (skill == null)
+            return 0;
         return ReturnUnlocked(skill);
     }
 

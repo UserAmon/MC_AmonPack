@@ -29,59 +29,68 @@ public class FarmMenager {
             Material.BAMBOO,
             Material.SUGAR_CANE,
             Material.CACTUS,
-            Material.KELP
-    );
+            Material.KELP);
     static Set<Material> ageableCrops = Set.of(
             Material.WHEAT,
             Material.POTATOES,
             Material.CARROTS,
             Material.BEETROOTS,
-            Material.NETHER_WART
-    );
+            Material.NETHER_WART);
 
     public FarmMenager() {
         ReloadConfig();
     }
-    public void ReloadConfig(){
-        FarmBlocks=new ArrayList<>();
+
+    public void ReloadConfig() {
+        FarmBlocks = new ArrayList<>();
         FarmWorlds = new ArrayList<>();
         FileConfiguration config = AmonPackPlugin.getConfigs_menager().getMining_Config();
-        for(String key : Objects.requireNonNull(config.getConfigurationSection("AmonPack.Farms")).getKeys(false)) {
+        for (String key : Objects.requireNonNull(config.getConfigurationSection("AmonPack.Farms")).getKeys(false)) {
             String World = config.getString("AmonPack.Farms." + key + ".World");
             HashMap<Material, Double> ExpMap = new HashMap<>();
-            if (config.getConfigurationSection("AmonPack.Farms."+key+".Exp") != null){
-                for(String FarmItem : config.getConfigurationSection("AmonPack.Farms."+key+".Exp").getKeys(false)) {
-                    ExpMap.put(Material.getMaterial(FarmItem),config.getDouble("AmonPack.Farms." + key + ".Exp."+FarmItem));
-                }}
+            if (config.getConfigurationSection("AmonPack.Farms." + key + ".Exp") != null) {
+                for (String FarmItem : config.getConfigurationSection("AmonPack.Farms." + key + ".Exp")
+                        .getKeys(false)) {
+                    ExpMap.put(Material.getMaterial(FarmItem),
+                            config.getDouble("AmonPack.Farms." + key + ".Exp." + FarmItem));
+                }
+            }
             Location loc = new Location(Bukkit.getWorld(World), 0, 0, 0);
-            Farm farm = new Farm(loc,ExpMap);
+            Farm farm = new Farm(loc, ExpMap);
             FarmWorlds.add(farm);
         }
-        for(String key : config.getStringList("AmonPack.FarmingBlocks")) {
+        for (String key : config.getStringList("AmonPack.FarmingBlocks")) {
             FarmBlocks.add(Material.getMaterial(key));
         }
     }
+
     public static boolean CheckFarmBlock(Block block, Player player, boolean IsRightClick) {
         Material type = block.getType();
         for (Farm farm : FarmWorlds) {
-            if (!block.getWorld().equals(farm.getLoc().getWorld())) continue;
-            if(IsRightClick){
-                if (type == Material.SWEET_BERRY_BUSH && isNaturalBlock(block)) {
+            if (!block.getWorld().equals(farm.getLoc().getWorld()))
+                continue;
+            if (IsRightClick) {
+                player.sendMessage("test numer 1");
+                if (type == Material.SWEET_BERRY_BUSH) {
+                    player.sendMessage("test numer 2");
                     BlockState state = block.getState();
                     if (state.getBlockData() instanceof Ageable ageable) {
+                        player.sendMessage("test numer 3");
                         if (ageable.getAge() >= 2) {
+                            player.sendMessage("test numer 4");
                             ItemStack berries = new ItemStack(Material.SWEET_BERRIES, getRandom(2, 4));
                             Map<Integer, ItemStack> leftover = player.getInventory().addItem(berries);
                             leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
                             ageable.setAge(1);
                             block.setBlockData(ageable);
-                            AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player, (int) farm.GetExpByMaterial(type));
+                            AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
+                                    (int) farm.GetExpByMaterial(type));
                             return true;
                         }
                     }
                 }
-            }else {
-            if (verticalPlants.contains(type) && isNaturalBlock(block)) {
+            } else {
+                if (verticalPlants.contains(type) && isNaturalBlock(block)) {
                     Block current = block;
                     List<Block> blocks = new ArrayList<>();
                     while (current.getType() == type) {
@@ -95,33 +104,38 @@ public class FarmMenager {
                         }
                         b.setType(Material.AIR);
                     }
-                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player, 1 + blocks.size());
+                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
+                            1 + blocks.size());
                     return true;
-            }
-            if (ageableCrops.contains(type)) {
-                BlockState state = block.getState();
-                if (state.getBlockData() instanceof Ageable ageable) {
-                    if (ageable.getAge() < ageable.getMaximumAge()) {
-                        return false;
-                    }}
-                for (ItemStack item : block.getDrops()) {
-                    Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
-                    leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
                 }
-                block.setType(Material.AIR);
-                AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player, (int) farm.GetExpByMaterial(type));
-                return true;
-            }
-            if (FarmBlocks.contains(type) && isNaturalBlock(block)) {
-                for (ItemStack item : block.getDrops()) {
-                    Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
-                    leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
+                if (ageableCrops.contains(type)) {
+                    BlockState state = block.getState();
+                    if (state.getBlockData() instanceof Ageable ageable) {
+                        if (ageable.getAge() < ageable.getMaximumAge()) {
+                            return false;
+                        }
+                    }
+                    for (ItemStack item : block.getDrops()) {
+                        Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
+                        leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
+                    }
+                    block.setType(Material.AIR);
+                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
+                            (int) farm.GetExpByMaterial(type));
+                    return true;
                 }
-                block.setType(Material.AIR);
-                AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player, (int) farm.GetExpByMaterial(type));
-                return true;
+                if (FarmBlocks.contains(type) && isNaturalBlock(block)) {
+                    for (ItemStack item : block.getDrops()) {
+                        Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
+                        leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
+                    }
+                    block.setType(Material.AIR);
+                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
+                            (int) farm.GetExpByMaterial(type));
+                    return true;
+                }
             }
-        }}
+        }
 
         return false;
     }

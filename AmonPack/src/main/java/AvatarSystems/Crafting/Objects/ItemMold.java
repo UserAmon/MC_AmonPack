@@ -123,7 +123,7 @@ public class ItemMold {
     public ItemStack to_Empty_Mold_ItemStack() {
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
-        meta.setCustomModelData(10095);
+        meta.setCustomModelData(10007);
         if (meta != null) {
             if (ItemName != null)
                 meta.setDisplayName(ChatColor.DARK_AQUA + "Forma: " + ChatColor.GOLD + ChatColor.BOLD + ItemName);

@@ -156,6 +156,26 @@ public class AmonPackPlugin extends JavaPlugin {
 			e.printStackTrace();
 		}
 		System.out.println("Amonpack Załadowany");
+		new Mechanics.ArmorEffectsRunnable().runTaskTimer(this, 0, 20);
+	}
+
+	@Override
+	public void onDisable() {
+		try {
+			if (PlayerMenager != null) {
+				PlayerMenager.LoadIntoDatabase();
+			}
+			if (bountiesMenager != null) {
+				bountiesMenager.SaveAll();
+			}
+			SaveConfigs();
+			if (sqlite != null) {
+				sqlite.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		getLogger().info("AmonPack wyłączony");
 	}
 
 	private void handleDigPacket(PacketEvent event) {
@@ -547,28 +567,28 @@ public class AmonPackPlugin extends JavaPlugin {
 		try {
 			sqlite.open();
 
-		if (sqlite.open() != null) {
-			getLogger().info("Baza danych połączona!");
-		}
-		ExecuteQuery("CREATE TABLE IF NOT EXISTS BendingTree (Player VARCHAR(50) PRIMARY KEY," +
-				" AirPoints INT," +
-				" FirePoints INT," +
-				" WaterPoints INT," +
-				" EarthPoints INT," +
-				" UnlockedAbilities TEXT," +
-				" CurrentElement TEXT," +
-				" AllElements TEXT" +
-				")");
-		ExecuteQuery(
-				"CREATE TABLE IF NOT EXISTS SpellTree (Player VARCHAR(50) PRIMARY KEY, SkillPoint INT, Path TEXT, Element TEXT, AllElements TEXT)");
-		ExecuteQuery(
-				"CREATE TABLE IF NOT EXISTS Reputation (Player VARCHAR(50) PRIMARY KEY, RepLvL1 INT, RepLvL2 INT, RepLvL3 INT, RepLvL4 INT, RepLvL5 INT, RepLvL6 INT, RepLvL7 INT)");
-		ExecuteQuery(
-				"CREATE TABLE IF NOT EXISTS Jobs (Player VARCHAR(50) PRIMARY KEY, Job1 INT, Job2 INT, Job3 INT, Job4 INT)");
-		for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
-			ExecuteQuery("CREATE TABLE IF NOT EXISTS Level" + key
-					+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
-		}
+			if (sqlite.open() != null) {
+				getLogger().info("Baza danych połączona!");
+			}
+			ExecuteQuery("CREATE TABLE IF NOT EXISTS BendingTree (Player VARCHAR(50) PRIMARY KEY," +
+					" AirPoints INT," +
+					" FirePoints INT," +
+					" WaterPoints INT," +
+					" EarthPoints INT," +
+					" UnlockedAbilities TEXT," +
+					" CurrentElement TEXT," +
+					" AllElements TEXT" +
+					")");
+			ExecuteQuery(
+					"CREATE TABLE IF NOT EXISTS SpellTree (Player VARCHAR(50) PRIMARY KEY, SkillPoint INT, Path TEXT, Element TEXT, AllElements TEXT)");
+			ExecuteQuery(
+					"CREATE TABLE IF NOT EXISTS Reputation (Player VARCHAR(50) PRIMARY KEY, RepLvL1 INT, RepLvL2 INT, RepLvL3 INT, RepLvL4 INT, RepLvL5 INT, RepLvL6 INT, RepLvL7 INT)");
+			ExecuteQuery(
+					"CREATE TABLE IF NOT EXISTS Jobs (Player VARCHAR(50) PRIMARY KEY, Job1 INT, Job2 INT, Job3 INT, Job4 INT)");
+			for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
+				ExecuteQuery("CREATE TABLE IF NOT EXISTS Level" + key
+						+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
+			}
 		} catch (Exception e) {
 			plugin.getLogger().info(e.getMessage());
 			getPluginLoader().disablePlugin(plugin);

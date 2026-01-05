@@ -1,6 +1,5 @@
 package AvatarSystems.Bounties.Objects;
 
-import org.bukkit.entity.EntityType;
 import java.util.List;
 
 public class Bounty {
@@ -8,15 +7,18 @@ public class Bounty {
     private String displayName;
     private List<String> lore;
     private BountyType type;
-    private EntityType target;
+    private String target;
     private int amount;
     private List<String> rewards;
 
     public enum BountyType {
-        KILL_MOB
+        KILL_MOB,
+        MINING,
+        LUMBERING,
+        FARMING
     }
 
-    public Bounty(String id, String displayName, List<String> lore, BountyType type, EntityType target, int amount,
+    public Bounty(String id, String displayName, List<String> lore, BountyType type, String target, int amount,
             List<String> rewards) {
         this.id = id;
         this.displayName = displayName;
@@ -43,7 +45,7 @@ public class Bounty {
         return type;
     }
 
-    public EntityType getTarget() {
+    public String getTarget() {
         return target;
     }
 

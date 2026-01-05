@@ -160,27 +160,48 @@ public class MiningMenager {
                         }
 
                         double modifier = 1;
+                        int extraLootChance = 0;
+
+                        // Check Armor & MainHand for Effects
+                        List<ItemStack> equipment = new ArrayList<>();
+                        equipment.add(player.getInventory().getItemInMainHand());
+                        for (ItemStack armor : player.getInventory().getArmorContents()) {
+                            if (armor != null)
+                                equipment.add(armor);
+                        }
+
+                        for (ItemStack item : equipment) {
+                            if (CraftingMenager.HaveEffect(item, "Exp_Boost")) {
+                                modifier += 0.5; // 50% more XP per item
+                            }
+                            if (CraftingMenager.HaveEffect(item, "Mining_Loot_Boost")) {
+                                extraLootChance += 10; // 10% extra loot chance per item
+                            }
+                        }
+
                         if (CraftingMenager.HaveEffect(player.getItemInUse(), "Expierience")) {
                             modifier += 1;
                         }
                         if (CraftingMenager.HaveEffect(player.getItemInUse(), "Looting")) {
-                            if (getRandom(0, 10) > 3) {
-                                if (customBlock != null) {
-                                    for (Object item : customBlock.getLoot()) {
-                                        player.getInventory().addItem((ItemStack) item);
-                                    }
-                                    double iaExp = m.GetExpByIA(customBlock.getNamespacedID());
-                                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
-                                            (int) iaExp);
-                                } else {
-                                    for (ItemStack item : block.getDrops()) {
-                                        player.getInventory().addItem(item);
-                                    }
-                                    AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
-                                            (int) m.GetExpByMaterial(block.getType()));
+                            extraLootChance += 30; // Original Looting effect
+                        }
+
+                        if (extraLootChance > 0 && getRandom(0, 100) < extraLootChance) {
+                            if (customBlock != null) {
+                                for (Object item : customBlock.getLoot()) {
+                                    player.getInventory().addItem((ItemStack) item);
                                 }
-                                modifier += 1;
+                                double iaExp = m.GetExpByIA(customBlock.getNamespacedID());
+                                AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
+                                        (int) iaExp);
+                            } else {
+                                for (ItemStack item : block.getDrops()) {
+                                    player.getInventory().addItem(item);
+                                }
+                                AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
+                                        (int) m.GetExpByMaterial(block.getType()));
                             }
+                            modifier += 1; // Bonus XP for bonus loot
                         }
                         player.giveExp((int) ((1 + exp) * modifier));
                         return true;

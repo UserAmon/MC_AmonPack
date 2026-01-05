@@ -245,7 +245,7 @@ public class IceThorn extends IceAbility implements AddonAbility {
 					break;
 				case 1:
 					if (!bPlayer.isOnCooldown("Ice_Encase_Aspect")) {
-						Methods.FreezeTarget(victim.getLocation(),2,1,3,3000,Material.ICE);
+						Methods.FreezeTarget(victim.getLocation(),2,1,2,3000,Material.ICE);
 						bPlayer.addCooldown("Ice_Encase_Aspect",5000);
 						break;
 					}
@@ -254,7 +254,7 @@ public class IceThorn extends IceAbility implements AddonAbility {
 						player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,60,2,false,false));
 						((LivingEntity)victim).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,60,2,false,false));
 						for (Block b : GeneralMethods.getBlocksAroundPoint(victim.getLocation(), 2)) {
-							if(b.getLocation().getY()<player.getLocation().getY()+1 && (WaterAbility.isWaterbendable(b.getType())||EarthAbility.isEarthbendable(player,b))){
+							if(b.getLocation().getY()<victim.getLocation().getY() && (WaterAbility.isWaterbendable(b.getType())||EarthAbility.isEarthbendable(player,b))){
 								TempBlock tb2 = new TempBlock(b, Material.SNOW_BLOCK);
 								tb2.setRevertTime(5000);
 							}

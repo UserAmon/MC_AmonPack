@@ -17,15 +17,21 @@ import java.util.UUID;
 
 public class CraftedWeapon extends ItemMold {
     private double Damage;
+    private boolean IsRange;
 
     public CraftedWeapon(String weaponID, List<ItemStack> itemsRequiredToShapeMold, String itemName, Material itemMaterial, List<String> itemLore, Integer customModelID, List<MagicEffects> allowedMagicEffects, double damage) {
         super(weaponID, itemsRequiredToShapeMold, itemName, itemMaterial, itemLore, customModelID, allowedMagicEffects,ItemType.WEAPON);
         Damage = damage;
+        IsRange = false;
     }
 
     public double getDamage() {
         return Damage;
     }
+    public boolean isRange() {
+        return IsRange;
+    }
+
     public double ExecuteEffectsOnHitByPlayer(Entity victim, ItemStack item, Player player){
         double Damage = 0;
         ItemMeta meta = item.getItemMeta();

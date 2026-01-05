@@ -128,11 +128,23 @@ public class CraftingMenager {
             }
             ItemStack effectItem = new ItemStack(Material.BOOK);
             List<String> Lore = new ArrayList<>();
-            if (effect.isMajorRune()) {
-                effectItem.setType(Material.ENCHANTED_BOOK);
-                Lore.add("§3§lWiększa Runa");
-            }
             ItemMeta meta = effectItem.getItemMeta();
+
+            boolean isScroll = moldItem instanceof Craftable_Item
+                    && ((Craftable_Item) moldItem).getWeaponID().equals("1000");
+
+            if (isScroll) {
+                if (effect.getScrollModelID() > 0) {
+                    effectItem.setType(Material.PAPER);
+                    meta.setCustomModelData(effect.getScrollModelID());
+                }
+            } else {
+                if (effect.isMajorRune()) {
+                    effectItem.setType(Material.ENCHANTED_BOOK);
+                    Lore.add("§3§lWiększa Runa");
+                }
+            }
+
             meta.setDisplayName(effect.getDisplayName());
             try {
                 if (effect.getLoreDescription() != null) {
@@ -164,6 +176,45 @@ public class CraftingMenager {
             effectItem.setItemMeta(meta);
             inv.addItem(effectItem);
         }
+
+        // Scroll Crafting Logic
+        if (moldItem instanceof Craftable_Item && moldItem.getWeaponID().equals("1000")) { // magic_scroll ID
+            if (clickeditem != null) {
+                String effectName = ChatColor.stripColor(clickeditem.getItemMeta().getDisplayName());
+                MagicEffects effect = GetMagicEfectByDisplayName(effectName);
+
+                if (effect != null) {
+                    // Check cost
+                    if (HaveItems(player, true, effect.getCost())) {
+                        ItemStack scroll = item.clone();
+                        ItemMeta meta = scroll.getItemMeta();
+                        meta.setDisplayName(effect.getScrollName());
+                        meta.setCustomModelData(effect.getScrollModelID());
+
+                        // Add effect to NBT
+                        NamespacedKey key = new NamespacedKey(AmonPackPlugin.plugin, "magic_effects");
+                        List<MagicEffects> effectsList = new ArrayList<>();
+                        effectsList.add(effect);
+                        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING,
+                                MagicEffects.serializeList(effectsList));
+
+                        scroll.setItemMeta(meta);
+                        player.getInventory().addItem(scroll);
+                        player.sendMessage(ChatColor.GREEN + "Stworzono " + effect.getScrollName() + "!");
+                        player.closeInventory();
+                        return;
+                    } else {
+                        player.sendMessage(ChatColor.RED + "Nie masz wystarczających materiałów!");
+                        return;
+                    }
+                }
+            }
+
+            inv.setItem(53, item);
+            inventory.showInventory(player);
+            return;
+        }
+
         MagicEffects EffectToAplly;
         if (clickeditem != null) {
             String effectName = ChatColor.stripColor(clickeditem.getItemMeta().getDisplayName());
@@ -207,6 +258,7 @@ public class CraftingMenager {
         AllCraftableWeapons.clear();
         AllMolds.clear();
         AllTools.clear();
+        AllArmor.clear();
         AllCraftableItems.clear();
         AllMagicEffects.clear();
         FileConfiguration Config = AmonPackPlugin.getConfigs_menager().getCrafting_Config();
@@ -252,33 +304,31 @@ public class CraftingMenager {
                             String matName = Config.getString(path + ".Material");
                             int amount = Config.getInt(path + ".Amount");
 
-                            Material mat = Material.getMaterial(matName);
-                            if (mat != null) {
-                                cost.add(new ItemStack(mat, amount));
+                            ItemStack item = parseItem(matName, amount);
+                            if (item != null) {
+                                cost.add(item);
                             } else {
-                                dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack
-                                        .getInstance(matName);
-                                if (custom != null) {
-                                    ItemStack iaItem = custom.getItemStack().clone();
-                                    iaItem.setAmount(amount);
-                                    cost.add(iaItem);
-                                } else {
-                                    System.out.println(
-                                            "⚠ Nieprawidłowy materiał (ani vanilla, ani ItemsAdder) w MagicEffects."
-                                                    + effectId + ".Cost." + costKey + ": " + matName);
-                                }
+                                System.out.println(
+                                        "⚠ Nieprawidłowy materiał (ani vanilla, ani ItemsAdder) w MagicEffects."
+                                                + effectId + ".Cost." + costKey + ": " + matName);
                             }
                         }
                     }
 
+                    boolean IsArmorEffect = Config.getBoolean("MagicEffects." + effectId + ".IsArmorEffect", false);
+                    String scrollName = Config.getString("MagicEffects." + effectId + ".ScrollName");
+                    int scrollModelID = Config.getInt("MagicEffects." + effectId + ".ScrollModelID");
+                    long chargeTime = Config.getLong("MagicEffects." + effectId + ".ChargeTime", 2500);
+
                     AllMagicEffects
-                            .add(new MagicEffects(conditions, cost, name, lore, effectId, IsMajor, IsItemEffect));
+                            .add(new MagicEffects(conditions, cost, name, lore, effectId, IsMajor, IsItemEffect,
+                                    IsArmorEffect,
+                                    scrollName, scrollModelID, chargeTime));
                 }
             }
         } catch (Exception e) {
             System.out.println(" bład przy ładowaniu magic effects - " + e);
         }
-
         try {
             int IdCounter = 10;
             if (Config.getConfigurationSection("Craftable_Weapons") != null) {
@@ -301,19 +351,11 @@ public class CraftingMenager {
                                     .getString(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Material");
                             int amount = Config.getInt(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Amount");
 
-                            Material mat = Material.getMaterial(matName);
-                            if (mat != null) {
-                                ItemToShapeMold.add(new ItemStack(mat, amount));
+                            ItemStack item = parseItem(matName, amount);
+                            if (item != null) {
+                                ItemToShapeMold.add(item);
                             } else {
-                                dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack
-                                        .getInstance(matName);
-                                if (custom != null) {
-                                    ItemStack iaItem = custom.getItemStack().clone();
-                                    iaItem.setAmount(amount);
-                                    ItemToShapeMold.add(iaItem);
-                                } else {
-                                    System.out.println("⚠ Nieprawidłowy materiał w Items_To_Craft: " + matName);
-                                }
+                                System.out.println("⚠ Nieprawidłowy materiał w Items_To_Craft: " + matName);
                             }
                         }
                     }
@@ -329,7 +371,11 @@ public class CraftingMenager {
                             }
                         }
                     } else {
-                        AllowedEffects.addAll(AllMagicEffects);
+                        for (MagicEffects effect : AllMagicEffects) {
+                            if (!effect.isArmorEffect()) {
+                                AllowedEffects.add(effect);
+                            }
+                        }
                     }
 
                     String ItemPath = path + "Item.";
@@ -374,17 +420,11 @@ public class CraftingMenager {
                                     .getString(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Material");
                             int amount = Config.getInt(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Amount");
 
-                            Material mat = Material.getMaterial(matName);
-                            if (mat != null) {
-                                ItemToShapeMold.add(new ItemStack(mat, amount));
+                            ItemStack item = parseItem(matName, amount);
+                            if (item != null) {
+                                ItemToShapeMold.add(item);
                             } else {
-                                dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack
-                                        .getInstance(matName);
-                                if (custom != null) {
-                                    ItemStack iaItem = custom.getItemStack().clone();
-                                    iaItem.setAmount(amount);
-                                    ItemToShapeMold.add(iaItem);
-                                }
+                                System.out.println("⚠ Nieprawidłowy materiał w Items_To_Craft: " + matName);
                             }
                         }
                     }
@@ -447,17 +487,11 @@ public class CraftingMenager {
                                     .getString(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Material");
                             int amount = Config.getInt(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Amount");
 
-                            Material mat = Material.getMaterial(matName);
-                            if (mat != null) {
-                                ItemToShapeMold.add(new ItemStack(mat, amount));
+                            ItemStack item = parseItem(matName, amount);
+                            if (item != null) {
+                                ItemToShapeMold.add(item);
                             } else {
-                                dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack
-                                        .getInstance(matName);
-                                if (custom != null) {
-                                    ItemStack iaItem = custom.getItemStack().clone();
-                                    iaItem.setAmount(amount);
-                                    ItemToShapeMold.add(iaItem);
-                                }
+                                System.out.println("⚠ Nieprawidłowy materiał w Items_To_Craft: " + matName);
                             }
                         }
                     }
@@ -473,7 +507,11 @@ public class CraftingMenager {
                             }
                         }
                     } else {
-                        AllowedEffects.addAll(AllMagicEffects);
+                        for (MagicEffects effect : AllMagicEffects) {
+                            if (effect.isArmorEffect()) {
+                                AllowedEffects.add(effect);
+                            }
+                        }
                     }
 
                     String ItemPath = path + "Item.";
@@ -519,17 +557,11 @@ public class CraftingMenager {
                                     .getString(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Material");
                             int amount = Config.getInt(MoldPath + "Items_To_Craft." + MoldCraftItem + ".Amount");
 
-                            Material mat = Material.getMaterial(matName);
-                            if (mat != null) {
-                                ItemToShapeMold.add(new ItemStack(mat, amount));
+                            ItemStack item = parseItem(matName, amount);
+                            if (item != null) {
+                                ItemToShapeMold.add(item);
                             } else {
-                                dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack
-                                        .getInstance(matName);
-                                if (custom != null) {
-                                    ItemStack iaItem = custom.getItemStack().clone();
-                                    iaItem.setAmount(amount);
-                                    ItemToShapeMold.add(iaItem);
-                                }
+                                System.out.println("⚠ Nieprawidłowy materiał w Items_To_Craft: " + matName);
                             }
                         }
                     }
@@ -711,6 +743,8 @@ public class CraftingMenager {
     public static boolean HaveEffect(ItemStack item, String effectname) {
         if (item != null) {
             ItemMeta meta = item.getItemMeta();
+            if (meta == null)
+                return false;
             NamespacedKey key = new NamespacedKey(AmonPackPlugin.plugin, "magic_effects");
             String data = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
             if (data != null && !data.isEmpty()) {
@@ -785,6 +819,24 @@ public class CraftingMenager {
         }
         return hasAll;
 
+    }
+
+    private static ItemStack parseItem(String matName, int amount) {
+        Material mat = Material.getMaterial(matName);
+        if (mat != null) {
+            return new ItemStack(mat, amount);
+        } else {
+            if (matName.startsWith("ia:")) {
+                matName = matName.substring(3);
+            }
+            dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack.getInstance(matName);
+            if (custom != null) {
+                ItemStack iaItem = custom.getItemStack().clone();
+                iaItem.setAmount(amount);
+                return iaItem;
+            }
+        }
+        return null;
     }
 
 }
