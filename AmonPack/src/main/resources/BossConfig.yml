@@ -1,0 +1,27 @@
+Bosses:
+  TestBoss:
+    MythicMobName: "SkeletalMinion"
+    DisplayName: "&aSkeletal Minion"
+    Type: "SINGLE"
+    LootTable:
+      - Material: "DIAMOND"
+        Amount: 2
+        Chance: 1.0
+      - Material: "GOLD_INGOT"
+        Amount: 5
+        Chance: 0.5
+      - Material: "NETHER_STAR"
+        Amount: 1
+        Chance: 0.1
+  TestGroup:
+    MythicMobName: "SkeletalMinion"
+    DisplayName: "&aSkeletal Minion"
+    Type: "GROUP"
+    GroupSize: 3
+    LootTable:
+      - Material: "IRON_INGOT"
+        Amount: 10
+        Chance: 1.0
+      - Material: "BONE"
+        Amount: 20
+        Chance: 0.8

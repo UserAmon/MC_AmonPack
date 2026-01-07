@@ -340,25 +340,26 @@ public class Listeners implements Listener {
         * }
         * }
         */
-
-    @EventHandler
-    public void onBlockDamage(BlockDamageEvent event) {
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-
-        ItemStack item = player.getInventory().getItemInMainHand();
-        if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()
-                && item.getItemMeta().getCustomModelData() == 10000) {
-            event.setCancelled(true);
-            player.sendMessage("blokowanie");
-            // Craftable_Tool tool = CraftingMenager.getCraftedToolByItem(item);
-            // if(tool==null){
-            // System.out.println("Ten item pownien zostac zcraftowany");
-            return;
-            // }
-            // tool.startMining(player, block);
-        }
-    }
+    /*
+     * @EventHandler
+     * public void onBlockDamage(BlockDamageEvent event) {
+     * Player player = event.getPlayer();
+     * Block block = event.getBlock();
+     * 
+     * ItemStack item = player.getInventory().getItemInMainHand();
+     * if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()
+     * && item.getItemMeta().getCustomModelData() == 10000) {
+     * event.setCancelled(true);
+     * player.sendMessage("blokowanie");
+     * // Craftable_Tool tool = CraftingMenager.getCraftedToolByItem(item);
+     * // if(tool==null){
+     * // System.out.println("Ten item pownien zostac zcraftowany");
+     * return;
+     * // }
+     * // tool.startMining(player, block);
+     * }
+     * }
+     */
 
     @EventHandler
     public void onRightClick(PlayerInteractEvent event) {
@@ -367,8 +368,7 @@ public class Listeners implements Listener {
             ItemStack item = player.getInventory().getItemInMainHand();
             Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
             if (craftItem != null) {
-                if (craftItem.getWeaponID().equals("1000")) {
-                    // Scrolls are now used by sneaking
+                if (craftItem.getWeaponID().equals("1000") || craftItem.getDisplayName().contains("Zwój Przyzwania")) {
                     return;
                 }
                 craftItem.Use(player);
@@ -386,11 +386,11 @@ public class Listeners implements Listener {
                 // CraftingMenager.OpenMoldCrafting(player);
                 CraftingMenager.OpenMoldCategory(player);
             } else if (block.getType() == Material.ENCHANTING_TABLE || block.getType() == Material.ANVIL) {
-                    event.setCancelled(true);
-                    player.sendMessage(
-                            "§c✖ §7Ta funkcja jest §lwyłączona§7! Udaj się do §6Kowala§7, aby z niej skorzystać.");
+                event.setCancelled(true);
+                player.sendMessage(
+                        "§c✖ §7Ta funkcja jest §lwyłączona§7! Udaj się do §6Kowala§7, aby z niej skorzystać.");
 
-            }else{
+            } else {
                 if (FarmMenager.CheckFarmBlock(block, player, true)) {
                     event.setCancelled(true);
                 }
@@ -464,50 +464,14 @@ public class Listeners implements Listener {
                     player.getWorld().dropItemNaturally(player.getLocation(), leftover);
                 }
             }
-            ItemStack item = player.getInventory().getItemInMainHand();
-            if (item.getType() != Material.AIR && item.hasItemMeta()
-                    && CraftingMenager.getItemMoldByItem(item) != null) {
-                if (CraftingMenager.HaveEffect(item, "Looting")) {
-                    for (ItemStack itemdrops : drops) {
-                        HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(itemdrops);
-                        for (ItemStack leftover : leftovers.values()) {
-                            player.getWorld().dropItemNaturally(player.getLocation(), leftover);
-                        }
-                    }
-                }
-                if (CraftingMenager.HaveEffect(item, "Expierience")) {
-                    player.giveExp((event.getDroppedExp() * 2));
-                }
-                if (CraftingMenager.HaveEffect(item, "Earth_Health_Boost")) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 200, 1, false, false));
-                }
-                if (CraftingMenager.HaveEffect(item, "Monster_Hunter")) {
-                    if (event.getEntity() instanceof Monster) {
-                        for (ItemStack itemdrops : drops) {
-                            HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(itemdrops);
-                            for (ItemStack leftover : leftovers.values()) {
-                                player.getWorld().dropItemNaturally(player.getLocation(), leftover);
-                            }
-                        }
-                    }
-                }
-                if (CraftingMenager.HaveEffect(item, "Midas")) {
-                    if (getRandom(0, 10) > 5) {
-                        Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
-                        example.executeCommand("money give " + player.getName() + " " + (event.getDroppedExp() * 0.1));
+            for (ItemStack item : player.getInventory().getArmorContents()) {
+                if (item != null && item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
+                    if (CraftingMenager.IsArmor(item) || CraftingMenager.IsWeapon(item)) {
+                        CraftingMenager.getItemMoldByItem(item).ExecuteOnKillingByPlayer(event.getEntity(), item,
+                                player, drops, event.getDroppedExp());
                     }
                 }
             }
-            if (player.getGameMode().equals(GameMode.CREATIVE)) {
-                return;
-            }
-            Entity victim = event.getEntity();
-            int expmodifier = 0;
-            if (CraftingMenager.HaveEffect(item, "Monster_Hunter") && event.getEntity() instanceof Monster) {
-                expmodifier += 1;
-            }
-            CombatMenager.ExecuteKill(player, victim, expmodifier);
-
         }
     }
 
@@ -533,15 +497,11 @@ public class Listeners implements Listener {
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event) {
         if (event.getEntity() instanceof Player p) {
-            // Disable Vanilla Armor Protection
-            double armorPoints = p.getAttribute(Attribute.ARMOR).getValue();
-            double toughnessPoints = p.getAttribute(Attribute.ARMOR_TOUGHNESS).getValue();
-            if(armorPoints>0){
-                p.getAttribute(Attribute.ARMOR).setBaseValue(0);
-            }
-            if(toughnessPoints>0){
-                p.getAttribute(Attribute.ARMOR_TOUGHNESS).setBaseValue(0);
 
+            if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p, abilities.GustShield.class)) {
+                abilities.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(p,
+                        abilities.GustShield.class);
+                shield.onHit();
             }
 
             double totalReduction = 0;
@@ -549,35 +509,13 @@ public class Listeners implements Listener {
                 if (item != null && item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
                     if (CraftingMenager.IsArmor(item)) {
                         Craftable_Armor armor = CraftingMenager.GetCraftedArmorByItem(item);
-                        totalReduction += armor.getDmgReduction();
+                        totalReduction += armor.ExecutePlayerGetDamaged(event.getDamager(), item, p);
 
-                        if (CraftingMenager.HaveEffect(item, "MoltenShell")) {
-                            if (event.getDamager() instanceof LivingEntity attacker) {
-                                if (getRandom(0, 100) < 25) {
-                                    attacker.setFireTicks(60);
-                                }
-                            }
-                        }
-                        if (CraftingMenager.HaveEffect(item, "Adrenaline")) {
-                            if (getRandom(0, 100) < 20) { // 20% chance
-                                p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 1));
-                            }
-                        }
-                        if (CraftingMenager.HaveEffect(item, "Repulse")) {
-                            if (event.getDamager() instanceof LivingEntity attacker && attacker!=p) {
-                                attacker.setVelocity(attacker.getLocation().toVector()
-                                        .subtract(p.getLocation().toVector()).normalize().multiply(1).setY(0.5));
-                            }
-                        }
                     }
                 }
             }
-
-            if (totalReduction > 0) {
-                double newDamage = Math.max(1, event.getDamage() - totalReduction);
-                 p.sendMessage("§aPowinno byc "+event.getDamage()+" ale Blocked " + (event.getDamage() - newDamage) + " damage! Taken: " + newDamage + ")");
-                event.setDamage(newDamage);
-            }
+            double newDamage = event.getDamage() - totalReduction;
+            event.setDamage(newDamage);
         }
 
         if (event.getDamager() instanceof Player p) {
@@ -1481,11 +1419,10 @@ public class Listeners implements Listener {
         if (event.isSneaking()) {
             ItemStack item = player.getInventory().getItemInMainHand();
             Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
-            if (craftItem != null && craftItem.getWeaponID().equals("1000")) {
-                // Start charging
+            if (craftItem != null && (craftItem.getWeaponID().equals("1000")
+                    || craftItem.getDisplayName().contains("Zwój Przyzwania"))) {
                 chargingPlayers.put(player.getUniqueId(), System.currentTimeMillis());
 
-                // Start visual task
                 int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(AmonPackPlugin.plugin, new Runnable() {
                     @Override
                     public void run() {
@@ -1500,7 +1437,7 @@ public class Listeners implements Listener {
 
                         ItemStack currentItem = player.getInventory().getItemInMainHand();
                         Craftable_Item currentCraftItem = CraftingMenager.getCraftableItemByItem(currentItem);
-                        if (currentCraftItem == null || !currentCraftItem.getWeaponID().equals("1000")) {
+                        if (currentCraftItem == null || (!craftItem.getWeaponID().equals("1000") && !craftItem.getDisplayName().contains("Zwój Przyzwania"))) {
                             if (chargingTasks.containsKey(player.getUniqueId())) {
                                 Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
                                 chargingTasks.remove(player.getUniqueId());
@@ -1509,7 +1446,6 @@ public class Listeners implements Listener {
                             return;
                         }
 
-                        // Get charge time from effect
                         long chargeTime = 2500;
                         List<MagicEffects> effects = CraftingMenager.getEffectsFromItem(currentItem);
                         if (!effects.isEmpty()) {
@@ -1520,12 +1456,10 @@ public class Listeners implements Listener {
                         long elapsed = System.currentTimeMillis() - startTime;
 
                         if (elapsed >= chargeTime) {
-                            // Fully charged particles
                             player.spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 5, 0.5,
                                     0.5, 0.5, 0);
                             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 2.0f);
                         } else {
-                            // Charging particles
                             player.spawnParticle(Particle.ENCHANTED_HIT, player.getLocation().add(0, 1, 0), 5, 0.5,
                                     0.5, 0.5, 0);
                         }
@@ -1535,7 +1469,6 @@ public class Listeners implements Listener {
                 chargingTasks.put(player.getUniqueId(), taskId);
             }
         } else {
-            // Stop sneaking - check if charged
             if (chargingPlayers.containsKey(player.getUniqueId())) {
                 long startTime = chargingPlayers.get(player.getUniqueId());
 
@@ -1549,8 +1482,7 @@ public class Listeners implements Listener {
                 ItemStack item = player.getInventory().getItemInMainHand();
                 Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
 
-                if (craftItem != null && craftItem.getWeaponID().equals("1000")) {
-                    // Get charge time
+                if (craftItem != null && (craftItem.getWeaponID().equals("1000") || craftItem.getDisplayName().contains("Zwój Przyzwania"))) {
                     long chargeTime = 2500;
                     List<MagicEffects> effects = CraftingMenager.getEffectsFromItem(item);
                     if (!effects.isEmpty()) {

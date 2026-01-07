@@ -27,6 +27,8 @@ public class ConfigsMenager {
     private File combat_File;
     private File bounties_File;
     private FileConfiguration bounties_Config;
+    private FileConfiguration boss_Config;
+    private File boss_File;
 
     public CraftingMenager craftingMenager;
     public PerksMenager perks_menager;
@@ -92,6 +94,8 @@ public class ConfigsMenager {
             forest_menager.ReloadConfig();
         if (AmonPackPlugin.combatMenager != null)
             AmonPackPlugin.combatMenager.ReloadConfig();
+        if (Mechanics.BossScrollManager.getInstance() != null)
+            Mechanics.BossScrollManager.getInstance().reloadConfig();
         // if (perks_menager != null) perks_menager.ReloadConfig();
     }
 
@@ -130,6 +134,12 @@ public class ConfigsMenager {
             }
             bounties_Config = YamlConfiguration.loadConfiguration(bounties_File);
 
+            boss_File = new File(rpgFolder, "BossConfig.yml");
+            if (!boss_File.exists()) {
+                boss_File.createNewFile();
+            }
+            boss_Config = YamlConfiguration.loadConfiguration(boss_File);
+
             System.out.println("pomyślnie zrobiono reload!");
         } catch (Exception e) {
             System.out.println("ERROR przy ładowaniu configów!!! " + e.getMessage());
@@ -143,6 +153,7 @@ public class ConfigsMenager {
             forest_Config.save(forest_File);
             combat_Config.save(combat_File);
             bounties_Config.save(bounties_File);
+            boss_Config.save(boss_File);
             // perks_Config.save(perks_File);
         } catch (IOException e) {
             System.out.println("Błąd z konfigiem! " + e.getMessage());
@@ -171,6 +182,10 @@ public class ConfigsMenager {
 
     public FileConfiguration getBounties_Config() {
         return bounties_Config;
+    }
+
+    public FileConfiguration getBoss_Config() {
+        return boss_Config;
     }
 
     private void addDefaultPerksValues(FileConfiguration cfg) {
@@ -611,6 +626,32 @@ public class ConfigsMenager {
         cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l1", "§7Starożytny zwój używany do");
         cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l2", "§7przyzywania nieumarłych sług.");
         cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l3", "§eKliknij PPM aby użyć.");
+
+        // Summon Boss TestBoss Effect
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.Name", "§c👹 Przyzwanie Króla Szkieletów");
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.Lore.l1", "§7Przyzywa Króla Szkieletów.");
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.IsMajor", true);
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.IsItemEffect", true);
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.ScrollName", "§c👹 Zwój Króla Szkieletów");
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.ScrollModelID", 10008);
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.Conditions.req1.Skill_Type", "COMBAT");
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.Conditions.req1.Skill_Level", 5);
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.Cost.c1.Material", "BONE_BLOCK");
+        cfg.set("MagicEffects.Summon_Boss_TestBoss.Cost.c1.Amount", 10);
+
+        // Scroll of TestBoss
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Material", "PAPER");
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Name", "§c👹 Zwój Przyzwania Króla Szkieletów");
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Custom_Model_ID", 10002);
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m1.Material", "BONE_BLOCK");
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m1.Amount", 10);
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m2.Material", "DIAMOND");
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m2.Amount", 1);
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m3.Material", "PAPER");
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m3.Amount", 1);
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.AllowedMagicEffects", Arrays.asList("Summon_Boss_TestBoss"));
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Item.Lore.l1", "§7Zwój przyzywający potężnego bossa.");
+        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Item.Lore.l2", "§eKliknij PPM aby użyć.");
     }
 
 }

@@ -107,7 +107,9 @@ public class Methods {
 			double y = 0.3 + random.nextDouble() * (0.1*factor);
 			fallingBlock.setVelocity(new Vector(x, y, z));
 			SpawnedByMe.add(fallingBlock);
-			startDamageTask(fallingBlock,player);
+			if(player!=null){
+				startDamageTask(fallingBlock,player);
+			}
 		}
 	}
 	private static void startDamageTask(FallingBlock fallingBlock, Player player) {

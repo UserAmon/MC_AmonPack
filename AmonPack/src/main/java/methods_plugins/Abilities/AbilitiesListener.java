@@ -1,6 +1,7 @@
 package methods_plugins.Abilities;
 
 import abilities.*;
+import abilities.Util_Objects.EarthDisc;
 import methods_plugins.AmonPackPlugin;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -25,6 +26,7 @@ import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.Element;
 import org.bukkit.inventory.ItemStack;
 import AvatarSystems.Crafting.CraftingMenager;
+import org.bukkit.potion.PotionEffectType;
 
 public class AbilitiesListener implements Listener {
 
@@ -32,20 +34,17 @@ public class AbilitiesListener implements Listener {
 		if (ability.getElement() == Element.EARTH) {
 			boolean hasEffect = false;
 			for (ItemStack item : player.getInventory().getArmorContents()) {
-				if (item != null && CraftingMenager.HaveEffect(item, "Earth_Health_Boost")) {
+				if (item != null && CraftingMenager.HaveEffect(item, "Earth_Health_Boost_On_Abilities")) {
 					hasEffect = true;
 					break;
 				}
 			}
 			if (hasEffect) {
 				BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-				if (!bPlayer.isOnCooldown("Earth_Health_Boost")) {
-					player.addPotionEffect(new org.bukkit.potion.PotionEffect(
-							org.bukkit.potion.PotionEffectType.ABSORPTION, 200, 1, false, false)); // 2 Hearts
-																									// (Absorbtion II is
-																									// 4 hearts, I is 2
-																									// hearts)
-					bPlayer.addCooldown("Earth_Health_Boost", 10000); // 10s Cooldown
+				if (!bPlayer.isOnCooldown("Earth_Health_Boost_On_Abilities")) {
+					player.addPotionEffect(
+							new org.bukkit.potion.PotionEffect(PotionEffectType.HEALTH_BOOST, 120, 1, false, false));
+					bPlayer.addCooldown("Earth_Health_Boost_On_Abilities", 10000);
 				}
 			}
 		}
@@ -61,14 +60,35 @@ public class AbilitiesListener implements Listener {
 					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 					if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandBreath")) {
 						new SandBreath(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirScythe")) {
+						if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player,
+								abilities.AirScythe.class)) {
+							abilities.AirScythe scythe = com.projectkorra.projectkorra.ability.CoreAbility
+									.getAbility(player, abilities.AirScythe.class);
+							scythe.onShift();
+						}
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("TideLock")) {
+						new TideLock(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("LightningWeave")) {
+						new LightningWeave(player);
+					}  else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthShift")) {
+						new EarthShift(player);
+					}  else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Whirlpool")) {
+						new Whirlpool(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")) {
+						new EarthDiscs(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")) {
+						if (!player.isSneaking()) {
+							new DiscHurl(player);
+						}
 					} // else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("MetalCompress")) {
-						// if (player.getInventory().getChestplate().getType() !=
-						// Material.IRON_CHESTPLATE) {
-						// return;}
-						// else if (player.getInventory().getChestplate().getType() == null) {
-						// return;}
-						// new MetalCompress(player);
-						// }
+					// if (player.getInventory().getChestplate().getType() !=
+					// Material.IRON_CHESTPLATE) {
+					// return;}
+					// else if (player.getInventory().getChestplate().getType() == null) {
+					// return;}
+					// new MetalCompress(player);
+					// }
 				}
 			} else
 				return;
@@ -82,75 +102,87 @@ public class AbilitiesListener implements Listener {
 		Player player = event.getPlayer();
 		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
 		if (bPlayer.getBoundAbility() != null) {
+			if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")
+					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")) {
+				EarthDisc.redirectNearby(player, 4.0);
+			}
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
-				if (!event.isCancelled() || bPlayer != null) {
-					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
+				CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 
-					// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("MetalFlex")) {
-					// if (player.getInventory().getChestplate().getType() !=
-					// Material.IRON_CHESTPLATE) {
-					// return;}
-					// else if (player.getInventory().getChestplate().getType() == null) {
-					// return;}
-					// new MetalFlex(player);
-					// } else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SteelShackles")) {
-					// if (player.getInventory().getChestplate().getType() !=
-					// Material.IRON_CHESTPLATE) {
-					// return;}
-					// else if (player.getInventory().getChestplate().getType() == null) {
-					// return;}
-					// new SteelShackles(player);
-					// }else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Slash")) {
-					// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
-					// new Slash(player);
-					// }}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Pierce")) {
-					// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
-					// new Pierce(player);
-					// }}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Stab")) {
-					// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
-					// new Stab(player);
-					// }else
-					// if
-					// (player.getInventory().getItemInMainHand().isSimilar(BladesAbility.Sword1)) {
-					// new Stab(player);
-					// Stab.LpmSkill(player);
-					// player.getInventory().remove(BladesAbility.Sword1);
-					// player.getInventory().setItemInHand(BladesAbility.Sword1);
-					// }
-					// }else
-					if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeSurge")) {
-						new SmokeSurge(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeDaggers")) {
-						new SmokeDaggers(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePull")) {
-						new SmokePull(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePath")) {
-						new SmokePath(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SoundCrash")) {
-						new SoundCrash(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeSlash")) {
-						new SmokeSlash(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
-						new SmokeShot(player, false);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("NoisySlash")) {
-						new NoisySlash(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EchoJab")) {
-						new EchoJab(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Ionization")) {
-						if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Ionization.class)) {
-							Ionization ionization = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
-									Ionization.class);
-							ionization.onClick();
-						} else {
-							new Ionization(player);
-						}
+				// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("MetalFlex")) {
+				// if (player.getInventory().getChestplate().getType() !=
+				// Material.IRON_CHESTPLATE) {
+				// return;}
+				// else if (player.getInventory().getChestplate().getType() == null) {
+				// return;}
+				// new MetalFlex(player);
+				// } else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SteelShackles")) {
+				// if (player.getInventory().getChestplate().getType() !=
+				// Material.IRON_CHESTPLATE) {
+				// return;}
+				// else if (player.getInventory().getChestplate().getType() == null) {
+				// return;}
+				// new SteelShackles(player);
+				// }else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Slash")) {
+				// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
+				// new Slash(player);
+				// }}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Pierce")) {
+				// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
+				// new Pierce(player);
+				// }}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Stab")) {
+				// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
+				// new Stab(player);
+				// }else
+				// if
+				// (player.getInventory().getItemInMainHand().isSimilar(BladesAbility.Sword1)) {
+				// new Stab(player);
+				// Stab.LpmSkill(player);
+				// player.getInventory().remove(BladesAbility.Sword1);
+				// player.getInventory().setItemInHand(BladesAbility.Sword1);
+				// }
+				// }else
+				if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeSurge")) {
+					new SmokeSurge(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeDaggers")) {
+					new SmokeDaggers(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePull")) {
+					new SmokePull(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePath")) {
+					new SmokePath(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SoundCrash")) {
+					new SoundCrash(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeSlash")) {
+					new SmokeSlash(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
+					new SmokeShot(player, false);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirScythe")) {
+					new AirScythe(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("NoisySlash")) {
+					new NoisySlash(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EchoJab")) {
+					new EchoJab(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("GustShield")) {
+					new GustShield(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Ionization")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Ionization.class)) {
+						Ionization ionization = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
+								Ionization.class);
+						ionization.onClick();
+					} else {
+						new Ionization(player);
 					}
-
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player,
+							abilities.EarthDiscs.class)) {
+						abilities.EarthDiscs discs = com.projectkorra.projectkorra.ability.CoreAbility
+								.getAbility(player, abilities.EarthDiscs.class);
+						discs.onClick();
+					}
 				}
-			} else
-				return;
-		} else
-			return;
+			}
+
+		}
+
 	}
 
 	// @SuppressWarnings("deprecation")
@@ -311,27 +343,17 @@ public class AbilitiesListener implements Listener {
 							new AirPressure(player);
 						}
 						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthHammer")) {
-							new EarthHammer(player);
-						}
-						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("IceThorn")) {
-							new IceThorn(player);
-						}
-						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeBarrage")) {
-							new SmokeBarrage(player);
-						}
-						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeCamouflage")) {
-							new SmokeCamouflage(player);
-						}
-						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
-							new SmokeShot(player, true);
-						}
-						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("IceArch")) {
-							new IceArch(player);
+							if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
+								new SmokeShot(player, true);
+							}
+							if (bPlayer.getBoundAbilityName().equalsIgnoreCase("IceArch")) {
+								new IceArch(player);
+							}
 						}
 					}
 				}
 			}
 		}
-	}
 
+	}
 }

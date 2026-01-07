@@ -39,7 +39,7 @@ public class Craftable_Item extends ItemMold {
         }
     }
 
-    private String getDisplayName() {
+    public String getDisplayName() {
         return super.toItemStack().getItemMeta().getDisplayName();
     }
 }

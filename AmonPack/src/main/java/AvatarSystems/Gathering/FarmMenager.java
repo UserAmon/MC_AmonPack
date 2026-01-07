@@ -70,14 +70,10 @@ public class FarmMenager {
             if (!block.getWorld().equals(farm.getLoc().getWorld()))
                 continue;
             if (IsRightClick) {
-                player.sendMessage("test numer 1");
-                if (type == Material.SWEET_BERRY_BUSH) {
-                    player.sendMessage("test numer 2");
+                if (type == Material.SWEET_BERRY_BUSH && isNaturalBlock(block)) {
                     BlockState state = block.getState();
                     if (state.getBlockData() instanceof Ageable ageable) {
-                        player.sendMessage("test numer 3");
                         if (ageable.getAge() >= 2) {
-                            player.sendMessage("test numer 4");
                             ItemStack berries = new ItemStack(Material.SWEET_BERRIES, getRandom(2, 4));
                             Map<Integer, ItemStack> leftover = player.getInventory().addItem(berries);
                             leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));

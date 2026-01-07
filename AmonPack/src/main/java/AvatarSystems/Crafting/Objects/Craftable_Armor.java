@@ -23,11 +23,11 @@ public class Craftable_Armor extends ItemMold {
         return DmgReduction;
     }
     public double ExecutePlayerGetDamaged(Entity victim, ItemStack item, Player player){
-        double DamageTaken = 0;
+        double DamageTaken = DmgReduction;
         ItemMeta meta = item.getItemMeta();
         NamespacedKey key = new NamespacedKey(AmonPackPlugin.plugin, "magic_effects");
         String data = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
-        if (data != null && !data.isEmpty()) {
+        if (data != null && !data.isEmpty() && victim!=player) {
             for (MagicEffects effects : MagicEffects.deserializeList(data)){
                 DamageTaken=DamageTaken+effects.ExecuteOnTakinHit(victim,player);
             }

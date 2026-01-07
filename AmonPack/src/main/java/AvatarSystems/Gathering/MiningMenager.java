@@ -162,7 +162,6 @@ public class MiningMenager {
                         double modifier = 1;
                         int extraLootChance = 0;
 
-                        // Check Armor & MainHand for Effects
                         List<ItemStack> equipment = new ArrayList<>();
                         equipment.add(player.getInventory().getItemInMainHand());
                         for (ItemStack armor : player.getInventory().getArmorContents()) {
@@ -172,21 +171,22 @@ public class MiningMenager {
 
                         for (ItemStack item : equipment) {
                             if (CraftingMenager.HaveEffect(item, "Exp_Boost")) {
-                                modifier += 0.5; // 50% more XP per item
+                                modifier += 0.25;
                             }
                             if (CraftingMenager.HaveEffect(item, "Mining_Loot_Boost")) {
-                                extraLootChance += 10; // 10% extra loot chance per item
+                                extraLootChance += 10;
                             }
                         }
-
                         if (CraftingMenager.HaveEffect(player.getItemInUse(), "Expierience")) {
                             modifier += 1;
                         }
                         if (CraftingMenager.HaveEffect(player.getItemInUse(), "Looting")) {
-                            extraLootChance += 30; // Original Looting effect
+                            extraLootChance += 30;
                         }
 
+
                         if (extraLootChance > 0 && getRandom(0, 100) < extraLootChance) {
+                            player.sendMessage("Extra loot");
                             if (customBlock != null) {
                                 for (Object item : customBlock.getLoot()) {
                                     player.getInventory().addItem((ItemStack) item);
@@ -201,9 +201,9 @@ public class MiningMenager {
                                 AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
                                         (int) m.GetExpByMaterial(block.getType()));
                             }
-                            modifier += 1; // Bonus XP for bonus loot
                         }
-                        player.giveExp((int) ((1 + exp) * modifier));
+                        if(exp<1 && getRandom(0, 10)>6)exp+=1;
+                        player.giveExp((int) ((exp) * modifier));
                         return true;
                     }
                 }

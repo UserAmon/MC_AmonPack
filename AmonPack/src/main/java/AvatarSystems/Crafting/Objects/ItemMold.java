@@ -136,6 +136,17 @@ public class ItemMold {
         return item;
     }
 
+    public void ExecuteOnKillingByPlayer(Entity victim, ItemStack item, Player player, List<ItemStack> drops, int exp){
+        ItemMeta meta = item.getItemMeta();
+        NamespacedKey key = new NamespacedKey(AmonPackPlugin.plugin, "magic_effects");
+        String data = meta.getPersistentDataContainer().get(key, PersistentDataType.STRING);
+        if (data != null && !data.isEmpty() && victim!=player) {
+            for (MagicEffects effects : MagicEffects.deserializeList(data)){
+                effects.ExecuteOnKilling(victim, player,drops, exp);
+            }
+        }
+    }
+
     public String getWeaponID() {
         return weaponID;
     }

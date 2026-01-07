@@ -1,6 +1,7 @@
 package AvatarSystems.Crafting.Objects;
 
 import AvatarSystems.Crafting.CraftingMenager;
+import AvatarSystems.Gathering.CombatMenager;
 import abilities.*;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.Ability;
@@ -11,6 +12,7 @@ import com.projectkorra.projectkorra.attribute.AttributeModifier;
 import com.projectkorra.projectkorra.attribute.AttributePriority;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
+import commands.Commands;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.FallingBlock;
 import methods_plugins.Abilities.SoundAbility;
@@ -33,11 +35,14 @@ import org.bukkit.World;
 import org.bukkit.Location;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import static com.projectkorra.projectkorra.attribute.AttributeModifier.ADDITION;
 import static com.projectkorra.projectkorra.attribute.AttributeModifier.SUBTRACTION;
 import static methods_plugins.Abilities.SoundAbility.AfffectedEntities;
+import static methods_plugins.Methods.getRandom;
 
 public class MagicEffects {
     private final List<MagicEffectsConditions> conditions;
@@ -77,6 +82,50 @@ public class MagicEffects {
         return isArmorEffect;
     }
 
+    public void ExecuteOnKilling(Entity victim, Player player, List<ItemStack> drops, int exp) {
+        double ExtraExp = 0;
+        double ExtraLoot = 0;
+        switch (id) {
+            case "Looting":
+                ExtraLoot += 20;
+                break;
+            case "Expierience":
+                ExtraExp += 30;
+                break;
+            case "Exp_Boost":
+                ExtraExp += 10;
+                break;
+            case "Earth_Health_Boost_On_Kill":
+                player.addPotionEffect(new PotionEffect(PotionEffectType.HEALTH_BOOST, 200, 1, false, false));
+                break;
+            case "Monster_Hunter":
+                ExtraLoot += 10;
+                break;
+            case "Midas":
+                if (getRandom(0, 10) > 5) {
+                    Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
+                    example.executeCommand("money give " + player.getName() + " " + (exp * 0.1));
+                }
+                break;
+        }
+
+        for (ItemStack itemdrops : drops) {
+            if (new Random().nextInt(100) < ExtraLoot) {
+                player.sendMessage("Extra loot z killa, sznasa twoja to " + ExtraLoot);
+                HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(itemdrops);
+                for (ItemStack leftover : leftovers.values()) {
+                    player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                }
+            }
+        }
+        if (new Random().nextInt(100) < ExtraExp) {
+            player.sendMessage("dodatkowy exp, powinienes dostac " + exp + " a dostales " + (exp * 2)
+                    + "bo twoja szansa to " + ExtraExp);
+            player.giveExp(exp * 2);
+        }
+        CombatMenager.ExecuteKill(player, victim, (int) ((ExtraExp / 100) * 2));
+    }
+
     public double ExecuteOnTakinHit(Entity attacker, Player player) {
         double DamageReduction = 0;
         switch (id) {
@@ -85,11 +134,30 @@ public class MagicEffects {
                     DamageReduction = DamageReduction + 1;
                 }
                 break;
+            case "MoltenShell":
+                if (attacker instanceof LivingEntity) {
+                    if (getRandom(0, 100) < 25) {
+                        attacker.setFireTicks(60);
+                    }
+                }
+                break;
+            case "Repulse":
+                if (attacker instanceof LivingEntity) {
+                    Vector forceDir = GeneralMethods.getDirection(attacker.getLocation(),
+                            player.getLocation().clone().subtract(0, 1, 0));
+                    attacker.setVelocity(forceDir.clone().normalize().multiply(-1));
+                }
+                break;
+            case "Adrenaline":
+                if (getRandom(0, 100) < 20) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 1));
+                }
+                break;
             case "Earth_Resolve_Dmg_Taking":
                 List<Block> NearBlocks = new ArrayList<>();
-                for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 3)) {
+                for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 4)) {
                     if (b.getLocation().getY() <= player.getLocation().getY() + 1
-                            && b.getLocation().distance(player.getLocation()) > 7
+                            && b.getLocation().distance(player.getLocation()) < 7
                             && EarthAbility.isEarthbendable(player, b)) {
                         NearBlocks.add(b);
                     }
@@ -97,12 +165,16 @@ public class MagicEffects {
                 if (NearBlocks.size() > 3) {
                     new EarthHammer(player, 0);
                     DamageReduction = DamageReduction + 1;
+                    System.out.println("Test 32 earth   " + DamageReduction);
                 }
+
                 break;
             case "Slowness_Defense":
                 if (player.hasPotionEffect(PotionEffectType.SLOWNESS)) {
-                    DamageReduction += 2; // Reduces damage by 2 (1 heart) if slowed
+                    DamageReduction += 1;
                 }
+                break;
+            default:
                 break;
         }
         return DamageReduction;
@@ -273,6 +345,12 @@ public class MagicEffects {
     }
 
     public double ExecuteOnUse(Player player) {
+        if (id.startsWith("Summon_Boss_")) {
+            String bossId = id.replace("Summon_Boss_", "");
+            Location location = player.getLocation().clone();
+            StartRitual(location, () -> Mechanics.BossScrollManager.getInstance().summonBoss(location, bossId));
+            return 0; // Return value might be cooldown or something, keeping 0 for now
+        }
         double value = 0;
         switch (id) {
             case "Heal":
