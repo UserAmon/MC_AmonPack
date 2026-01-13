@@ -10,6 +10,8 @@ import AvatarSystems.Levels.PlayerBendingBranch;
 import AvatarSystems.Levels.PlayerLevelMenager;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
+import AvatarSystems.TownEscape.TownEscapeMenager;
+import AvatarSystems.TownEscape.Objects.TownE_Session;
 import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.Element;
@@ -352,8 +354,8 @@ public class Listeners implements Listener {
             ItemStack item = player.getInventory().getItemInMainHand();
 
             Craftable_Tool c_tool = CraftingMenager.getCraftedToolByItem(item);
-            if(c_tool!=null){
-                c_tool.Effects(item,player,event.getClickedBlock());
+            if (c_tool != null) {
+                c_tool.Effects(item, player, event.getClickedBlock());
             }
             Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
             if (craftItem != null) {
@@ -384,7 +386,6 @@ public class Listeners implements Listener {
             }
         }
     }
-
 
     @EventHandler
     public void BlockPlace(BlockPlaceEvent event) {
@@ -442,6 +443,11 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
+        if (TownEscapeMenager.getInstance() != null) {
+            for (TownE_Session session : TownEscapeMenager.getInstance().getActiveSessions()) {
+                session.handleEntityDeath(event.getEntity());
+            }
+        }
         if (event.getEntity().getKiller() != null) {
             Player player = event.getEntity().getKiller();
             List<ItemStack> drops = new ArrayList<>(event.getDrops());

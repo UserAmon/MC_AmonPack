@@ -15,23 +15,27 @@ public class TownE_Round {
     private int TimeBetweenSpawn;
     private int HowManyLocationFrom;
 
-
-    public TownE_Round(List<EntityType> enemyTypes, int numbersOfEnemies, int roundNumber, int timeBetweenSpawn, int howManyLocationFrom) {
+    public TownE_Round(List<EntityType> enemyTypes, int numbersOfEnemies, int roundNumber, int timeBetweenSpawn,
+            int howManyLocationFrom) {
         EnemyTypes = enemyTypes;
         NumbersOfEnemies = numbersOfEnemies;
-        RoundNumber=roundNumber;
-        TimeBetweenSpawn=timeBetweenSpawn;
-        HowManyLocationFrom=howManyLocationFrom;
+        RoundNumber = roundNumber;
+        TimeBetweenSpawn = timeBetweenSpawn;
+        HowManyLocationFrom = howManyLocationFrom;
     }
-    public int SpawnEnemies(Location location){
-        if (EnemyTypes.isEmpty()) return 0;
+
+    public List<Entity> SpawnEnemies(Location location) {
+        List<Entity> spawned = new ArrayList<>();
+        if (EnemyTypes.isEmpty())
+            return spawned;
         Random random = new Random();
         for (int i = 0; i < NumbersOfEnemies; i++) {
             EntityType type = EnemyTypes.get(random.nextInt(EnemyTypes.size()));
-            location.getWorld().spawnEntity(location, type);
+            spawned.add(location.getWorld().spawnEntity(location, type));
         }
-        return NumbersOfEnemies;
+        return spawned;
     }
+
     public int getRoundNumber() {
         return RoundNumber;
     }

@@ -8,6 +8,11 @@ public class TownE_Interactable {
     private Location location;
     private int InteracRadius;
 
+    public TownE_Interactable(int interacRadius, Location location, TE_InteractableTypes type) {
+        InteracRadius = interacRadius;
+        this.location = location;
+        this.type = type;
+    }
 
     public boolean PlayerHasInteracted(Block block){
         return block.getLocation().distance(location) <= InteracRadius;
