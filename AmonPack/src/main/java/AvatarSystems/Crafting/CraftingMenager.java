@@ -319,11 +319,12 @@ public class CraftingMenager {
                     String scrollName = Config.getString("MagicEffects." + effectId + ".ScrollName");
                     int scrollModelID = Config.getInt("MagicEffects." + effectId + ".ScrollModelID");
                     long chargeTime = Config.getLong("MagicEffects." + effectId + ".ChargeTime", 2500);
+                    int power = Config.getInt("MagicEffects." + effectId + ".Power", 0);
 
                     AllMagicEffects
                             .add(new MagicEffects(conditions, cost, name, lore, effectId, IsMajor, IsItemEffect,
                                     IsArmorEffect,
-                                    scrollName, scrollModelID, chargeTime));
+                                    scrollName, scrollModelID, chargeTime, power));
                 }
             }
         } catch (Exception e) {

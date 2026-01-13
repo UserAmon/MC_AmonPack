@@ -2,23 +2,10 @@ package methods_plugins.Abilities;
 
 import abilities.*;
 import abilities.Util_Objects.EarthDisc;
-import methods_plugins.AmonPackPlugin;
-import org.bukkit.Material;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 
 import com.projectkorra.projectkorra.BendingPlayer;
@@ -69,8 +56,8 @@ public class AbilitiesListener implements Listener {
 						}
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("TideLock")) {
 						new TideLock(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("LightningWeave")) {
-						new LightningWeave(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWeave")) {
+						new FlameWeave(player);
 					}  else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthShift")) {
 						new EarthShift(player);
 					}  else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Whirlpool")) {
@@ -161,6 +148,10 @@ public class AbilitiesListener implements Listener {
 					new NoisySlash(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EchoJab")) {
 					new EchoJab(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameShot")) {
+					new FlameShot(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AerialPush")) {
+					new AerialPush(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("GustShield")) {
 					new GustShield(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Ionization")) {

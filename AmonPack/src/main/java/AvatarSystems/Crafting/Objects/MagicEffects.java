@@ -2,6 +2,8 @@ package AvatarSystems.Crafting.Objects;
 
 import AvatarSystems.Crafting.CraftingMenager;
 import AvatarSystems.Gathering.CombatMenager;
+import AvatarSystems.Gathering.ForestMenager;
+import AvatarSystems.Gathering.MiningMenager;
 import abilities.*;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.Ability;
@@ -13,31 +15,21 @@ import com.projectkorra.projectkorra.attribute.AttributePriority;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import commands.Commands;
+import methods_plugins.AmonPackPlugin;
+import org.bukkit.*;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.*;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.Methods;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import org.bukkit.Color;
-import org.bukkit.Particle;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.entity.EntityType;
-import org.bukkit.World;
-import org.bukkit.Location;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static com.projectkorra.projectkorra.attribute.AttributeModifier.ADDITION;
 import static com.projectkorra.projectkorra.attribute.AttributeModifier.SUBTRACTION;
@@ -56,15 +48,16 @@ public class MagicEffects {
     private final String scrollName;
     private final int scrollModelID;
     private long chargeTime;
+    private int power;
 
     public MagicEffects(List<MagicEffectsConditions> conditions, List<ItemStack> cost, String name, List<String> lore,
             String id, boolean isMajor) {
-        this(conditions, cost, name, lore, id, isMajor, false, false, null, 0, 2500);
+        this(conditions, cost, name, lore, id, isMajor, false, false, null, 0, 2500, 0);
     }
 
     public MagicEffects(List<MagicEffectsConditions> conditions, List<ItemStack> cost, String name, List<String> lore,
             String id, boolean isMajor, boolean isItemEffect, boolean isArmorEffect, String scrollName,
-            int scrollModelID, long chargeTime) {
+            int scrollModelID, long chargeTime, int power) {
         this.conditions = conditions;
         this.cost = cost;
         this.name = name;
@@ -76,10 +69,67 @@ public class MagicEffects {
         this.scrollName = scrollName;
         this.scrollModelID = scrollModelID;
         this.chargeTime = chargeTime;
+        this.power = power;
+    }
+
+    public int getPower() {
+        return power;
     }
 
     public boolean isArmorEffect() {
         return isArmorEffect;
+    }
+
+    private static final Map<UUID, Long> toolCooldowns = new HashMap<>();
+
+    public void ExecuteTools(Player player, Block block) {
+        switch (id) {
+            case "Area_Miner":
+                if (block != null && (block.getType() == Material.STONE || block.getType() == Material.DEEPSLATE
+                        || block.getType() == Material.NETHERRACK || block.getType() == Material.END_STONE)) {
+                    long now = System.currentTimeMillis();
+                    if (toolCooldowns.containsKey(player.getUniqueId())
+                            && toolCooldowns.get(player.getUniqueId()) > now) {
+                        long remaining = (toolCooldowns.get(player.getUniqueId()) - now) / 1000;
+                        player.sendMessage(ChatColor.RED + "Ability on cooldown: " + remaining + "s");
+                    } else {
+                        MiningMenager.MineArea(player, block);
+                        toolCooldowns.put(player.getUniqueId(), now + 10000);
+                        player.getWorld().playSound(block.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1f, 1f);
+                        player.getWorld().spawnParticle(Particle.EXPLOSION, block.getLocation(), 1);
+                    }
+                }
+                break;
+            case "Axe_Throw":
+                long now = System.currentTimeMillis();
+                if (toolCooldowns.containsKey(player.getUniqueId()) && toolCooldowns.get(player.getUniqueId()) > now) {
+                    long remaining = (toolCooldowns.get(player.getUniqueId()) - now) / 1000;
+                    player.sendMessage(ChatColor.RED + "Ability on cooldown: " + remaining + "s");
+                } else {
+                    throwAxe(player);
+                    toolCooldowns.put(player.getUniqueId(), now + 5000);
+                }
+                break;
+            case "Tree_Feller":
+                if (block != null
+                        && (block.getType().name().contains("LOG") || block.getType().name().contains("WOOD"))) {
+                    long time = System.currentTimeMillis();
+                    if (toolCooldowns.containsKey(player.getUniqueId())
+                            && toolCooldowns.get(player.getUniqueId()) > time) {
+                        long remaining = (toolCooldowns.get(player.getUniqueId()) - time) / 1000;
+                        player.sendMessage(ChatColor.RED + "Ability on cooldown: " + remaining + "s");
+                    } else {
+                        int p = power;
+                        if (p == 0)
+                            p = 500;
+                        ForestMenager.ChopTree(player, block, p);
+                        toolCooldowns.put(player.getUniqueId(), time + 20000); // 20s
+                        player.getWorld().playSound(block.getLocation(), Sound.BLOCK_WOOD_BREAK, 1f, 0.5f);
+                    }
+                    return;
+                }
+                break;
+        }
     }
 
     public void ExecuteOnKilling(Entity victim, Player player, List<ItemStack> drops, int exp) {
@@ -624,5 +674,43 @@ public class MagicEffects {
                 ticks++;
             }
         }.runTaskTimer(methods_plugins.AmonPackPlugin.plugin, 0L, 1L);
+    }
+
+    private void throwAxe(Player player) {
+        ArmorStand as = player.getWorld().spawn(player.getEyeLocation().subtract(0, 0.5, 0), ArmorStand.class);
+        as.setVisible(false);
+        as.setGravity(false);
+        as.setSmall(true);
+        as.getEquipment().setHelmet(player.getInventory().getItemInMainHand());
+
+        Vector dir = player.getEyeLocation().getDirection().normalize().multiply(1.5);
+
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks > 20 || as.getLocation().getBlock().getType().isSolid()) {
+                    as.remove();
+                    cancel();
+                    return;
+                }
+
+                as.teleport(as.getLocation().add(dir)
+                        .setDirection(as.getLocation().getDirection().add(new Vector(0, 0.5, 0)))); // Spin
+
+                for (Entity e : as.getNearbyEntities(0.5, 0.5, 0.5)) {
+                    if (e instanceof LivingEntity && e != player) {
+                        ((LivingEntity) e).damage(3, player);
+                        as.remove();
+                        cancel();
+                        return;
+                    }
+                }
+                ticks++;
+            }
+        }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
+
+        player.getWorld().playSound(player.getLocation(), Sound.ITEM_TRIDENT_THROW, 1f, 1f);
     }
 }

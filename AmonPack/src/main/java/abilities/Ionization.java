@@ -24,6 +24,7 @@ import abilities.Util_Objects.AbilityProjectile;
 import abilities.Util_Objects.BetterParticles;
 import methods_plugins.AmonPackPlugin;
 import methods_plugins.Methods;
+import abilities.Util_Objects.LightningBolt;
 
 public class Ionization extends LightningAbility implements AddonAbility {
 
@@ -75,20 +76,14 @@ public class Ionization extends LightningAbility implements AddonAbility {
                     startTime = System.currentTimeMillis(); // Reset timer for charged window
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
                 } else {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,20,2,false,false));
-                    if(player.getLocation().getBlock().getType()==Material.WATER){
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 2, false, false));
+                    if (player.getLocation().getBlock().getType() == Material.WATER) {
                         Methods.LightningProjectile(player.getLocation().clone(), player);
                         Methods.LightningProjectile(player.getLocation().clone(), player);
                         fail("Got Wet!");
                     }
-                    if (new Random().nextInt(2) == 0) {
-                        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(135, 206, 250), 1);
-                        player.getWorld().spawnParticle(Particle.DUST, player.getLocation().add(0, 1, 0), 5, 0.5,
-                                0.5, 0.5, 0, dustOptions);
-                        if (new Random().nextInt(10) == 0) {
-                            player.playSound(player.getLocation(), Sound.ENTITY_TNT_PRIMED, 0.1f, 2f);
-                        }
-                    }
+                        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(0, 1, 0), 2, 0.3,
+                                0.5, 0.3, 0.05);
                 }
                 break;
 
@@ -96,8 +91,12 @@ public class Ionization extends LightningAbility implements AddonAbility {
                 if (System.currentTimeMillis() - startTime >= chargedWindow) {
                     fail("Too late!");
                 } else {
-                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(0, 1, 0), 2, 0.3,
-                            0.5, 0.3, 0.05);
+                    Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(135, 206, 250), 1);
+                    player.getWorld().spawnParticle(Particle.DUST, player.getLocation().add(0, 1, 0), 5, 0.5,
+                            0.5, 0.5, 0, dustOptions);
+                    if (new Random().nextInt(10) == 0) {
+                        player.playSound(player.getLocation(), Sound.ENTITY_TNT_PRIMED, 0.1f, 2f);
+                    }
                 }
                 break;
             case FIRING:
@@ -117,49 +116,19 @@ public class Ionization extends LightningAbility implements AddonAbility {
         state = State.FIRING;
         player.playSound(player.getLocation(), Sound.ITEM_TRIDENT_THUNDER, 1f, 1f);
 
-        Location origin = player.getEyeLocation().clone().add(0,0.5,0);
+        Location origin = player.getEyeLocation().clone().add(0, 0.5, 0);
         Vector direction = player.getLocation().getDirection();
 
-        List<BetterParticles> particles = new ArrayList<>();
-        particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(0, 153, 255)));
-        particles.add(new BetterParticles(3, ParticleEffect.REDSTONE, 0.3, 0.01, 0.15, Color.fromRGB(0, 255, 235)));
-        particles.add(new BetterParticles(2, ParticleEffect.CRIT_MAGIC, 0.3, 0.01, 0.15));
-
-        AbilityProjectile mainBolt = new AbilityProjectile(direction, origin.clone(), origin.clone(), particles, 1.5);
+        LightningBolt bolt = new LightningBolt(player, this, origin, direction, 4, 60, 5, true);
 
         new BukkitRunnable() {
-            int ticks = 0;
-
             @Override
             public void run() {
-                if (ticks > 40) { // Max duration
+                if (bolt.isDead()) {
                     this.cancel();
                     return;
                 }
-                Location loc;
-                    loc = mainBolt.LightningAdvance().clone();
-                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1.5)) {
-                    if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
-                        DamageHandler.damageEntity(entity, 4, Ionization.this);
-                        Methods.LightningProjectile(loc.clone(), player);
-                    }
-                }
-                if (ticks % 3 == 0) {
-                    Methods.LightningProjectile(loc.clone(), player);
-                }
-                if (loc.getBlock().getType().isSolid()) {
-                    this.cancel();
-                }
-                if(loc.getBlock().getType()== Material.WATER || loc.getBlock().getType()== Material.ICE){
-                    Methods.LightningProjectile(loc.clone(), player);
-                    for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 3)) {
-                        if (entity instanceof LivingEntity) {
-                            Methods.LightningProjectile(entity.getLocation().clone(), player);
-                        }
-                    }
-                    ticks+=4;
-                }
-                ticks++;
+                bolt.progress();
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
@@ -168,11 +137,10 @@ public class Ionization extends LightningAbility implements AddonAbility {
     }
 
     private void fail(String reason) {
-        // Visual Lightning Strike
         player.getWorld().strikeLightningEffect(player.getLocation());
         DamageHandler.damageEntity(player, selfDamage, this);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,40,2,false,false));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,20,2,false,false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 2, false, false));
         bPlayer.addCooldown(this, failCooldown);
         remove();
     }

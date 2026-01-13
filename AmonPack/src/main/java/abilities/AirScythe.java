@@ -46,15 +46,18 @@ public class AirScythe extends AirAbility implements AddonAbility {
         if (hasAbility(player, AirScythe.class)) {
             AirScythe existing = getAbility(player, AirScythe.class);
             if (existing.state == State.SHOT_1) {
+                if (System.currentTimeMillis() - existing.lastFireTime < 1000) {
+                    return;
+                }
                 existing.fireSecondShot();
                 return;
             } else if (existing.state == State.SHOT_2) {
                 return;
             }
         }
-            this.state = State.READY;
-            start();
-            fireFirstShot();
+        this.state = State.READY;
+        start();
+        fireFirstShot();
     }
 
     @Override
@@ -129,7 +132,8 @@ public class AirScythe extends AirAbility implements AddonAbility {
                     Location pLoc = loc.clone().add(offset).add(curve);
                     Particle.DustOptions dustOptions = new Particle.DustOptions(Color.GRAY, 0.75f);
                     player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.1, 0.1, 0.1, 0, dustOptions);
-                    player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.1, 0.1, 0.1, 0, new Particle.DustOptions(Color.WHITE, 0.75f));
+                    player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.1, 0.1, 0.1, 0,
+                            new Particle.DustOptions(Color.WHITE, 0.75f));
                 }
 
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1.5)) {
@@ -154,6 +158,7 @@ public class AirScythe extends AirAbility implements AddonAbility {
 
         new BukkitRunnable() {
             Location loc = origin.clone();
+            Vector dir = direction.clone();
             int ticks = 0;
 
             @Override
@@ -163,31 +168,51 @@ public class AirScythe extends AirAbility implements AddonAbility {
                     return;
                 }
 
-                loc.add(direction.clone().multiply(speed));
+                org.bukkit.util.RayTraceResult result = loc.getWorld().rayTraceBlocks(loc, dir, speed,
+                        org.bukkit.FluidCollisionMode.NEVER, true);
 
-                Vector right = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-                Vector up = right.clone().crossProduct(direction).normalize();
+                if (result != null && result.getHitBlock() != null) {
+                    org.bukkit.block.BlockFace face = result.getHitBlockFace();
+                    if (face != null) {
+                        Vector normal = new Vector(face.getModX(), face.getModY(), face.getModZ());
+                        double dot = dir.dot(normal);
+                        dir.subtract(normal.multiply(2 * dot));
+
+                        // Move to hit position to avoid clipping
+                        loc = result.getHitPosition().toLocation(loc.getWorld())
+                                .add(result.getHitPosition().subtract(loc.toVector()).multiply(0.1));
+
+                        loc.getWorld().playSound(loc, Sound.BLOCK_STONE_HIT, 1f, 1.5f);
+                    } else {
+                        this.cancel();
+                        return;
+                    }
+                } else {
+                    loc.add(dir.clone().multiply(speed));
+                }
+
+                Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+                Vector up = right.clone().crossProduct(dir).normalize();
 
                 for (double i = -1.5; i <= 1.5; i += 0.2) {
                     Vector offset = up.clone().multiply(i);
-                    Vector curve = direction.clone().multiply(-Math.abs(i) * 0.5);
+                    Vector curve = dir.clone().multiply(-Math.abs(i) * 0.5);
                     Location pLoc = loc.clone().add(offset).add(curve);
                     Particle.DustOptions dustOptions = new Particle.DustOptions(Color.GRAY, 0.75f);
                     player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.1, 0.1, 0.1, 0, dustOptions);
-                    player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.1, 0.1, 0.1, 0, new Particle.DustOptions(Color.WHITE, 0.75f));
+                    player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.1, 0.1, 0.1, 0,
+                            new Particle.DustOptions(Color.WHITE, 0.75f));
                 }
 
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1.5)) {
                     if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                         DamageHandler.damageEntity(entity, damage * 2.0, AirScythe.this);
-                        entity.setVelocity(direction.clone().multiply(0.5).setY(0.7));
+                        entity.setVelocity(dir.clone().multiply(1.5).setY(1.0));
                         this.cancel();
                         return;
                     }
                 }
-                if (loc.getBlock().getType().isSolid()) {
-                    this.cancel();
-                }
+
                 ticks++;
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);

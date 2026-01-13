@@ -1,37 +1,25 @@
 package Mechanics;
 
-//import AvatarSystems.ForestMenager;
 import AvatarSystems.Crafting.CraftingMenager;
 import AvatarSystems.Crafting.Objects.*;
-import AvatarSystems.Gathering.CombatMenager;
 import AvatarSystems.Gathering.FarmMenager;
 import AvatarSystems.Gathering.ForestMenager;
 import AvatarSystems.Gathering.MiningMenager;
 import AvatarSystems.Levels.ElementTree;
 import AvatarSystems.Levels.PlayerBendingBranch;
 import AvatarSystems.Levels.PlayerLevelMenager;
-//import AvatarSystems.Util_Objects.Forest;
-import AvatarSystems.Perks.Objects.Perk;
-import AvatarSystems.Perks.PerksMenager;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
-//import Mechanics.PVP.newPvP;
 import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.Element;
 import com.projectkorra.projectkorra.ability.CoreAbility;
-import com.projectkorra.projectkorra.attribute.AttributePriority;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
 import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
-import com.projectkorra.projectkorra.event.AbilityStartEvent;
-import com.projectkorra.projectkorra.event.PlayerCooldownChangeEvent;
-import commands.Commands;
 import methods_plugins.Abilities.SoundAbility;
 import methods_plugins.AmonPackPlugin;
 import methods_plugins.Methods;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -40,22 +28,18 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 
-import static AvatarSystems.Crafting.CraftingMenager.AllCraftableWeapons;
-import static com.projectkorra.projectkorra.attribute.AttributeModifier.ADDITION;
 import static methods_plugins.AmonPackPlugin.ElementBasedOnSubElement;
 import static methods_plugins.AmonPackPlugin.plugin;
 import static methods_plugins.Methods.getRandom;
@@ -366,6 +350,11 @@ public class Listeners implements Listener {
         Player player = event.getPlayer();
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack item = player.getInventory().getItemInMainHand();
+
+            Craftable_Tool c_tool = CraftingMenager.getCraftedToolByItem(item);
+            if(c_tool!=null){
+                c_tool.Effects(item,player,event.getClickedBlock());
+            }
             Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
             if (craftItem != null) {
                 if (craftItem.getWeaponID().equals("1000") || craftItem.getDisplayName().contains("Zwój Przyzwania")) {
@@ -383,13 +372,11 @@ public class Listeners implements Listener {
             Location blacksmith = new Location(Bukkit.getWorld("world"), 0, 100, 0);
             if (block.getType() == Material.CRAFTING_TABLE && block.getLocation().distance(blacksmith) < 10) {
                 event.setCancelled(true);
-                // CraftingMenager.OpenMoldCrafting(player);
                 CraftingMenager.OpenMoldCategory(player);
             } else if (block.getType() == Material.ENCHANTING_TABLE || block.getType() == Material.ANVIL) {
                 event.setCancelled(true);
                 player.sendMessage(
                         "§c✖ §7Ta funkcja jest §lwyłączona§7! Udaj się do §6Kowala§7, aby z niej skorzystać.");
-
             } else {
                 if (FarmMenager.CheckFarmBlock(block, player, true)) {
                     event.setCancelled(true);
@@ -397,6 +384,7 @@ public class Listeners implements Listener {
             }
         }
     }
+
 
     @EventHandler
     public void BlockPlace(BlockPlaceEvent event) {
@@ -501,6 +489,7 @@ public class Listeners implements Listener {
             if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p, abilities.GustShield.class)) {
                 abilities.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(p,
                         abilities.GustShield.class);
+                event.setCancelled(true);
                 shield.onHit();
             }
 
@@ -1437,7 +1426,8 @@ public class Listeners implements Listener {
 
                         ItemStack currentItem = player.getInventory().getItemInMainHand();
                         Craftable_Item currentCraftItem = CraftingMenager.getCraftableItemByItem(currentItem);
-                        if (currentCraftItem == null || (!craftItem.getWeaponID().equals("1000") && !craftItem.getDisplayName().contains("Zwój Przyzwania"))) {
+                        if (currentCraftItem == null || (!craftItem.getWeaponID().equals("1000")
+                                && !craftItem.getDisplayName().contains("Zwój Przyzwania"))) {
                             if (chargingTasks.containsKey(player.getUniqueId())) {
                                 Bukkit.getScheduler().cancelTask(chargingTasks.get(player.getUniqueId()));
                                 chargingTasks.remove(player.getUniqueId());
@@ -1460,8 +1450,8 @@ public class Listeners implements Listener {
                                     0.5, 0.5, 0);
                             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 2.0f);
                         } else {
-                            player.spawnParticle(Particle.ENCHANTED_HIT, player.getLocation().add(0, 1, 0), 5, 0.5,
-                                    0.5, 0.5, 0);
+                            player.spawnParticle(Particle.ENCHANTED_HIT, player.getLocation().add(0, 1, 0), 5, 0.5, 0.5,
+                                    0.5, 0);
                         }
                     }
                 }, 0L, 5L);
@@ -1482,7 +1472,8 @@ public class Listeners implements Listener {
                 ItemStack item = player.getInventory().getItemInMainHand();
                 Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
 
-                if (craftItem != null && (craftItem.getWeaponID().equals("1000") || craftItem.getDisplayName().contains("Zwój Przyzwania"))) {
+                if (craftItem != null && (craftItem.getWeaponID().equals("1000")
+                        || craftItem.getDisplayName().contains("Zwój Przyzwania"))) {
                     long chargeTime = 2500;
                     List<MagicEffects> effects = CraftingMenager.getEffectsFromItem(item);
                     if (!effects.isEmpty()) {

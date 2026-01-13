@@ -34,7 +34,7 @@ public class GustShield extends AirAbility implements AddonAbility {
     private long duration = 2000;
     private long cooldown = 6000;
     private double speed = 0.7;
-    private double range = 15;
+    private double range = 10;
     private double pushFactor = 1;
 
     private Location shieldLoc;
@@ -64,6 +64,11 @@ public class GustShield extends AirAbility implements AddonAbility {
             return;
         }
 
+        if (!bPlayer.getBoundAbilityName().equals(getName())) {
+            remove();
+            return;
+        }
+
         switch (state) {
             case SHIELDING:
                 if (System.currentTimeMillis() - startTime > duration) {
@@ -73,20 +78,10 @@ public class GustShield extends AirAbility implements AddonAbility {
 
                 Location eye = player.getEyeLocation();
                 Vector dir = eye.getDirection().normalize();
-                shieldLoc = eye.clone().add(dir.clone().multiply(2.5));
+                shieldLoc = eye.clone().add(dir.clone().multiply(1.5));
                 shieldDir = dir;
-                Particle.DustOptions dustOptions = new Particle.DustOptions(Color.GRAY, 0.75f);
 
-                for (double i = 0; i < 360; i += 20) {
-                    Vector offset = GeneralMethods.getOrthogonalVector(dir, i, 1.35);
-                    player.getWorld().spawnParticle(Particle.DUST, shieldLoc.clone().add(offset), 1, 0.1, 0.1, 0.1, 0, dustOptions);
-                    player.getWorld().spawnParticle(Particle.DUST, shieldLoc.clone().add(offset), 1, 0.1, 0.1, 0.1, 0, new Particle.DustOptions(Color.WHITE, 0.75f));
-                }
-                for (double i = 0; i < 360; i += 40) {
-                    Vector offset = GeneralMethods.getOrthogonalVector(dir, i, 0.7);
-                    player.getWorld().spawnParticle(Particle.DUST, shieldLoc.clone().add(offset), 1, 0.1, 0.1, 0.1, 0, dustOptions);
-                    player.getWorld().spawnParticle(Particle.DUST, shieldLoc.clone().add(offset), 1, 0.1, 0.1, 0.1, 0, new Particle.DustOptions(Color.WHITE, 0.75f));
-                }
+                displayParticles(shieldLoc, dir);
                 break;
 
             case LAUNCHED:
@@ -96,11 +91,7 @@ public class GustShield extends AirAbility implements AddonAbility {
                 }
 
                 shieldLoc.add(shieldDir.clone().multiply(speed));
-
-                for (double i = 0; i < 360; i += 20) {
-                    Vector offset = GeneralMethods.getOrthogonalVector(shieldDir, i, 1);
-                    playAirbendingParticles(shieldLoc.clone().add(offset),1);
-                }
+                displayParticles(shieldLoc, shieldDir);
 
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(shieldLoc, 1.25)) {
                     if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
@@ -116,6 +107,36 @@ public class GustShield extends AirAbility implements AddonAbility {
                 }
                 break;
         }
+    }
+
+    private void displayParticles(Location center, Vector dir) {
+        double time = System.currentTimeMillis() / 1000.0;
+        double radius = 1.0;
+
+        // Calculate vertical rotation
+        // We need a vector perpendicular to direction (right) and up
+        Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+        Vector up = right.clone().crossProduct(dir).normalize();
+
+        // Angle based on time
+        double angle1 = time * 4;
+
+        // Point 1
+        double x1 = radius * Math.cos(angle1);
+        double y1 = radius * Math.sin(angle1);
+        Vector offset1 = right.clone().multiply(x1).add(up.clone().multiply(y1));
+
+        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.GRAY, 0.75f);
+        player.getWorld().spawnParticle(Particle.DUST, center.clone().add(offset1), 1, 0.1, 0.1, 0.1, 0, dustOptions);
+
+        // Point 2 (Opposite)
+        double angle2 = angle1 + Math.PI;
+        double x2 = radius * Math.cos(angle2);
+        double y2 = radius * Math.sin(angle2);
+        Vector offset2 = right.clone().multiply(x2).add(up.clone().multiply(y2));
+
+        player.getWorld().spawnParticle(Particle.DUST, center.clone().add(offset2), 1, 0.1, 0.1, 0.1, 0,
+                new Particle.DustOptions(Color.WHITE, 0.75f));
     }
 
     public void onHit() {

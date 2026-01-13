@@ -137,13 +137,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
 		this.getServer().getPluginManager().registerEvents(bountiesMenager, this);
-		ProtocolLibrary.getProtocolManager().addPacketListener(
-				new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Client.BLOCK_DIG) {
-					@Override
-					public void onPacketReceiving(PacketEvent event) {
-						handleDigPacket(event);
-					}
-				});
 		// new newPvP();
 		try {
 			StartDeafnessTimer();
@@ -176,22 +169,6 @@ public class AmonPackPlugin extends JavaPlugin {
 			e.printStackTrace();
 		}
 		getLogger().info("AmonPack wyłączony");
-	}
-
-	private void handleDigPacket(PacketEvent event) {
-		Player player = event.getPlayer();
-		EnumWrappers.PlayerDigType digType = event.getPacket().getPlayerDigTypes().read(0);
-		BlockPosition pos = event.getPacket().getBlockPositionModifier().read(0);
-		Block block = player.getWorld().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
-
-		if (digType == EnumWrappers.PlayerDigType.ABORT_DESTROY_BLOCK
-				|| digType == EnumWrappers.PlayerDigType.STOP_DESTROY_BLOCK) {
-			Craftable_Tool tool = CraftingMenager.getCraftedToolByItem(
-					player.getInventory().getItemInMainHand());
-			if (tool != null) {
-				tool.cancelMining(player, block, pos, player.getEntityId() * -1);
-			}
-		}
 	}
 
 	public static void setPlayerUpgrade(Player player, List<String> upgrades) {

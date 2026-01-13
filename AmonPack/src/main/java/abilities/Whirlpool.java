@@ -1,11 +1,9 @@
 package abilities;
 
-import java.util.List;
-import java.util.Random;
-
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -14,31 +12,28 @@ import org.bukkit.util.Vector;
 
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
-import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
-
-import methods_plugins.AmonPackPlugin;
 
 public class Whirlpool extends WaterAbility implements AddonAbility {
 
     private enum State {
-        MIST, BLADE
+        GATHERING, SHIELD, SHOOT
     }
 
     private State state;
     private long startTime;
-    private long mistDuration = 2000;
-    private long cooldown = 5000;
-    private double mistRadius = 3;
-    private Location mistLoc;
 
-    // Blade variables
-    private Location bladeLoc;
-    private Vector bladeDir;
-    private double bladeSpeed = 0.7;
-    private double bladeDamage = 3.0;
-    private double bladeRange = 20;
+    // Configurable variables
+    private long gatheringDuration = 4000;
+    private double damage = 4.0;
+    private double speed = 1.5;
+    private double range = 30;
+    private long cooldown = 6000;
+
+    // Shoot vars
+    private Location projectileLoc;
+    private Vector projectileDir;
     private double distanceTraveled = 0;
 
     public Whirlpool(Player player) {
@@ -46,9 +41,8 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
-
         this.startTime = System.currentTimeMillis();
-        this.state = State.MIST;
+        this.state = State.GATHERING;
         start();
     }
 
@@ -59,106 +53,172 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
             return;
         }
 
-        if (state == State.MIST) {
-            if (!player.isSneaking()) {
-                remove();
-                return;
-            }
-            if (System.currentTimeMillis() - startTime > mistDuration) {
-                shootBlade();
-                return;
-            }
-            updateMist();
-        } else if (state == State.BLADE) {
-            progressBlade();
+        switch (state) {
+            case GATHERING:
+                if (!player.isSneaking()) {
+                    remove();
+                    return;
+                }
+                if (System.currentTimeMillis() - startTime > gatheringDuration) {
+                    state = State.SHIELD;
+                    return;
+                }
+                progressGathering();
+                break;
+            case SHIELD:
+                if (!player.isSneaking()) {
+                    startShoot();
+                    return;
+                }
+                progressShield();
+                break;
+            case SHOOT:
+                progressShoot();
+                break;
         }
     }
 
-    private void updateMist() {
-        mistLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(3));
-
+    private void progressGathering() {
         long timeElapsed = System.currentTimeMillis() - startTime;
-        double progress = (double) timeElapsed / mistDuration;
-        double currentRadius = mistRadius * (1 - progress);
+        Location shieldLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(2));
 
-        double angleSpeed = 10 + (progress * 20); // Spin faster as it gets smaller
-        double angle = (timeElapsed / 50.0) * angleSpeed;
-
-        for (int i = 0; i < 3; i++) {
-            double currentAngle = angle + (i * 120);
-            double x = currentRadius * Math.cos(Math.toRadians(currentAngle));
-            double z = currentRadius * Math.sin(Math.toRadians(currentAngle));
-            Vector dir = player.getLocation().getDirection().normalize();
-            Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-            if (right.lengthSquared() < 0.01) {
-                right = new Vector(1, 0, 0);
-            }
-            Vector up = right.clone().crossProduct(dir).normalize();
-
-            Vector pPos = right.clone().multiply(x).add(up.clone().multiply(z));
-
-            mistLoc.getWorld().spawnParticle(Particle.CLOUD, mistLoc.clone().add(pPos), 1, 0, 0, 0, 0);
+        // Mist particles flying towards shield location
+        for (int i = 0; i < 2; i++) {
+            Location spawnLoc = shieldLoc.clone()
+                    .add(Vector.getRandom().subtract(new Vector(0.5, 0.5, 0.5)).multiply(5));
+            Vector dir = shieldLoc.toVector().subtract(spawnLoc.toVector()).normalize();
+            player.getWorld().spawnParticle(Particle.CLOUD, spawnLoc, 0, dir.getX(), dir.getY(), dir.getZ(), 0.5);
             if (Math.random() < 0.3) {
-                mistLoc.getWorld().spawnParticle(Particle.BUBBLE_POP, mistLoc.clone().add(pPos), 1, 0, 0, 0, 0);
+                player.getWorld().spawnParticle(Particle.SPLASH, spawnLoc, 0, dir.getX(), dir.getY(), dir.getZ(), 0.5);
             }
         }
 
-        for (Entity entity : GeneralMethods.getEntitiesAroundPoint(mistLoc, mistRadius)) {
-            if (entity instanceof Projectile) {
-                if (!entity.getUniqueId().equals(player.getUniqueId())) {
-                    entity.remove();
-                    mistLoc.getWorld().spawnParticle(Particle.SPLASH, entity.getLocation(), 10, 0.2, 0.2, 0.2, 0);
-                    mistLoc.getWorld().playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.5f, 1f);
+        if (timeElapsed > 2000) {
+            double progress = (timeElapsed - 2000) / 2000.0;
+            drawShield(shieldLoc, progress);
+        }
+    }
+
+    private void progressShield() {
+        Location shieldLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(3));
+        drawShield(shieldLoc, 1.0);
+
+        for (Entity e : GeneralMethods.getEntitiesAroundPoint(shieldLoc, 2)) {
+            if (e instanceof Projectile && !e.getUniqueId().equals(player.getUniqueId())) {
+                e.setVelocity(e.getVelocity().multiply(-0.5));
+                ParticleEffect.WATER_SPLASH.display(e.getLocation(), 5, 0.1, 0.1, 0.1, 0.1);
+            }
+        }
+    }
+
+    private void drawShield(Location shieldLoc, double progress) {
+        Vector dir = player.getEyeLocation().getDirection().multiply(2).normalize();
+        Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+        Vector up = right.clone().crossProduct(dir).normalize();
+        Material mat = Material.WATER;
+
+        double maxR = 1 * progress;
+        if (progress > 0 && maxR < 0.5)
+            maxR = 0.5;
+
+        for (double r = 0.5; r <= 1.5; r += 0.5) {
+            if (r > maxR)
+                continue;
+
+            for (double theta = 0; theta < 360; theta += 45) {
+                double x = r * Math.cos(Math.toRadians(theta));
+                double y = r * Math.sin(Math.toRadians(theta));
+
+                Vector offset = right.clone().multiply(x).add(up.clone().multiply(y));
+                Location pLoc = shieldLoc.clone().add(offset);
+
+                Block b = pLoc.getBlock();
+                if (isTransparent(b)) {
+                    new TempBlock(b, mat).setRevertTime(100);
                 }
             }
         }
     }
 
-    private void shootBlade() {
-        state = State.BLADE;
-        bladeLoc = mistLoc.clone();
-        bladeDir = player.getLocation().getDirection().normalize();
+    private void startShoot() {
+        state = State.SHOOT;
+        projectileLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(2));
+        projectileDir = player.getEyeLocation().getDirection().normalize();
         bPlayer.addCooldown(this);
-        player.playSound(bladeLoc, Sound.ENTITY_PLAYER_SPLASH_HIGH_SPEED, 1f, 1f);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_SPLASH_HIGH_SPEED, 1f, 1f);
     }
 
-    private void progressBlade() {
-        if (distanceTraveled >= bladeRange) {
+    private void progressShoot() {
+        if (distanceTraveled > range) {
             remove();
             return;
         }
 
 
-        bladeLoc.add(bladeDir.clone().multiply(bladeSpeed));
-        distanceTraveled += bladeSpeed;
+        projectileLoc.add(projectileDir.clone().multiply(speed));
+        distanceTraveled += speed;
 
-        Vector right = bladeDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-        Vector up = right.clone().crossProduct(bladeDir).normalize();
-
-        for (double i = -1.5; i <= 1.5; i += 0.2) {
-            Vector offset = up.clone().multiply(i);
-            Vector curve = bladeDir.clone().multiply(-Math.abs(i) * 0.5);
-            Location pLoc = bladeLoc.clone().add(offset).add(curve);
-
-            ParticleEffect.BLOCK_CRACK.display(pLoc, 3, 0.3, 0.5, 0.3, 0.01, Material.ICE.createBlockData());
-            if(new Random().nextDouble()>0.6){
-                TempBlock tb2 = new TempBlock(bladeLoc.getBlock(), Material.BLUE_ICE);
-                tb2.setRevertTime(100);
-            }
-        }
-        if (GeneralMethods.isSolid(bladeLoc.getBlock())) {
+        if ((!isTransparent(projectileLoc.getBlock()) && !projectileLoc.getBlock().isPassable())||projectileLoc.getBlock().getType().isSolid()) {
+            createIceSpike(projectileLoc);
             remove();
             return;
         }
 
-        for (Entity entity : GeneralMethods.getEntitiesAroundPoint(bladeLoc, 1.5)) {
-            if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
-                DamageHandler.damageEntity(entity, bladeDamage, this);
-                entity.setVelocity(bladeDir.clone().multiply(1.2).setY(0.5));
+        new TempBlock(projectileLoc.getBlock(), Material.WATER).setRevertTime(100);
+        ParticleEffect.WATER_SPLASH.display(projectileLoc, 5, 0.5, 0.5, 0.5, 0.1);
+
+        for (Entity e : GeneralMethods.getEntitiesAroundPoint(projectileLoc, 1.5)) {
+            if (e instanceof LivingEntity && e.getUniqueId() != player.getUniqueId()) {
+                DamageHandler.damageEntity(e, damage, this);
+                e.setVelocity(projectileDir.clone().multiply(1.2).setY(0.5));
                 remove();
                 return;
             }
         }
+    }
+
+    private void createIceSpike(Location loc) {
+        Vector dir = projectileDir.clone().normalize();
+
+        // Create a crystal-like structure
+        // Central pillar
+        for (int i = 0; i < 4; i++) {
+            Location spikeLoc = loc.clone().add(dir.clone().multiply(i));
+            Block b = spikeLoc.getBlock();
+            if (isTransparent(b) || !b.getType().isSolid()) {
+                new TempBlock(b, Material.BLUE_ICE).setRevertTime(5000);
+                ParticleEffect.BLOCK_CRACK.display(spikeLoc, 10, 0.5, 0.5, 0.5, 0.1,
+                        Material.BLUE_ICE.createBlockData());
+            }
+        }
+
+        // Surrounding smaller spikes/base
+        Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+        Vector up = right.clone().crossProduct(dir).normalize();
+
+        for (int i = 0; i < 4; i++) {
+            double angle = i * 90;
+            double x = Math.cos(Math.toRadians(angle));
+            double y = Math.sin(Math.toRadians(angle));
+
+            Vector offset = right.clone().multiply(x).add(up.clone().multiply(y));
+            Location sideLoc = loc.clone().add(offset).add(dir.clone().multiply(1)); // Start slightly forward
+
+            Block b = sideLoc.getBlock();
+            if (isTransparent(b) || !b.getType().isSolid()) {
+                new TempBlock(b, Material.PACKED_ICE).setRevertTime(5000);
+            }
+
+            // Extend side spikes a bit
+            Location sideLoc2 = sideLoc.clone().add(dir.clone().multiply(1));
+            Block b2 = sideLoc2.getBlock();
+            if (isTransparent(b2) || !b2.getType().isSolid()) {
+                new TempBlock(b2, Material.ICE).setRevertTime(5000);
+            }
+        }
+
+        loc.getWorld().playSound(loc, Sound.BLOCK_GLASS_BREAK, 1f, 0.5f);
+        loc.getWorld().playSound(loc, Sound.BLOCK_AMETHYST_BLOCK_RESONATE, 1f, 1f);
     }
 
     @Override
@@ -168,7 +228,7 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
 
     @Override
     public Location getLocation() {
-        return mistLoc != null ? mistLoc : player.getLocation();
+        return projectileLoc != null ? projectileLoc : player.getLocation();
     }
 
     @Override

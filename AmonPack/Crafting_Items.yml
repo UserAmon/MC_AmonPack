@@ -571,6 +571,54 @@ Craftable_Weapons:
           Material: STICK
           Amount: 2
 
+  Vein_Miner:
+    Name: §6⛏ Vein Miner
+    Lore:
+      l1: §7Mines entire veins of ores.
+    IsMajor: true
+    Power: 128
+    Cost:
+      c1:
+        Material: DIAMOND
+        Amount: 3
+  Area_Miner:
+    Name: §c💥 Area Miner
+    Lore:
+      l1: §7Right-click to mine 3x3 area.
+    IsMajor: true
+    Cost:
+      c1:
+        Material: TNT
+        Amount: 5
+  Tree_Feller:
+    Name: §2🪓 Tree Feller
+    Lore:
+      l1: §7Chops down entire trees.
+    IsMajor: true
+    Power: 500
+    Cost:
+      c1:
+        Material: GOLDEN_AXE
+        Amount: 1
+  Axe_Throw:
+    Name: §b🪓 Axe Throw
+    Lore:
+      l1: §7Right-click air to throw axe.
+    IsMajor: false
+    Cost:
+      c1:
+        Material: IRON_INGOT
+        Amount: 5
+  Tool_Exp_Boost:
+    Name: §a✨ Tool Experience Boost
+    Lore:
+      l1: §7Increases experience gained from tools.
+    IsMajor: false
+    Cost:
+      c1:
+        Material: EXPERIENCE_BOTTLE
+        Amount: 5
+
 Craftable_Tools:
   meteorite_pickaxe:
     Material: NETHERITE_PICKAXE
@@ -584,10 +632,38 @@ Craftable_Tools:
         m2:
           Material: STICK
           Amount: 2
-      AllowedMagicEffects: []
+      AllowedMagicEffects:
+        - Vein_Miner
+        - Area_Miner
+        - Mining_Loot_Boost
+        - Tool_Exp_Boost
     Item:
       Lore:
         l1: §7Wykuty z kosmicznego metalu.
+      Items_To_Craft:
+        c1:
+          Material: STICK
+          Amount: 2
+  meteorite_axe:
+    Material: NETHERITE_AXE
+    Name: §2Topór z Meteorytu
+    Custom_Model_ID: 10001
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: NETHERITE_INGOT
+          Amount: 3
+        m2:
+          Material: STICK
+          Amount: 2
+      AllowedMagicEffects:
+        - Tree_Feller
+        - Axe_Throw
+        - Mining_Loot_Boost
+        - Tool_Exp_Boost
+    Item:
+      Lore:
+        l1: §7Ostrze z gwiezdnego pyłu.
       Items_To_Craft:
         c1:
           Material: STICK

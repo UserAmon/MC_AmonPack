@@ -1,6 +1,7 @@
 package AvatarSystems.Gathering;
 
 import AvatarSystems.Crafting.CraftingMenager;
+import AvatarSystems.Crafting.Objects.MagicEffects;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Gathering.Objects.Mine;
 import com.projectkorra.projectkorra.util.ParticleEffect;
@@ -111,39 +112,67 @@ public class MiningMenager {
     }
 
     public static boolean PlayerBreakBlock(Player player, Block block, int exp) {
+        return BreakBlockInternal(player, block, exp, true);
+    }
+
+    private static boolean BreakBlockInternal(Player player, Block block, int exp, boolean triggerAbilities) {
         if (isNaturalBlock(block)) {
             for (Mine m : MiningWorlds) {
                 if (block.getWorld().equals(m.getLoc().getWorld())) {
                     int Result = IsMinable(block);
                     if (Result > 0) {
                         CustomBlock customBlock = CustomBlock.byAlreadyPlaced(block);
+                        List<ItemStack> Drops = new ArrayList<>();
+                        int SkillPoints;
+                        boolean IsOre = false;
+                        Material type = block.getType();
+                        if (!MiningOresDrops.contains(block.getType())) {
+                            IsOre=true;
+                        }
+
                         if (Result == 1) {
-                            for (ItemStack item : block.getDrops()) {
-                                player.getInventory().addItem(item);
-                            }
-                            AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
-                                    (int) m.GetExpByMaterial(block.getType()));
+                            Drops.addAll(block.getDrops());
+                            SkillPoints = (int) m.GetExpByMaterial(block.getType());
                             block.setType(Material.AIR);
                         } else {
                             double iaExp = m.GetExpByIA(customBlock.getNamespacedID());
-                            AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
-                                    (int) iaExp);
                             exp = (int) (iaExp + 1);
+                            SkillPoints = (int) iaExp;
                             String dropId = ItemsAdderMining.get(customBlock.getNamespacedID());
-                            CustomStack dropStack = CustomStack.getInstance(dropId);
-                            if (dropStack != null) {
-                                player.getInventory().addItem(dropStack.getItemStack());
-                            }
+                            Drops.add(CustomStack.getInstance(dropId).getItemStack());
                             customBlock.playBreakParticles();
                             customBlock.playBreakEffect();
                             customBlock.playBreakSound();
                             customBlock.remove();
                         }
 
+                        double modifier = 1;
+                        int extraLootChance = 0;
+
+                        List<ItemStack> equipment = new ArrayList<>();
+                        equipment.add(player.getInventory().getItemInMainHand());
+                        for (ItemStack armor : player.getInventory().getArmorContents()) {
+                            if (armor != null)
+                                equipment.add(armor);
+                        }
+                        for (ItemStack item : equipment) {
+                            if (CraftingMenager.HaveEffect(item, "Exp_Boost")
+                                    || CraftingMenager.HaveEffect(item, "Experience")) {
+                                modifier += 0.2;
+                            }
+                            if (CraftingMenager.HaveEffect(item, "Mining_Loot_Boost")) {
+                                extraLootChance += 10;
+                            }
+                            if (CraftingMenager.HaveEffect(item, "Vein_Miner")&&IsOre) {
+                                VeinMiner(player, block, type, 10);
+                            }
+
+                        }
+
                         for (Map.Entry<String, Integer> entry : m.getLootList().entrySet()) {
                             String lootItem = entry.getKey();
                             int chance = entry.getValue();
-                            if (getRandom(1, 100) <= chance) {
+                            if (getRandom(1, 100) <= (chance + (extraLootChance / 2))) {
                                 if (lootItem.startsWith("amonpack:")) {
                                     String iaName = lootItem.substring(9);
                                     CustomStack cs = CustomStack.getInstance(iaName);
@@ -158,51 +187,21 @@ public class MiningMenager {
                                 }
                             }
                         }
-
-                        double modifier = 1;
-                        int extraLootChance = 0;
-
-                        List<ItemStack> equipment = new ArrayList<>();
-                        equipment.add(player.getInventory().getItemInMainHand());
-                        for (ItemStack armor : player.getInventory().getArmorContents()) {
-                            if (armor != null)
-                                equipment.add(armor);
+                        for (ItemStack item : Drops) {
+                            player.getInventory().addItem(item);
                         }
-
-                        for (ItemStack item : equipment) {
-                            if (CraftingMenager.HaveEffect(item, "Exp_Boost")) {
-                                modifier += 0.25;
-                            }
-                            if (CraftingMenager.HaveEffect(item, "Mining_Loot_Boost")) {
-                                extraLootChance += 10;
-                            }
-                        }
-                        if (CraftingMenager.HaveEffect(player.getItemInUse(), "Expierience")) {
-                            modifier += 1;
-                        }
-                        if (CraftingMenager.HaveEffect(player.getItemInUse(), "Looting")) {
-                            extraLootChance += 30;
-                        }
-
-
+                        AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
+                                SkillPoints);
                         if (extraLootChance > 0 && getRandom(0, 100) < extraLootChance) {
-                            player.sendMessage("Extra loot");
-                            if (customBlock != null) {
-                                for (Object item : customBlock.getLoot()) {
-                                    player.getInventory().addItem((ItemStack) item);
-                                }
-                                double iaExp = m.GetExpByIA(customBlock.getNamespacedID());
-                                AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
-                                        (int) iaExp);
-                            } else {
-                                for (ItemStack item : block.getDrops()) {
-                                    player.getInventory().addItem(item);
-                                }
-                                AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
-                                        (int) m.GetExpByMaterial(block.getType()));
+                            System.out.println("Dodatkowy loot - "+extraLootChance);
+                            for (ItemStack item : Drops) {
+                                player.getInventory().addItem(item);
                             }
+                            AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.MINING, player,
+                                    SkillPoints);
                         }
-                        if(exp<1 && getRandom(0, 10)>6)exp+=1;
+                        if (exp < 1 && getRandom(0, 10) > 6)
+                            exp += 1;
                         player.giveExp((int) ((exp) * modifier));
                         return true;
                     }
@@ -210,6 +209,59 @@ public class MiningMenager {
             }
         }
         return false;
+    }
+
+    public static void VeinMiner(Player player, Block startBlock, Material type, int maxBlocks) {
+        Set<Block> visited = new HashSet<>();
+        Queue<Block> queue = new LinkedList<>();
+        queue.add(startBlock);
+        visited.add(startBlock);
+
+        int mined = 0;
+
+        while (!queue.isEmpty() && mined < maxBlocks) {
+            Block current = queue.poll();
+
+            if (current.getType() == type && isNaturalBlock(current)) {
+                BreakBlockInternal(player, current, 0, false);
+                mined++;
+            } else {
+                continue;
+            }
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        if (x == 0 && y == 0 && z == 0)
+                            continue;
+
+                        Block relative = current.getRelative(x, y, z);
+                        if (!visited.contains(relative) && relative.getType() == type && isNaturalBlock(relative)) {
+                            visited.add(relative);
+                            queue.add(relative);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void MineArea(Player player, Block center) {
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    Block b = center.getRelative(x, y, z);
+                    if (b.getType() == Material.BEDROCK)
+                        continue;
+                    if (isNaturalBlock(b)) {
+                        if (IsMinable(b) > 0) {
+                            PlayerBreakBlock(player, b, 0);
+                        } else {
+                            b.breakNaturally(player.getInventory().getItemInMainHand());
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void startCleanupTask() {
