@@ -73,7 +73,7 @@ public class Listeners implements Listener {
      * player.setFlySpeed(0);
      * new BukkitRunnable() {
      * int countdown =5;
-     * 
+     *
      * @Override
      * public void run() {
      * if (countdown > 0) {
@@ -204,7 +204,7 @@ public class Listeners implements Listener {
      * new BukkitRunnable() {
      * double t = 0;
      * double g = -0.5;
-     * 
+     *
      * @Override
      * public void run() {
      * double x = direction.getX() * t;
@@ -256,7 +256,7 @@ public class Listeners implements Listener {
      * double t = 0;
      * final double radius = 2;
      * Location location = origin.clone();
-     * 
+     *
      * @Override
      * public void run() {
      * double x = direction.getX() * t;
@@ -308,7 +308,7 @@ public class Listeners implements Listener {
      * }}
      * break;
      * }}
-     * 
+     *
      * /*if (!AmonPackPlugin.BuildingOnArenas) {
      * Block block = event.getClickedBlock();
      * if(block !=null){
@@ -331,7 +331,7 @@ public class Listeners implements Listener {
      * public void onBlockDamage(BlockDamageEvent event) {
      * Player player = event.getPlayer();
      * Block block = event.getBlock();
-     * 
+     *
      * ItemStack item = player.getInventory().getItemInMainHand();
      * if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData()
      * && item.getItemMeta().getCustomModelData() == 10000) {
@@ -442,32 +442,27 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void onEntityDeath(EntityDeathEvent event) {
+    public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
         if (TownEscapeMenager.getInstance() != null) {
-            for (TownE_Session session : TownEscapeMenager.getInstance().getActiveSessions()) {
-                session.handleEntityDeath(event.getEntity());
+            TownE_Session session = TownEscapeMenager.getInstance().getSessionByPlayer(event.getPlayer());
+            if (session != null) {
+                session.removePlayer(event.getPlayer());
+            }
+        }/*
+                for (ItemStack leftover : leftover.values()) {
+                    pla.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                }
+            for(ItemStack item:player.getInventory().getArmorContents()){
+        if (item != null && item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
+            if (CraftingMenager.IsArmor(item) || CraftingMenager.IsWeapon(item)) {
+                CraftingMenager.getItemMoldByItem(item).ExecuteOnKillingByPlayer(event.getEntity(), item,
+                        player, drops, event.getDroppedExp());
             }
         }
-        if (event.getEntity().getKiller() != null) {
-            Player player = event.getEntity().getKiller();
-            List<ItemStack> drops = new ArrayList<>(event.getDrops());
-            event.getDrops().clear();
-            for (ItemStack item : drops) {
-                HashMap<Integer, ItemStack> leftovers = player.getInventory().addItem(item);
-                for (ItemStack leftover : leftovers.values()) {
-                    player.getWorld().dropItemNaturally(player.getLocation(), leftover);
-                }
-            }
-            for (ItemStack item : player.getInventory().getArmorContents()) {
-                if (item != null && item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
-                    if (CraftingMenager.IsArmor(item) || CraftingMenager.IsWeapon(item)) {
-                        CraftingMenager.getItemMoldByItem(item).ExecuteOnKillingByPlayer(event.getEntity(), item,
-                                player, drops, event.getDroppedExp());
-                    }
-                }
-            }
-        }
+    }*/
     }
+
+
 
     /*
      * @EventHandler

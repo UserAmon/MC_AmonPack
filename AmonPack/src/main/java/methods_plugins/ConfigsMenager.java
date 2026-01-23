@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import AvatarSystems.TownEscape.TownEscapeMenager;
 
 public class ConfigsMenager {
 
@@ -34,6 +35,7 @@ public class ConfigsMenager {
     public PerksMenager perks_menager;
     public MiningMenager mining_menager;
     public ForestMenager forest_menager;
+    public TownEscapeMenager townEscapeMenager;
 
     public ConfigsMenager(File datafolder) {
         System.out.println("Zaczynam ładowanie konfigów! " + datafolder);
@@ -82,6 +84,7 @@ public class ConfigsMenager {
         craftingMenager = new CraftingMenager();
         mining_menager = new MiningMenager();
         forest_menager = new ForestMenager();
+        townEscapeMenager = new TownEscapeMenager(datafolder);
         // perks_menager = new PerksMenager();
     }
 
