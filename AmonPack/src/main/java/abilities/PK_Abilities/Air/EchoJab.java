@@ -118,16 +118,6 @@ public class EchoJab extends SoundAbility implements AddonAbility {
 	}
 
 	@Override
-	public String getDescription() {
-		return "";
-	}
-
-	@Override
-	public String getInstructions() {
-		return "Left-Click";
-	}
-
-	@Override
 	public String getAuthor() {
 		return "AmonPack";
 	}
@@ -155,4 +145,15 @@ public class EchoJab extends SoundAbility implements AddonAbility {
 	public void stop() {
 		super.remove();
 	}
+
+	@Override
+	public String getDescription() {
+		return "Delivers a fast jab of sound waves, disorienting and damaging the opponent.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Left-click to throw an echo jab.";
+	}
+
 }

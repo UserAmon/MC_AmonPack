@@ -32,14 +32,13 @@ public class AerialPush extends AirAbility implements AddonAbility {
     private LivingEntity target;
     private long monitorStartTime;
 
-    // Configurable variables
     private double damage = 2.0;
     private double wallDamage = 4.0;
     private double knockback = 2.5;
     private double speed = 1.5;
     private double range = 20;
     private long cooldown = 3000;
-    private long monitorDuration = 1000; // 1 second to hit a wall
+    private long monitorDuration = 1000;
 
     public AerialPush(Player player) {
         super(player);
@@ -87,7 +86,6 @@ public class AerialPush extends AirAbility implements AddonAbility {
                     new Particle.DustOptions(Color.WHITE, 0.75f));
         }
 
-        // Play sound occasionally
         if (Math.random() < 0.3) {
             location.getWorld().playSound(location, Sound.ENTITY_ENDER_DRAGON_FLAP, 0.5f, 1.5f);
         }
@@ -206,4 +204,15 @@ public class AerialPush extends AirAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Pushes nearby entities away from you with a powerful blast of air. If the target hits a wall, it deals extra damage and stuns the target.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Left-click to release an aerial push.";
+    }
+
 }

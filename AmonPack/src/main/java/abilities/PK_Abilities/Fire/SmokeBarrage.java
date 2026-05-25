@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 public class SmokeBarrage extends SmokeAbility implements AddonAbility {
-	// @Attribute("Cooldown")
+
 	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Cooldown");
 	private double Gravity = AmonPackPlugin.getAbilitiesConfig()
 			.getDouble("AmonPack.Fire.Smoke.SmokeBarrage.Gravity-Factor");
@@ -169,16 +169,6 @@ public class SmokeBarrage extends SmokeAbility implements AddonAbility {
 	}
 
 	@Override
-	public String getDescription() {
-		return "";
-	}
-
-	@Override
-	public String getInstructions() {
-		return "Hold Shift near SmokeSource to charge, then relase barrage of projetiles";
-	}
-
-	@Override
 	public String getAuthor() {
 		return "AmonPack";
 	}
@@ -206,4 +196,15 @@ public class SmokeBarrage extends SmokeAbility implements AddonAbility {
 	public void stop() {
 		super.remove();
 	}
+
+	@Override
+	public String getDescription() {
+		return "This ability uses smoke source! Fires a rapid barrage of dense smoke projectiles that choke and blind targets.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Shift while looking at smoke-source to charge, release to fire!";
+	}
+
 }

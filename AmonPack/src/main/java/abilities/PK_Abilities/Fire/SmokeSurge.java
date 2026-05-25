@@ -1,4 +1,5 @@
 package Abilities.PK_Abilities.Fire;
+
 import Abilities.Util_Objects.SmokeSource;
 import com.projectkorra.projectkorra.attribute.Attribute;
 import org.bukkit.Location;
@@ -20,10 +21,8 @@ import Plugin.AmonPackPlugin;
 import Plugin.Methods;
 import Abilities.Bending.SmokeAbility;
 
-
-
 public class SmokeSurge extends SmokeAbility implements AddonAbility {
-	//@Attribute("Cooldown")
+
 	private int Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.Cooldown");
 	private int dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.Dmg");
 	private int range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeSurge.Range");
@@ -41,6 +40,7 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 	public int degree;
 	public int degree2;
 	private int interval;
+
 	public SmokeSurge(Player player) {
 		super(player);
 		if (bPlayer.isOnCooldown(this)) {
@@ -55,10 +55,11 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 		i = 0;
 		degree = -180;
 		degree2 = -60;
-		interval=0;
+		interval = 0;
 		start();
 		bPlayer.addCooldown(this);
 	}
+
 	@Override
 	public void progress() {
 		if (player.isDead() || !player.isOnline()) {
@@ -66,104 +67,104 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 			return;
 		}
 		if (GeneralMethods.isSolid(location.getBlock())) {
-			SmokeSource Source = new SmokeSource(location,60,2,1,player);
-			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
+			SmokeSource Source = new SmokeSource(location, 60, 2, 1, player);
+
 			remove();
 			return;
 		}
 		if (origin.distance(location) > (range)) {
-			SmokeSource Source = new SmokeSource(location,60,2,1,player);
-			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
+			SmokeSource Source = new SmokeSource(location, 60, 2, 1, player);
+
 			remove();
 			return;
 		}
 		interval++;
-		if(interval>1){
-			interval=0;
+		if (interval > 1) {
+			interval = 0;
 
-		/*for (Block b : GeneralMethods.getBlocksAroundPoint(location, 3)) {
-		if (b.getType() == Material.FIRE) {
-			SmokeSource Source = new SmokeSource(location,60,2,1,player);
-			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
+			location.add(direction.multiply(1));
+			vortex();
+			for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 2)) {
+				if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
+					DamageHandler.damageEntity(entity, dmg, this);
+					((LivingEntity) entity)
+							.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowdur, slowpower));
+					((LivingEntity) entity)
+							.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
+					((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
+				}
+			}
 		}
-		}*/
-		location.add(direction.multiply(1));
-		vortex();
-   		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 2)) {
-		if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
-		DamageHandler.damageEntity(entity, dmg, this);
-			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowdur, slowpower));
-			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
-			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
-    	}}
-	}}
+	}
+
 	public void vortex() {
 		if (degree < 180) {
-        degree = degree + 30;
-		  	Location loc = player.getLocation();
-		  	loc.setYaw(loc.getYaw() + 90);
-        Location tempLoc = location.clone();
-        Vector newDir = loc.getDirection().clone().multiply(2 * Math.cos(Math.toRadians(degree)));
-        tempLoc.add(newDir);
-        tempLoc.setY(tempLoc.getY() + 2 * Math.sin(Math.toRadians(degree)));
-        ParticleEffect.SMOKE_NORMAL.display(tempLoc, 12, 0.2, 0.1, 0.2, 0.01);
-        ParticleEffect.CAMPFIRE_COSY_SMOKE.display(tempLoc, 3, 0.2, 0.1, 0.2, 0);
-    } else {
-        degree = -180;
-    }
+			degree = degree + 30;
+			Location loc = player.getLocation();
+			loc.setYaw(loc.getYaw() + 90);
+			Location tempLoc = location.clone();
+			Vector newDir = loc.getDirection().clone().multiply(2 * Math.cos(Math.toRadians(degree)));
+			tempLoc.add(newDir);
+			tempLoc.setY(tempLoc.getY() + 2 * Math.sin(Math.toRadians(degree)));
+			ParticleEffect.SMOKE_NORMAL.display(tempLoc, 12, 0.2, 0.1, 0.2, 0.01);
+			ParticleEffect.CAMPFIRE_COSY_SMOKE.display(tempLoc, 3, 0.2, 0.1, 0.2, 0);
+		} else {
+			degree = -180;
+		}
 		if (degree2 > -180) {
-	        degree2 = degree2 - 30;
-			  	Location loc2 = player.getLocation();
-			  	loc2.setYaw(loc2.getYaw() + 90);
-	        Location tempLoc2 = location.clone();
-	        Vector newDir2 = loc2.getDirection().clone().multiply(2 * Math.cos(Math.toRadians(degree2)));
-	        tempLoc2.add(newDir2);
-	        tempLoc2.setY(tempLoc2.getY() + 2 * Math.sin(Math.toRadians(degree2)));
+			degree2 = degree2 - 30;
+			Location loc2 = player.getLocation();
+			loc2.setYaw(loc2.getYaw() + 90);
+			Location tempLoc2 = location.clone();
+			Vector newDir2 = loc2.getDirection().clone().multiply(2 * Math.cos(Math.toRadians(degree2)));
+			tempLoc2.add(newDir2);
+			tempLoc2.setY(tempLoc2.getY() + 2 * Math.sin(Math.toRadians(degree2)));
 			ParticleEffect.SMOKE_NORMAL.display(tempLoc2, 10, 0.15, 0.1, 0.15, 0.01);
 			ParticleEffect.CAMPFIRE_COSY_SMOKE.display(tempLoc2, 2, 0.15, 0.1, 0.15, 0);
-	} else {
-	        degree2 = 180;
-	}
+		} else {
+			degree2 = 180;
 		}
-	
+	}
+
 	@Override
 	public long getCooldown() {
 		return Cooldown;
 	}
+
 	@Override
 	public Location getLocation() {
 		return null;
 	}
+
 	@Override
 	public String getName() {
 		return "SmokeSurge";
 	}
-	@Override
-	public String getDescription() {
-		return "";
-	}
-	@Override
-	public String getInstructions() {
-		return "";
-	}
+
 	@Override
 	public String getAuthor() {
 		return "AmonPack";
 	}
+
 	@Override
 	public String getVersion() {
 		return "1.0";
 	}
+
 	@Override
 	public boolean isHarmlessAbility() {
 		return false;
 	}
+
 	@Override
 	public boolean isSneakAbility() {
 		return false;
 	}
+
 	@Override
-	public void load() {}
+	public void load() {
+	}
+
 	@Override
 	public void stop() {
 		super.remove();
@@ -174,8 +175,18 @@ public class SmokeSurge extends SmokeAbility implements AddonAbility {
 		if (bPlayer.isOnCooldown("SmokeSurgeEffect")) {
 			return;
 		}
-		SmokeSource Source = new SmokeSource(player.getLocation(),60,2,1,player);
-		bPlayer.addCooldown("SmokeSurgeEffect",5000);
+		SmokeSource Source = new SmokeSource(player.getLocation(), 60, 2, 1, player);
+		bPlayer.addCooldown("SmokeSurgeEffect", 5000);
+	}
+
+	@Override
+	public String getDescription() {
+		return "This ability creates smoke clouds! Creates a sudden surge of dense smoke, disorienting and slowing all nearby enemies.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Left-click to trigger a smoke surge.";
 	}
 
 }

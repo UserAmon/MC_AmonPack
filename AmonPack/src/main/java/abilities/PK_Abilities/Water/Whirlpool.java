@@ -24,14 +24,12 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
     private State state;
     private long startTime;
 
-    // Configurable variables
     private long gatheringDuration = 4000;
     private double damage = 4.0;
     private double speed = 1.5;
     private double range = 30;
     private long cooldown = 6000;
 
-    // Shoot vars
     private Location projectileLoc;
     private Vector projectileDir;
     private double distanceTraveled = 0;
@@ -82,7 +80,6 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
         long timeElapsed = System.currentTimeMillis() - startTime;
         Location shieldLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(2));
 
-        // Mist particles flying towards shield location
         for (int i = 0; i < 2; i++) {
             Location spawnLoc = shieldLoc.clone()
                     .add(Vector.getRandom().subtract(new Vector(0.5, 0.5, 0.5)).multiply(5));
@@ -154,11 +151,11 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
             return;
         }
 
-
         projectileLoc.add(projectileDir.clone().multiply(speed));
         distanceTraveled += speed;
 
-        if ((!isTransparent(projectileLoc.getBlock()) && !projectileLoc.getBlock().isPassable())||projectileLoc.getBlock().getType().isSolid()) {
+        if ((!isTransparent(projectileLoc.getBlock()) && !projectileLoc.getBlock().isPassable())
+                || projectileLoc.getBlock().getType().isSolid()) {
             createIceSpike(projectileLoc);
             remove();
             return;
@@ -180,8 +177,6 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
     private void createIceSpike(Location loc) {
         Vector dir = projectileDir.clone().normalize();
 
-        // Create a crystal-like structure
-        // Central pillar
         for (int i = 0; i < 4; i++) {
             Location spikeLoc = loc.clone().add(dir.clone().multiply(i));
             Block b = spikeLoc.getBlock();
@@ -192,7 +187,6 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
             }
         }
 
-        // Surrounding smaller spikes/base
         Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
         Vector up = right.clone().crossProduct(dir).normalize();
 
@@ -202,14 +196,13 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
             double y = Math.sin(Math.toRadians(angle));
 
             Vector offset = right.clone().multiply(x).add(up.clone().multiply(y));
-            Location sideLoc = loc.clone().add(offset).add(dir.clone().multiply(1)); // Start slightly forward
+            Location sideLoc = loc.clone().add(offset).add(dir.clone().multiply(1));
 
             Block b = sideLoc.getBlock();
             if (isTransparent(b) || !b.getType().isSolid()) {
                 new TempBlock(b, Material.PACKED_ICE).setRevertTime(5000);
             }
 
-            // Extend side spikes a bit
             Location sideLoc2 = sideLoc.clone().add(dir.clone().multiply(1));
             Block b2 = sideLoc2.getBlock();
             if (isTransparent(b2) || !b2.getType().isSolid()) {
@@ -264,4 +257,15 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Drag moisture from the air to form a whirpool around you. After a while - you will form a shield that can be launched!";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Sneak while in water to form a whirlpool of moisture around you. After a while - you will form a shield. Release shift to launch the shild forward.";
+    }
+
 }

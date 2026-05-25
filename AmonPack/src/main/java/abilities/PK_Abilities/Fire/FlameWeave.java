@@ -183,7 +183,6 @@ public class FlameWeave extends FireAbility implements AddonAbility {
             this.hasSplit = false;
         }
 
-        // Constructor for split bolts
         public FlameBolt(Player player, FireAbility ability, Location loc, Vector dir, double damage,
                 double maxDistance, boolean hasSplit) {
             this.player = player;
@@ -232,14 +231,10 @@ public class FlameWeave extends FireAbility implements AddonAbility {
                     if (face != null) {
                         Vector normal = new Vector(face.getModX(), face.getModY(), face.getModZ());
 
-                        // Bounce logic: Reflection + Original Direction (to keep some forward
-                        // momentum/go around)
-                        // Reflection = Dir - 2 * (Dir . Normal) * Normal
                         Vector reflection = dir.clone().subtract(normal.clone().multiply(2 * dir.dot(normal)));
-                        // Mix reflection with original direction (weighted)
+
                         Vector bounceDir = reflection.clone().add(dir.clone().multiply(0.5)).normalize();
 
-                        // If bounce is too perpendicular/invalid, add randomness
                         if (bounceDir.lengthSquared() < 0.01) {
                             Vector randomVec = new Vector(random.nextDouble(), random.nextDouble(),
                                     random.nextDouble());
@@ -254,15 +249,8 @@ public class FlameWeave extends FireAbility implements AddonAbility {
                         }
                         loc.getWorld().playSound(loc, Sound.BLOCK_FIRE_AMBIENT, 0.5f, 2f);
 
-                        // Split logic
                         if (!hasSplit) {
                             hasSplit = true;
-                            // Spawn 3 new bolts
-                            // 1. Main bounce direction (already set for this bolt, but we want new ones)
-                            // Actually, this bolt continues as one. We spawn 2 more? Or 3 new ones and kill
-                            // this?
-                            // User said: "wypuść dodatkowe 3 flamebolty" (release additional 3 flamebolts).
-                            // So this one continues, and we add 3 more.
 
                             Vector left = dir.clone().crossProduct(new Vector(0, 1, 0)).multiply(0.5);
                             Vector right = dir.clone().crossProduct(new Vector(0, -1, 0)).multiply(0.5);
@@ -299,4 +287,15 @@ public class FlameWeave extends FireAbility implements AddonAbility {
             return dead;
         }
     }
+
+    @Override
+    public String getDescription() {
+        return "Weaves multiple streams of fire that incinerate your enemies. The longer you weave - the more powerfull attack will be!";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Sneak to weave flames, relase and launch your bolts!";
+    }
+
 }

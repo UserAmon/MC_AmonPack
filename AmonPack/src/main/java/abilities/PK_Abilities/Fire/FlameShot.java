@@ -21,7 +21,7 @@ public class FlameShot extends FireAbility implements AddonAbility {
     private long lastFireTime;
     private int chargesLeft;
 
-    // Configurable variables
+    
     private double damage = 3.0;
     private double speed = 1.2;
     private double range = 30;
@@ -174,4 +174,15 @@ public class FlameShot extends FireAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+	@Override
+	public String getDescription() {
+		return "Shoots a fast-moving projectile of pure fire towards your target.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Left-click to shoot a flame shot.";
+	}
+
 }

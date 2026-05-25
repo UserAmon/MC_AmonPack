@@ -73,7 +73,7 @@ public class Ionization extends LightningAbility implements AddonAbility {
             case CHARGING:
                 if (System.currentTimeMillis() - startTime >= chargeTime) {
                     state = State.CHARGED;
-                    startTime = System.currentTimeMillis(); // Reset timer for charged window
+                    startTime = System.currentTimeMillis();
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
                 } else {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 2, false, false));
@@ -190,11 +190,12 @@ public class Ionization extends LightningAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Charge up a powerful lightning attack. Click to start charging, wait for the signal, then click again to fire. Don't mess up!";
+        return "Ionizes the air around you, charging your body and discharging electric sparks at enemies. Be careful - if you take damage, touch water or miss relase-windows - you will be shocked!";
     }
 
     @Override
     public String getInstructions() {
-        return "Left-Click to charge. Left-Click again when charged.";
+        return "Left-click to start ionizating the air around you! After ability is charged, left-click to release it and destroy your enemies!";
     }
+
 }

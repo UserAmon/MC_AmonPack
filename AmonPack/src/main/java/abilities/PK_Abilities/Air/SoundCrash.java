@@ -28,7 +28,6 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class SoundCrash extends SoundAbility implements AddonAbility {
 	Location origin;
 	private List<AbilityProjectile> Projectiles;
@@ -109,14 +108,6 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 		return "SoundCrash";
 	}
 	@Override
-	public String getDescription() {
-		return "";
-	}
-	@Override
-	public String getInstructions() {
-		return "Left-Click";
-	}
-	@Override
 	public String getAuthor() {
 		return "AmonPack";
 	}
@@ -149,4 +140,15 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 					break;
 				}
 		}}
+
+	@Override
+	public String getDescription() {
+		return "Unleashes a powerful sonic boom that crashes into enemies, deafening and pushing them back.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Left-click to cause a sound crash.";
+	}
+
 }

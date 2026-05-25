@@ -113,15 +113,11 @@ public class GustShield extends AirAbility implements AddonAbility {
         double time = System.currentTimeMillis() / 1000.0;
         double radius = 1.0;
 
-        // Calculate vertical rotation
-        // We need a vector perpendicular to direction (right) and up
         Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
         Vector up = right.clone().crossProduct(dir).normalize();
 
-        // Angle based on time
         double angle1 = time * 4;
 
-        // Point 1
         double x1 = radius * Math.cos(angle1);
         double y1 = radius * Math.sin(angle1);
         Vector offset1 = right.clone().multiply(x1).add(up.clone().multiply(y1));
@@ -129,7 +125,6 @@ public class GustShield extends AirAbility implements AddonAbility {
         Particle.DustOptions dustOptions = new Particle.DustOptions(Color.GRAY, 0.75f);
         player.getWorld().spawnParticle(Particle.DUST, center.clone().add(offset1), 1, 0.1, 0.1, 0.1, 0, dustOptions);
 
-        // Point 2 (Opposite)
         double angle2 = angle1 + Math.PI;
         double x2 = radius * Math.cos(angle2);
         double y2 = radius * Math.sin(angle2);
@@ -191,4 +186,15 @@ public class GustShield extends AirAbility implements AddonAbility {
     @Override
     public void stop() {
     }
+
+    @Override
+    public String getDescription() {
+        return "Surrounds you with a protective shield of swirling wind that blocks incoming attacks. Upon blocking instance of damage - retaliate!";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Tap sneak to toggle your gust shield.";
+    }
+
 }

@@ -148,4 +148,15 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Launches a solid earth disc at high speed towards your target. Maybe there is a way this ability works with arleady existing Earth Discs...";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Hold shift on bendable earth block to charge an earth disc. Release to hurl it.";
+    }
+
 }

@@ -95,9 +95,10 @@ public class EarthShift extends EarthAbility implements AddonAbility {
                 center.getBlock().getType().createBlockData());
 
         for (Block b : GeneralMethods.getBlocksAroundPoint(center, radius)) {
-            if (isEarthbendable(player, b) && GeneralMethods.isSolid(b) && (b.getY() > center.getY() - 2 && b.getY()< center.getY()+2)) {
-                    b.getWorld().spawnParticle(Particle.BLOCK, b.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0,
-                            b.getType().createBlockData());
+            if (isEarthbendable(player, b) && GeneralMethods.isSolid(b)
+                    && (b.getY() > center.getY() - 2 && b.getY() < center.getY() + 2)) {
+                b.getWorld().spawnParticle(Particle.BLOCK, b.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0,
+                        b.getType().createBlockData());
             }
         }
     }
@@ -187,4 +188,15 @@ public class EarthShift extends EarthAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Shifts a section of the earth towards yourself, along with enemies on the path!";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Shift to charge, look at an earthbendable blocks to aim, release to shift the earth toward yourself.";
+    }
+
 }

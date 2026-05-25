@@ -156,7 +156,6 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
         }
     }
 
-
     public void onClick() {
         if (state == State.ARMED && ammo > 0) {
             ammo--;
@@ -215,4 +214,15 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Extracts discs from the earth beneath you, allowing you to manipulate and throw them. Maybe there is a way this ability works with arleady existing Earth Discs...";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Sneak to pull discs from the ground, left-click to throw them.";
+    }
+
 }

@@ -178,7 +178,6 @@ public class AirScythe extends AirAbility implements AddonAbility {
                         double dot = dir.dot(normal);
                         dir.subtract(normal.multiply(2 * dot));
 
-                        // Move to hit position to avoid clipping
                         loc = result.getHitPosition().toLocation(loc.getWorld())
                                 .add(result.getHitPosition().subtract(loc.toVector()).multiply(0.1));
 
@@ -260,4 +259,15 @@ public class AirScythe extends AirAbility implements AddonAbility {
     @Override
     public void stop() {
     }
+
+    @Override
+    public String getDescription() {
+        return "Launches sharp blades of compressed air that slices through enemies.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Left-click to throw the first air scythe. Click again to throw the second. Hold Shift to perform the final blow.";
+    }
+
 }

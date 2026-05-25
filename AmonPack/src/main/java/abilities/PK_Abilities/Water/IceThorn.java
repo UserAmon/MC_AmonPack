@@ -28,27 +28,29 @@ import java.util.Random;
 
 import static Plugin.Methods.getRandom;
 
-
 public class IceThorn extends IceAbility implements AddonAbility {
-	//@Attribute("Cooldown")
+
 	private long Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Cooldown");
-	//@Attribute("Damage")
+
 	private int dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Damage");
-	//@Attribute("ChargeTime")
+
 	private long TimeToCharge = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.ChargeTime");
 	private final long RevertTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.Ice.IceThorn.RevertTime");
-	private final long FreezeDuration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.Ice.IceThorn.FreezeDuration");
-	//@Attribute("Range")
+	private final long FreezeDuration = AmonPackPlugin.plugin.getConfig()
+			.getLong("AmonPack.Water.Ice.IceThorn.FreezeDuration");
+
 	private int range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Range");
-	//@Attribute("Radius")
+
 	private int radius = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IceThorn.Radius");
 	private State AbilityState;
+
 	private enum State {
 		BENDABLE,
 		CHARGING,
 		READY,
 		USED
 	}
+
 	private List<Location> NearBlocks;
 	private Location Projectile;
 	private Vector Direction;
@@ -56,19 +58,22 @@ public class IceThorn extends IceAbility implements AddonAbility {
 	private long interval;
 	private long spikeinterval;
 	private boolean IsPKUse;
+
 	public IceThorn(Player player) {
 		super(player);
 		if (!player.isSneaking()) {
 			if (!this.bPlayer.isOnCooldown(getName()) && this.bPlayer.canBend(this)) {
-				Location TargetedBlock = Methods.getTargetLocation(player,15);
-				if(WaterAbility.isWaterbendable(TargetedBlock.getBlock().getType()) ){
-					interval=0;
+				Location TargetedBlock = Methods.getTargetLocation(player, 15);
+				if (WaterAbility.isWaterbendable(TargetedBlock.getBlock().getType())) {
+					interval = 0;
 					AbilityState = State.BENDABLE;
-					NearBlocks=new ArrayList<>();
+					NearBlocks = new ArrayList<>();
 					NearBlocks.add(TargetedBlock);
-					IsPKUse=true;
+					IsPKUse = true;
 					start();
-				}}}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -80,19 +85,23 @@ public class IceThorn extends IceAbility implements AddonAbility {
 		if (AbilityState == State.BENDABLE) {
 			if (player.isSneaking()) {
 				interval++;
-				if(interval>=3) {
+				if (interval >= 3) {
 					interval = 0;
-					NearBlocks=Methods.BendableBlocksAnimation(NearBlocks,player.getLocation().clone(),Material.WATER,1);
-					if(NearBlocks.isEmpty()){
+					NearBlocks = Methods.BendableBlocksAnimation(NearBlocks, player.getLocation().clone(),
+							Material.WATER, 1);
+					if (NearBlocks.isEmpty()) {
 						AbilityState = State.CHARGING;
-					}}
-			}else{
+					}
+				}
+			} else {
 				bPlayer.addCooldown(this);
 				remove();
 				return;
-			}}
+			}
+		}
 		if (AbilityState == State.CHARGING) {
-			if (bPlayer.getBoundAbility() == null || bPlayer.getBoundAbilityName() == null || !bPlayer.getBoundAbilityName().equalsIgnoreCase(getName())) {
+			if (bPlayer.getBoundAbility() == null || bPlayer.getBoundAbilityName() == null
+					|| !bPlayer.getBoundAbilityName().equalsIgnoreCase(getName())) {
 				bPlayer.addCooldown(this);
 				remove();
 				return;
@@ -104,78 +113,90 @@ public class IceThorn extends IceAbility implements AddonAbility {
 				bPlayer.addCooldown(this);
 				remove();
 				return;
-			}}
+			}
+		}
 		if (AbilityState == State.READY) {
 			origin = player.getLocation();
 			origin.setPitch(0);
 			Direction = origin.getDirection();
 			Projectile = origin.clone();
 			if (player.isSneaking()) {
-				ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.5, 0.5, 0.5, 0.1, Material.ICE.createBlockData());
-				ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.5, 0.5, 0.5, 0.1, Material.SNOW_BLOCK.createBlockData());
+				ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.5, 0.5, 0.5, 0.1,
+						Material.ICE.createBlockData());
+				ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.5, 0.5, 0.5, 0.1,
+						Material.SNOW_BLOCK.createBlockData());
 			} else {
 				AbilityState = State.USED;
 				bPlayer.addCooldown(this);
-			}}
+			}
+		}
 		if (AbilityState == State.USED) {
-			if(IsPKUse){
-				AdvanceThorn(radius,range,5);
-			}else{
-				AdvanceThorn(2,7,3);
+			if (IsPKUse) {
+				AdvanceThorn(radius, range, 5);
+			} else {
+				AdvanceThorn(2, 7, 3);
 			}
 		}
 	}
 
-	private void AdvanceThorn(int customradius, int customrange, int custominterval){
+	private void AdvanceThorn(int customradius, int customrange, int custominterval) {
 		{
 			interval++;
-			if(interval>=2){
+			if (interval >= 2) {
 				spikeinterval++;
-				interval=0;
+				interval = 0;
 				Projectile.add(Direction).multiply(1);
-				if(Projectile.getBlock().getType()!=Material.AIR && Projectile.getBlock().getType()==Material.WATER&& !Projectile.getBlock().getType().isSolid()){
-					Projectile.setY(Projectile.getY()+1);
+				if (Projectile.getBlock().getType() != Material.AIR && Projectile.getBlock().getType() == Material.WATER
+						&& !Projectile.getBlock().getType().isSolid()) {
+					Projectile.setY(Projectile.getY() + 1);
 				}
-				if(Projectile.clone().subtract(0,1,0).getBlock().getType()==Material.AIR){
-					Projectile.setY(Projectile.getY()-1);
+				if (Projectile.clone().subtract(0, 1, 0).getBlock().getType() == Material.AIR) {
+					Projectile.setY(Projectile.getY() - 1);
 				}
 				List<Block> BendableBlocks = new ArrayList<>();
 				for (Block b : GeneralMethods.getBlocksAroundPoint(Projectile, customradius)) {
-					if (b.getY() < Projectile.getY() &&b.getY()>Projectile.getY()-2 && (WaterAbility.isWaterbendable(b.getType())||EarthAbility.isEarthbendable(player,b))) {
+					if (b.getY() < Projectile.getY() && b.getY() > Projectile.getY() - 2
+							&& (WaterAbility.isWaterbendable(b.getType()) || EarthAbility.isEarthbendable(player, b))) {
 						BendableBlocks.add(b);
 						int chance = getRandom(0, 15);
-						if (chance <=  6) {
+						if (chance <= 6) {
 							TempBlock tb2 = new TempBlock(b, Material.SNOW_BLOCK);
 							tb2.setRevertTime(RevertTime);
-						} else if (chance <=  12) {
+						} else if (chance <= 12) {
 							TempBlock tb2 = new TempBlock(b, Material.ICE);
 							tb2.setRevertTime(RevertTime);
-						}else {
-							Methods.spawnFallingBlocks(b.getLocation(),Material.ICE,1,0.75,player);
+						} else {
+							Methods.spawnFallingBlocks(b.getLocation(), Material.ICE, 1, 0.75, player);
 						}
-					}}
-				if(IsPKUse){
-				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(Projectile, customradius)) {
-					if ((entity instanceof LivingEntity)) {
-						if (entity.getUniqueId() != player.getUniqueId()) {
-							if (entity.getLocation().getY() < Projectile.getY()+2) {
-								Methods.FreezeTarget(entity.getLocation(),3,1,3,FreezeDuration,Material.ICE);
-								DamageHandler.damageEntity(entity, dmg, this);
-								Methods.FreezeTarget(Projectile.clone().subtract(0,1,0),3,1,0,FreezeDuration,Material.ICE);
-								remove();
-								break;
-							}}}}}
-				if(spikeinterval>custominterval){
-					spikeinterval=0;
-					Methods.FreezeTarget(Projectile,1,2,4,RevertTime,Material.ICE);
-					Location tempprojectile=Projectile.clone().add(Direction).multiply(1);
-					Methods.spawnFallingBlocks(tempprojectile,Material.ICE,6,1.2,player);
+					}
 				}
-				Block stop = Projectile.clone().add(0,2,0).getBlock();
-				if(!WaterAbility.isWaterbendable(stop.getType()) && !stop.getType().isAir()){
+				if (IsPKUse) {
+					for (Entity entity : GeneralMethods.getEntitiesAroundPoint(Projectile, customradius)) {
+						if ((entity instanceof LivingEntity)) {
+							if (entity.getUniqueId() != player.getUniqueId()) {
+								if (entity.getLocation().getY() < Projectile.getY() + 2) {
+									Methods.FreezeTarget(entity.getLocation(), 3, 1, 3, FreezeDuration, Material.ICE);
+									DamageHandler.damageEntity(entity, dmg, this);
+									Methods.FreezeTarget(Projectile.clone().subtract(0, 1, 0), 3, 1, 0, FreezeDuration,
+											Material.ICE);
+									remove();
+									break;
+								}
+							}
+						}
+					}
+				}
+				if (spikeinterval > custominterval) {
+					spikeinterval = 0;
+					Methods.FreezeTarget(Projectile, 1, 2, 4, RevertTime, Material.ICE);
+					Location tempprojectile = Projectile.clone().add(Direction).multiply(1);
+					Methods.spawnFallingBlocks(tempprojectile, Material.ICE, 6, 1.2, player);
+				}
+				Block stop = Projectile.clone().add(0, 2, 0).getBlock();
+				if (!WaterAbility.isWaterbendable(stop.getType()) && !stop.getType().isAir()) {
 					remove();
 				}
-				if (Projectile.distance(origin) > customrange||BendableBlocks.size()<2){
+				if (Projectile.distance(origin) > customrange || BendableBlocks.size() < 2) {
 					remove();
 				}
 			}
@@ -186,81 +207,95 @@ public class IceThorn extends IceAbility implements AddonAbility {
 	public long getCooldown() {
 		return Cooldown;
 	}
+
 	@Override
 	public Location getLocation() {
 		return null;
 	}
+
 	@Override
 	public String getName() {
 		return "IceThorn";
 	}
-	@Override
-	public String getDescription() {
-		return "";
-	}
-	@Override
-	public String getInstructions() {
-		return "Hold Shift near WaterBendable blocks to charge, then relase it";
-	}
+
 	@Override
 	public String getAuthor() {
 		return "AmonPack";
 	}
+
 	@Override
 	public String getVersion() {
 		return "1.0";
 	}
+
 	@Override
 	public boolean isHarmlessAbility() {
 		return false;
 	}
+
 	@Override
 	public boolean isSneakAbility() {
 		return true;
 	}
+
 	@Override
 	public void load() {
 	}
+
 	@Override
 	public void stop() {
 		super.remove();
 	}
 
-
 	public IceThorn(Player player, Entity victim, int use) {
 		super(player);
-			switch (use){
-				case 0:
-					if (!bPlayer.isOnCooldown("Ice_Thorn_Ability_Aspect")) {
-						interval = 0;
-						origin = player.getLocation().clone();
-						origin.setPitch(0);
-						Direction = origin.getDirection();
-						Projectile = origin.clone();
-						AbilityState = State.USED;
-						IsPKUse = false;
-						start();
-						bPlayer.addCooldown("Ice_Thorn_Ability_Aspect",5000);
-					}
+		switch (use) {
+			case 0:
+				if (!bPlayer.isOnCooldown("Ice_Thorn_Ability_Aspect")) {
+					interval = 0;
+					origin = player.getLocation().clone();
+					origin.setPitch(0);
+					Direction = origin.getDirection();
+					Projectile = origin.clone();
+					AbilityState = State.USED;
+					IsPKUse = false;
+					start();
+					bPlayer.addCooldown("Ice_Thorn_Ability_Aspect", 5000);
+				}
+				break;
+			case 1:
+				if (!bPlayer.isOnCooldown("Ice_Encase_Aspect")) {
+					Methods.FreezeTarget(victim.getLocation(), 2, 1, 2, 3000, Material.ICE);
+					bPlayer.addCooldown("Ice_Encase_Aspect", 5000);
 					break;
-				case 1:
-					if (!bPlayer.isOnCooldown("Ice_Encase_Aspect")) {
-						Methods.FreezeTarget(victim.getLocation(),2,1,2,3000,Material.ICE);
-						bPlayer.addCooldown("Ice_Encase_Aspect",5000);
-						break;
-					}
-				case 2:
-					if (!bPlayer.isOnCooldown("Ice_Snow_Aspect")) {
-						player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,60,2,false,false));
-						((LivingEntity)victim).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,60,2,false,false));
-						for (Block b : GeneralMethods.getBlocksAroundPoint(victim.getLocation(), 2)) {
-							if(b.getLocation().getY()<victim.getLocation().getY() && (WaterAbility.isWaterbendable(b.getType())||EarthAbility.isEarthbendable(player,b))){
-								TempBlock tb2 = new TempBlock(b, Material.SNOW_BLOCK);
-								tb2.setRevertTime(5000);
-							}
+				}
+			case 2:
+				if (!bPlayer.isOnCooldown("Ice_Snow_Aspect")) {
+					player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2, false, false));
+					((LivingEntity) victim)
+							.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2, false, false));
+					for (Block b : GeneralMethods.getBlocksAroundPoint(victim.getLocation(), 2)) {
+						if (b.getLocation().getY() < victim.getLocation().getY()
+								&& (WaterAbility.isWaterbendable(b.getType())
+										|| EarthAbility.isEarthbendable(player, b))) {
+							TempBlock tb2 = new TempBlock(b, Material.SNOW_BLOCK);
+							tb2.setRevertTime(5000);
 						}
-						bPlayer.addCooldown("Ice_Snow_Aspect",5000);
-						break;
 					}
-		}}
+					bPlayer.addCooldown("Ice_Snow_Aspect", 5000);
+					break;
+				}
+		}
+	}
+
+	@Override
+	public String getDescription() {
+		return "Summons sharp ice thorns from the ground or freezes water to impale targets.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Charge ability by sneaking while looking at water-bendable sources, release shift to summon the ice thorn.";
+	}
+
 }

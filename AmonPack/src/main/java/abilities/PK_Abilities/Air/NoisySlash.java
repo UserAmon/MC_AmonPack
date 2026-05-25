@@ -46,7 +46,7 @@ public class NoisySlash extends SoundAbility implements AddonAbility {
 		ParticlesMain.add(new BetterParticles(2, ParticleEffect.SPELL, 0.25, 0.05, 0.1));
 		ParticlesMain.add(new BetterParticles(1, ParticleEffect.NOTE, 0.25, 0.01, 0.1));
 
-		// Jasnoszary SPELL_MOB_AMBIENT (RGB: 192,192,192)
+		
 		ParticlesMain.add(
 				new BetterParticles(6, ParticleEffect.SPELL_MOB_AMBIENT, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192)));
 
@@ -122,16 +122,6 @@ public class NoisySlash extends SoundAbility implements AddonAbility {
 	}
 
 	@Override
-	public String getDescription() {
-		return "";
-	}
-
-	@Override
-	public String getInstructions() {
-		return "Left-Click";
-	}
-
-	@Override
 	public String getAuthor() {
 		return "AmonPack";
 	}
@@ -159,4 +149,15 @@ public class NoisySlash extends SoundAbility implements AddonAbility {
 	public void stop() {
 		super.remove();
 	}
+
+	@Override
+	public String getDescription() {
+		return "Slashes the target with a highly concentrated wave of loud sound, causing deafening damage.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Left-click to perform a noisy slash.";
+	}
+
 }

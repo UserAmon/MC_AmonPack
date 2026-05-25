@@ -47,7 +47,6 @@ public class TideLock extends WaterAbility implements AddonAbility {
     private long markStartTime;
     private long lockStartTime;
 
-    // Projectile Variables
     private int slot;
     private Location projectileLoc;
     private Vector projectileDir;
@@ -106,7 +105,7 @@ public class TideLock extends WaterAbility implements AddonAbility {
                 } else {
                     waterRing = Methods.BendableBlocksAnimation(waterRing, player.getLocation(), Material.WATER, 1);
                     if (waterRing.isEmpty()) {
-                        Animation(player.getEyeLocation(),2.5, Material.WATER);
+                        Animation(player.getEyeLocation(), 2.5, Material.WATER);
                     }
                 }
                 break;
@@ -175,7 +174,7 @@ public class TideLock extends WaterAbility implements AddonAbility {
                     }
                     player.getWorld().spawnParticle(Particle.DRIPPING_WATER, markedTarget.getLocation(), 3,
                             0.2, 0.2, 0.2, 0);
-                    Animation(markedTarget.getEyeLocation(),2, Material.WATER);
+                    Animation(markedTarget.getEyeLocation(), 2, Material.WATER);
                     markedTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 2, false, false));
                 } else {
                     remove();
@@ -187,7 +186,7 @@ public class TideLock extends WaterAbility implements AddonAbility {
                     remove();
                     return;
                 }
-                if(!player.isSneaking()){
+                if (!player.isSneaking()) {
                     remove();
                     return;
                 }
@@ -198,8 +197,9 @@ public class TideLock extends WaterAbility implements AddonAbility {
                 if (Math.random() < 0.25) {
                     Methods.spawnFallingBlocks(markedTarget.getLocation(), Material.ICE, 1, 0.5, null);
                 }
-                int amplifier = (int) (1+((System.currentTimeMillis() - lockStartTime) / 1000));
-                    Animation(markedTarget.getEyeLocation(),(1.25+((double) lockDuration /1000))-amplifier, Material.ICE);
+                int amplifier = (int) (1 + ((System.currentTimeMillis() - lockStartTime) / 1000));
+                Animation(markedTarget.getEyeLocation(), (1.25 + ((double) lockDuration / 1000)) - amplifier,
+                        Material.ICE);
                 markedTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, amplifier, false, false));
                 for (Block b : GeneralMethods.getBlocksAroundPoint(markedTarget.getLocation(), 3)) {
                     if (isWater(b)) {
@@ -210,7 +210,7 @@ public class TideLock extends WaterAbility implements AddonAbility {
         }
     }
 
-    private void Animation(Location location, double radius, Material mat){
+    private void Animation(Location location, double radius, Material mat) {
         {
             double time = System.currentTimeMillis() / 1000.0;
 
@@ -258,7 +258,7 @@ public class TideLock extends WaterAbility implements AddonAbility {
 
             Methods.FreezeTarget(markedTarget.getLocation(), 1, 2, 2, 2000, Material.ICE);
 
-            markedTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 5, false, false)); // Freeze
+            markedTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 5, false, false));
             player.getWorld().spawnParticle(Particle.SNOWFLAKE, markedTarget.getLocation(), 50, 1, 1, 1, 0.5);
             player.playSound(markedTarget.getLocation(), Sound.BLOCK_GLASS_BREAK, 1f, 1f);
         }
@@ -313,4 +313,15 @@ public class TideLock extends WaterAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Launches a freezing projectile that marks a target, eventually locking them in solid ice.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Sneak near water source to charge. Relase and launch water torrent and mark your enemies. Sneak to lock them in solid ice.";
+    }
+
 }

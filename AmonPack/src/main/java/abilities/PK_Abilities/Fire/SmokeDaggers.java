@@ -1,4 +1,5 @@
 package Abilities.PK_Abilities.Fire;
+
 import Abilities.Util_Objects.AbilityProjectile;
 import Abilities.Util_Objects.BetterParticles;
 import Abilities.Util_Objects.SmokeSource;
@@ -24,7 +25,6 @@ import Abilities.Bending.SmokeAbility;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 	private int Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Cooldown");
 	private int dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Dmg");
@@ -33,9 +33,11 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 	private int slowdur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SlowDuration");
 	private int poisonpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.PoisonPower");
 	private int poisondur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.PoisonDuration");
-	private int blinddur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.BlindnessDuration");
+	private int blinddur = AmonPackPlugin.plugin.getConfig()
+			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.BlindnessDuration");
 	private int zonerange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SmokeZoneRange");
-	private int zonedur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SmokeZoneDuration");
+	private int zonedur = AmonPackPlugin.plugin.getConfig()
+			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.SmokeZoneDuration");
 	Location origin;
 	Location location;
 	Location location2;
@@ -45,6 +47,7 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 	private List<AbilityProjectile> Projectiles;
 	private int interval;
 	Location loc2;
+
 	public SmokeDaggers(Player player) {
 		super(player);
 		if (bPlayer.isOnCooldown(this)) {
@@ -53,158 +56,107 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 		if (!bPlayer.canBend(this)) {
 			return;
 		}
-		origin = player.getLocation().clone().add(0,1.3,0);
-		Projectiles=new ArrayList<>();
-		interval=0;
+		origin = player.getLocation().clone().add(0, 1.3, 0);
+		Projectiles = new ArrayList<>();
+		interval = 0;
 		List<BetterParticles> Particles = new ArrayList<>();
-		Particles.add(new BetterParticles(8,ParticleEffect.SMOKE_NORMAL,0.3,0.01,0.15));
+		Particles.add(new BetterParticles(8, ParticleEffect.SMOKE_NORMAL, 0.3, 0.01, 0.15));
 		Location Projectile = origin.clone();
 		Vector Dir = Projectile.clone().getDirection();
-		Location tloc1 = new Location(player.getWorld(), player.getLocation().getX(), player.getLocation().getY()+1, player.getLocation().getZ(), (player.getLocation().getYaw() - 15), player.getLocation().getPitch());
+		Location tloc1 = new Location(player.getWorld(), player.getLocation().getX(), player.getLocation().getY() + 1,
+				player.getLocation().getZ(), (player.getLocation().getYaw() - 15), player.getLocation().getPitch());
 		Vector Loc1Dir = tloc1.clone().getDirection();
-		Location tloc2 = new Location(player.getWorld(), player.getLocation().getX(), player.getLocation().getY()+1, player.getLocation().getZ(), (player.getLocation().getYaw() + 15), player.getLocation().getPitch());
+		Location tloc2 = new Location(player.getWorld(), player.getLocation().getX(), player.getLocation().getY() + 1,
+				player.getLocation().getZ(), (player.getLocation().getYaw() + 15), player.getLocation().getPitch());
 		Vector Loc2Dir = tloc2.clone().getDirection();
-		Projectiles.add(new AbilityProjectile(Loc1Dir,tloc1,origin,Particles,1));
-		Projectiles.add(new AbilityProjectile(Loc2Dir,tloc2,origin,Particles,1));
-		Projectiles.add(new AbilityProjectile(Dir,Projectile,origin,Particles,1));
+		Projectiles.add(new AbilityProjectile(Loc1Dir, tloc1, origin, Particles, 1));
+		Projectiles.add(new AbilityProjectile(Loc2Dir, tloc2, origin, Particles, 1));
+		Projectiles.add(new AbilityProjectile(Dir, Projectile, origin, Particles, 1));
 		bPlayer.addCooldown(this);
 		start();
 	}
+
 	@Override
 	public void progress() {
 		if (player.isDead() || !player.isOnline()) {
 			remove();
 			return;
 		}
-			for (AbilityProjectile Projectile : Projectiles) {
-				Location location = Projectile.Advance().clone();
-				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1)) {
-					if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
-						DamageHandler.damageEntity(entity, 1, this);
-						SmokeSource SourceEnd = new SmokeSource(location.clone().add(0,1,0), 120, 3, 1,player);
-						Projectiles.remove(Projectile);
-						return;
-					}
-				}
-				if (location.distance(origin) > 20 || !location.clone().add(0,0.8,0).getBlock().getType().isAir() || location.clone().add(0,0.8,0).getBlock().getType().isSolid()) {
-					SmokeSource SourceEnd = new SmokeSource(location.clone().add(0,1,0), 120, 3, 1,player);
+		for (AbilityProjectile Projectile : Projectiles) {
+			Location location = Projectile.Advance().clone();
+			for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1)) {
+				if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
+					DamageHandler.damageEntity(entity, 1, this);
+					SmokeSource SourceEnd = new SmokeSource(location.clone().add(0, 1, 0), 120, 3, 1, player);
 					Projectiles.remove(Projectile);
 					return;
 				}
 			}
-		if(Projectiles.isEmpty()){
+			if (location.distance(origin) > 20 || !location.clone().add(0, 0.8, 0).getBlock().getType().isAir()
+					|| location.clone().add(0, 0.8, 0).getBlock().getType().isSolid()) {
+				SmokeSource SourceEnd = new SmokeSource(location.clone().add(0, 1, 0), 120, 3, 1, player);
+				Projectiles.remove(Projectile);
+				return;
+			}
+		}
+		if (Projectiles.isEmpty()) {
 			remove();
 		}
 
-
-/*
-		if (!GeneralMethods.isSolid(location.getBlock()) && origin.distance(location) < (range)) {
-			location.add(direction.multiply(1));
-			location.add(direction.multiply(1));
-			ParticleEffect.SMOKE_NORMAL.display(location, 6, 0.3, 0.3, 0.3, 0.1);
-	   		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1.5)) {
-	   			if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
-	   			DamageHandler.damageEntity(entity, dmg, this);
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slowdur, slowpower));
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
-	   			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
-					SmokeSource Source = new SmokeSource(location,60,2,1,player);
-	   			location.zero();
-	   	    	}}
-			for (Block b : GeneralMethods.getBlocksAroundPoint(location, 1.5)) {
-				if (b.getType() == Material.FIRE) {
-		   			//Methods.CreateSmokeZone(player,location.clone(), this, zonerange, zonedur);
-					SmokeSource Source = new SmokeSource(location,60,2,1,player);
-				}}}
-		if (!GeneralMethods.isSolid(location2.getBlock()) && origin.distance(location2) < (range)) {
-			location2.add(loc1.getDirection().multiply(1));
-			location2.add(loc1.getDirection().multiply(1));
-			ParticleEffect.SMOKE_NORMAL.display(location2, 6, 0.3, 0.3, 0.3, 0.1);
-	   		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location2, 1.5)) {
-	   			if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
-	   			DamageHandler.damageEntity(entity, dmg, this);
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slowdur, slowpower));
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
-	   			//Methods.CreateSmokeZone(player,location2.clone(), this, zonerange, zonedur);
-					SmokeSource Source = new SmokeSource(location2,60,2,1,player);
-	   			location2.zero();
-	   	    	}}
-			for (Block b : GeneralMethods.getBlocksAroundPoint(location2, 1.5)) {
-				if (b.getType() == Material.FIRE) {
-				//Methods.CreateSmokeZone(player,location2.clone(), this, zonerange, zonedur);
-					SmokeSource Source = new SmokeSource(location2,60,2,1,player);
-				}}}
-			if (!GeneralMethods.isSolid(location3.getBlock()) && origin.distance(location3) < (range)) {
-			location3.add(loc2.getDirection().multiply(1));
-			location3.add(loc2.getDirection().multiply(1));
-				ParticleEffect.SMOKE_NORMAL.display(location3, 6, 0.3, 0.3, 0.3, 0.1);
-	   		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location3, 1.5)) {
-	   			if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
-	   			DamageHandler.damageEntity(entity, dmg, this);
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slowdur, slowpower));
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisondur, poisonpower));
-	   			((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blinddur, 1));
-	   			//Methods.CreateSmokeZone(player,location3.clone(), this, zonerange, zonedur);
-					SmokeSource Source = new SmokeSource(location3,60,2,1,player);
-	   			location3.zero();
-	   	    	}}
-			for (Block b : GeneralMethods.getBlocksAroundPoint(location3, 1.5)) {
-				if (b.getType() == Material.FIRE) {
-				//Methods.CreateSmokeZone(player,location3.clone(), this, zonerange, zonedur);
-					SmokeSource Source = new SmokeSource(location3,60,2,1,player);
-				}}}
-		if ((GeneralMethods.isSolid(location.getBlock()) || origin.distance(location) > (range)) &&
-		(GeneralMethods.isSolid(location2.getBlock()) || origin.distance(location2) > (range)) &&
-		(GeneralMethods.isSolid(location3.getBlock()) || origin.distance(location3) > (range))) {
-			SmokeSource Source = new SmokeSource(location,60,2,1,player);
-			remove();
-   			return;
-		}
-		*/
 	}
-	
+
 	@Override
 	public long getCooldown() {
 		return Cooldown;
 	}
+
 	@Override
 	public Location getLocation() {
 		return null;
 	}
+
 	@Override
 	public String getName() {
 		return "SmokeDaggers";
 	}
-	@Override
-	public String getDescription() {
-		return "";
-	}
-	@Override
-	public String getInstructions() {
-		return "";
-	}
+
 	@Override
 	public String getAuthor() {
 		return "AmonPack";
 	}
+
 	@Override
 	public String getVersion() {
 		return "1.0";
 	}
+
 	@Override
 	public boolean isHarmlessAbility() {
 		return false;
 	}
+
 	@Override
 	public boolean isSneakAbility() {
 		return false;
 	}
+
 	@Override
-	public void load() {}
+	public void load() {
+	}
+
 	@Override
 	public void stop() {
 		super.remove();
 	}
+
+	@Override
+	public String getDescription() {
+		return "This ability creates smoke clouds! Forms and throws deadly daggers made of solid smoke that poison and blind your targets.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Left-click to throw smoke daggers.";
+	}
+
 }
