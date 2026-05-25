@@ -1,4 +1,4 @@
-package abilities.Util_Objects;
+package Abilities.Util_Objects;
 
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import org.bukkit.Location;

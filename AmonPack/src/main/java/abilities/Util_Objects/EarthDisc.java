@@ -1,4 +1,4 @@
-package abilities.Util_Objects;
+package Abilities.Util_Objects;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,7 +18,7 @@ import org.bukkit.util.Vector;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.util.DamageHandler;
 
-import methods_plugins.AmonPackPlugin;
+import Plugin.AmonPackPlugin;
 
 public class EarthDisc {
 

@@ -1,0 +1,194 @@
+package Abilities.PK_Abilities.Air;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.projectkorra.projectkorra.util.ParticleEffect;
+import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+import com.projectkorra.projectkorra.GeneralMethods;
+import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.AirAbility;
+import com.projectkorra.projectkorra.util.DamageHandler;
+
+import Plugin.AmonPackPlugin;
+
+public class GustShield extends AirAbility implements AddonAbility {
+
+    private enum State {
+        SHIELDING, LAUNCHED
+    }
+
+    private State state;
+    private long startTime;
+    private long duration = 2000;
+    private long cooldown = 6000;
+    private double speed = 0.7;
+    private double range = 10;
+    private double pushFactor = 1;
+
+    private Location shieldLoc;
+    private Vector shieldDir;
+
+    public GustShield(Player player) {
+        super(player);
+        if (bPlayer.isOnCooldown(this)) {
+            return;
+        }
+        if (!bPlayer.canBend(this)) {
+            return;
+        }
+
+        bPlayer.addCooldown(this);
+        this.state = State.SHIELDING;
+        this.startTime = System.currentTimeMillis();
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 3, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 100, 1, false, false));
+        start();
+    }
+
+    @Override
+    public void progress() {
+        if (player.isDead() || !player.isOnline()) {
+            remove();
+            return;
+        }
+
+        if (!bPlayer.getBoundAbilityName().equals(getName())) {
+            remove();
+            return;
+        }
+
+        switch (state) {
+            case SHIELDING:
+                if (System.currentTimeMillis() - startTime > duration) {
+                    remove();
+                    return;
+                }
+
+                Location eye = player.getEyeLocation();
+                Vector dir = eye.getDirection().normalize();
+                shieldLoc = eye.clone().add(dir.clone().multiply(1.5));
+                shieldDir = dir;
+
+                displayParticles(shieldLoc, dir);
+                break;
+
+            case LAUNCHED:
+                if (shieldLoc == null) {
+                    remove();
+                    return;
+                }
+
+                shieldLoc.add(shieldDir.clone().multiply(speed));
+                displayParticles(shieldLoc, shieldDir);
+
+                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(shieldLoc, 1.25)) {
+                    if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
+                        Vector knockback = shieldDir.clone().multiply(pushFactor).setY(0.5);
+                        entity.setVelocity(knockback);
+                        DamageHandler.damageEntity(entity, 2, this);
+                    }
+                }
+                if (shieldLoc.getBlock().getType().isSolid()
+                        || shieldLoc.distanceSquared(player.getEyeLocation()) > range * range) {
+                    remove();
+                    return;
+                }
+                break;
+        }
+    }
+
+    private void displayParticles(Location center, Vector dir) {
+        double time = System.currentTimeMillis() / 1000.0;
+        double radius = 1.0;
+
+        // Calculate vertical rotation
+        // We need a vector perpendicular to direction (right) and up
+        Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+        Vector up = right.clone().crossProduct(dir).normalize();
+
+        // Angle based on time
+        double angle1 = time * 4;
+
+        // Point 1
+        double x1 = radius * Math.cos(angle1);
+        double y1 = radius * Math.sin(angle1);
+        Vector offset1 = right.clone().multiply(x1).add(up.clone().multiply(y1));
+
+        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.GRAY, 0.75f);
+        player.getWorld().spawnParticle(Particle.DUST, center.clone().add(offset1), 1, 0.1, 0.1, 0.1, 0, dustOptions);
+
+        // Point 2 (Opposite)
+        double angle2 = angle1 + Math.PI;
+        double x2 = radius * Math.cos(angle2);
+        double y2 = radius * Math.sin(angle2);
+        Vector offset2 = right.clone().multiply(x2).add(up.clone().multiply(y2));
+
+        player.getWorld().spawnParticle(Particle.DUST, center.clone().add(offset2), 1, 0.1, 0.1, 0.1, 0,
+                new Particle.DustOptions(Color.WHITE, 0.75f));
+    }
+
+    public void onHit() {
+        if (state == State.SHIELDING) {
+            state = State.LAUNCHED;
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, false, false));
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1f, 2f);
+            player.removePotionEffect(PotionEffectType.SLOWNESS);
+            player.removePotionEffect(PotionEffectType.DARKNESS);
+        }
+    }
+
+    @Override
+    public long getCooldown() {
+        return cooldown;
+    }
+
+    @Override
+    public Location getLocation() {
+        return player.getLocation();
+    }
+
+    @Override
+    public String getName() {
+        return "GustShield";
+    }
+
+    @Override
+    public boolean isHarmlessAbility() {
+        return false;
+    }
+
+    @Override
+    public boolean isSneakAbility() {
+        return false;
+    }
+
+    @Override
+    public String getAuthor() {
+        return "AmonPack";
+    }
+
+    @Override
+    public String getVersion() {
+        return "1.0";
+    }
+
+    @Override
+    public void load() {
+    }
+
+    @Override
+    public void stop() {
+    }
+}

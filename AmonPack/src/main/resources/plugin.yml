@@ -1,6 +1,6 @@
 name: AmonPack
 version: '${project.version}'
-main: methods_plugins.AmonPackPlugin
+main: Plugin.AmonPackPlugin
 api-version: 1.20
 authors: [ Amon ]
 depend: ['ProjectKorra']
