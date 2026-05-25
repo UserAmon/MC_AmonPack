@@ -1,0 +1,12 @@
+/target/
+/.idea/
+/out/
+*.iml
+*.class
+*.jar
+*.war
+*.log
+*.sql
+.DS_Store
+*.csv
+*.md
