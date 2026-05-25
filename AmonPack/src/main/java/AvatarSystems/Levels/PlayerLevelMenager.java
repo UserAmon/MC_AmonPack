@@ -27,7 +27,6 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static Mechanics.PVP.PvPMethods.sendTitleMessage;
 import static methods_plugins.AmonPackPlugin.ExecuteQuery;
 
 public class PlayerLevelMenager {
@@ -354,7 +353,7 @@ public class PlayerLevelMenager {
                     expPool -= reqExp;
                 } else {
                     if (expPool + points >= reqExp) {
-                        sendTitleMessage(player,
+                        player.sendTitle(
                                 ChatColor.GREEN + "Osiągnąłeś poziom " + (actualLevel + 1) + " " + skill.getType()
                                         + "!",
                                 ChatColor.YELLOW + "Odbierz swoje nagrody!", 20, 80, 20);

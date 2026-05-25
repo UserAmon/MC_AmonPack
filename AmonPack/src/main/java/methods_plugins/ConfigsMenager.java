@@ -3,7 +3,6 @@ package methods_plugins;
 import AvatarSystems.Crafting.CraftingMenager;
 import AvatarSystems.Gathering.ForestMenager;
 import AvatarSystems.Gathering.MiningMenager;
-import AvatarSystems.Perks.PerksMenager;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -32,7 +31,6 @@ public class ConfigsMenager {
     private File boss_File;
 
     public CraftingMenager craftingMenager;
-    public PerksMenager perks_menager;
     public MiningMenager mining_menager;
     public ForestMenager forest_menager;
     public TownEscapeMenager townEscapeMenager;
