@@ -10,8 +10,6 @@ import AvatarSystems.Levels.PlayerBendingBranch;
 import AvatarSystems.Levels.PlayerLevelMenager;
 import AvatarSystems.Util_Objects.LevelSkill;
 import AvatarSystems.Util_Objects.PlayerLevel;
-import AvatarSystems.TownEscape.TownEscapeMenager;
-import AvatarSystems.TownEscape.Objects.TownE_Session;
 import UtilObjects.Skills.SkillTree_Ability;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.Element;
@@ -443,23 +441,6 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
-        if (TownEscapeMenager.getInstance() != null) {
-            TownE_Session session = TownEscapeMenager.getInstance().getSessionByPlayer(event.getPlayer());
-            if (session != null) {
-                session.removePlayer(event.getPlayer());
-            }
-        }/*
-                for (ItemStack leftover : leftover.values()) {
-                    pla.getWorld().dropItemNaturally(player.getLocation(), leftover);
-                }
-            for(ItemStack item:player.getInventory().getArmorContents()){
-        if (item != null && item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
-            if (CraftingMenager.IsArmor(item) || CraftingMenager.IsWeapon(item)) {
-                CraftingMenager.getItemMoldByItem(item).ExecuteOnKillingByPlayer(event.getEntity(), item,
-                        player, drops, event.getDroppedExp());
-            }
-        }
-    }*/
     }
 
 

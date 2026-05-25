@@ -20,5 +20,3 @@ commands:
     usage: /<command>
   bounties:
     usage: /<command>
-  Escape:
-    usage: /<command>

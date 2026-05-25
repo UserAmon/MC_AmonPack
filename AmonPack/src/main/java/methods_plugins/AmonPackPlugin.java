@@ -134,7 +134,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		// this.getCommand("PvP").setExecutor(new Commands());
 		this.getCommand("Reload").setExecutor(new Commands());
 		this.getCommand("Bounties").setExecutor(new Commands());
-		this.getCommand("Escape").setExecutor(new Commands());
 		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
 		this.getServer().getPluginManager().registerEvents(bountiesMenager, this);
@@ -161,9 +160,6 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 			if (bountiesMenager != null) {
 				bountiesMenager.SaveAll();
-			}
-			if (AvatarSystems.TownEscape.TownEscapeMenager.getInstance() != null) {
-				AvatarSystems.TownEscape.TownEscapeMenager.getInstance().shutdown();
 			}
 			SaveConfigs();
 			if (sqlite != null) {

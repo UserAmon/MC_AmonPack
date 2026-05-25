@@ -84,15 +84,6 @@ public class Commands implements CommandExecutor {
             case "reload":
                 AmonPackPlugin.reloadAllConfigs();
                 break;
-            case "escape":
-                if (sender instanceof Player p) {
-                    if (args.length > 0) {
-                        AvatarSystems.TownEscape.TownEscapeMenager.getInstance().StartGame(p, args[0]);
-                    } else {
-                        p.sendMessage(ChatColor.RED + "Użycie: /escape <NazwaMapy>");
-                    }
-                }
-                break;
             case "bounties":
                 if (sender instanceof Player) {
                     if (args.length > 0 && args[0].equalsIgnoreCase("reset")) {
