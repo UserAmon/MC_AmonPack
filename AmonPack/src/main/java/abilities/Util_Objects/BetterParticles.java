@@ -29,9 +29,16 @@ public class BetterParticles {
     }
 
     public void Display(Location location) {
-        if (effect == ParticleEffect.SPELL_MOB ||effect == ParticleEffect.REDSTONE || effect == ParticleEffect.SPELL_MOB_AMBIENT || effect == ParticleEffect.SPELL|| effect == ParticleEffect.NOTE) {
-            effect.display(location, amount, range, Yrange, range, speed,Color.fromRGB(192,192,192));
-        }else{
+        if (effect == ParticleEffect.SPELL_MOB || effect == ParticleEffect.SPELL_MOB_AMBIENT || effect == ParticleEffect.SPELL) {
+            Particle.DustOptions dustGray = new Particle.DustOptions(Color.GRAY, 0.75f);
+            location.getWorld().spawnParticle(Particle.DUST, location, amount, range, Yrange, range, 0, dustGray);
+            if (effect == ParticleEffect.SPELL_MOB_AMBIENT) {
+                Particle.DustOptions dustWhite = new Particle.DustOptions(Color.WHITE, 0.75f);
+                location.getWorld().spawnParticle(Particle.DUST, location, amount, range, Yrange, range, 0, dustWhite);
+            }
+        } else if (effect == ParticleEffect.REDSTONE || effect == ParticleEffect.NOTE) {
+            effect.display(location, amount, range, Yrange, range, speed, Color.fromRGB(192, 192, 192));
+        } else {
             effect.display(location, amount, range, Yrange, range, speed);
         }
     }

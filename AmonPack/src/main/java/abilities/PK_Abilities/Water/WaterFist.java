@@ -6,8 +6,8 @@ import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
-import Abilities.Util_Objects.BetterParticles;
 import Plugin.AmonPackPlugin;
+import Plugin.Methods;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -17,6 +17,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 public class WaterFist extends WaterAbility implements AddonAbility {
@@ -29,6 +30,13 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 	private int clicksUsed = 0;
 	private double speed = 0.8;
 
+	// Reka: startuje 1 blok z boku (right), 1 blok do przodu, na wys. ramienia
+	// Segmenty: od 1.0 do 4.0 (4 bloki dlugosci)
+	private static final double HAND_FORWARD_OFFSET = 0.0; // przesuniecie poczatku reki od gracza
+	private static final double HAND_RIGHT_OFFSET    = 1.5; // przesuniecie boczne
+	private static final double HAND_HEIGHT          = 1.05; // wysokosc reki
+	private static final double[] HAND_SEGMENTS      = {1.0, 1.6, 2.2, 2.8}; // 4 segmenty
+
 	public WaterFist(Player player) {
 		super(player);
 		if (bPlayer.isOnCooldown(this)) {
@@ -39,28 +47,14 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 		}
 
 		this.slot = player.getInventory().getHeldItemSlot();
-		sourceLoc = findWaterSource(player.getLocation(), 20);
+		sourceLoc = Methods.findWaterSource(player, 20);
 		if (sourceLoc == null) {
 			return;
 		}
 
 		currentWaterLoc = sourceLoc.clone();
-		state = 1;
+		state = 0;
 		start();
-	}
-
-	private Location findWaterSource(Location center, int radius) {
-		for (int x = -radius; x <= radius; x++) {
-			for (int y = -radius; y <= radius; y++) {
-				for (int z = -radius; z <= radius; z++) {
-					Block b = center.clone().add(x, y, z).getBlock();
-					if (WaterAbility.isWaterbendable(b.getType()) || WaterAbility.isWater(b.getType())) {
-						return b.getLocation().add(0.5, 0.5, 0.5);
-					}
-				}
-			}
-		}
-		return null;
 	}
 
 	@Override
@@ -75,16 +69,23 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 			return;
 		}
 
-		if (state == 1) {
+		if (state == 0) {
+			if (player.isSneaking()) {
+				state = 1;
+			} else {
+				remove();
+				return;
+			}
+		} else if (state == 1) {
 			if (!player.isSneaking()) {
 				remove();
 				return;
 			}
 
-			Location handLoc = getHandLocation();
+			Location handLoc = getHandAnchor();
 			Vector dir = handLoc.toVector().subtract(currentWaterLoc.toVector());
 			double dist = dir.length();
-			
+
 			if (dist < 1.5) {
 				state = 2;
 				chargeStartTime = System.currentTimeMillis();
@@ -103,42 +104,38 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 				remove();
 				return;
 			}
-
-			renderWaterHand();
+			renderWaterHand(HAND_SEGMENTS);
 		}
 	}
 
-	private Location getHandLocation() {
-		Location hand = player.getLocation().clone().add(0, 1.1, 0);
-		Vector right = player.getLocation().getDirection().clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(0.35);
-		return hand.add(right);
+	/** Punkt kotwicy reki - 1 blok z boku i 1 blok do przodu od gracza */
+	private Location getHandAnchor() {
+		Location base = player.getLocation().clone().add(0, HAND_HEIGHT, 0);
+		Vector forward = player.getLocation().getDirection().clone().setY(0).normalize();
+		Vector right   = forward.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+		return base.add(forward.multiply(HAND_FORWARD_OFFSET)).add(right.multiply(HAND_RIGHT_OFFSET));
 	}
 
-	private void renderWaterHand() {
-		Location handLoc = getHandLocation();
-		Vector viewDir = player.getLocation().getDirection().normalize();
-		
-		Location p1 = handLoc.clone().add(viewDir.clone().multiply(0.4));
-		Location p2 = handLoc.clone().add(viewDir.clone().multiply(0.8));
-		Location p3 = handLoc.clone().add(viewDir.clone().multiply(1.2));
+	/** Renderuje segmenty reki wzdluz kierunku patrzenia gracza */
+	private void renderWaterHand(double[] segments) {
+		Location anchor = getHandAnchor();
+		Vector viewDir  = player.getLocation().getDirection().clone().setY(0).normalize();
+		Vector rightVec = viewDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+		viewDir.add(rightVec.multiply(0.12)).normalize(); // Lekkie oddalenie od celownika (outward)
 
-		spawnWaterBlock(p1.getBlock());
-		spawnWaterBlock(p2.getBlock());
-		spawnWaterBlock(p3.getBlock());
-
-		ParticleEffect.WATER_WAKE.display(p1, 2, 0.05, 0.05, 0.05, 0.01);
-		ParticleEffect.WATER_SPLASH.display(p1, 2, 0.05, 0.05, 0.05, 0.01);
-
-		ParticleEffect.WATER_WAKE.display(p2, 3, 0.05, 0.05, 0.05, 0.01);
-		ParticleEffect.WATER_SPLASH.display(p2, 3, 0.05, 0.05, 0.05, 0.01);
-
-		ParticleEffect.WATER_WAKE.display(p3, 4, 0.08, 0.08, 0.08, 0.01);
-		ParticleEffect.WATER_SPLASH.display(p3, 4, 0.08, 0.08, 0.08, 0.01);
+		for (double seg : segments) {
+			Location p = anchor.clone().add(viewDir.clone().multiply(seg));
+			spawnWaterBlock(p.getBlock());
+			int amt = (seg < 2.0) ? 2 : (seg < 3.0) ? 3 : 4;
+			double spread = (seg < 2.0) ? 0.05 : 0.08;
+			ParticleEffect.WATER_WAKE.display(p, amt, spread, spread, spread, 0.01);
+			ParticleEffect.WATER_SPLASH.display(p, amt, spread, spread, spread, 0.01);
+		}
 	}
 
 	private void spawnWaterBlock(Block b) {
 		if (b.getType() == Material.AIR) {
-			new TempBlock(b, Material.WATER).setRevertTime(100);
+			new TempBlock(b, Material.WATER).setRevertTime(170);
 		}
 	}
 
@@ -154,48 +151,81 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 		clicksUsed++;
 		lastPunchTime = now;
+		final int thisClick = clicksUsed;
 
 		player.getWorld().playSound(player.getLocation(), Sound.ITEM_TRIDENT_RIPTIDE_1, 1f, 1.2f);
 
-		Location start = player.getEyeLocation().clone().add(player.getLocation().getDirection().multiply(0.5));
-		Vector dir = player.getLocation().getDirection().normalize();
-		boolean hitTarget = false;
+		// ---- Animacja: extend 3 -> 7 blokow, potem retract ----
+		Location anchor   = getHandAnchor();
+		Vector viewDir    = player.getLocation().getDirection().clone().setY(0).normalize();
+		Vector rightVec   = viewDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+		viewDir.add(rightVec.multiply(0.12)).normalize(); // Lekkie oddalenie od celownika (outward)
+		final boolean[] hitDone = {false};
 
-		for (double d = 0.5; d <= 7.0; d += 0.5) {
-			Location point = start.clone().add(dir.clone().multiply(d));
-			ParticleEffect.WATER_SPLASH.display(point, 6, 0.15, 0.15, 0.15, 0.05);
-			ParticleEffect.WATER_WAKE.display(point, 3, 0.1, 0.1, 0.1, 0.05);
+		new BukkitRunnable() {
+			int tick = 0;
+			// Fazy: 0-5 extend (0.5 bloku/tick), 6-10 retract
+			final int EXTEND_TICKS  = 6;
+			final int RETRACT_TICKS = 5;
+			final double EXTEND_SPEED = 0.5;  // bloków/tick
+			final double MAX_REACH    = 7.0;
 
-			for (Entity entity : GeneralMethods.getEntitiesAroundPoint(point, 1.4)) {
-				if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-					LivingEntity target = (LivingEntity) entity;
-					
-					DamageHandler.damageEntity(target, 4.0, this);
-					
-					Vector knock = target.getLocation().toVector().subtract(player.getLocation().toVector());
-					if (knock.lengthSquared() > 0) {
-						knock.normalize().multiply(0.85).setY(0.25);
-						target.setVelocity(knock);
-					}
+			@Override
+			public void run() {
+				tick++;
+				int totalTicks = EXTEND_TICKS + RETRACT_TICKS;
+				if (tick > totalTicks || hitDone[0]) {
+					cancel();
+					return;
+				}
 
-					if (clicksUsed == 3) {
-						target.getWorld().spawnParticle(org.bukkit.Particle.SNOWFLAKE, target.getLocation(), 40, 0.5, 0.5, 0.5, 0.1);
-						target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
+				// Oblicz ile segmentow widac w tym ticku
+				double reachNow;
+				if (tick <= EXTEND_TICKS) {
+					reachNow = Math.min(tick * EXTEND_SPEED + 3.0, MAX_REACH); // start od 3 (normalny zasiag)
+				} else {
+					double retractProgress = (tick - EXTEND_TICKS) / (double) RETRACT_TICKS;
+					reachNow = MAX_REACH * (1.0 - retractProgress) + 1.0;
+				}
 
-						Block feet = target.getLocation().getBlock();
-						if (feet.getType().isAir()) {
-							new TempBlock(feet, Material.ICE).setRevertTime(2000);
+				// Rysuj segmenty tymczasowe
+				double step = 0.6;
+				for (double d = 1.0; d <= reachNow; d += step) {
+					Location p = anchor.clone().add(viewDir.clone().multiply(d));
+					spawnWaterBlock(p.getBlock());
+					ParticleEffect.WATER_WAKE.display(p, 3, 0.08, 0.08, 0.08, 0.02);
+					ParticleEffect.WATER_SPLASH.display(p, 2, 0.08, 0.08, 0.08, 0.02);
+
+					// Hit detection na koncu wyciagnietego punchowania
+					if (tick <= EXTEND_TICKS && d >= reachNow - step) {
+						for (Entity entity : GeneralMethods.getEntitiesAroundPoint(p, 1.4)) {
+							if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
+								LivingEntity target = (LivingEntity) entity;
+								DamageHandler.damageEntity(target, 4.0, WaterFist.this);
+
+								Vector knock = target.getLocation().toVector().subtract(player.getLocation().toVector());
+								if (knock.lengthSquared() > 0) {
+									knock.normalize().multiply(0.85).setY(0.25);
+									target.setVelocity(knock);
+								}
+
+								if (thisClick == 3) {
+									target.getWorld().spawnParticle(org.bukkit.Particle.SNOWFLAKE, target.getLocation(), 40, 0.5, 0.5, 0.5, 0.1);
+									target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
+									Block feet = target.getLocation().getBlock();
+									if (feet.getType().isAir()) {
+										new TempBlock(feet, Material.ICE).setRevertTime(2000);
+									}
+								}
+								hitDone[0] = true;
+								cancel();
+								return;
+							}
 						}
 					}
-
-					hitTarget = true;
-					break;
 				}
 			}
-			if (hitTarget) {
-				break;
-			}
-		}
+		}.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
 		if (clicksUsed >= 3) {
 			bPlayer.addCooldown(this);
@@ -249,11 +279,11 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "Summons a floating liquid fist on your hand from a nearby water source. Once loaded, you can release sneak and punch up to 3 times. The final successful strike freezes the opponent's feet in solid ice.";
+		return "Summons a floating liquid fist on your main hand from a nearby water source. Once loaded, left-click to throw punches (3 uses). The third strike freezes the target in ice.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Hold sneak to draw water from a source within 20 blocks. Once fully loaded, left-click to throw punches (max 3 charges, 1s internal cooldown).";
+		return "Hold sneak to draw water from within 20 blocks. Release sneak to keep the fist, left-click to punch (max 3 times, 1s cooldown between punches).";
 	}
 }

@@ -69,11 +69,17 @@ public class AbilitiesListener implements Listener {
 						new EarthShift(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Whirlpool")) {
 						new Whirlpool(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SacrificialHeal")) {
+						new SacrificialHeal(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")) {
 						new EarthDiscs(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")) {
 						if (!player.isSneaking()) {
 							new DiscHurl(player);
+						}
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterFist")) {
+						if (!CoreAbility.hasAbility(player, WaterFist.class)) {
+							new WaterFist(player);
 						}
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandRupture")) {
 						new SandRupture(player);
@@ -195,6 +201,11 @@ public class AbilitiesListener implements Listener {
 						sb.onLeftClick();
 					} else {
 						new SandRupture(player).onLeftClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterFist")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, WaterFist.class)) {
+						WaterFist wf = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, WaterFist.class);
+						wf.onLeftClick();
 					}
 				}
 			}

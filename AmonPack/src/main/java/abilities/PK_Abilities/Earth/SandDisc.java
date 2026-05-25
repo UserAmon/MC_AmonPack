@@ -7,9 +7,12 @@ import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.TempBlock;
 import Abilities.Util_Objects.EarthDisc;
 import Plugin.AmonPackPlugin;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -22,6 +25,7 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class SandDisc extends EarthAbility implements AddonAbility {
 	private int state = 0;
@@ -219,18 +223,19 @@ class SandEarthDisc extends EarthDisc {
 			location.add(velocity);
 		}
 
+		List<org.bukkit.entity.Entity> hitEntities = new ArrayList<>();
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1.5)) {
 			if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
-				LivingEntity target = (LivingEntity) entity;
-				DamageHandler.damageEntity(target, 4.0, sourceAbility);
-				Vector knock = target.getLocation().toVector().subtract(player.getLocation().toVector());
-				if (knock.lengthSquared() > 0) {
-					knock.normalize().multiply(0.85).setY(0.25);
-					target.setVelocity(knock);
+				if (!hitEntities.contains(entity)) {
+					hitEntities.add(entity);
+					LivingEntity target = (LivingEntity) entity;
+					DamageHandler.damageEntity(target, 4.0, sourceAbility);
+					Vector knock = target.getLocation().toVector().subtract(player.getLocation().toVector());
+					if (knock.lengthSquared() > 0) {
+						knock.normalize().multiply(0.85).setY(0.25);
+						target.setVelocity(knock);
+					}
 				}
-				explode();
-				remove();
-				return;
 			}
 		}
 
@@ -239,10 +244,26 @@ class SandEarthDisc extends EarthDisc {
 
 	@Override
 	protected void display() {
-		Vector base = new Vector(0, 0.5, 0);
-		for (double angle = 0; angle < 360; angle += 45) {
-			Vector offset = GeneralMethods.getOrthogonalVector(base, angle, radius);
-			location.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, location.clone().add(offset), 1, 0, 0, 0, 0, Material.SAND.createBlockData());
+		World world = location.getWorld();
+		Vector baseVector = new Vector(0, 0.5, 0);
+		// Sand colours: bright sand / dark sand / orange grain
+		Particle.DustOptions dustSand   = new Particle.DustOptions(Color.fromRGB(237, 201, 122), 0.55f);
+		Particle.DustOptions dustDark   = new Particle.DustOptions(Color.fromRGB(160, 120,  50), 0.60f);
+		Particle.DustOptions dustOrange = new Particle.DustOptions(Color.fromRGB(210, 160,  70), 0.45f);
+		for (double angle = 0; angle < 360; angle += 30) {
+			if (new Random().nextDouble() > 0.25) {
+				Vector blockOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius);
+				world.spawnParticle(Particle.BLOCK, location.clone().add(blockOffset), 1, 0, 0, 0, 0,
+						Material.SAND.createBlockData());
+			}
+			Vector dustOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius / 2);
+			world.spawnParticle(Particle.DUST, location.clone().add(dustOffset), 1, 0, 0, 0, 0, dustSand);
+			Vector darkOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius + 0.25);
+			world.spawnParticle(Particle.DUST, location.clone().add(darkOffset), 1, 0, 0, 0, 0, dustDark);
+			if (angle % 60 == 0) {
+				Vector orangeOff = GeneralMethods.getOrthogonalVector(baseVector, angle + 15, radius * 0.75);
+				world.spawnParticle(Particle.DUST, location.clone().add(orangeOff), 1, 0, 0, 0, 0, dustOrange);
+			}
 		}
 	}
 
@@ -260,12 +281,12 @@ class SandEarthDisc extends EarthDisc {
 				@Override
 				public void run() {
 					t++;
-					if (t > 10 || shLoc.getBlock().getType().isSolid()) {
+					if (t > 22 || shLoc.getBlock().getType().isSolid()) {
 						cancel();
 						return;
 					}
 					shLoc.add(shDir);
-					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 2, 0.05, 0.05, 0.05, 0, Material.SAND.createBlockData());
+					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 4, 0.1, 0.1, 0.1, 0, Material.SAND.createBlockData());
 
 					for (Entity e : GeneralMethods.getEntitiesAroundPoint(shLoc, 1.2)) {
 						if (e instanceof LivingEntity && e.getUniqueId() != player.getUniqueId()) {
@@ -296,12 +317,12 @@ class SandEarthDisc extends EarthDisc {
 				@Override
 				public void run() {
 					t++;
-					if (t > 6 || shLoc.getBlock().getType().isSolid()) {
+					if (t > 14 || shLoc.getBlock().getType().isSolid()) {
 						cancel();
 						return;
 					}
 					shLoc.add(shDir);
-					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 2, 0.05, 0.05, 0.05, 0, Material.SAND.createBlockData());
+					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 4, 0.1, 0.1, 0.1, 0, Material.SAND.createBlockData());
 
 					for (Entity e : GeneralMethods.getEntitiesAroundPoint(shLoc, 1.2)) {
 						if (e instanceof LivingEntity && e.getUniqueId() != player.getUniqueId()) {

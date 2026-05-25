@@ -12,6 +12,7 @@ import Plugin.AmonPackPlugin;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -42,10 +43,11 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
     }
 
     public static void HandleDamage(Entity entity, double i) {
-        ParticleEffect.SPELL.display(entity.getLocation(), (10), 1.4, 1.7, 1.4, Color.fromRGB(192, 192, 192));
-        ParticleEffect.NOTE.display(entity.getLocation(), (10), 1.4, 1.7, 1.4, Color.fromRGB(192, 192, 192));
-        ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(), (10), 1.4, 1.7, 1.4,
-                Color.fromRGB(192, 192, 192));
+        entity.getWorld().spawnParticle(org.bukkit.Particle.SCULK_CHARGE_POP, entity.getLocation(), 15, 1.4, 1.7, 1.4, 0.1);
+        if (Math.random() < 0.2) {
+            entity.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, entity.getLocation(), 1, 0, 0, 0, 0);
+        }
+        ParticleEffect.NOTE.display(entity.getLocation(), 10, 1.4, 1.7, 1.4, 0);
         if (!AfffectedEntities.isEmpty() && AfffectedEntities.get(entity) != null) {
             Double actual = AfffectedEntities.get(entity);
             AfffectedEntities.put(entity, actual + i);
@@ -75,20 +77,15 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                                                 new PotionEffect(PotionEffectType.NAUSEA, 40, 10, false, false, false));
                                         ((LivingEntity) entity).addPotionEffect(new PotionEffect(
                                                 PotionEffectType.SLOWNESS, 40, 3, false, false, false));
-                                        ParticleEffect.SPELL.display(entity.getLocation(), (10), 1.4, 1.7, 1.4,
-                                                Color.fromRGB(192, 192, 192));
-                                        ParticleEffect.NOTE.display(entity.getLocation(), (10), 1.4, 1.7, 1.4,
-                                                Color.fromRGB(192, 192, 192));
-                                        ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(), (10), 1.4, 1.7,
-                                                1.4, Color.fromRGB(192, 192, 192));
+                                        entity.getWorld().spawnParticle(org.bukkit.Particle.SCULK_CHARGE_POP, entity.getLocation(), 15, 1.4, 1.7, 1.4, 0.1);
+                                        if (Math.random() < 0.2) {
+                                            entity.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, entity.getLocation(), 1, 0, 0, 0, 0);
+                                        }
+                                        ParticleEffect.NOTE.display(entity.getLocation(), 10, 1.4, 1.7, 1.4, 0);
                                         ToRemove.add(entity);
                                     } else {
-                                        ParticleEffect.SPELL.display(entity.getLocation(), (int) time, 0.4, 1.7, 0.4,
-                                                Color.fromRGB(192, 192, 192));
-                                        ParticleEffect.NOTE.display(entity.getLocation(), (int) time, 0.4, 1.7, 0.4,
-                                                Color.fromRGB(192, 192, 192));
-                                        ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(), (int) time, 0.4,
-                                                1.7, 0.4, Color.fromRGB(192, 192, 192));
+                                        entity.getWorld().spawnParticle(org.bukkit.Particle.SCULK_CHARGE_POP, entity.getLocation(), (int) time, 0.4, 1.7, 0.4, 0.1);
+                                        ParticleEffect.NOTE.display(entity.getLocation(), (int) time, 0.4, 1.7, 0.4, 0);
                                         
                                         // Rising pitch note sound effect
                                         float volume = 0.4f + 0.6f * (float)(time / 20.0);

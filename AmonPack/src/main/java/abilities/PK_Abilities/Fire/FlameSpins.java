@@ -8,10 +8,13 @@ import com.projectkorra.projectkorra.util.ParticleEffect;
 import Plugin.AmonPackPlugin;
 import Plugin.Methods;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -36,14 +39,21 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 		this.startTime = System.currentTimeMillis();
 		this.castTime = System.currentTimeMillis();
 
-		Methods.Spin(player);
 
-		ParticleEffect.FLAME.display(player.getLocation(), 20, 0.5, 0.1, 0.5, 0.1);
+		// Flame particles burst at feet
+		ParticleEffect.FLAME.display(player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
+		player.spawnParticle(Particle.LAVA, player.getLocation().clone().add(0, 0.2, 0), 6, 0.3, 0.1, 0.3, 0);
 		player.getWorld().spawnParticle(org.bukkit.Particle.EXPLOSION, player.getLocation(), 1);
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f);
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 0.8f);
 
-		Vector dash = player.getLocation().getDirection().clone().setY(0).normalize().multiply(1.1);
-		dash.setY(0.45);
+		// Slow falling - 2.5 sekundy opadania
+		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 50, 0, false, false));
+
+		// Dash - poziome w 100% z ruchu gracza
+		Vector motion  = player.getVelocity().clone().setY(0).multiply(1.35);
+		Vector dash    = motion.clone();
+		dash.setY(0.85); // mocno w gore
 		player.setVelocity(dash);
 
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), 3.5)) {
@@ -77,12 +87,22 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 
 		if (state == 1) {
 			if (player.isOnGround() && System.currentTimeMillis() - castTime > 500) {
+				if (player.hasPotionEffect(PotionEffectType.SLOW_FALLING)) {
+					player.removePotionEffect(PotionEffectType.SLOW_FALLING);
+				}
 				bPlayer.addCooldown(this);
 				remove();
 				return;
 			}
 
-			ParticleEffect.FLAME.display(player.getLocation(), 3, 0.2, 0.2, 0.2, 0.02);
+			Location feet = player.getLocation().clone().add(0, -0.4, 0);
+			Vector rightVec = player.getLocation().getDirection().crossProduct(new Vector(0, 1, 0)).normalize().multiply(0.25);
+			
+			Location rightFoot = feet.clone().add(rightVec);
+			Location leftFoot = feet.clone().subtract(rightVec);
+			
+			ParticleEffect.FLAME.display(rightFoot, 1, 0, 0, 0, 0);
+			ParticleEffect.FLAME.display(leftFoot, 1, 0, 0, 0, 0);
 		}
 	}
 
@@ -92,7 +112,7 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 		}
 
 		long now = System.currentTimeMillis();
-		if (now - lastPunchTime < 1000) {
+		if (now - lastPunchTime < 500) {
 			return;
 		}
 

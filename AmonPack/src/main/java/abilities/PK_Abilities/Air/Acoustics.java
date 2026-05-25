@@ -2,10 +2,12 @@ package Abilities.PK_Abilities.Air;
 
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.AirAbility;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import Abilities.Bending.SoundAbility;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -87,11 +89,27 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 
 		ticksElapsed++;
 		if (ticksElapsed >= 100) {
+			for (LivingEntity target : chain) {
+				com.projectkorra.projectkorra.util.DamageHandler.damageEntity(target, 2.0, this);
+				target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 1));
+				target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 1));
+				
+				for (int i = 0; i < 2; i++) {
+					Vector randomDir = new Vector(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
+					new EchoProjectile(player, target.getLocation().clone().add(0, 1.0, 0), randomDir, 2.0, 0.0, new java.util.ArrayList<>());
+				}
+			}
 			remove();
 			return;
 		}
 
-		drawTether(player.getEyeLocation().clone().subtract(0, 0.3, 0), chain.get(0).getEyeLocation());
+		Location pStart = player.getLocation().clone().add(
+				(Math.random() - 0.5), 
+				0.5 + (Math.random() - 0.5), 
+				(Math.random() - 0.5)
+		);
+		drawTether(pStart, chain.get(0).getEyeLocation());
+
 		for (int i = 0; i < chain.size() - 1; i++) {
 			drawTether(chain.get(i).getEyeLocation(), chain.get(i + 1).getEyeLocation());
 		}
@@ -115,6 +133,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				}
 
 				HandleDamage(target, 3.0);
+				target.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, target.getLocation(), 1, 0, 0, 0, 0);
 
 				double newStack = currentStack + 3.0;
 				int amp = (int) (newStack / 5.0);
@@ -134,6 +153,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 					chain.add(nextTarget);
 					allTargets.add(nextTarget);
 					HandleDamage(nextTarget, 3.0);
+					nextTarget.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, nextTarget.getLocation(), 1, 0, 0, 0, 0);
 				}
 			}
 		}
@@ -160,8 +180,8 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 			Location point = start.clone().add(dir.clone().multiply(d));
 			double wave = Math.sin(d * 1.5 + (System.currentTimeMillis() / 80.0)) * 0.15;
 			point.add(0, wave, 0);
-			ParticleEffect.SPELL_MOB_AMBIENT.display(point, 1, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192));
-			if (Math.random() < 0.12) {
+			point.getWorld().spawnParticle(org.bukkit.Particle.SCULK_CHARGE_POP, point, 1, 0, 0, 0, 0);
+			if (Math.random() < 0.04) {
 				ParticleEffect.NOTE.display(point, 1, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192));
 			}
 		}

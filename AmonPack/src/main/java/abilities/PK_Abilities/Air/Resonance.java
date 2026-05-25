@@ -2,12 +2,14 @@ package Abilities.PK_Abilities.Air;
 
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.AirAbility;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import Abilities.Bending.SoundAbility;
 import Plugin.AmonPackPlugin;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -15,12 +17,16 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Resonance extends SoundAbility implements AddonAbility {
 	private Location origin;
 	private Location currentLoc;
 	private Vector direction;
 	private double range = 15.0;
-	private double speed = 1.0;
+	private double speed = 2.0;
+	private Set<Entity> hitEntities = new HashSet<>();
 
 	public Resonance(Player player) {
 		super(player);
@@ -45,18 +51,12 @@ public class Resonance extends SoundAbility implements AddonAbility {
 		}
 
 		currentLoc.add(direction.clone().multiply(speed));
-		
-		ParticleEffect.SPELL.display(currentLoc, 3, 0.1, 0.1, 0.1, 0.01);
-		ParticleEffect.NOTE.display(currentLoc, 1, 0.05, 0.05, 0.05, 0);
 
-		if (currentLoc.distance(origin) > range) {
-			explodeAtBlock(currentLoc);
-			remove();
-			return;
-		}
+		// wiązka nie używa notes, tylko lekki sculk
+		currentLoc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, currentLoc, 3, 0.1, 0.1, 0.1, 0);
 
-		if (currentLoc.getBlock().getType().isSolid()) {
-			explodeAtBlock(currentLoc);
+		if (currentLoc.distance(origin) > range || currentLoc.getBlock().getType().isSolid()) {
+			triggerExplosion(currentLoc, false);
 			remove();
 			return;
 		}
@@ -70,9 +70,9 @@ public class Resonance extends SoundAbility implements AddonAbility {
 				}
 
 				if (S <= 0.0) {
-					explodeAtBlock(target.getLocation());
+					triggerExplosion(target.getLocation(), false);
 				} else {
-					explodeAtStackedTarget(target, S);
+					triggerExplosion(target.getLocation(), true);
 				}
 				remove();
 				return;
@@ -80,53 +80,54 @@ public class Resonance extends SoundAbility implements AddonAbility {
 		}
 	}
 
-	private void explodeAtBlock(Location loc) {
-		ParticleEffect.CLOUD.display(loc, 15, 1.5, 0.2, 1.5, 0.05);
-		ParticleEffect.SPELL.display(loc, 10, 1.5, 0.2, 1.5, Color.fromRGB(192, 192, 192));
-		ParticleEffect.NOTE.display(loc, 10, 1.5, 0.2, 1.5, Color.fromRGB(192, 192, 192));
-		
-		double radius = 3.5;
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius + 2.0)) {
-			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-				Location targetLoc = entity.getLocation();
-				double distance = loc.distance(targetLoc);
-				double verticalDist = Math.abs(loc.getY() - targetLoc.getY());
-				
-				if (distance <= radius && verticalDist <= 2.0) {
-					LivingEntity le = (LivingEntity) entity;
-					HandleDamage(le, 10.0);
-					le.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1));
-					
-					Vector pushDir = targetLoc.toVector().subtract(loc.toVector());
-					if (pushDir.lengthSquared() > 0) {
-						pushDir.normalize().multiply(0.6).setY(0.2);
-						le.setVelocity(pushDir);
-					}
+	private void triggerExplosion(Location loc, boolean empowered) {
+		double radius = empowered ? 10.0 : 5.0;
+		double stacksToApply = empowered ? 8.0 : 5.0;
+
+		if (empowered) {
+			loc.getWorld().spawnParticle(Particle.SONIC_BOOM, loc, 1, 0, 0, 0, 0);
+			ParticleEffect.NOTE.display(loc, 25, radius / 2, 1.0, radius / 2, 0);
+			loc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, loc, 60, radius / 2, 1.0, radius / 2, 0.02);
+			
+			for (int i = 0; i < 3; i++) {
+				Vector randomDir = new Vector(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
+				new EchoProjectile(player, loc.clone().add(0, 0.5, 0), randomDir, 2.0, 0.0, new java.util.ArrayList<>());
+			}
+		} else {
+			loc.getWorld().spawnParticle(Particle.SONIC_BOOM, loc, 1, 0, 0, 0, 0);
+			loc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, loc, 30, radius / 2, 1.0, radius / 2, 0.02);
+		}
+
+		// Zbieramy cele w zasięgu, by wyzwolić dodatkowe wybuchy bez problemu ConcurrentModification
+		Set<LivingEntity> toChain = new HashSet<>();
+
+		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius)) {
+			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId() && !hitEntities.contains(entity)) {
+				LivingEntity target = (LivingEntity) entity;
+				hitEntities.add(target);
+
+				double S = 0.0;
+				if (AfffectedEntities.containsKey(target)) {
+					S = AfffectedEntities.get(target);
+				}
+
+				HandleDamage(target, stacksToApply);
+
+				if (S > 0 && !empowered) {
+					// jeśli cel miał stacki a to był mały wybuch, wywołuje duży wybuch z tego miejsca
+					toChain.add(target);
+				}
+
+				Vector pushDir = target.getLocation().toVector().subtract(loc.toVector());
+				if (pushDir.lengthSquared() > 0) {
+					pushDir.normalize().multiply(empowered ? 0.8 : 0.6).setY(0.2);
+					target.setVelocity(pushDir);
 				}
 			}
 		}
-	}
 
-	private void explodeAtStackedTarget(LivingEntity target, double S) {
-		Location loc = target.getLocation();
-		loc.getWorld().spawnParticle(org.bukkit.Particle.EXPLOSION, loc, 3, 0.5, 0.5, 0.5, 0.1);
-		ParticleEffect.SPELL.display(loc, 25, 2.5, 1.5, 2.5, Color.fromRGB(192, 192, 192));
-		ParticleEffect.NOTE.display(loc, 25, 2.5, 1.5, 2.5, Color.fromRGB(192, 192, 192));
-		
-		HandleDamage(target, 20.0);
-
-		double radius = 5.5;
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius)) {
-			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId() && entity.getUniqueId() != target.getUniqueId()) {
-				LivingEntity le = (LivingEntity) entity;
-				HandleDamage(le, S);
-				
-				Vector pullDir = loc.toVector().subtract(le.getLocation().toVector());
-				if (pullDir.lengthSquared() > 0) {
-					pullDir.normalize().multiply(0.8).setY(0.35);
-					le.setVelocity(pullDir);
-				}
-			}
+		for (LivingEntity chainTarget : toChain) {
+			triggerExplosion(chainTarget.getLocation(), true);
 		}
 	}
 
@@ -166,8 +167,7 @@ public class Resonance extends SoundAbility implements AddonAbility {
 	}
 
 	@Override
-	public void load() {
-	}
+	public void load() {}
 
 	@Override
 	public void stop() {
@@ -176,11 +176,11 @@ public class Resonance extends SoundAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "Launches a narrow resonance beam. On solid blocks or stack-less targets, it creates a horizontal shockwave. On stacked targets, it detonates them and pulls surrounding enemies in.";
+		return "Fires a resonant wave. Detonates on impact. Hits on stacked targets cause a massively amplified chained explosion.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Left-click to launch the resonance beam.";
+		return "Left-click to fire.";
 	}
 }

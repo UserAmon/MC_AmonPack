@@ -84,9 +84,9 @@ public class TideLock extends WaterAbility implements AddonAbility {
                 if (player.isSneaking()) {
                     state = State.CHARGING;
                     startTime = System.currentTimeMillis();
-                    Location target = Methods.getTargetLocation(player, 10);
-                    if (isWaterbendable(target.getBlock()) || isWaterbendable(player.getLocation().getBlock())) {
-                        waterRing.add(target);
+                    Location source = Methods.findWaterSource(player, 15);
+                    if (source != null) {
+                        waterRing.add(source);
                     } else {
                         remove();
                     }

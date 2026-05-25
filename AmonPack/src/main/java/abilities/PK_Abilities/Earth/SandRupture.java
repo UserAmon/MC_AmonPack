@@ -7,12 +7,12 @@ import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import Plugin.AmonPackPlugin;
+import Plugin.Methods;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -154,10 +154,7 @@ public class SandRupture extends EarthAbility implements AddonAbility {
 	}
 
 	private void spawnWaveFallingBlock(Location loc) {
-		FallingBlock fb = loc.getWorld().spawnFallingBlock(loc, Material.SAND.createBlockData());
-		fb.setDropItem(false);
-		fb.setHurtEntities(false);
-		fb.setVelocity(new Vector(0, 0.25, 0));
+		Methods.spawnFallingBlocks(loc, Material.SAND, 1, 2.0, player);
 	}
 
 	public void onLeftClick() {
@@ -179,16 +176,7 @@ public class SandRupture extends EarthAbility implements AddonAbility {
 		loc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, loc, 40, 0.6, 0.6, 0.6, 0.1, Material.SAND.createBlockData());
 		loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1f, 1.2f);
 
-		for (int i = 0; i < 6; i++) {
-			FallingBlock fb = loc.getWorld().spawnFallingBlock(loc, Material.SAND.createBlockData());
-			fb.setDropItem(false);
-			fb.setHurtEntities(true);
-			
-			double xVel = (Math.random() - 0.5) * 0.4;
-			double yVel = 0.4 + Math.random() * 0.3;
-			double zVel = (Math.random() - 0.5) * 0.4;
-			fb.setVelocity(new Vector(xVel, yVel, zVel));
-		}
+		Methods.spawnFallingBlocks(loc, Material.SAND, 8, 4.0, player);
 
 		double radius = 3.0;
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius)) {

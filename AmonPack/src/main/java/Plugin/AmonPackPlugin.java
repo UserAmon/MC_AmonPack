@@ -59,6 +59,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static SQLite sqlite;
 	private static Element BladesElement;
 	private static Element SmokeElement;
+	private static Element SoundElement;
 	public FileConfiguration config = getConfig();
 	static List<File> MenagerieConfigFile;
 	// static File PvPFile;
@@ -92,6 +93,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		// BladesElement = new SubElement("Blades", Element.CHI, ElementType.BLOCKING,
 		// this);
 		SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
+		SoundElement = new SubElement("Sound", Element.AIR, ElementType.BENDING, ProjectKorra.plugin);
 		createconf();
 
 		// PvPFile = new File(getDataFolder(), "PvPConfig.yml");
@@ -590,6 +592,10 @@ public class AmonPackPlugin extends JavaPlugin {
 
 	public static Element getSmokeElement() {
 		return SmokeElement;
+	}
+
+	public static Element getSoundElement() {
+		return SoundElement;
 	}
 
 	public void createconf() {

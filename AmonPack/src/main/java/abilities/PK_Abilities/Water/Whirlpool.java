@@ -14,6 +14,7 @@ import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
+import Plugin.Methods;
 
 public class Whirlpool extends WaterAbility implements AddonAbility {
 
@@ -37,6 +38,13 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
     public Whirlpool(Player player) {
         super(player);
         if (bPlayer.isOnCooldown(this)) {
+            return;
+        }
+        if (!bPlayer.canBend(this)) {
+            return;
+        }
+        Location source = Methods.findWaterSource(player, 15);
+        if (source == null) {
             return;
         }
         this.startTime = System.currentTimeMillis();

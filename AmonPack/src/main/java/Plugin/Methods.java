@@ -513,4 +513,55 @@ public class Methods {
 		return blocks;
 	}
 
+	public static Location findWaterSource(Player player, int radius) {
+		Location loc = player.getLocation();
+		for (int x = -radius; x <= radius; x++) {
+			for (int y = -radius; y <= radius; y++) {
+				for (int z = -radius; z <= radius; z++) {
+					Block b = loc.clone().add(x, y, z).getBlock();
+					if (WaterAbility.isWater(b) || WaterAbility.isWaterbendable(b.getType())) {
+						// LOS check - upewnij się że blok wody jest osiągalny
+						org.bukkit.util.RayTraceResult los = loc.getWorld().rayTraceBlocks(
+							player.getEyeLocation(),
+							b.getLocation().clone().add(0.5, 0.5, 0.5).toVector().subtract(player.getEyeLocation().toVector()).normalize(),
+							b.getLocation().distance(player.getEyeLocation()) + 0.5,
+							org.bukkit.FluidCollisionMode.ALWAYS,
+							false
+						);
+						if (los != null && los.getHitBlock() != null && !los.getHitBlock().equals(b)) {
+							continue; // zablokowane
+						}
+						return b.getLocation().add(0.5, 0.5, 0.5);
+					}
+				}
+			}
+		}
+
+		List<Block> grassBlocks = new ArrayList<>();
+		for (int x = -radius; x <= radius; x++) {
+			for (int y = -radius; y <= radius; y++) {
+				for (int z = -radius; z <= radius; z++) {
+					Block b = loc.clone().add(x, y, z).getBlock();
+					if (b.getType() == Material.GRASS_BLOCK) {
+						if (b.getRelative(org.bukkit.block.BlockFace.UP).getType().isAir() || b.getRelative(org.bukkit.block.BlockFace.UP).isPassable()) {
+							grassBlocks.add(b);
+						}
+					}
+				}
+			}
+		}
+
+		if (grassBlocks.size() >= 5) {
+			for (int i = 0; i < Math.min(5, grassBlocks.size()); i++) {
+				Block gb = grassBlocks.get(i);
+				gb.setType(Material.COARSE_DIRT);
+				gb.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, gb.getLocation().add(0.5, 1.0, 0.5), 10, 0.2, 0.2, 0.2, 0, Material.GRASS_BLOCK.createBlockData());
+				gb.getWorld().playSound(gb.getLocation(), Sound.BLOCK_GRASS_BREAK, 0.8f, 0.8f);
+			}
+			return grassBlocks.get(0).getLocation().add(0.5, 1.0, 0.5);
+		}
+
+		return null;
+	}
+
 }
