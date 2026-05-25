@@ -67,7 +67,7 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                             } else {
                                 double time = AfffectedEntities.get(entity);
                                 if (time > 0) {
-                                    if (time > 15) {
+                                    if (time >= 20.0) {
                                         ((LivingEntity) entity).damage(4);
                                         ((LivingEntity) entity).addPotionEffect(new PotionEffect(
                                                 PotionEffectType.BLINDNESS, 40, 3, false, false, false));
@@ -89,6 +89,12 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                                                 Color.fromRGB(192, 192, 192));
                                         ParticleEffect.SPELL_MOB_AMBIENT.display(entity.getLocation(), (int) time, 0.4,
                                                 1.7, 0.4, Color.fromRGB(192, 192, 192));
+                                        
+                                        // Rising pitch note sound effect
+                                        float volume = 0.4f + 0.6f * (float)(time / 20.0);
+                                        float pitch = 0.5f + 1.5f * (float)(time / 20.0);
+                                        entity.getWorld().playSound(entity.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, volume, pitch);
+                                        
                                         AfffectedEntities.put(entity, (time - 0.5));
                                     }
                                 }

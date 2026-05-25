@@ -50,6 +50,8 @@ public class AbilitiesListener implements Listener {
 					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 					if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandBreath")) {
 						new SandBreath(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Acoustics")) {
+						new Acoustics(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirScythe")) {
 						if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player,
 								Abilities.PK_Abilities.Air.AirScythe.class)) {
@@ -59,6 +61,8 @@ public class AbilitiesListener implements Listener {
 						}
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("TideLock")) {
 						new TideLock(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameSpins")) {
+						new FlameSpins(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWeave")) {
 						new FlameWeave(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthShift")) {
@@ -71,6 +75,8 @@ public class AbilitiesListener implements Listener {
 						if (!player.isSneaking()) {
 							new DiscHurl(player);
 						}
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandRupture")) {
+						new SandRupture(player);
 					} // else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("MetalCompress")) {
 						// if (player.getInventory().getChestplate().getType() !=
 						// Material.IRON_CHESTPLATE) {
@@ -93,7 +99,8 @@ public class AbilitiesListener implements Listener {
 		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
 		if (bPlayer.getBoundAbility() != null) {
 			if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")
-					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")) {
+					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")
+					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("SandDisc")) {
 				EarthDisc.redirectNearby(player, 4.0);
 			}
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
@@ -147,12 +154,15 @@ public class AbilitiesListener implements Listener {
 					new SmokeShot(player, false);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirScythe")) {
 					new AirScythe(player);
-				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("NoisySlash")) {
-					new NoisySlash(player);
-				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EchoJab")) {
-					new EchoJab(player);
-				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameShot")) {
-					new FlameShot(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Resonance")) {
+					new Resonance(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Echo")) {
+					new Echo(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameSpins")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSpins.class)) {
+						FlameSpins fs = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FlameSpins.class);
+						fs.onLeftClick();
+					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AerialPush")) {
 					new AerialPush(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("GustShield")) {
@@ -171,6 +181,20 @@ public class AbilitiesListener implements Listener {
 						Abilities.PK_Abilities.Earth.EarthDiscs discs = com.projectkorra.projectkorra.ability.CoreAbility
 								.getAbility(player, Abilities.PK_Abilities.Earth.EarthDiscs.class);
 						discs.onClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandDisc")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SandDisc.class)) {
+						SandDisc sd = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SandDisc.class);
+						sd.onLeftClick();
+					} else {
+						new SandDisc(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandRupture")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SandRupture.class)) {
+						SandRupture sb = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SandRupture.class);
+						sb.onLeftClick();
+					} else {
+						new SandRupture(player).onLeftClick();
 					}
 				}
 			}

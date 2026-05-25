@@ -1,0 +1,203 @@
+package Abilities.PK_Abilities.Fire;
+
+import com.projectkorra.projectkorra.GeneralMethods;
+import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.FireAbility;
+import com.projectkorra.projectkorra.util.DamageHandler;
+import com.projectkorra.projectkorra.util.ParticleEffect;
+import Plugin.AmonPackPlugin;
+import Plugin.Methods;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+public class FlameSpins extends FireAbility implements AddonAbility {
+	private int state = 0;
+	private int slot;
+	private long startTime;
+	private long castTime;
+	private long lastPunchTime = 0;
+	private int clicksUsed = 0;
+
+	public FlameSpins(Player player) {
+		super(player);
+		if (bPlayer.isOnCooldown(this)) {
+			return;
+		}
+		if (!bPlayer.canBend(this)) {
+			return;
+		}
+
+		this.slot = player.getInventory().getHeldItemSlot();
+		this.startTime = System.currentTimeMillis();
+		this.castTime = System.currentTimeMillis();
+
+		Methods.Spin(player);
+
+		ParticleEffect.FLAME.display(player.getLocation(), 20, 0.5, 0.1, 0.5, 0.1);
+		player.getWorld().spawnParticle(org.bukkit.Particle.EXPLOSION, player.getLocation(), 1);
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f);
+
+		Vector dash = player.getLocation().getDirection().clone().setY(0).normalize().multiply(1.1);
+		dash.setY(0.45);
+		player.setVelocity(dash);
+
+		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), 3.5)) {
+			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+				DamageHandler.damageEntity(entity, 3.0, this);
+			}
+		}
+
+		state = 1;
+		start();
+	}
+
+	@Override
+	public void progress() {
+		if (player.isDead() || !player.isOnline()) {
+			remove();
+			return;
+		}
+
+		if (player.getInventory().getHeldItemSlot() != slot) {
+			bPlayer.addCooldown(this);
+			remove();
+			return;
+		}
+
+		if (System.currentTimeMillis() - startTime > 10000) {
+			bPlayer.addCooldown(this);
+			remove();
+			return;
+		}
+
+		if (state == 1) {
+			if (player.isOnGround() && System.currentTimeMillis() - castTime > 500) {
+				bPlayer.addCooldown(this);
+				remove();
+				return;
+			}
+
+			ParticleEffect.FLAME.display(player.getLocation(), 3, 0.2, 0.2, 0.2, 0.02);
+		}
+	}
+
+	public void onLeftClick() {
+		if (state != 1) {
+			return;
+		}
+
+		long now = System.currentTimeMillis();
+		if (now - lastPunchTime < 1000) {
+			return;
+		}
+
+		clicksUsed++;
+		lastPunchTime = now;
+
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 1.1f);
+
+		Location projLoc = player.getEyeLocation().clone();
+		Vector projDir = player.getLocation().getDirection().normalize().multiply(0.8);
+
+		new BukkitRunnable() {
+			int ticks = 0;
+			double angle = 0;
+
+			@Override
+			public void run() {
+				ticks++;
+				if (ticks > 40 || projLoc.getBlock().getType().isSolid()) {
+					cancel();
+					return;
+				}
+
+				projDir.setY(projDir.getY() - 0.03);
+				projLoc.add(projDir);
+
+				angle += 0.5;
+				double r = 0.6;
+				double x1 = r * Math.cos(angle);
+				double z1 = r * Math.sin(angle);
+				Location p1 = projLoc.clone().add(x1, 0, z1);
+				Location p2 = projLoc.clone().subtract(x1, 0, z1);
+
+				ParticleEffect.FLAME.display(p1, 1, 0, 0, 0, 0);
+				ParticleEffect.FLAME.display(p2, 1, 0, 0, 0, 0);
+				ParticleEffect.SMOKE_NORMAL.display(projLoc, 1, 0.1, 0.1, 0.1, 0.01);
+
+				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projLoc, 1.2)) {
+					if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+						DamageHandler.damageEntity(entity, 4.0, FlameSpins.this);
+						entity.setFireTicks(50);
+						cancel();
+						return;
+					}
+				}
+			}
+		}.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
+
+		if (clicksUsed >= 2) {
+			bPlayer.addCooldown(this);
+			remove();
+		}
+	}
+
+	@Override
+	public long getCooldown() {
+		return 6000;
+	}
+
+	@Override
+	public Location getLocation() {
+		return player.getLocation();
+	}
+
+	@Override
+	public String getName() {
+		return "FlameSpins";
+	}
+
+	@Override
+	public String getAuthor() {
+		return "AmonPack";
+	}
+
+	@Override
+	public String getVersion() {
+		return "1.0";
+	}
+
+	@Override
+	public boolean isHarmlessAbility() {
+		return false;
+	}
+
+	@Override
+	public boolean isSneakAbility() {
+		return true;
+	}
+
+	@Override
+	public void load() {
+	}
+
+	@Override
+	public void stop() {
+		super.remove();
+	}
+
+	@Override
+	public String getDescription() {
+		return "Initiates a flaming spin on shift, exploding at your feet and dashing you in the direction you look. While airborne, you can click LPM up to 2 times to throw spinning fire discs with gravity.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Sneak (Shift) to trigger the flaming spin dash, then left-click (LPM) while airborne to throw fire discs (max 2 charges, 1s internal cooldown).";
+	}
+}

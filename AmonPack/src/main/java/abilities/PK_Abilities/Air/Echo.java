@@ -17,13 +17,13 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EchoJab extends SoundAbility implements AddonAbility {
-	Location origin;
+public class Echo extends SoundAbility implements AddonAbility {
+	private Location origin;
 	private List<AbilityProjectile> Projectiles;
 	private List<Entity> Hited = new ArrayList<>();
 	private int Interval;
 
-	public EchoJab(Player player) {
+	public Echo(Player player) {
 		super(player);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
@@ -35,8 +35,8 @@ public class EchoJab extends SoundAbility implements AddonAbility {
 		Projectiles = new ArrayList<>();
 		List<BetterParticles> Particles = new ArrayList<>();
 		Particles.add(new BetterParticles(1, ParticleEffect.SPELL, 0.15, 0, 0.1, Color.fromRGB(128, 128, 128)));
-		Particles.add(
-				new BetterParticles(2, ParticleEffect.SPELL_MOB_AMBIENT, 0.15, 0, 0.1, Color.fromRGB(128, 128, 128)));
+		Particles.add(new BetterParticles(2, ParticleEffect.SPELL_MOB_AMBIENT, 0.15, 0, 0.1, Color.fromRGB(128, 128, 128)));
+		
 		int Offset = 0;
 		Interval = 0;
 		origin.setPitch(0);
@@ -84,10 +84,13 @@ public class EchoJab extends SoundAbility implements AddonAbility {
 					}
 				}
 				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1)) {
-					if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()
-							&& !Hited.contains(entity)) {
-						HandleDamage(entity, 10);
-						Hited.add(entity);
+					if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
+						if (!Hited.contains(entity)) {
+							HandleDamage(entity, 8);
+							Hited.add(entity);
+						} else {
+							HandleDamage(entity, 2);
+						}
 						ToRemove.add(Projectile);
 					}
 				}
@@ -114,7 +117,7 @@ public class EchoJab extends SoundAbility implements AddonAbility {
 
 	@Override
 	public String getName() {
-		return "EchoJab";
+		return "Echo";
 	}
 
 	@Override
@@ -148,12 +151,11 @@ public class EchoJab extends SoundAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "Delivers a fast jab of sound waves, disorienting and damaging the opponent.";
+		return "Fires echoing sound waves that ricochet off walls. First hit builds up substantial acoustic pressure, while subsequent ricochets maintain and slightly increase it.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Left-click to throw an echo jab.";
+		return "Left-click to launch echoing sound waves.";
 	}
-
 }

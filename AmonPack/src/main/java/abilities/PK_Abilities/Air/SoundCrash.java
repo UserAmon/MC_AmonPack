@@ -79,7 +79,7 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 				Location location = Projectile.Advance().clone();
 				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1)) {
 					if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId() && !Hited.contains(entity)) {
-						HandleDamage(entity,10);
+						applySoundCrashEffect((LivingEntity) entity);
 						Hited.add(entity);
 						Projectiles.remove(Projectile);
 						return;
@@ -92,6 +92,39 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 			}}
 		if(Projectiles.isEmpty()){
 			remove();
+		}
+	}
+
+	private void applySoundCrashEffect(LivingEntity target) {
+		double S = 0.0;
+		if (AfffectedEntities.containsKey(target)) {
+			S = AfffectedEntities.get(target);
+		}
+
+		if (S < 10.0) {
+			HandleDamage(target, 5.0);
+			Vector push = target.getLocation().toVector().subtract(player.getLocation().toVector());
+			if (push.lengthSquared() > 0) {
+				push.normalize().multiply(0.8).setY(0.2);
+				target.setVelocity(push);
+			}
+		} else {
+			HandleDamage(target, 20.0);
+			for (Entity near : GeneralMethods.getEntitiesAroundPoint(target.getLocation(), 4.5)) {
+				if (near instanceof LivingEntity && near.getUniqueId() != player.getUniqueId()) {
+					Vector shock = near.getLocation().toVector().subtract(target.getLocation().toVector());
+					if (shock.lengthSquared() > 0) {
+						shock.normalize().multiply(1.2).setY(0.35);
+						near.setVelocity(shock);
+					} else {
+						Vector push = target.getLocation().toVector().subtract(player.getLocation().toVector());
+						if (push.lengthSquared() > 0) {
+							push.normalize().multiply(1.2).setY(0.35);
+							target.setVelocity(push);
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -135,7 +168,11 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 		switch (use){
 			case 0:
 				if (!bPlayer.isOnCooldown("Major_Sound_OnHit")) {
-					HandleDamage(victim,10);
+					if (victim instanceof LivingEntity) {
+						applySoundCrashEffect((LivingEntity) victim);
+					} else {
+						HandleDamage(victim, 10);
+					}
 					bPlayer.addCooldown("Major_Sound_OnHit",5000);
 					break;
 				}
@@ -143,12 +180,11 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "Unleashes a powerful sonic boom that crashes into enemies, deafening and pushing them back.";
+		return "Unleashes a powerful sonic boom. Targets below 10 sound stacks receive +5 stacks and are pushed away. Targets with 10 or more stacks instantly detonate, releasing a powerful shockwave.";
 	}
 
 	@Override
 	public String getInstructions() {
 		return "Left-click to cause a sound crash.";
 	}
-
 }

@@ -22,18 +22,18 @@ import Plugin.AmonPackPlugin;
 
 public class EarthDisc {
 
-    private static List<EarthDisc> instances = new ArrayList<>();
+    protected static List<EarthDisc> instances = new ArrayList<>();
 
-    private Player player;
-    private Location location;
-    private Vector direction;
-    private double damage;
-    private double speed;
-    private boolean destroyOnEntityHit;
-    private long spawnTime;
-    private double radius = 0.5;
-    private BukkitRunnable runnable;
-    private boolean isDead = false;
+    protected Player player;
+    protected Location location;
+    protected Vector direction;
+    protected double damage;
+    protected double speed;
+    protected boolean destroyOnEntityHit;
+    protected long spawnTime;
+    protected double radius = 0.5;
+    protected BukkitRunnable runnable;
+    protected boolean isDead = false;
 
     public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit) {
         this.player = player;
@@ -68,7 +68,7 @@ public class EarthDisc {
         runnable.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
     }
 
-    private void progress() {
+    protected void progress() {
         Vector velocity = direction.clone().multiply(speed);
 
         org.bukkit.util.RayTraceResult result = location.getWorld().rayTraceBlocks(location, velocity, speed,
@@ -114,7 +114,7 @@ public class EarthDisc {
         display();
     }
 
-    private void display() {
+    protected void display() {
         World world = location.getWorld();
         Vector baseVector = new Vector(0, 0.5, 0);
         Particle.DustOptions dustOptions =
