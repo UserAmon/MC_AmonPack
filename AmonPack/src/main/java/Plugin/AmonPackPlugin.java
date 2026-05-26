@@ -164,6 +164,8 @@ public class AmonPackPlugin extends JavaPlugin {
 		// this.getCommand("PvP").setExecutor(new Commands());
 		this.getCommand("Reload").setExecutor(new Commands());
 		this.getCommand("Bounties").setExecutor(new Commands());
+		this.getCommand("party").setExecutor(new Commands());
+		this.getCommand("p").setExecutor(new Commands());
 		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
 		this.getServer().getPluginManager().registerEvents(bountiesMenager, this);
@@ -599,6 +601,10 @@ public class AmonPackPlugin extends JavaPlugin {
 					"CREATE TABLE IF NOT EXISTS Reputation (Player VARCHAR(50) PRIMARY KEY, RepLvL1 INT, RepLvL2 INT, RepLvL3 INT, RepLvL4 INT, RepLvL5 INT, RepLvL6 INT, RepLvL7 INT)");
 			ExecuteQuery(
 					"CREATE TABLE IF NOT EXISTS Jobs (Player VARCHAR(50) PRIMARY KEY, Job1 INT, Job2 INT, Job3 INT, Job4 INT)");
+			ExecuteQuery(
+					"CREATE TABLE IF NOT EXISTS Parties (party_id VARCHAR(36) PRIMARY KEY, leader_uuid VARCHAR(36), friendly_fire INT)");
+			ExecuteQuery(
+					"CREATE TABLE IF NOT EXISTS PartyMembers (player_uuid VARCHAR(36) PRIMARY KEY, party_id VARCHAR(36))");
 			for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
 				ExecuteQuery("CREATE TABLE IF NOT EXISTS Level" + key
 						+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");

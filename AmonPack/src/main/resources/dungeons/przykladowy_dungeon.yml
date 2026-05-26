@@ -69,7 +69,7 @@ encounters:
         x: 0
         y: 61
         z: 12
-        type: "ROGUELITE_CHEST"
+        chest-type: "ROGUELITE_CHEST"
     next: "ENC3"
 
   ENC3:

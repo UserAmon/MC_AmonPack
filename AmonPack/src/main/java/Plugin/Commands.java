@@ -2,6 +2,7 @@ package Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import RPG.Levels.Objects.LevelSkill;
@@ -116,26 +117,20 @@ public class Commands implements CommandExecutor {
                         }
                     } else if (args[0].equalsIgnoreCase("start")) {
                         if (args.length < 2) {
-                            sender.sendMessage(ChatColor.RED + "Uzycie: /dungeons start <dungeonId> [gracz1] [gracz2]...");
+                            sender.sendMessage(ChatColor.RED + "Użycie: /dungeons start <dungeonId>");
                             break;
                         }
+                        if (!(sender instanceof Player)) {
+                            sender.sendMessage(ChatColor.RED + "Tylko gracz może uruchomić dungeon!");
+                            break;
+                        }
+                        Player player = (Player) sender;
                         String dungId = args[1];
-                        List<Player> party = new ArrayList<>();
-                        if (args.length > 2) {
-                            for (int i = 2; i < args.length; i++) {
-                                Player p = Bukkit.getPlayer(args[i]);
-                                if (p != null && p.isOnline()) {
-                                    party.add(p);
-                                }
-                            }
-                        } else if (sender instanceof Player) {
-                            party.add((Player) sender);
-                        }
-                        if (party.isEmpty()) {
-                            sender.sendMessage(ChatColor.RED + "Brak dostepnych graczy do wystartowania dungeonu!");
+                        if (RPG.Dungeons.DungeonManager.getInstance().getActiveInstance(player) != null) {
+                            player.sendMessage(ChatColor.RED + "Jesteś już w aktywnym dungeonie!");
                             break;
                         }
-                        RPG.Dungeons.DungeonManager.getInstance().startDungeon(dungId, party);
+                        RPG.Dungeons.DungeonEntryGui.open(player, dungId);
                     } else {
                         sender.sendMessage(ChatColor.RED + "Niepoprawne argumenty! Dostepne: start, leave, skills, reload");
                     }
@@ -251,6 +246,107 @@ public class Commands implements CommandExecutor {
                         }
                     }
                     MenagerieMenager.StartMenagerie(listofplayers, args[0]);
+                    break;
+                case "party":
+                    if (!(sender instanceof Player)) {
+                        sender.sendMessage("Tylko gracz może użyć tej komendy!");
+                        break;
+                    }
+                    Player pParty = (Player) sender;
+                    if (args.length == 0) {
+                        pParty.sendMessage(ChatColor.GOLD + "========== " + ChatColor.AQUA + "SYSTEM PARTY" + ChatColor.GOLD + " ==========");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party invite <gracz> " + ChatColor.GRAY + "- Zaprasza gracza do party");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party accept " + ChatColor.GRAY + "- Akceptuje zaproszenie");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party leave " + ChatColor.GRAY + "- Opuszcza obecne party");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party kick <gracz> " + ChatColor.GRAY + "- Wyrzuca gracza z party (lider)");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party pvp " + ChatColor.GRAY + "- Przełącza friendly fire (lider)");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party list " + ChatColor.GRAY + "- Pokazuje liste graczy w party");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party chat <tekst> " + ChatColor.GRAY + "- Wysyła wiadomość do party");
+                        pParty.sendMessage(ChatColor.YELLOW + "/party togglechat " + ChatColor.GRAY + "- Togglowanie pętli czatu");
+                        pParty.sendMessage(ChatColor.GOLD + "========================================");
+                        break;
+                    }
+                    
+                    String sub = args[0].toLowerCase();
+                    RPG.Party.PartyManager pm = RPG.Party.PartyManager.getInstance();
+                    
+                    if (sub.equals("invite") || sub.equals("zapros")) {
+                        if (args.length < 2) {
+                            pParty.sendMessage(ChatColor.RED + "Podaj nazwę gracza: /party invite <gracz>");
+                            break;
+                        }
+                        Player target = Bukkit.getPlayer(args[1]);
+                        if (target == null || !target.isOnline()) {
+                            pParty.sendMessage(ChatColor.RED + "Ten gracz jest offline.");
+                            break;
+                        }
+                        pm.invitePlayer(pParty, target);
+                    } else if (sub.equals("accept") || sub.equals("akceptuj")) {
+                        pm.acceptInvite(pParty);
+                    } else if (sub.equals("leave") || sub.equals("opusc")) {
+                        pm.leaveParty(pParty);
+                    } else if (sub.equals("kick") || sub.equals("wyrzuc")) {
+                        if (args.length < 2) {
+                            pParty.sendMessage(ChatColor.RED + "Podaj nazwę gracza: /party kick <gracz>");
+                            break;
+                        }
+                        Player target = Bukkit.getPlayer(args[1]);
+                        if (target == null) {
+                            pParty.sendMessage(ChatColor.RED + "Gracz nieznaleziony.");
+                            break;
+                        }
+                        pm.kickPlayer(pParty, target);
+                    } else if (sub.equals("pvp") || sub.equals("ff")) {
+                        pm.toggleFriendlyFire(pParty);
+                    } else if (sub.equals("list") || sub.equals("lista")) {
+                        RPG.Party.Party partyObj = pm.getParty(pParty.getUniqueId());
+                        if (partyObj == null) {
+                            pParty.sendMessage(ChatColor.RED + "Nie jesteś w żadnej drużynie!");
+                            break;
+                        }
+                        pParty.sendMessage(ChatColor.GOLD + "=== Członkowie drużyny (FF: " + (partyObj.isFriendlyFireEnabled() ? "ON" : "OFF") + ") ===");
+                        for (UUID uuid : partyObj.getMembers()) {
+                            String name = Bukkit.getOfflinePlayer(uuid).getName();
+                            if (name == null) name = uuid.toString();
+                            
+                            String status = Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline() 
+                                    ? ChatColor.GREEN + "[ONLINE]" 
+                                    : ChatColor.RED + "[OFFLINE]";
+                                    
+                            String suffix = partyObj.getLeaderUUID().equals(uuid) ? ChatColor.GOLD + " (Lider) *" : "";
+                            pParty.sendMessage(ChatColor.YELLOW + "- " + name + suffix + " " + status);
+                        }
+                    } else if (sub.equals("chat") || sub.equals("c")) {
+                        if (args.length < 2) {
+                            pParty.sendMessage(ChatColor.RED + "Użycie: /party chat <wiadomość>");
+                            break;
+                        }
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 1; i < args.length; i++) {
+                            sb.append(args[i]).append(" ");
+                        }
+                        pm.sendPartyChat(pParty, sb.toString().trim());
+                    } else if (sub.equals("togglechat") || sub.equals("tc")) {
+                        pm.togglePartyChatRouting(pParty);
+                    } else {
+                        pParty.sendMessage(ChatColor.RED + "Nieznane polecenie party. Wpisz /party aby zobaczyć pomoc.");
+                    }
+                    break;
+                case "p":
+                    if (!(sender instanceof Player)) {
+                        sender.sendMessage("Tylko gracz może użyć tej komendy!");
+                        break;
+                    }
+                    Player pChat = (Player) sender;
+                    if (args.length == 0) {
+                        pChat.sendMessage(ChatColor.RED + "Użycie: /p <wiadomość>");
+                        break;
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    for (String arg : args) {
+                        sb.append(arg).append(" ");
+                    }
+                    RPG.Party.PartyManager.getInstance().sendPartyChat(pChat, sb.toString().trim());
                     break;
             }
         }

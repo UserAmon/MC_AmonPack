@@ -26,3 +26,9 @@ commands:
     usage: /<command>
   bounties:
     usage: /<command>
+  party:
+    usage: /<command>
+    description: "System druzyn Party"
+  p:
+    usage: /<command>
+    description: "Wbudowany czat druzyny"

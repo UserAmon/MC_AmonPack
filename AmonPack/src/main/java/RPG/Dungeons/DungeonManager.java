@@ -221,7 +221,7 @@ public class DungeonManager implements Listener {
                                         break;
                                     case SPAWN_CHEST:
                                         effects.add(new DungeonEffect(
-                                            asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), (String) map.get("type")
+                                            asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), (String) map.getOrDefault("chest-type", "ROGUELITE_CHEST")
                                         ));
                                         break;
                                     case COMPLETE_DUNGEON:

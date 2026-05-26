@@ -441,6 +441,20 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        RPG.Matchmaking.MatchmakingManager.getInstance().handlePlayerQuit(player.getUniqueId());
+        RPG.Party.PartyManager.getInstance().removePlayerFromMemory(player.getUniqueId());
+    }
+
+    @EventHandler
+    public void onPlayerChat(org.bukkit.event.player.AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        if (RPG.Party.PartyManager.getInstance().isPartyChatToggled(player.getUniqueId())) {
+            event.setCancelled(true);
+            Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+                RPG.Party.PartyManager.getInstance().sendPartyChat(player, event.getMessage());
+            });
+        }
     }
 
     /*
@@ -464,6 +478,23 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player victim) {
+            if (event.getDamager() instanceof Player damager) {
+                if (RPG.Party.PartyManager.getInstance().shouldBlockDamage(damager, victim)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+            if (event.getDamager() instanceof org.bukkit.entity.Projectile projectile) {
+                if (projectile.getShooter() instanceof Player damager) {
+                    if (RPG.Party.PartyManager.getInstance().shouldBlockDamage(damager, victim)) {
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
+            }
+        }
+
         if (event.getEntity() instanceof Player p) {
 
             if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p,
@@ -642,6 +673,15 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getInventory().getHolder() instanceof RPG.Dungeons.DungeonEntryGui) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() == null) return;
+            Player p = (Player) event.getWhoClicked();
+            RPG.Dungeons.DungeonEntryGui gui = (RPG.Dungeons.DungeonEntryGui) event.getInventory().getHolder();
+            boolean isLeftClick = event.isLeftClick();
+            gui.handleInventoryClick(p, event.getRawSlot(), isLeftClick);
+            return;
+        }
         if (event.getCurrentItem() != null) {
             Player p = (Player) event.getWhoClicked();
             Inventory inv = p.getInventory();
