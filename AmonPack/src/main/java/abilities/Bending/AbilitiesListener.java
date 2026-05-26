@@ -90,6 +90,12 @@ public class AbilitiesListener implements Listener {
 						new AirPressure(player);
 					} else if (boundAbility.equalsIgnoreCase("EarthHammer")) {
 						new EarthHammer(player);
+					}
+					 else if (boundAbility.equalsIgnoreCase("BloodArrow")) {
+						new BloodArrow(player);
+					}
+					 else if (boundAbility.equalsIgnoreCase("BloodCall")) {
+						new BloodCall(player);
 					} else if (boundAbility.equalsIgnoreCase("IceArch")) {
 						new IceArch(player);
 					} else if (boundAbility.equalsIgnoreCase("SmokeBurst")) {

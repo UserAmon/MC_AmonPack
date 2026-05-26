@@ -62,17 +62,18 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 			int clicks = steadyHandClicks.getOrDefault(player.getUniqueId(), 0);
 			long lastClick = steadyHandLastTime.getOrDefault(player.getUniqueId(), 0L);
 			
-			// Reset clicks if they waited too long (more than 6 seconds) to prevent entering cooldown on next fresh sequence
-			if (clicks > 0 && System.currentTimeMillis() - lastClick > 6000) {
+			if (clicks > 0 && System.currentTimeMillis() - lastClick > 8000) {
 				clicks = 0;
 				steadyHandClicks.put(player.getUniqueId(), 0);
 			}
 
 			if (clicks == 0 && bPlayer.isOnCooldown(this)) {
+				System.out.println("Cooldown active, cannot start SmokeDaggers.");
 				return;
 			}
 			
 			if (clicks > 0 && System.currentTimeMillis() - lastClick < 1000) {
+				System.out.println("Too fast, resetting clicks.");
 				return;
 			}
 			
@@ -86,6 +87,7 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 			} else {
 				this.leaveSmoke = true;
 				bPlayer.addCooldown(this);
+				System.out.println("SmokeDaggers activated with smoke. Clicks: " + clicks);
 				steadyHandClicks.put(player.getUniqueId(), 0);
 			}
 		} else {

@@ -198,11 +198,20 @@ AmonPack:
         - 22
         - 22
         - 28
+        - 24
+        - 6
+        - 10
+        - 9
+        - 1
+        - 3
+        - 105
+        - 96
+        - 95
       WaterManipulation:
         Cost: 0
         Place: 49
         ReqAbilities: []
-      Torrent:
+      Surge:
         Cost: 20
         Place: 31
         ReqAbilities:
@@ -211,7 +220,13 @@ AmonPack:
         Cost: 30
         Place: 13
         ReqAbilities:
-        - Torrent
+        - Surge
+      IceThorn:
+        Cost: 50
+        Place: 4
+        ReqAbilities:
+        - PhaseChange
+        - WaterFist
 
       HealingWaters:
         Cost: 10
@@ -219,15 +234,30 @@ AmonPack:
         ReqAbilities: []
       CalmTide:
         Cost: 30
-        Place: 24
+        Place: 15
         ReqAbilities:
         - HealingWaters
+      BloodBending:
+        Cost: 40
+        Place: 7
+        ReqAbilities:
+        - CalmTide
+      BloodArrow:
+        Cost: 50
+        Place: 87
+        ReqAbilities:
+        - BloodBending
+      BloodCall:
+        Cost: 50
+        Place: 94
+        ReqAbilities:
+        - BloodBending
 
       WaterFist:
         Cost: 15
         Place: 37
         ReqAbilities:
-          - Torrent
+          - WaterManipulation
       Uppercut:
         Cost: 2
         Place: 20
@@ -244,6 +274,17 @@ AmonPack:
         Place: 19
         ReqAbilities:
         - WaterFist
+      TideLock:
+        Cost: 35
+        Place: 0
+        ReqAbilities:
+        - WaterArms
+      Torrent:
+        Cost: 50
+        Place: 2
+        ReqAbilities:
+        - TideLock
+        - PhaseChange
     Air:
       PathDecoration:
         - 39

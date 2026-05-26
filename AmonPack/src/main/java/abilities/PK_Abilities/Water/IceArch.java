@@ -4,6 +4,7 @@ import com.projectkorra.projectkorra.attribute.Attribute;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -47,7 +48,7 @@ public class IceArch extends IceAbility implements AddonAbility {
 
 	// Rising animation state
 	private int risingTick = 0;
-	private static final int RISING_TICKS = 25;   // ~1.25 seconds
+	private static final int RISING_TICKS = 20;   // 1 second
 	private static final int CONVERSION_RADIUS = 5;
 	private Location riseOrigin;
 	// track which enemies already got spiked
@@ -116,22 +117,17 @@ public class IceArch extends IceAbility implements AddonAbility {
 							player.getLocation().clone().add(player.getLocation().getDirection()).multiply(1), 4, 0.3,
 							0.3, 0.3, 0, Material.ICE.createBlockData());
 				} else if (!player.isSneaking() || i == 1) {
-					// Transition to RISING animation state on first release
 					if (i == 0) {
 						i = 1;
 						risingTick = 0;
 						riseOrigin = player.getLocation().clone();
 						abilityState = 2;
-						// Slight upward boost to the player
-						player.setVelocity(player.getVelocity().add(new Vector(0, 0.45, 0)));
 						bPlayer.addCooldown(this);
 						return;
 					}
-					// State 1 firing (i==1 means rising is done, now fire)
 					runFiringPhase();
 				}
 			} else if (abilityState == 2) {
-				// RISING animation
 				progressRising();
 			}
 		} else {
@@ -142,51 +138,64 @@ public class IceArch extends IceAbility implements AddonAbility {
 	}
 
 	/**
-	 * Smooth rising animation: converts nearby bendable blocks to snow/ice,
-	 * sends ice particles, and creates ice spikes under nearby enemies.
+	 * Rising animation: builds an ice spike/arch under the player over one second,
+	 * then lightly launches and pushes them backward.
 	 */
 	private void progressRising() {
 		risingTick++;
 
-		// Particle burst around player
 		Location pLoc = player.getLocation().clone().add(0, 0.5, 0);
 		ParticleEffect.BLOCK_CRACK.display(pLoc, 8, 1.2, 0.4, 1.2, 0.05, Material.ICE.createBlockData());
 		ParticleEffect.BLOCK_CRACK.display(pLoc, 5, 0.8, 0.2, 0.8, 0.03, Material.SNOW_BLOCK.createBlockData());
 		pLoc.getWorld().spawnParticle(Particle.SNOWFLAKE, pLoc, 12, 1.5, 0.5, 1.5, 0.08);
 
-		// Gradually expand the conversion radius
+		Location base = player.getLocation().clone().subtract(0, 1, 0);
+		int height = 1 + (risingTick * 2 / RISING_TICKS);
+		for (int h = 0; h < height; h++) {
+			Location spikeLoc = base.clone().add(0, h, 0);
+			Block block = spikeLoc.getBlock();
+			if (block.getType().isAir() || block.getType() == Material.WATER) {
+				new TempBlock(block, Material.ICE).setRevertTime(ArchDuration + 2000L);
+			}
+			if (h == height - 1) {
+				Location left = spikeLoc.clone().add(-1, 0, 0);
+				Location right = spikeLoc.clone().add(1, 0, 0);
+				if (left.getBlock().getType().isAir() || left.getBlock().getType() == Material.WATER) {
+					new TempBlock(left.getBlock(), Material.ICE).setRevertTime(ArchDuration + 2000L);
+				}
+				if (right.getBlock().getType().isAir() || right.getBlock().getType() == Material.WATER) {
+					new TempBlock(right.getBlock(), Material.ICE).setRevertTime(ArchDuration + 2000L);
+				}
+			}
+		}
 		int currentRadius = 1 + (risingTick * CONVERSION_RADIUS / RISING_TICKS);
 		convertBlocksAround(riseOrigin, currentRadius);
 
-		// Ice spikes under nearby enemies (only once per enemy)
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(riseOrigin, 7)) {
 			if (!(entity instanceof LivingEntity)) continue;
 			if (entity.getUniqueId().equals(player.getUniqueId())) continue;
 			if (spikedEnemies.contains(entity)) continue;
 
 			spikedEnemies.add(entity);
-			Location enemyLoc = entity.getLocation().clone();
-			// Animate a growing spike: 3 blocks tall from ground
-			spawnIceSpikeAnimation(enemyLoc);
-			DamageHandler.damageEntity(entity, Dmg * 0.5, this);
+			LivingEntity enemy = (LivingEntity) entity;
+			spawnIceSpikeAnimation(enemy.getLocation());
+			Vector knockback = enemy.getLocation().toVector().subtract(player.getLocation().toVector()).setY(0.35).normalize().multiply(0.8);
+			enemy.setVelocity(knockback);
+			DamageHandler.damageEntity(enemy, Dmg * 0.5, this);
 		}
 
-		// After RISING_TICKS ticks, switch to firing phase
 		if (risingTick >= RISING_TICKS) {
-			abilityState = 1; // back to firing, i is already 1
-			dir = player.getLocation().getDirection().clone();
-			origin = player.getLocation().add(0, 1, 0).clone();
-			projectile = origin.clone();
+			Vector backward = player.getLocation().getDirection().clone().setY(0).normalize().multiply(-0.45);
+			backward.setY(0.35);
+			player.setVelocity(backward);
+			player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.8f);
+			player.getWorld().spawnParticle(Particle.CRIT, player.getLocation().clone().add(0, 0.7, 0), 20, 0.3, 0.3, 0.3, 0.05);
+			remove();
 		}
 	}
 
-	/**
-	 * Converts earthbendable, plantbendable and waterbendable blocks
-	 * in a sphere of given radius around 'center' to snow/ice.
-	 */
 	private void convertBlocksAround(Location center, int radius) {
 		for (Block b : GeneralMethods.getBlocksAroundPoint(center, radius)) {
-			// Only affect ground-level and below-eye-level blocks
 			if (b.getY() > center.getY() + 1) continue;
 			if (b.getY() < center.getY() - 2) continue;
 			Material mat = b.getType();
@@ -194,17 +203,12 @@ public class IceArch extends IceAbility implements AddonAbility {
 					|| WaterAbility.isPlantbendable(player, mat, false)
 					|| EarthAbility.isEarthbendable(player, b);
 			if (!isConvertible) continue;
-			// Randomly assign snow or ice, favouring snow
 			Material target = (Math.random() < 0.65) ? Material.SNOW_BLOCK : Material.PACKED_ICE;
 			TempBlock tb = new TempBlock(b, target);
 			tb.setRevertTime(ArchDuration + 5000L);
 		}
 	}
 
-	/**
-	 * Plays a growing ice column animation starting from 1 block below the
-	 * target entity's feet, growing 3 blocks upward.
-	 */
 	private void spawnIceSpikeAnimation(Location enemyLoc) {
 		Location base = enemyLoc.clone().subtract(0, 1, 0);
 		for (int h = 0; h < 3; h++) {
@@ -222,9 +226,6 @@ public class IceArch extends IceAbility implements AddonAbility {
 		Methods.spawnFallingBlocks(base.clone().add(0, 3, 0), Material.ICE, 4, 0.9, player);
 	}
 
-	/**
-	 * The original arch-projectile firing phase (runs after rising).
-	 */
 	private void runFiringPhase() {
 		if (dir == null) {
 			dir = player.getLocation().getDirection().clone();
@@ -242,21 +243,6 @@ public class IceArch extends IceAbility implements AddonAbility {
 					&& entity.getLocation().distance(player.getLocation()) > entity.getLocation()
 							.distance(projectile)) {
 				DamageHandler.damageEntity(entity, Dmg, this);
-			}
-		}
-		for (Block b : GeneralMethods.getBlocksAroundPoint(projectile, ArchWidth)) {
-			if (b.getType() == Material.WATER) {
-				TempBlock tb1 = new TempBlock(b, Material.ICE);
-				tb1.setRevertTime(5000);
-			} else if (b.getLocation().distance(projectile) > Thick && b.getType() == Material.AIR
-					&& b.getLocation().distance(origin) > (Thick + 1)
-					&& b.getLocation().distance(origin) > projectile.distance(origin)) {
-				TempBlock tb1 = new TempBlock(b, Material.ICE);
-				tb1.setRevertTime(ArchDuration);
-			} else if (b.getLocation().distance(projectile) < Thick && b.getType() == Material.ICE
-					&& b.getLocation().getY() >= (projectile.getY() - 1)) {
-				TempBlock tb1 = new TempBlock(b, Material.AIR);
-				tb1.setRevertTime(5000);
 			}
 		}
 	}
