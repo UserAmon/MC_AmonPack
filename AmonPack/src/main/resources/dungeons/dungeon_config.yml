@@ -1,0 +1,55 @@
+# Konfiguracja Skrzyń z Nagrodami (Rogue-lite Chests) oraz Błogosławieństw w Dungeonach
+# Tutaj możesz zdefiniować nazwy, przedmioty, lore oraz wartości liczbowe dla ulepszeń.
+
+stats:
+  HP:
+    display-name: "&cMaksymalne HP"
+    material: "RED_DYE"
+    lore:
+      - "&7Statystyka: &a+4 HP (+2 Serca)"
+      - "&7Zwieksza Twoja przezywalnosc w lochach."
+    value: 4.0
+  DEF:
+    display-name: "&bObrona (DEF)"
+    material: "IRON_CHESTPLATE"
+    lore:
+      - "&7Statystyka: &a+10 DEF"
+      - "&7Zmniejsza otrzymywane obrazenia."
+    value: 10.0
+  DMG:
+    display-name: "&6Obrazenia (DAMAGE)"
+    material: "BLAZE_POWDER"
+    lore:
+      - "&7Statystyka: &a+15% Obrazen"
+      - "&7Zwieksza moc Twoich atakow i czarow."
+    value: 0.15
+  SPEED:
+    display-name: "&ePredkosc (SPEED)"
+    material: "FEATHER"
+    lore:
+      - "&7Statystyka: &a+10% Predkosci"
+      - "&7Szybciej unikasz potworow i pulapek."
+    value: 0.02
+
+blessings:
+  VAMPIRISM:
+    display-name: "&dBlogoslawienstwo: Wampiryzm Plomieni"
+    material: "GHAST_TEAR"
+    lore:
+      - "&7Efekt: &aLeczenie przy zabiciu"
+      - "&7Zabicie podpalonego wroga"
+      - "&7natychmiast leczy o 2 serca (4 HP)."
+  DODGE:
+    display-name: "&dBlogoslawienstwo: Unik"
+    material: "RABBIT_FOOT"
+    lore:
+      - "&7Efekt: &a+10% szansy na unik"
+      - "&7Masz stala szanse na calkowite"
+      - "&7zablokowanie wrogich obrazen."
+  ADRENALINE:
+    display-name: "&dBlogoslawienstwo: Adrenalina"
+    material: "REDSTONE"
+    lore:
+      - "&7Efekt: &aWscieklosc przy niskim zdrowiu"
+      - "&7Zadajesz +35% obrazen, gdy"
+      - "&7Twoje zdrowie spadnie ponizej 20% max."

@@ -1,9 +1,9 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
-import RPG.Menagerie.Upgrades;
-import RPG.Menagerie.ObjectiveConditions;
-import RPG.Menagerie.Objectives;
-import RPG.Menagerie.UpgradesMenager;
+import RPG.UnUsed.Menagerie.Upgrades;
+import RPG.UnUsed.Menagerie.ObjectiveConditions;
+import RPG.UnUsed.Menagerie.Objectives;
+import RPG.UnUsed.Menagerie.UpgradesMenager;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.board.BendingBoardManager;
@@ -233,7 +233,7 @@ public class Menagerie {
         List<String> UpgradesOfPlayer = AmonPackPlugin.getPlayerUpgrades(p);
         List<Upgrades> eligibleUpgrades = new ArrayList<>();
         //List<String> SelectedPath = new ArrayList<>(Objects.requireNonNull(BendingGuiMenu.getPlayerSkillTreeByName(p)).getSelectedPath());
-        for (RPG.Menagerie.Upgrades up : UpgradesMenager.MenagerieUpgradesList) {
+        for (RPG.UnUsed.Menagerie.Upgrades up : UpgradesMenager.MenagerieUpgradesList) {
             if (
                     !UpgradesOfPlayer.contains(up.getName()) &&
                     (up.getReqUpdates() == null || UpgradesOfPlayer.stream().anyMatch(up.getReqUpdates()::contains))) {
@@ -297,7 +297,7 @@ public class Menagerie {
             if (e.getCurrentItem().getType().equals(Material.BARRIER)) {
                 OpenMenagerieMenu(p);
             }
-            for (RPG.Menagerie.Upgrades upgrade:UpgradesMenager.MenagerieUpgradesList) {
+            for (RPG.UnUsed.Menagerie.Upgrades upgrade:UpgradesMenager.MenagerieUpgradesList) {
                 if (e.getCurrentItem().equals(upgrade.getItem())){
                     //if (PlayerPoints.get(p)>=upgrade.getPrice()){
                         List<String> TestList = new ArrayList<>(AmonPackPlugin.getPlayerUpgrades(p));

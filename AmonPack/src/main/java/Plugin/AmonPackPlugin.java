@@ -18,10 +18,10 @@ import RPG.Levels.BendingTree.Levels_Bending;
 import RPG.Levels.PlayerLevelMenager;
 
 import Plugin.Listeners;
-//import RPG.Menagerie.MMORPG.GuiMenu;
+//import RPG.UnUsed.Menagerie.MMORPG.GuiMenu;
 
 import Plugin.SimpleWorldGenerator;
-import RPG.Menagerie.UpgradesMenager;
+import RPG.UnUsed.Menagerie.UpgradesMenager;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.ListenerPriority;
@@ -78,6 +78,8 @@ public class AmonPackPlugin extends JavaPlugin {
 	private static FileConfiguration LevelConfig;
 	private static FileConfiguration AbilitiesConfig;
 	private static FileConfiguration SkillTreeConfig;
+	private static FileConfiguration DungeonConfig;
+	private static File DungeonConfigFile;
 	private static NamespacedKey upgradeKey;
 
 	@Override
@@ -104,7 +106,28 @@ public class AmonPackPlugin extends JavaPlugin {
 		if (!SkillTreeFile.exists()) {
 			saveResource("skilltree.yml", false);
 		}
+
+		File dungeonsDir = new File(getDataFolder(), "dungeons");
+		if (!dungeonsDir.exists()) {
+			dungeonsDir.mkdirs();
+		}
+		File exampleDungeonFile = new File(dungeonsDir, "przykladowy_dungeon.yml");
+		if (!exampleDungeonFile.exists()) {
+			saveResource("dungeons/przykladowy_dungeon.yml", false);
+		}
+		File docsFile = new File(dungeonsDir, "dokumentacja_dungeonow.yml");
+		if (!docsFile.exists()) {
+			saveResource("dungeons/dokumentacja_dungeonow.yml", false);
+		}
+
 		setDungeonsConfig(MenagerieConfigFile);
+		
+		DungeonConfigFile = new File(getDataFolder(), "dungeons/dungeon_config.yml");
+		if (!DungeonConfigFile.exists()) {
+			saveResource("dungeons/dungeon_config.yml", false);
+		}
+		setDungeonConfig(YamlConfiguration.loadConfiguration(DungeonConfigFile));
+
 		configpath = getDataFolder();
 		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
 		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
@@ -135,6 +158,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		this.getCommand("SelectElement").setExecutor(new Commands());
 		this.getCommand("ArenaBuilding").setExecutor(new Commands());
 		this.getCommand("Menagerie").setExecutor(new Commands());
+		this.getCommand("Dungeons").setExecutor(new Commands());
 		// this.getCommand("Menagerie").setTabCompleter(new CommandsTabMenager());
 		// this.getCommand("ArenaBuilding").setTabCompleter(new CommandsTabMenager());
 		// this.getCommand("PvP").setExecutor(new Commands());
@@ -151,6 +175,8 @@ public class AmonPackPlugin extends JavaPlugin {
 			// new ForestMenager();
 			// MenaMenager = new MenagerieMenager();
 			new UpgradesMenager();
+			new RPG.Dungeons.DungeonManager();
+			this.getServer().getPluginManager().registerEvents(RPG.Dungeons.DungeonManager.getInstance(), this);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -161,6 +187,9 @@ public class AmonPackPlugin extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		try {
+			if (RPG.Dungeons.DungeonManager.getInstance() != null) {
+				RPG.Dungeons.DungeonManager.getInstance().cleanupAll();
+			}
 			if (PlayerMenager != null) {
 				PlayerMenager.LoadIntoDatabase();
 			}
@@ -298,6 +327,8 @@ public class AmonPackPlugin extends JavaPlugin {
 				LevelConfig.set("AmonPack.Levels.MINING.Gui.Title", ChatColor.GOLD + "Doświadczenie w Kopalni: ");
 				LevelConfig.set("AmonPack.Levels.COMBAT.Gui.Place", 22);
 				LevelConfig.set("AmonPack.Levels.COMBAT.Gui.Title", ChatColor.GOLD + "Doświadczenie w Strefie Walki: ");
+				LevelConfig.set("AmonPack.Levels.DUNGEON.Gui.Place", 24);
+				LevelConfig.set("AmonPack.Levels.DUNGEON.Gui.Title", ChatColor.GOLD + "Poziom Eksploracji Dungeonów: ");
 			}
 			LevelConfig.save(LevelConfigFile);
 			AbilitiesConfig.save(AbilitiesConfigFile);
@@ -781,6 +812,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			// MenaMenager.ReloadMenageries();
 			// ForestMenager.LoadData();
 			SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(configpath, "skilltree.yml"));
+			DungeonConfig = YamlConfiguration.loadConfiguration(new File(configpath, "dungeons/dungeon_config.yml"));
 			levelsBending.LoadData();
 			farmmenager.ReloadConfig();
 			combatMenager.ReloadConfig();
@@ -799,6 +831,14 @@ public class AmonPackPlugin extends JavaPlugin {
 
 	public static FileConfiguration getSkillTreeConfig() {
 		return SkillTreeConfig;
+	}
+
+	public static FileConfiguration getDungeonConfig() {
+		return DungeonConfig;
+	}
+
+	public static void setDungeonConfig(FileConfiguration DungeonConfig) {
+		AmonPackPlugin.DungeonConfig = DungeonConfig;
 	}
 
 	public static void setDungeonsConfig(List<File> DungeonsConfig) {

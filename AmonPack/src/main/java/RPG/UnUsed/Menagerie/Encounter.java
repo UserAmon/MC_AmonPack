@@ -1,8 +1,8 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
-import RPG.Menagerie.ObjectiveConditions;
-import RPG.Menagerie.ObjectiveEffect;
-import RPG.Menagerie.Objectives;
+import RPG.UnUsed.Menagerie.ObjectiveConditions;
+import RPG.UnUsed.Menagerie.ObjectiveEffect;
+import RPG.UnUsed.Menagerie.Objectives;
 import org.bukkit.Location;
 
 import java.util.ArrayList;

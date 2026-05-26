@@ -1,0 +1,84 @@
+name: "Komnata Cieni"
+schematic: "komnata_cieni.schem"
+paste-location:
+  x: 0
+  y: 60
+  z: 0
+spawn-location:
+  x: 0
+  y: 61
+  z: 0
+exit-location:
+  world: "world"
+  x: 100
+  y: 64
+  z: 100
+initial-encounter: "ENC1"
+
+# Ograniczenie puli ulepszeń/błogosławieństw w skrzyniach (opcjonalne - brak oznacza dostęp do wszystkich z pliku dungeon_config.yml)
+loot-chest:
+  allowed-stats:
+    - HP
+    - DEF
+    - DMG
+    - SPEED
+  allowed-blessings:
+    - VAMPIRISM
+    - DODGE
+    - ADRENALINE
+
+rewards:
+  dungeon-xp: 250
+  money: 500
+  commands:
+    - "give %player% gold_ingot 5"
+  items:
+    item1:
+      material: "GOLDEN_APPLE"
+      amount: 1
+      display-name: "&6Jablko Zwyciezcy"
+      lore:
+        - "&7Nagroda za ukonczenie dungeonu."
+
+encounters:
+  ENC1:
+    description: "Start lochu"
+    conditions:
+      - type: "ALL_PLAYERS_READY"
+    effects:
+      - type: "SEND_MESSAGE"
+        message: "&a[Dungeon] &fRozpoczalem przygode! Przygotuj sie!"
+      - type: "SPAWN_MOB"
+        mob-name: "ShadowCreeper"
+        amount: 3
+        level: 1
+        x: 0
+        y: 61
+        z: 10
+        range: 2
+    next: "ENC2"
+
+  ENC2:
+    description: "Loot ze skrzyni"
+    conditions:
+      - type: "KILL_MOBS"
+        mob-name: "ShadowCreeper"
+        amount: 3
+    effects:
+      - type: "SPAWN_CHEST"
+        x: 0
+        y: 61
+        z: 12
+        type: "ROGUELITE_CHEST"
+    next: "ENC3"
+
+  ENC3:
+    description: "Wyjscie"
+    conditions:
+      - type: "PLAYER_ENTER_AREA"
+        x: 0
+        y: 61
+        z: 15
+        radius: 2.0
+    effects:
+      - type: "COMPLETE_DUNGEON"

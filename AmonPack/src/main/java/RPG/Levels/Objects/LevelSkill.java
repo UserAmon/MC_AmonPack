@@ -19,7 +19,8 @@ public class LevelSkill {
         SMITHING, // Przepalanie
         BUILDING, // Budowanie
         CRAFTING, // Craftowanie
-        BOUNTY // Zlecenia
+        BOUNTY, // Zlecenia
+        DUNGEON // Eksploracja lochów
 
     }
 

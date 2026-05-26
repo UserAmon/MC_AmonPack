@@ -1,4 +1,4 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
 import Plugin.Commands;
 import org.bukkit.Location;

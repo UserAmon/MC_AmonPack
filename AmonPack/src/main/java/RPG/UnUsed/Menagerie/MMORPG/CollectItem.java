@@ -1,4 +1,4 @@
-package RPG.Menagerie.MMORPG;
+package RPG.UnUsed.Menagerie.MMORPG;
 /*
 import Plugin.Commands;
 import Plugin.AmonPackPlugin;

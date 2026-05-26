@@ -1,4 +1,4 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;

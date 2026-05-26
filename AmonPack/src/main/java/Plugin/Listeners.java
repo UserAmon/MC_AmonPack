@@ -1224,9 +1224,9 @@ public class Listeners implements Listener {
      * false, false));
      * }}
      * 
-     * for (RPG.Menagerie.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
+     * for (RPG.UnUsed.Menagerie.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
      * if (upgrade.contains("SpiritOrbs_1_Dmg") && UPV.getType() ==
-     * RPG.Menagerie.Upgrades.MenagerieUpgradeType.BUFF){
+     * RPG.UnUsed.Menagerie.Upgrades.MenagerieUpgradeType.BUFF){
      * Random rand = new Random();
      * int chance = rand.nextInt(10);
      * if (chance < 3) {
@@ -1239,7 +1239,7 @@ public class Listeners implements Listener {
      * }}
      * }
      * if (upgrade.contains("Ignitions_1_Buff") && UPV.getType() ==
-     * RPG.Menagerie.Upgrades.MenagerieUpgradeType.BUFF){
+     * RPG.UnUsed.Menagerie.Upgrades.MenagerieUpgradeType.BUFF){
      * if (Victim.getFireTicks()>0){
      * if(!event.getCause().equals(EntityDamageEvent.DamageCause.FIRE_TICK)&&
      * !event.getCause().equals(EntityDamageEvent.DamageCause.FIRE)){
@@ -1254,7 +1254,7 @@ public class Listeners implements Listener {
      * }}
      * }
      * if (upgrade.contains("Dmg_1_Buff") && UPV.getType() ==
-     * RPG.Menagerie.Upgrades.MenagerieUpgradeType.BUFF){
+     * RPG.UnUsed.Menagerie.Upgrades.MenagerieUpgradeType.BUFF){
      * if(!event.getCause().equals(EntityDamageEvent.DamageCause.FIRE_TICK)&&
      * !event.getCause().equals(EntityDamageEvent.DamageCause.FIRE)){
      * if(FireDamageTimer.getInstances().keySet().contains(Victim)){
@@ -1411,11 +1411,11 @@ public class Listeners implements Listener {
      * List<String> upgrade = AmonPackPlugin.getPlayerUpgrades(p);
      * for (Menagerie mena:ListOfAllMenageries) {
      * if (mena.IsInMenagerie(event.getAbility().getPlayer().getLocation())){
-     * for (RPG.Menagerie.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
+     * for (RPG.UnUsed.Menagerie.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
      * if (upgrade.contains(UPV.getName()) &&
      * event.getAbility().getName().equalsIgnoreCase(UPV.getAbilityName())){
      * if (UPV.getType() ==
-     * RPG.Menagerie.Upgrades.MenagerieUpgradeType.ABILITYBUFF){
+     * RPG.UnUsed.Menagerie.Upgrades.MenagerieUpgradeType.ABILITYBUFF){
      * UPV.ApplyEffects((CoreAbility) event.getAbility());
      * break;
      * }}}

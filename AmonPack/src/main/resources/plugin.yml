@@ -4,6 +4,7 @@ main: Plugin.AmonPackPlugin
 api-version: 1.20
 authors: [ Amon ]
 depend: ['ProjectKorra']
+softdepend: [WorldEdit, FastAsyncWorldEdit]
 description: 'Plugin made for Avatarserv'
 commands:
   Puzzle:
@@ -12,6 +13,9 @@ commands:
     usage: /<command>
   Menagerie:
     usage: /<command>
+  dungeons:
+    usage: /<command>
+    description: "Modulowy system lochow rogue-lite"
   Level:
     usage: /<command>
   SelectElement:

@@ -6,8 +6,8 @@ import java.util.List;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import RPG.Levels.Objects.LevelSkill;
 import RPG.Levels.PlayerLevelMenager;
-//import RPG.Menagerie.MMORPG.GuiMenu;
-import RPG.Menagerie.MenagerieMenager;
+//import RPG.UnUsed.Menagerie.MMORPG.GuiMenu;
+import RPG.UnUsed.Menagerie.MenagerieMenager;
 import RPG.Bounties.BountiesMenager;
 import com.projectkorra.projectkorra.Element;
 import Plugin.AmonPackPlugin;
@@ -88,6 +88,60 @@ public class Commands implements CommandExecutor {
                 break;
             case "reload":
                 AmonPackPlugin.reloadAllConfigs();
+                break;
+            case "dungeons":
+                if (args.length > 0) {
+                    if (args[0].equalsIgnoreCase("reload")) {
+                        if (sender.isOp()) {
+                            RPG.Dungeons.DungeonManager.getInstance().loadTemplates();
+                            sender.sendMessage(ChatColor.GREEN + "[Dungeons] Szablony zostaly przeladowane!");
+                        } else {
+                            sender.sendMessage(ChatColor.RED + "Brak uprawnien!");
+                        }
+                    } else if (args[0].equalsIgnoreCase("leave") && sender instanceof Player) {
+                        Player player = (Player) sender;
+                        RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance().getActiveInstance(player);
+                        if (run != null) {
+                            run.ejectPlayer(player);
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Nie jestes w zadnym dungeonie!");
+                        }
+                    } else if (args[0].equalsIgnoreCase("skills") && sender instanceof Player) {
+                        Player player = (Player) sender;
+                        RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance().getActiveInstance(player);
+                        if (run != null) {
+                            AmonPackPlugin.levelsBending.OpenBendingSkillMenu(player.getName());
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Ta komenda dziala tylko w dungeonie!");
+                        }
+                    } else if (args[0].equalsIgnoreCase("start")) {
+                        if (args.length < 2) {
+                            sender.sendMessage(ChatColor.RED + "Uzycie: /dungeons start <dungeonId> [gracz1] [gracz2]...");
+                            break;
+                        }
+                        String dungId = args[1];
+                        List<Player> party = new ArrayList<>();
+                        if (args.length > 2) {
+                            for (int i = 2; i < args.length; i++) {
+                                Player p = Bukkit.getPlayer(args[i]);
+                                if (p != null && p.isOnline()) {
+                                    party.add(p);
+                                }
+                            }
+                        } else if (sender instanceof Player) {
+                            party.add((Player) sender);
+                        }
+                        if (party.isEmpty()) {
+                            sender.sendMessage(ChatColor.RED + "Brak dostepnych graczy do wystartowania dungeonu!");
+                            break;
+                        }
+                        RPG.Dungeons.DungeonManager.getInstance().startDungeon(dungId, party);
+                    } else {
+                        sender.sendMessage(ChatColor.RED + "Niepoprawne argumenty! Dostepne: start, leave, skills, reload");
+                    }
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Dostepne podkomendy: start, leave, skills, reload");
+                }
                 break;
             case "bounties":
                 if (sender instanceof Player) {

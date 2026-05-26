@@ -11,7 +11,7 @@ import org.bukkit.util.Vector;
 import java.util.HashMap;
 import java.util.Map;
 
-import static RPG.Menagerie.UpgradesMenager.MoonBow;
+import static RPG.UnUsed.Menagerie.UpgradesMenager.MoonBow;
 
 public class BowAbility {
     private static final Map<Player, Integer> playerShots = new HashMap<>();

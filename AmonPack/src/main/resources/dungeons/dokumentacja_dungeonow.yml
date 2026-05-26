@@ -1,0 +1,171 @@
+# =========================================================================
+# DOKUMENTACJA SYSTEMU DUNGEONÓW - WARUNKI I EFEKTY DLA ENCOUNTERS (ETAPÓW)
+# =========================================================================
+# Ten plik służy wyłącznie jako dokumentacja i instrukcja dla administratora.
+# Pokazuje wszystkie dostępne Warunki (Conditions) oraz Efekty (Effects),
+# które można wykorzystać w plikach skryptów lochów w folderze "dungeons/".
+# =========================================================================
+
+dokumentacja:
+  informacje-ogolne:
+    opis: "Dungeon składa się z etapów (encounters). Każdy etap posiada warunki zakończenia oraz efekty wywoływane na starcie i na końcu."
+    uwagi: "Wielkości liter w typach warunków i efektów MAJĄ znaczenie i muszą być pisane wielkimi literami (UPPERCASE)."
+
+  # =========================================================================
+  # 1. WARUNKI (CONDITIONS) - Decydują o ukończeniu danego etapu (Encounter)
+  # =========================================================================
+  warunki:
+    ALL_PLAYERS_READY:
+      opis: "Wymaga, aby wszyscy gracze w lochu potwierdzili gotowość kompasem (PPM na kompas gotowości w ręce)."
+      przyklad:
+        - type: "ALL_PLAYERS_READY"
+
+    PLAYER_ENTER_AREA:
+      opis: "Wymaga, aby co najmniej jeden gracz zbliżył się do podanego punktu na określony promień."
+      parametry:
+        x: "Współrzędna X środka strefy (Double)"
+        y: "Współrzędna Y środka strefy (Double)"
+        z: "Współrzędna Z środka strefy (Double)"
+        radius: "Promień strefy detekcji (Double)"
+      przyklad:
+        - type: "PLAYER_ENTER_AREA"
+          x: 10.5
+          y: 61.0
+          z: 25.0
+          radius: 3.0
+
+    KILL_MOBS:
+      opis: "Wymaga pokonania określonej liczby konkretnych potworów (po typie moba lub nazwie wyświetlanej)."
+      parametry:
+        mob-name: "Typ potwora (np. ZOMBIE, CREEPER) lub jego customowa nazwa wyświetlana (String)"
+        amount: "Wymagana liczba potworów do zabicia (Integer)"
+      przyklad:
+        - type: "KILL_MOBS"
+          mob-name: "ShadowCreeper"
+          amount: 5
+
+    INTERACT_BLOCK_WITH_ITEM:
+      opis: "Wymaga kliknięcia PPM na blok o konkretnych współrzędnych przy użyciu określonego klucza/przedmiotu (przedmiot ulega zużyciu)."
+      parametry:
+        x: "Współrzędna X bloku (Double)"
+        y: "Współrzędna Y bloku (Double)"
+        z: "Współrzędna Z bloku (Double)"
+        block-material: "Materiał bloku, na który trzeba kliknąć (np. IRON_DOOR, STONE_BUTTON) (String)"
+        item-material: "Materiał przedmiotu wymagany jako klucz (np. TRIPWIRE_HOOK, LEVER) (Opcjonalny, String)"
+        item-display-name: "Dokładna nazwa klucza (np. '&6Klucz Bramy') (Opcjonalna, String)"
+      przyklad:
+        - type: "INTERACT_BLOCK_WITH_ITEM"
+          x: 12.0
+          y: 62.0
+          z: -5.0
+          block-material: "IRON_DOOR"
+          item-material: "TRIPWIRE_HOOK"
+          item-display-name: "&6Klucz Cieni"
+
+  # =========================================================================
+  # 2. EFEKTY (EFFECTS) - Akcje wykonywane na starcie etapu lub przy jego ukończeniu
+  # =========================================================================
+  efekty:
+    SEND_MESSAGE:
+      opis: "Wysyła sformatowaną wiadomość tekstową (obsługuje kolory '&') do wszystkich uczestników lochu."
+      parametry:
+        message: "Treść wiadomości do wysłania (String)"
+      przyklad:
+        - type: "SEND_MESSAGE"
+          message: "&a[Dungeon] &fBrama Cieni została otwarta! Ruszaj dalej."
+
+    TELEPORT_PLAYERS:
+      opis: "Teleportuje całą drużynę do podanego punktu wewnątrz instancji lochu."
+      parametry:
+        x: "Współrzędna X (Double)"
+        y: "Współrzędna Y (Double)"
+        z: "Współrzędna Z (Double)"
+      przyklad:
+        - type: "TELEPORT_PLAYERS"
+          x: 0.0
+          y: 61.0
+          z: 50.0
+
+    SPAWN_MOB:
+      opis: "Respi określoną grupę potworów wokół podanej lokacji z losowym rozrzutem."
+      parametry:
+        mob-name: "Nazwa typu potwora ze Spigota (np. ZOMBIE, SKELETON) lub nazwa customowa (String)"
+        amount: "Ilość potworów do zrespienia (Integer)"
+        level: "Poziom potwora wpływający na jego atrybuty (Integer)"
+        x: "Środkowa współrzędna X respawnu (Double)"
+        y: "Środkowa współrzędna Y respawnu (Double)"
+        z: "Środkowa współrzędna Z respawnu (Double)"
+        range: "Maksymalny rozrzut od punktu środkowego w poziomie (Double)"
+      przyklad:
+        - type: "SPAWN_MOB"
+          mob-name: "ZOMBIE"
+          amount: 3
+          level: 5
+          x: 0.0
+          y: 61.0
+          z: 15.0
+          range: 2.5
+
+    OPEN_DOOR:
+      opis: "Zastępuje bloki w wyznaczonym obszarze (prostopadłościanie) powietrzem lub innym wybranym blokiem."
+      parametry:
+        x1: "Punkt A - Współrzędna X (Double)"
+        y1: "Punkt A - Współrzędna Y (Double)"
+        z1: "Punkt A - Współrzędna Z (Double)"
+        x2: "Punkt B - Współrzędna X (Double)"
+        y2: "Punkt B - Współrzędna Y (Double)"
+        z2: "Punkt B - Współrzędna Z (Double)"
+        material: "Blok, na jaki zostanie zamieniony obszar (domyślnie AIR) (Opcjonalny, String)"
+      przyklad:
+        - type: "OPEN_DOOR"
+          x1: 10.0
+          y1: 60.0
+          z1: 5.0
+          x2: 12.0
+          y2: 63.0
+          z2: 5.0
+          material: "AIR"
+
+    CLOSE_DOOR:
+      opis: "Zabudowuje wyznaczony obszar (prostopadłościan) określonym rodzajem bloków (np. blokuje przejście)."
+      parametry:
+        x1: "Punkt A - Współrzędna X (Double)"
+        y1: "Punkt A - Współrzędna Y (Double)"
+        z1: "Punkt A - Współrzędna Z (Double)"
+        x2: "Punkt B - Współrzędna X (Double)"
+        y2: "Punkt B - Współrzędna Y (Double)"
+        z2: "Punkt B - Współrzędna Z (Double)"
+        material: "Blok, którym zostanie zabudowany obszar (np. IRON_BARS, STONE) (String)"
+      przyklad:
+        - type: "CLOSE_DOOR"
+          x1: 10.0
+          y1: 60.0
+          z1: 5.0
+          x2: 12.0
+          y2: 63.0
+          z2: 5.0
+          material: "IRON_BARS"
+
+    GIVE_READY_COMPASS:
+      opis: "Rozdaje wszystkim graczom w drużynie Kompas Gotowości oraz Skrzynię Menu Umiejętności w celu przygotowania."
+      przyklad:
+        - type: "GIVE_READY_COMPASS"
+
+    SPAWN_CHEST:
+      opis: "Tworzy interaktywną skrzynię nagród rogue-lite na wyznaczonych współrzędnych."
+      parametry:
+        x: "Współrzędna X (Double)"
+        y: "Współrzędna Y (Double)"
+        z: "Współrzędna Z (Double)"
+        type: "Typ skrzyni (obecnie 'ROGUELITE_CHEST') (String)"
+      przyklad:
+        - type: "SPAWN_CHEST"
+          x: 0.0
+          y: 61.0
+          z: 12.0
+          type: "ROGUELITE_CHEST"
+
+    COMPLETE_DUNGEON:
+      opis: "Kończy loch sukcesem, rozdaje nagrody końcowe, przywraca ekwipunek i usuwa dynamiczny świat."
+      przyklad:
+        - type: "COMPLETE_DUNGEON"

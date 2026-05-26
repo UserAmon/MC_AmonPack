@@ -1,4 +1,4 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Color;

@@ -1,9 +1,9 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
-import RPG.Menagerie.Enemy;
-import RPG.Menagerie.ObjectiveConditions;
-import RPG.Menagerie.ObjectiveEffect;
-import RPG.Menagerie.Objectives;
+import RPG.UnUsed.Menagerie.Enemy;
+import RPG.UnUsed.Menagerie.ObjectiveConditions;
+import RPG.UnUsed.Menagerie.ObjectiveEffect;
+import RPG.UnUsed.Menagerie.Objectives;
 import Plugin.AmonPackPlugin;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;

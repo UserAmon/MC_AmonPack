@@ -1,4 +1,4 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.attribute.AttributeModifier;

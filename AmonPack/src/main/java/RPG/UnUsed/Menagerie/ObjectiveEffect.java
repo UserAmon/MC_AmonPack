@@ -1,6 +1,6 @@
-package RPG.Menagerie;
+package RPG.UnUsed.Menagerie;
 
-import RPG.Menagerie.Menagerie;
+import RPG.UnUsed.Menagerie.Menagerie;
 import Plugin.Commands;
 import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
