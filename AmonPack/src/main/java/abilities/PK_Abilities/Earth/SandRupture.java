@@ -3,6 +3,7 @@ package Abilities.PK_Abilities.Earth;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.EarthAbility;
+import com.projectkorra.projectkorra.ability.SandAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
@@ -23,7 +24,7 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SandRupture extends EarthAbility implements AddonAbility {
+public class SandRupture extends SandAbility implements AddonAbility {
 	private int state = 0;
 	private int slot;
 	private long startTime;

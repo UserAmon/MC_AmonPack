@@ -64,13 +64,34 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 			return;
 		}
 
-		Vector right = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-		for (double i = -1.5; i <= 1.5; i += 0.1) {
-			Vector offset = right.clone().multiply(i);
-			Vector curve = direction.clone().multiply(-Math.abs(i) * 0.2); // mniejsze wygięcie kosy
-			Location pLoc = currentLoc.clone().add(offset).add(curve);
+		Vector up = new Vector(0, 1, 0);
+		Vector right = direction.clone().crossProduct(up).normalize();
+		
+		Particle.DustOptions dustGray = new Particle.DustOptions(org.bukkit.Color.GRAY, 0.75f);
+		Particle.DustOptions dustWhite = new Particle.DustOptions(org.bukkit.Color.WHITE, 0.75f);
 
-			pLoc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, pLoc, 1, 0.05, 0.05, 0.05, 0);
+		// Trzon nuty (stem)
+		for (double y = -0.3; y <= 1.2; y += 0.1) {
+			Location pLoc = currentLoc.clone().add(up.clone().multiply(y)).add(right.clone().multiply(0.3));
+			pLoc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.05, 0.05, 0.05, 0, dustGray);
+			pLoc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.05, 0.05, 0.05, 0, dustWhite);
+		}
+		
+		// Główka nuty (head)
+		for (double a = 0; a < Math.PI * 2; a += 0.3) {
+			Vector offset = right.clone().multiply(0.0 + Math.cos(a) * 0.4).add(up.clone().multiply(-0.3 + Math.sin(a) * 0.25));
+			Location pLoc = currentLoc.clone().add(offset);
+			pLoc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.05, 0.05, 0.05, 0, dustGray);
+			pLoc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.05, 0.05, 0.05, 0, dustWhite);
+		}
+
+		// Flaga nuty (flag)
+		for (double t = 0; t <= 1; t += 0.1) {
+			double dx = 0.3 + t * 0.6;
+			double dy = 1.2 - Math.pow(t, 1.5) * 0.8;
+			Location pLoc = currentLoc.clone().add(right.clone().multiply(dx)).add(up.clone().multiply(dy));
+			pLoc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.05, 0.05, 0.05, 0, dustGray);
+			pLoc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0.05, 0.05, 0.05, 0, dustWhite);
 		}
 
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentLoc, 1.8)) {

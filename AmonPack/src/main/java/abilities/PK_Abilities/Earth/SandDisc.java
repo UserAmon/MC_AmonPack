@@ -3,6 +3,7 @@ package Abilities.PK_Abilities.Earth;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.EarthAbility;
+import com.projectkorra.projectkorra.ability.SandAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.TempBlock;
 import Abilities.Util_Objects.EarthDisc;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class SandDisc extends EarthAbility implements AddonAbility {
+public class SandDisc extends SandAbility implements AddonAbility {
 	private int state = 0;
 	private Location sourceLoc;
 	private Location currentSandLoc;

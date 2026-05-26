@@ -17,16 +17,38 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Resonance extends SoundAbility implements AddonAbility {
-	private Location origin;
-	private Location currentLoc;
-	private Vector direction;
-	private double range = 15.0;
-	private double speed = 2.0;
+	private Location targetBlockLoc;
+	private int initialSlot;
+	private int chargeTicks = 0;
+	private int detonateTicks = 0;
+	private boolean detonating = false;
 	private Set<Entity> hitEntities = new HashSet<>();
+	private List<SoundRing> activeRings = new ArrayList<>();
+
+	private static class SoundRing {
+		Location center;
+		double currentRadius;
+		double maxRadius;
+		double speed;
+		int delayTicks;
+		boolean empowered;
+		Set<Entity> hitInThisRing = new HashSet<>();
+
+		SoundRing(Location center, double maxRadius, double speed, int delayTicks, boolean empowered) {
+			this.center = center.clone();
+			this.currentRadius = 0.0;
+			this.maxRadius = maxRadius;
+			this.speed = speed;
+			this.delayTicks = delayTicks;
+			this.empowered = empowered;
+		}
+	}
 
 	public Resonance(Player player) {
 		super(player);
@@ -36,9 +58,15 @@ public class Resonance extends SoundAbility implements AddonAbility {
 		if (!bPlayer.canBend(this)) {
 			return;
 		}
-		origin = player.getEyeLocation().clone();
-		currentLoc = origin.clone();
-		direction = player.getLocation().getDirection().normalize();
+
+		org.bukkit.block.Block targetBlock = player.getTargetBlockExact(20);
+		if (targetBlock == null || targetBlock.getType().isAir()) {
+			return;
+		}
+
+		targetBlockLoc = targetBlock.getLocation().clone().add(0.5, 1, 0.5);
+		initialSlot = player.getInventory().getHeldItemSlot();
+
 		bPlayer.addCooldown(this);
 		start();
 	}
@@ -50,84 +78,154 @@ public class Resonance extends SoundAbility implements AddonAbility {
 			return;
 		}
 
-		currentLoc.add(direction.clone().multiply(speed));
-
-		// wiązka nie używa notes, tylko lekki sculk
-		currentLoc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, currentLoc, 3, 0.1, 0.1, 0.1, 0);
-
-		if (currentLoc.distance(origin) > range || currentLoc.getBlock().getType().isSolid()) {
-			triggerExplosion(currentLoc, false);
-			remove();
-			return;
-		}
-
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentLoc, 1.5)) {
-			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-				LivingEntity target = (LivingEntity) entity;
-				double S = 0.0;
-				if (AfffectedEntities.containsKey(target)) {
-					S = AfffectedEntities.get(target);
-				}
-
-				if (S <= 0.0) {
-					triggerExplosion(target.getLocation(), false);
-				} else {
-					triggerExplosion(target.getLocation(), true);
-				}
+		if (!detonating) {
+			if (player.getInventory().getHeldItemSlot() != initialSlot) {
 				remove();
 				return;
+			}
+			if (player.getLocation().distance(targetBlockLoc) > 25.0) {
+				remove();
+				return;
+			}
+			Location start = player.getLocation().clone().add(
+					(Math.random() - 0.5),
+					0.5 + (Math.random() - 0.5),
+					(Math.random() - 0.5));
+			drawTether(start, targetBlockLoc);
+
+			chargeTicks++;
+			if (chargeTicks >= 40) {
+				detonating = true;
+				// First ring is the first main wave -> firstRing = true
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
+				targetBlockLoc.getWorld().spawnParticle(Particle.SONIC_BOOM, targetBlockLoc.clone().add(0, 0.25, 0), 1,
+						0, 0, 0, 0);
+			}
+		} else {
+			detonateTicks++;
+
+			// 4 sequential expanding horizontal rings (every 0.5s = 10 ticks)
+			// Ring 1 spawned at detonateTicks = 0 (above).
+			// Rings 2, 3, 4 spawned at 10, 20, 30 ticks -> firstRing = false
+			if (detonateTicks == 10) {
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
+			} else if (detonateTicks == 20) {
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
+			} else if (detonateTicks == 30) {
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
+			}
+
+			List<SoundRing> toRemove = new ArrayList<>();
+			List<SoundRing> toAdd = new ArrayList<>();
+
+			for (SoundRing ring : activeRings) {
+				if (ring.delayTicks > 0) {
+					ring.delayTicks--;
+					continue;
+				}
+				ring.currentRadius += ring.speed;
+
+				if (ring.currentRadius >= ring.maxRadius) {
+					toRemove.add(ring);
+					continue;
+				}
+
+				drawRingParticles(ring);
+
+				double innerRad = ring.currentRadius - 0.75;
+				double outerRad = ring.currentRadius + 0.75;
+
+				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(ring.center, outerRad)) {
+					if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+						LivingEntity target = (LivingEntity) entity;
+						double dist = target.getLocation().distance(ring.center);
+						if (dist >= innerRad && dist <= outerRad) {
+							if (!ring.hitInThisRing.contains(target)) {
+								ring.hitInThisRing.add(target);
+
+								if (!hitEntities.contains(target)) {
+									hitEntities.add(target);
+
+									double S = 0.0;
+									if (AfffectedEntities.containsKey(target)) {
+										S = AfffectedEntities.get(target);
+									}
+
+									if (S <= 0.0) {
+										HandleDamage(target, 8.0);
+									} else {
+										HandleDamage(target, 12.0);
+
+										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 0, true));
+										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 10, true));
+
+										target.getWorld().spawnParticle(Particle.SONIC_BOOM,
+												target.getLocation().clone().add(0, 0.5, 0), 1, 0, 0, 0, 0);
+
+										Vector pushDir = target.getLocation().toVector()
+												.subtract(ring.center.toVector());
+										if (pushDir.lengthSquared() > 0) {
+											pushDir.normalize().multiply(0.8).setY(0.2);
+											target.setVelocity(pushDir);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			activeRings.removeAll(toRemove);
+			activeRings.addAll(toAdd);
+			if (activeRings.isEmpty() && detonateTicks >= 30) {
+				remove();
 			}
 		}
 	}
 
-	private void triggerExplosion(Location loc, boolean empowered) {
-		double radius = empowered ? 10.0 : 5.0;
-		double stacksToApply = empowered ? 8.0 : 5.0;
-
-		if (empowered) {
-			loc.getWorld().spawnParticle(Particle.SONIC_BOOM, loc, 1, 0, 0, 0, 0);
-			ParticleEffect.NOTE.display(loc, 25, radius / 2, 1.0, radius / 2, 0);
-			loc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, loc, 60, radius / 2, 1.0, radius / 2, 0.02);
-			
-			for (int i = 0; i < 3; i++) {
-				Vector randomDir = new Vector(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
-				new EchoProjectile(player, loc.clone().add(0, 0.5, 0), randomDir, 2.0, 0.0, new java.util.ArrayList<>());
-			}
-		} else {
-			loc.getWorld().spawnParticle(Particle.SONIC_BOOM, loc, 1, 0, 0, 0, 0);
-			loc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, loc, 30, radius / 2, 1.0, radius / 2, 0.02);
-		}
-
-		// Zbieramy cele w zasięgu, by wyzwolić dodatkowe wybuchy bez problemu ConcurrentModification
-		Set<LivingEntity> toChain = new HashSet<>();
-
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius)) {
-			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId() && !hitEntities.contains(entity)) {
-				LivingEntity target = (LivingEntity) entity;
-				hitEntities.add(target);
-
-				double S = 0.0;
-				if (AfffectedEntities.containsKey(target)) {
-					S = AfffectedEntities.get(target);
-				}
-
-				HandleDamage(target, stacksToApply);
-
-				if (S > 0 && !empowered) {
-					// jeśli cel miał stacki a to był mały wybuch, wywołuje duży wybuch z tego miejsca
-					toChain.add(target);
-				}
-
-				Vector pushDir = target.getLocation().toVector().subtract(loc.toVector());
-				if (pushDir.lengthSquared() > 0) {
-					pushDir.normalize().multiply(empowered ? 0.8 : 0.6).setY(0.2);
-					target.setVelocity(pushDir);
-				}
+	private void drawTether(Location start, Location end) {
+		if (!start.getWorld().equals(end.getWorld()))
+			return;
+		double dist = start.distance(end);
+		Vector dir = end.toVector().subtract(start.toVector()).normalize();
+		for (double d = 0; d < dist; d += 0.4) {
+			Location point = start.clone().add(dir.clone().multiply(d));
+			double wave = Math.sin(d * 1.5 + (System.currentTimeMillis() / 80.0)) * 0.15;
+			point.add(0, wave, 0);
+			point.getWorld().spawnParticle(org.bukkit.Particle.SCULK_CHARGE_POP, point, 1, 0, 0, 0, 0);
+			if (Math.random() < 0.02) {
+				ParticleEffect.NOTE.display(point, 1, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192));
 			}
 		}
+	}
 
-		for (LivingEntity chainTarget : toChain) {
-			triggerExplosion(chainTarget.getLocation(), true);
+	private void drawRingParticles(SoundRing ring) {
+		double radius = ring.currentRadius;
+		if (radius <= 0.1)
+			return;
+
+		int points = (int) (2 * Math.PI * radius * 2);
+		points = Math.max(8, points);
+		Particle.DustOptions dustGray = new Particle.DustOptions(Color.GRAY, 0.75f);
+		Particle.DustOptions dustWhite = new Particle.DustOptions(Color.WHITE, 0.75f);
+
+		for (int i = 0; i < points; i++) {
+			double angle = 2 * Math.PI * i / points;
+			double x = radius * Math.cos(angle);
+			double z = radius * Math.sin(angle);
+
+			double yOffset = (Math.random() - 0.5) * 0.5;
+			Location particleLoc = ring.center.clone().add(x, yOffset, z);
+
+			particleLoc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, particleLoc, 1, 0, 0, 0, 0);
+
+			if (Math.random() < 0.01) {
+				ParticleEffect.NOTE.display(particleLoc, 1, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192));
+			}
+			if (Math.random() < 0.01) {
+				particleLoc.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, particleLoc, 1, 0, 0, 0, 0);
+			}
 		}
 	}
 
@@ -138,7 +236,7 @@ public class Resonance extends SoundAbility implements AddonAbility {
 
 	@Override
 	public Location getLocation() {
-		return currentLoc;
+		return targetBlockLoc;
 	}
 
 	@Override
@@ -153,7 +251,7 @@ public class Resonance extends SoundAbility implements AddonAbility {
 
 	@Override
 	public String getVersion() {
-		return "1.0";
+		return "1.2";
 	}
 
 	@Override
@@ -167,7 +265,8 @@ public class Resonance extends SoundAbility implements AddonAbility {
 	}
 
 	@Override
-	public void load() {}
+	public void load() {
+	}
 
 	@Override
 	public void stop() {
@@ -176,11 +275,11 @@ public class Resonance extends SoundAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "Fires a resonant wave. Detonates on impact. Hits on stacked targets cause a massively amplified chained explosion.";
+		return "Establishes a tether to a clicked block. After charging, triggers sound waves. Stacked targets chain secondary waves.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Left-click to fire.";
+		return "Left-click on a block to start charging.";
 	}
 }

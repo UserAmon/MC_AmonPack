@@ -157,9 +157,9 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 		// ---- Animacja: extend 3 -> 7 blokow, potem retract ----
 		Location anchor   = getHandAnchor();
-		Vector viewDir    = player.getLocation().getDirection().clone().setY(0).normalize();
-		Vector rightVec   = viewDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-		viewDir.add(rightVec.multiply(0.12)).normalize(); // Lekkie oddalenie od celownika (outward)
+		// Celownik na max reach do przodu od głowy gracza
+		Location targetHit = player.getEyeLocation().clone().add(player.getLocation().getDirection().normalize().multiply(7.0));
+		Vector viewDir = targetHit.toVector().subtract(anchor.toVector()).normalize();
 		final boolean[] hitDone = {false};
 
 		new BukkitRunnable() {

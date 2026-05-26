@@ -3,7 +3,7 @@ package Abilities.PK_Abilities.Water;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
-import com.projectkorra.projectkorra.ability.WaterAbility;
+import com.projectkorra.projectkorra.ability.HealingAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.TempBlock;
 import Plugin.AmonPackPlugin;
@@ -24,7 +24,7 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SacrificialHeal extends WaterAbility implements AddonAbility {
+public class CalmTide extends HealingAbility implements AddonAbility {
 	private int state = 0;
 	private int slot;
 	private Location sourceLoc;
@@ -33,8 +33,9 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 	private int healingTicks = 0;
 	private double totalHealed = 0.0;
 	private int sourcingTicks = 0;
+	private Vector weaveStartDir;
 
-	public SacrificialHeal(Player player) {
+	public CalmTide(Player player) {
 		super(player);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
@@ -81,6 +82,8 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 			if (dist < 1.5 || sourcingTicks > 40) {
 				state = 2;
 				targetAngle = 0.0;
+				weaveStartDir = player.getLocation().getDirection().setY(0).normalize().multiply(2.0);
+				if (weaveStartDir.lengthSquared() == 0) weaveStartDir = new Vector(2.0, 0, 0);
 				player.getWorld().playSound(player.getLocation(), Sound.BLOCK_WATER_AMBIENT, 1f, 1.2f);
 			} else {
 				dir.normalize().multiply(0.6);
@@ -99,7 +102,9 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 			if (targetAngle < 360.0) {
 				for (double a = 0; a < 360; a += 15) {
 					double r = Math.toRadians(a);
-					Vector off = new Vector(Math.cos(r) * 2.0, 0.0, Math.sin(r) * 2.0);
+					double cos = Math.cos(r);
+					double sin = Math.sin(r);
+					Vector off = new Vector(weaveStartDir.getX() * cos - weaveStartDir.getZ() * sin, 0, weaveStartDir.getX() * sin + weaveStartDir.getZ() * cos);
 					Location pLoc = player.getLocation().clone().add(0, 1.0, 0).add(off);
 					if (a < targetAngle) {
 						player.spawnParticle(org.bukkit.Particle.DUST, pLoc, 1, 0, 0, 0, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(50, 205, 50), 0.8f));
@@ -109,7 +114,9 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 				}
 
 				double rad = Math.toRadians(targetAngle);
-				Vector offset = new Vector(Math.cos(rad) * 2.0, 0.0, Math.sin(rad) * 2.0);
+				double cos = Math.cos(rad);
+				double sin = Math.sin(rad);
+				Vector offset = new Vector(weaveStartDir.getX() * cos - weaveStartDir.getZ() * sin, 0, weaveStartDir.getX() * sin + weaveStartDir.getZ() * cos);
 				Location particleLoc = player.getLocation().clone().add(0, 1.0, 0).add(offset);
 				player.spawnParticle(org.bukkit.Particle.DUST, particleLoc, 5, 0.05, 0.05, 0.05, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0, 191, 255), 2.0f));
 
@@ -161,42 +168,20 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 				Vector offset = new Vector(Math.cos(angleRad) * 1.2, yOff, Math.sin(angleRad) * 1.2);
 				Location orbLoc = player.getLocation().clone().add(offset);
 
-				if (Math.random() > progressRatio) {
-					player.getWorld().spawnParticle(org.bukkit.Particle.DUST, orbLoc, 2, 0.05, 0.05, 0.05, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0, 191, 255), 1.0f));
-					player.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, orbLoc, 1, 0, 0, 0, 0);
-					Block b = orbLoc.getBlock();
-					if (isAir(b.getType()) || isWater(b)) {
-						new TempBlock(b, Material.WATER).setRevertTime(150);
-					}
-				} else {
-					player.getWorld().spawnParticle(org.bukkit.Particle.DUST, orbLoc, 2, 0.05, 0.05, 0.05, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(139, 0, 0), 1.2f));
+				player.getWorld().spawnParticle(org.bukkit.Particle.DUST, orbLoc, 2, 0.05, 0.05, 0.05, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0, 191, 255), 1.0f));
+				player.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, orbLoc, 1, 0, 0, 0, 0);
+				Block b = orbLoc.getBlock();
+				if (isAir(b.getType()) || isWater(b)) {
+					new TempBlock(b, Material.WATER).setRevertTime(150);
 				}
 			}
 
 			if (healingTicks >= 120) {
-				state = 4;
-				double sacrificeDmg = totalHealed / 2.0;
-				if (sacrificeDmg > 0) {
-					double newHealth = player.getHealth() - sacrificeDmg;
-					player.setHealth(Math.max(1.0, newHealth));
-					player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 1f, 0.7f);
-					player.getWorld().spawnParticle(org.bukkit.Particle.DUST, player.getEyeLocation(), 20, 0.4, 0.4, 0.4, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(139, 0, 0), 1.8f));
-				}
-				player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 0.5f);
-			}
-		} else if (state == 4) {
-			if (!player.isSneaking()) {
-				launchBloodDiscs();
+				player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1));
+				player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.5f);
 				bPlayer.addCooldown(this);
 				remove();
 				return;
-			}
-
-			Location discCenter = getHandLocation().add(player.getLocation().getDirection().multiply(1.5));
-			Vector base = new Vector(0, 0.5, 0);
-			for (double angle = 0; angle < 360; angle += 45) {
-				Vector offset = GeneralMethods.getOrthogonalVector(base, angle, 0.5);
-				player.getWorld().spawnParticle(org.bukkit.Particle.DUST, discCenter.clone().add(offset), 1, 0, 0, 0, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(139, 0, 0), 1.2f));
 			}
 		}
 	}
@@ -205,57 +190,6 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 		Location hand = player.getLocation().clone().add(0, 1.1, 0);
 		Vector right = player.getLocation().getDirection().clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(0.35);
 		return hand.add(right);
-	}
-
-	private void launchBloodDiscs() {
-		Location spawn = getHandLocation().add(player.getLocation().getDirection().multiply(1.5));
-		Vector dir = player.getLocation().getDirection().normalize();
-		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 0.8f, 0.7f);
-
-		new BukkitRunnable() {
-			private Location loc = spawn.clone();
-			private int t = 0;
-
-			@Override
-			public void run() {
-				t++;
-				if (t > 25 || loc.getBlock().getType().isSolid()) {
-					loc.getWorld().spawnParticle(org.bukkit.Particle.DUST, loc, 15, 0.2, 0.2, 0.2, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(139, 0, 0), 1.4f));
-					loc.getWorld().playSound(loc, Sound.ENTITY_SLIME_SQUISH, 1f, 0.8f);
-					cancel();
-					return;
-				}
-
-				loc.add(dir.clone().multiply(1.0));
-				
-				Vector base = new Vector(0, 0.5, 0);
-				for (double angle = 0; angle < 360; angle += 45) {
-					Vector offset = GeneralMethods.getOrthogonalVector(base, angle, 0.4);
-					loc.getWorld().spawnParticle(org.bukkit.Particle.DUST, loc.clone().add(offset), 1, 0, 0, 0, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(139, 0, 0), 1.2f));
-				}
-
-				for (Entity e : GeneralMethods.getEntitiesAroundPoint(loc, 1.5)) {
-					if (e instanceof LivingEntity && e.getUniqueId() != player.getUniqueId()) {
-						LivingEntity target = (LivingEntity) e;
-						DamageHandler.damageEntity(target, 4.0, SacrificialHeal.this);
-						target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 2));
-						target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 1));
-						
-						if (target instanceof Player) {
-							BendingPlayer targetBP = BendingPlayer.getBendingPlayer((Player) target);
-							if (targetBP != null) {
-								targetBP.blockChi();
-							}
-						}
-
-						loc.getWorld().spawnParticle(org.bukkit.Particle.DUST, loc, 25, 0.3, 0.3, 0.3, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(139, 0, 0), 1.6f));
-						loc.getWorld().playSound(loc, Sound.ENTITY_PLAYER_SPLASH, 1f, 0.7f);
-						cancel();
-						return;
-					}
-				}
-			}
-		}.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 	}
 
 	@Override
@@ -270,7 +204,7 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 
 	@Override
 	public String getName() {
-		return "SacrificialHeal";
+		return "CalmTide";
 	}
 
 	@Override
@@ -304,16 +238,16 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "A multi-phase dark waterbending art. Draw water to your front, weave a circle and look down to begin self-healing. Holding the healing to its end sacrifices half the healed health to weave blood discs, which can be fired by releasing Shift to damage and chi-block your target.";
+		return "A calming waterbending art. Draw water to your front, weave a circle, and look down to begin self-healing. Restores your life force and provides a burst of speed upon completion.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Hold shift at water source. Follow prompt particles in a circle with your crosshair, then look down to heal. Release shift to cancel or fire the blood disc once the sacrifice phase is reached.";
+		return "Hold Shift at a water source. Follow prompt particles in a circle with your crosshair, then look down to heal. Release Shift to cancel.";
 	}
 
 	private void renderWeavingWaterSphere() {
-		Location center = player.getEyeLocation().add(player.getLocation().getDirection().multiply(2.0));
+		Location center = player.getEyeLocation().add(player.getLocation().getDirection().multiply(3.0));
 		Block centerB = center.getBlock();
 		if (isAir(centerB.getType()) || isWater(centerB)) {
 			new TempBlock(centerB, Material.WATER).setRevertTime(100);
@@ -321,7 +255,7 @@ public class SacrificialHeal extends WaterAbility implements AddonAbility {
 		org.bukkit.block.BlockFace[] faces = { org.bukkit.block.BlockFace.UP, org.bukkit.block.BlockFace.DOWN, org.bukkit.block.BlockFace.EAST, org.bukkit.block.BlockFace.WEST, org.bukkit.block.BlockFace.NORTH, org.bukkit.block.BlockFace.SOUTH };
 		for (org.bukkit.block.BlockFace face : faces) {
 			Block adj = centerB.getRelative(face);
-			if (isAir(adj.getType()) && Math.random() < 0.4) {
+			if (isAir(adj.getType()) && Math.random() < 0.15) {
 				new TempBlock(adj, Material.WATER).setRevertTime(100);
 			}
 		}

@@ -69,8 +69,8 @@ public class AbilitiesListener implements Listener {
 						new EarthShift(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Whirlpool")) {
 						new Whirlpool(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SacrificialHeal")) {
-						new SacrificialHeal(player);
+					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("CalmTide")) {
+						new CalmTide(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")) {
 						new EarthDiscs(player);
 					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")) {

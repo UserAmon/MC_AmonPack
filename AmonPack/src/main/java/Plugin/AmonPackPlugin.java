@@ -89,11 +89,11 @@ public class AmonPackPlugin extends JavaPlugin {
 		configs_menager = new ConfigsMenager(getDataFolder());
 		configs_menager.CreateMenagers();
 
-		CoreAbility.registerPluginAbilities(this, "Abilities.PK_Abilities");
 		// BladesElement = new SubElement("Blades", Element.CHI, ElementType.BLOCKING,
 		// this);
 		SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
 		SoundElement = new SubElement("Sound", Element.AIR, ElementType.BENDING, ProjectKorra.plugin);
+		CoreAbility.registerPluginAbilities(this, "Abilities.PK_Abilities");
 		createconf();
 
 		// PvPFile = new File(getDataFolder(), "PvPConfig.yml");
