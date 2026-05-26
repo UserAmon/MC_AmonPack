@@ -100,7 +100,10 @@ public class AmonPackPlugin extends JavaPlugin {
 		// setPvPConfig(YamlConfiguration.loadConfiguration(PvPFile));
 
 		MenagerieConfigFile = getMenagerieFiles();
-		SkillTreeFile = new File(getDataFolder(), "SkillTreeConfig.yml");
+		SkillTreeFile = new File(getDataFolder(), "skilltree.yml");
+		if (!SkillTreeFile.exists()) {
+			saveResource("skilltree.yml", false);
+		}
 		setDungeonsConfig(MenagerieConfigFile);
 		configpath = getDataFolder();
 		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
@@ -129,6 +132,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		upgradeKey = new NamespacedKey(this, "playerUpgrade");
 		this.getCommand("Craft").setExecutor(new Commands());
 		this.getCommand("Level").setExecutor(new Commands());
+		this.getCommand("SelectElement").setExecutor(new Commands());
 		this.getCommand("ArenaBuilding").setExecutor(new Commands());
 		this.getCommand("Menagerie").setExecutor(new Commands());
 		// this.getCommand("Menagerie").setTabCompleter(new CommandsTabMenager());
@@ -776,7 +780,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			// = YamlConfiguration.loadConfiguration(new File(configpath, "PvPConfig.yml"));
 			// MenaMenager.ReloadMenageries();
 			// ForestMenager.LoadData();
-			SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(configpath, "SkillTreeConfig.yml"));
+			SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(configpath, "skilltree.yml"));
 			levelsBending.LoadData();
 			farmmenager.ReloadConfig();
 			combatMenager.ReloadConfig();

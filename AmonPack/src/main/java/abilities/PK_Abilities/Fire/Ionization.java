@@ -119,21 +119,49 @@ public class Ionization extends LightningAbility implements AddonAbility {
         Location origin = player.getEyeLocation().clone().add(0, 0.5, 0);
         Vector direction = player.getLocation().getDirection();
 
-        LightningBolt bolt = new LightningBolt(player, this, origin, direction, 4, 60, 5, true);
+        List<LightningBolt> bolts = new ArrayList<>();
+        bolts.add(new LightningBolt(player, this, origin, direction, 4, 60, 5, true));
+
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        boolean hasStatic = (branch != null && branch.hasUpgrade("Static"));
+
+        if (hasStatic) {
+            Vector leftDir = rotateY(direction, 20);
+            Vector rightDir = rotateY(direction, -20);
+            bolts.add(new LightningBolt(player, this, origin, leftDir, 2.0, 42, 3, false));
+            bolts.add(new LightningBolt(player, this, origin, rightDir, 2.0, 42, 3, false));
+        }
 
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (bolt.isDead()) {
+                bolts.removeIf(LightningBolt::isDead);
+                if (bolts.isEmpty()) {
                     this.cancel();
                     return;
                 }
-                bolt.progress();
+                List<LightningBolt> nextBranches = new ArrayList<>();
+                for (LightningBolt bolt : bolts) {
+                    List<LightningBolt> branches = bolt.progress();
+                    if (branches != null) {
+                        nextBranches.addAll(branches);
+                    }
+                }
+                bolts.addAll(nextBranches);
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
         bPlayer.addCooldown(this, cooldown);
         remove();
+    }
+
+    private Vector rotateY(Vector vector, double angleDegrees) {
+        double angle = Math.toRadians(angleDegrees);
+        double cos = Math.cos(angle);
+        double sin = Math.sin(angle);
+        double x = vector.getX() * cos - vector.getZ() * sin;
+        double z = vector.getX() * sin + vector.getZ() * cos;
+        return new Vector(x, vector.getY(), z).normalize();
     }
 
     private void fail(String reason) {

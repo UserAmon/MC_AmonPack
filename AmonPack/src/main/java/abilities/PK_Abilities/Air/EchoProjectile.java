@@ -74,13 +74,13 @@ public class EchoProjectile extends SoundAbility {
 			if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
 				if (sharedHitList != null) {
 					if (!sharedHitList.contains(entity)) {
-						HandleDamage(entity, stacksToApply);
+						HandleDamage(player, entity, stacksToApply);
 						sharedHitList.add(entity);
 					} else {
-						HandleDamage(entity, 2.0);
+						HandleDamage(player, entity, 2.0);
 					}
 				} else {
-					HandleDamage(entity, stacksToApply);
+					HandleDamage(player, entity, stacksToApply);
 				}
 				
 				if (dmg > 0) {

@@ -48,49 +48,57 @@ public class AbilitiesListener implements Listener {
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
 				if (!event.isCancelled() || bPlayer != null) {
 					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
-					if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandBreath")) {
+					String boundAbility = bPlayer.getBoundAbilityName();
+					if (boundAbility.equalsIgnoreCase("SandBreath")) {
 						new SandBreath(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Acoustics")) {
+					} else if (boundAbility.equalsIgnoreCase("Acoustics")) {
 						new Acoustics(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirScythe")) {
+					} else if (boundAbility.equalsIgnoreCase("AirScythe")) {
 						if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player,
 								Abilities.PK_Abilities.Air.AirScythe.class)) {
 							Abilities.PK_Abilities.Air.AirScythe scythe = com.projectkorra.projectkorra.ability.CoreAbility
 									.getAbility(player, Abilities.PK_Abilities.Air.AirScythe.class);
 							scythe.onShift();
 						}
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("TideLock")) {
+					} else if (boundAbility.equalsIgnoreCase("TideLock")) {
 						new TideLock(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameSpins")) {
+					} else if (boundAbility.equalsIgnoreCase("FlameSpins")) {
 						new FlameSpins(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWeave")) {
+					} else if (boundAbility.equalsIgnoreCase("FlameWeave")) {
 						new FlameWeave(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthShift")) {
+					} else if (boundAbility.equalsIgnoreCase("EarthShift")) {
 						new EarthShift(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Whirlpool")) {
+					} else if (boundAbility.equalsIgnoreCase("IceThorn")) {
+						new IceThorn(player);
+					} else if (boundAbility.equalsIgnoreCase("Whirlpool")) {
 						new Whirlpool(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("CalmTide")) {
+					} else if (boundAbility.equalsIgnoreCase("CalmTide")) {
 						new CalmTide(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")) {
+					} else if (boundAbility.equalsIgnoreCase("EarthDiscs")) {
 						new EarthDiscs(player);
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")) {
+					} else if (boundAbility.equalsIgnoreCase("DiscHurl")) {
 						if (!player.isSneaking()) {
 							new DiscHurl(player);
 						}
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterFist")) {
+					} else if (boundAbility.equalsIgnoreCase("WaterFist")) {
 						if (!CoreAbility.hasAbility(player, WaterFist.class)) {
 							new WaterFist(player);
 						}
-					} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandRupture")) {
+					} else if (boundAbility.equalsIgnoreCase("SandRupture")) {
 						new SandRupture(player);
-					} // else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("MetalCompress")) {
-						// if (player.getInventory().getChestplate().getType() !=
-						// Material.IRON_CHESTPLATE) {
-						// return;}
-						// else if (player.getInventory().getChestplate().getType() == null) {
-						// return;}
-						// new MetalCompress(player);
-						// }
+					} else if (boundAbility.equalsIgnoreCase("AirPressure")) {
+						new AirPressure(player);
+					} else if (boundAbility.equalsIgnoreCase("EarthHammer")) {
+						new EarthHammer(player);
+					} else if (boundAbility.equalsIgnoreCase("IceArch")) {
+						new IceArch(player);
+					} else if (boundAbility.equalsIgnoreCase("SmokeBurst")) {
+						new SmokeBurst(player, true);
+					} else if (boundAbility.equalsIgnoreCase("SmokeBarrage")) {
+						new SmokeBarrage(player);
+					} else if (boundAbility.equalsIgnoreCase("SmokeCamouflage")) {
+						new SmokeCamouflage(player);
+					}
 				}
 			} else
 				return;
@@ -98,7 +106,6 @@ public class AbilitiesListener implements Listener {
 			return;
 	}
 
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void OnSwing(PlayerAnimationEvent event) {
 		Player player = event.getPlayer();
@@ -156,8 +163,14 @@ public class AbilitiesListener implements Listener {
 					new SoundCrash(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeSlash")) {
 					new SmokeSlash(player);
-				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
-					new SmokeShot(player, false);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeBurst")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SmokeBurst.class)) {
+						SmokeBurst sb = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
+								SmokeBurst.class);
+						sb.onLeftClick();
+					} else {
+						new SmokeBurst(player, false);
+					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirScythe")) {
 					new AirScythe(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Resonance")) {
@@ -166,7 +179,8 @@ public class AbilitiesListener implements Listener {
 					new Echo(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameSpins")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSpins.class)) {
-						FlameSpins fs = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FlameSpins.class);
+						FlameSpins fs = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
+								FlameSpins.class);
 						fs.onLeftClick();
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AerialPush")) {
@@ -190,21 +204,24 @@ public class AbilitiesListener implements Listener {
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandDisc")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SandDisc.class)) {
-						SandDisc sd = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SandDisc.class);
+						SandDisc sd = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
+								SandDisc.class);
 						sd.onLeftClick();
 					} else {
 						new SandDisc(player);
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SandRupture")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SandRupture.class)) {
-						SandRupture sb = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SandRupture.class);
+						SandRupture sb = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
+								SandRupture.class);
 						sb.onLeftClick();
 					} else {
 						new SandRupture(player).onLeftClick();
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterFist")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, WaterFist.class)) {
-						WaterFist wf = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, WaterFist.class);
+						WaterFist wf = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
+								WaterFist.class);
 						wf.onLeftClick();
 					}
 				}
@@ -355,34 +372,4 @@ public class AbilitiesListener implements Listener {
 	// }
 	//
 
-	@SuppressWarnings("deprecation")
-	@EventHandler
-	public void Shift(PlayerToggleSneakEvent event) {
-		Player player = event.getPlayer();
-		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-		if (bPlayer.getBoundAbilityName() != null && bPlayer.getBoundAbility() != null) {
-			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
-				if (!event.isCancelled() && bPlayer != null) {
-					if (!bPlayer.getBoundAbilityName().equalsIgnoreCase((String) null)) {
-						// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Counter")) {
-						// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
-						// new Counter(player);
-						// }}
-						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirPressure")) {
-							new AirPressure(player);
-						}
-						if (bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthHammer")) {
-							if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeShot")) {
-								new SmokeShot(player, true);
-							}
-							if (bPlayer.getBoundAbilityName().equalsIgnoreCase("IceArch")) {
-								new IceArch(player);
-							}
-						}
-					}
-				}
-			}
-		}
-
-	}
 }

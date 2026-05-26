@@ -35,6 +35,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 	private int slot;
 	private long lastDrawTime = 0;
 	private double radius = 0.5;
+	private int ammo = 1;
 
 	public SandDisc(Player player) {
 		super(player);
@@ -60,6 +61,10 @@ public class SandDisc extends SandAbility implements AddonAbility {
 		this.currentSandLoc = sourceLoc.clone();
 		this.lastDrawTime = now;
 		
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasProbender = (branch != null && branch.hasUpgrade("Probender"));
+		this.ammo = hasProbender ? 2 : 1;
+
 		state = 1;
 		start();
 	}
@@ -118,8 +123,11 @@ public class SandDisc extends SandAbility implements AddonAbility {
 			Vector dir = player.getLocation().getDirection().normalize();
 			new SandEarthDisc(player, spawn, dir, 4.0, 0.85, true, this);
 			player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1f, 0.8f);
-			bPlayer.addCooldown(this);
-			remove();
+			ammo--;
+			if (ammo <= 0) {
+				bPlayer.addCooldown(this);
+				remove();
+			}
 		}
 	}
 
@@ -209,6 +217,12 @@ class SandEarthDisc extends EarthDisc {
 					bounces++;
 					spawnRicochetShrapnel();
 
+					RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+					boolean hasTrickshot = (branch != null && branch.hasUpgrade("Trickshot"));
+					if (hasTrickshot) {
+						damage = Math.min(damage + 0.5, baseDamage * 2.0);
+					}
+
 					if (bounces >= 4) {
 						explode();
 						remove();
@@ -230,7 +244,7 @@ class SandEarthDisc extends EarthDisc {
 				if (!hitEntities.contains(entity)) {
 					hitEntities.add(entity);
 					LivingEntity target = (LivingEntity) entity;
-					DamageHandler.damageEntity(target, 4.0, sourceAbility);
+					DamageHandler.damageEntity(target, damage, sourceAbility);
 					Vector knock = target.getLocation().toVector().subtract(player.getLocation().toVector());
 					if (knock.lengthSquared() > 0) {
 						knock.normalize().multiply(0.85).setY(0.25);

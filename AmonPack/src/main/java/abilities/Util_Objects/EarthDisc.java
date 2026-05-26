@@ -28,6 +28,7 @@ public class EarthDisc {
     protected Location location;
     protected Vector direction;
     protected double damage;
+    protected double baseDamage;
     protected double speed;
     protected boolean destroyOnEntityHit;
     protected long spawnTime;
@@ -40,6 +41,7 @@ public class EarthDisc {
         this.location = location;
         this.direction = direction.normalize();
         this.damage = damage;
+        this.baseDamage = damage;
         this.speed = speed;
         this.destroyOnEntityHit = destroyOnEntityHit;
         this.spawnTime = System.currentTimeMillis();
@@ -88,6 +90,12 @@ public class EarthDisc {
                     player.getWorld().playSound(location, Sound.BLOCK_STONE_HIT, 1f, 1.5f);
                     // Move slightly off the surface to prevent sticking
                     location.add(result.getHitPosition().subtract(location.toVector()).multiply(0.9));
+
+                    RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+                    boolean hasTrickshot = (branch != null && branch.hasUpgrade("Trickshot"));
+                    if (hasTrickshot) {
+                        damage = Math.min(damage + 0.5, baseDamage * 2.0);
+                    }
                 } else {
                     explode();
                     remove();

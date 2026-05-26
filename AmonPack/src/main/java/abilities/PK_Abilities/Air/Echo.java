@@ -3,6 +3,7 @@ package Abilities.PK_Abilities.Air;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import Abilities.Bending.SoundAbility;
+import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -24,9 +25,12 @@ public class Echo extends SoundAbility implements AddonAbility {
 		Location origin = GeneralMethods.getMainHandLocation(player).clone();
 		origin.setPitch(0);
 
-		// Mniej pociskow, lekko sprezone (mniejszy kat) + lekki losowy pitch
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasDysonance = (branch != null && branch.hasUpgrade("Dysonance"));
+		int projectileCount = hasDysonance ? 5 : 4;
+
 		int offset = 0;
-		for (int i = 1; i <= 4; i++) {
+		for (int i = 1; i <= projectileCount; i++) {
 			offset += 6;
 			Location multiL = origin.clone();
 			Location multiR = origin.clone();

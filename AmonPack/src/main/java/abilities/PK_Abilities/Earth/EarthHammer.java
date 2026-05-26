@@ -30,6 +30,10 @@ import static Plugin.Methods.getRandom;
 
 public class EarthHammer extends EarthAbility implements AddonAbility {
 
+	public static final java.util.HashMap<java.util.UUID, Long> chunkyHaste = new java.util.HashMap<>();
+	private boolean fastSlam = false;
+	private double speed = 1.0;
+
 	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Cooldown");
 
 	private int dmg = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Damage");
@@ -57,30 +61,51 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 
 	public EarthHammer(Player player) {
 		super(player);
-		if (!player.isSneaking()) {
-			if (!this.bPlayer.isOnCooldown(getName()) && this.bPlayer.canBend(this)) {
-				interval = 0;
-				AbilityState = State.BENDABLE;
+		if (bPlayer.isOnCooldown(this)) {
+			return;
+		}
+		if (!bPlayer.canBend(this)) {
+			return;
+		}
 
-				List<Location> shuffledList = new ArrayList<>();
-				for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 10)) {
-					if (b.getLocation().getY() <= player.getLocation().getY() + 1
-							&& b.getLocation().distance(player.getLocation()) > 7
-							&& EarthAbility.isEarthbendable(player, b)) {
-						shuffledList.add(b.getLocation());
-					}
-				}
-				if (shuffledList.size() > 4) {
-					Collections.shuffle(shuffledList);
-					NearBlocks = shuffledList.subList(0, 4);
-					for (Location loc : NearBlocks) {
-						TempBlock tb1 = new TempBlock(loc.getBlock(), Material.AIR);
-						tb1.setRevertTime(RevertTime);
-						loc.setY(loc.getY() + 2);
-					}
-					start();
-				}
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
+		if (hasChunky) {
+			this.range += 1;
+			this.radius += 1;
+		}
+
+		long now = System.currentTimeMillis();
+		if (chunkyHaste.containsKey(player.getUniqueId()) && now - chunkyHaste.getOrDefault(player.getUniqueId(), 0L) < 10000) {
+			chunkyHaste.remove(player.getUniqueId());
+			this.fastSlam = true;
+			this.speed = 1.6;
+			this.AbilityState = State.READY;
+			player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ITEM_TRIDENT_THUNDER, 1.2f, 1.8f);
+			start();
+			return;
+		}
+
+		interval = 0;
+		AbilityState = State.BENDABLE;
+
+		List<Location> shuffledList = new ArrayList<>();
+		for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 10)) {
+			if (b.getLocation().getY() <= player.getLocation().getY() + 1
+					&& b.getLocation().distance(player.getLocation()) > 7
+					&& EarthAbility.isEarthbendable(player, b)) {
+				shuffledList.add(b.getLocation());
 			}
+		}
+		if (shuffledList.size() > 0) {
+			Collections.shuffle(shuffledList);
+			NearBlocks = shuffledList.subList(0, Math.min(4, shuffledList.size()));
+			for (Location loc : NearBlocks) {
+				TempBlock tb1 = new TempBlock(loc.getBlock(), Material.AIR);
+				tb1.setRevertTime(RevertTime);
+				loc.setY(loc.getY() + 2);
+			}
+			start();
 		}
 	}
 
@@ -162,7 +187,7 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 			interval++;
 			if (interval >= 2) {
 				interval = 0;
-				Projectile.add(Direction).multiply(1);
+				Projectile.add(Direction.clone().multiply(speed));
 				if (Projectile.getBlock().getType() != Material.AIR && !PlantAbility.isPlant(Projectile.getBlock())) {
 					Projectile.setY(Projectile.getY() + 1);
 				}

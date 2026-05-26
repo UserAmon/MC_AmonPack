@@ -19,6 +19,8 @@ import com.projectkorra.projectkorra.ability.EarthAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 
 import Plugin.Methods;
+import Plugin.AmonPackPlugin;
+import RPG.Levels.BendingTree.PlayerBendingBranch;
 
 public class EarthShift extends EarthAbility implements AddonAbility {
 
@@ -45,6 +47,14 @@ public class EarthShift extends EarthAbility implements AddonAbility {
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
+
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
+        if (hasChunky) {
+            this.range = 16.0;
+            this.radius = 4.0;
+        }
+
         this.startTime = System.currentTimeMillis();
         this.state = State.CHARGING;
         start();
@@ -111,6 +121,46 @@ public class EarthShift extends EarthAbility implements AddonAbility {
 
         bPlayer.addCooldown(this);
         player.playSound(player.getLocation(), Sound.ENTITY_EVOKER_CAST_SPELL, 1f, 0.5f);
+
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
+        if (hasChunky) {
+            EarthHammer.chunkyHaste.put(player.getUniqueId(), System.currentTimeMillis());
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.5f);
+
+            new org.bukkit.scheduler.BukkitRunnable() {
+                int ticks = 0;
+                @Override
+                public void run() {
+                    ticks += 2;
+                    if (ticks > 200 || !player.isOnline() || player.isDead()) {
+                        cancel();
+                        return;
+                    }
+                    if (!EarthHammer.chunkyHaste.containsKey(player.getUniqueId()) || 
+                        System.currentTimeMillis() - EarthHammer.chunkyHaste.getOrDefault(player.getUniqueId(), 0L) > 10000) {
+                        cancel();
+                        return;
+                    }
+
+                    Location hand = player.getLocation().clone().add(0, 0.9, 0);
+                    Vector right = player.getLocation().getDirection().clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(-0.35); // right hand
+                    Location handLoc = hand.add(right);
+
+                    for (double d = 0; d <= 0.4; d += 0.15) {
+                        Location handlePoint = handLoc.clone().add(player.getLocation().getDirection().multiply(d));
+                        player.getWorld().spawnParticle(Particle.BLOCK, handlePoint, 1, 0, 0, 0, 0, org.bukkit.Material.DIRT.createBlockData());
+                    }
+                    Location headCenter = handLoc.clone().add(player.getLocation().getDirection().multiply(0.4));
+                    Vector up = new Vector(0, 1, 0);
+                    Vector rightVec = player.getLocation().getDirection().crossProduct(up).normalize();
+                    for (double h = -0.15; h <= 0.15; h += 0.1) {
+                        player.getWorld().spawnParticle(Particle.BLOCK, headCenter.clone().add(up.clone().multiply(h)), 1, 0, 0, 0, 0, org.bukkit.Material.DIRT.createBlockData());
+                        player.getWorld().spawnParticle(Particle.BLOCK, headCenter.clone().add(rightVec.clone().multiply(h)), 1, 0, 0, 0, 0, org.bukkit.Material.DIRT.createBlockData());
+                    }
+                }
+            }.runTaskTimer(AmonPackPlugin.plugin, 0, 2);
+        }
 
         state = State.PULLING;
         waveLoc = targetLoc.clone();

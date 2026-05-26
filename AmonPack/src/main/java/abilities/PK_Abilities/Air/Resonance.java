@@ -3,6 +3,7 @@ package Abilities.PK_Abilities.Air;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.AirAbility;
+import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import Abilities.Bending.SoundAbility;
 import Plugin.AmonPackPlugin;
@@ -27,9 +28,14 @@ public class Resonance extends SoundAbility implements AddonAbility {
 	private int initialSlot;
 	private int chargeTicks = 0;
 	private int detonateTicks = 0;
+	private int damage = 1;
 	private boolean detonating = false;
 	private Set<Entity> hitEntities = new HashSet<>();
 	private List<SoundRing> activeRings = new ArrayList<>();
+	private boolean hasDysonance = false;
+
+	private static java.util.HashMap<java.util.UUID, Integer> resonanceCharges = new java.util.HashMap<>();
+	private static java.util.HashMap<java.util.UUID, Long> lastResonanceTime = new java.util.HashMap<>();
 
 	private static class SoundRing {
 		Location center;
@@ -38,23 +44,32 @@ public class Resonance extends SoundAbility implements AddonAbility {
 		double speed;
 		int delayTicks;
 		boolean empowered;
+		boolean isFirstRing;
 		Set<Entity> hitInThisRing = new HashSet<>();
 
-		SoundRing(Location center, double maxRadius, double speed, int delayTicks, boolean empowered) {
+		SoundRing(Location center, double maxRadius, double speed, int delayTicks, boolean empowered,
+				boolean isFirstRing) {
 			this.center = center.clone();
 			this.currentRadius = 0.0;
 			this.maxRadius = maxRadius;
 			this.speed = speed;
 			this.delayTicks = delayTicks;
 			this.empowered = empowered;
+			this.isFirstRing = isFirstRing;
 		}
 	}
 
 	public Resonance(Player player) {
 		super(player);
+
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
+				.GetBranchByPlayerName(player.getName());
+		this.hasDysonance = (branch != null && branch.hasUpgrade("Dysonance"));
+
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
+
 		if (!bPlayer.canBend(this)) {
 			return;
 		}
@@ -66,7 +81,6 @@ public class Resonance extends SoundAbility implements AddonAbility {
 
 		targetBlockLoc = targetBlock.getLocation().clone().add(0.5, 1, 0.5);
 		initialSlot = player.getInventory().getHeldItemSlot();
-
 		bPlayer.addCooldown(this);
 		start();
 	}
@@ -94,25 +108,19 @@ public class Resonance extends SoundAbility implements AddonAbility {
 			drawTether(start, targetBlockLoc);
 
 			chargeTicks++;
-			if (chargeTicks >= 40) {
+			int requiredTicks = this.hasDysonance ? 20 : 40;
+			if (chargeTicks >= requiredTicks) {
 				detonating = true;
-				// First ring is the first main wave -> firstRing = true
-				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false, true));
 				targetBlockLoc.getWorld().spawnParticle(Particle.SONIC_BOOM, targetBlockLoc.clone().add(0, 0.25, 0), 1,
 						0, 0, 0, 0);
 			}
 		} else {
 			detonateTicks++;
-
-			// 4 sequential expanding horizontal rings (every 0.5s = 10 ticks)
-			// Ring 1 spawned at detonateTicks = 0 (above).
-			// Rings 2, 3, 4 spawned at 10, 20, 30 ticks -> firstRing = false
-			if (detonateTicks == 10) {
-				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
+			if (detonateTicks == 15) {
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false, false));
 			} else if (detonateTicks == 20) {
-				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
-			} else if (detonateTicks == 30) {
-				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false));
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false, false));
 			}
 
 			List<SoundRing> toRemove = new ArrayList<>();
@@ -152,12 +160,16 @@ public class Resonance extends SoundAbility implements AddonAbility {
 									}
 
 									if (S <= 0.0) {
-										HandleDamage(target, 8.0);
+										HandleDamage(player, target, 5.0);
+										target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 2));
+										target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 30, 2));
 									} else {
-										HandleDamage(target, 12.0);
-
-										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 0, true));
-										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 10, true));
+										DamageHandler.damageEntity(entity, damage, Resonance.this);
+										HandleDamage(player, target, 8.0);
+										target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 2));
+										target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 30, 2));
+										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 10, true, false));
+										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 20, true, false));
 
 										target.getWorld().spawnParticle(Particle.SONIC_BOOM,
 												target.getLocation().clone().add(0, 0.5, 0), 1, 0, 0, 0, 0);
@@ -204,11 +216,8 @@ public class Resonance extends SoundAbility implements AddonAbility {
 		double radius = ring.currentRadius;
 		if (radius <= 0.1)
 			return;
-
-		int points = (int) (2 * Math.PI * radius * 2);
-		points = Math.max(8, points);
-		Particle.DustOptions dustGray = new Particle.DustOptions(Color.GRAY, 0.75f);
-		Particle.DustOptions dustWhite = new Particle.DustOptions(Color.WHITE, 0.75f);
+		int points = (int) (Math.PI * radius * 2);
+		points = Math.max(4, points);
 
 		for (int i = 0; i < points; i++) {
 			double angle = 2 * Math.PI * i / points;
@@ -218,7 +227,11 @@ public class Resonance extends SoundAbility implements AddonAbility {
 			double yOffset = (Math.random() - 0.5) * 0.5;
 			Location particleLoc = ring.center.clone().add(x, yOffset, z);
 
-			particleLoc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, particleLoc, 1, 0, 0, 0, 0);
+			if (ring.isFirstRing && Math.random() < 0.2) {
+				playAirbendingParticles(ring.center.clone().add(x, 0.1, z), 1);
+			} else {
+				particleLoc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, particleLoc, 1, 0, 0, 0, 0);
+			}
 
 			if (Math.random() < 0.01) {
 				ParticleEffect.NOTE.display(particleLoc, 1, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192));

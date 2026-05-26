@@ -35,6 +35,33 @@ public class PlayerBendingBranch {
         UnlockedAbilities = new ArrayList<>(unlockedAbilities);
         TemporaryAbilities=new ArrayList<>();
         WaterPoints = waterPoints;
+
+        unlockDefaultAbilities();
+    }
+
+    public void unlockDefaultAbilities() {
+        if (ElementsInPossesion == null || AmonPackPlugin.levelsBending == null) {
+            return;
+        }
+        boolean changed = false;
+        for (Element element : ElementsInPossesion) {
+            ElementTree tree = AmonPackPlugin.levelsBending.GetElement(element);
+            if (tree != null) {
+                for (SkillTree_Ability ability : tree.getAbilities()) {
+                    if (ability.isdef() && !UnlockedAbilities.contains(ability.getName())) {
+                        UnlockedAbilities.add(ability.getName());
+                        changed = true;
+                    }
+                }
+            }
+        }
+        if (changed) {
+            try {
+                SaveInDatabaes();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
     public void SetCurrentElement(Element element){
         CurrentElement=element;
@@ -49,17 +76,22 @@ public class PlayerBendingBranch {
         List<String> AbilitiesToRemove=new ArrayList<>();
             for (String st:UnlockedAbilities) {
                 int temp_cost = elementtree.GetCostByAbilityName(st);
-                if(temp_cost>=0){
+                // cost > 0 only – free (cost == 0) abilities are kept even after reset
+                if(temp_cost > 0){
                     totalcost = totalcost+temp_cost;
                     AbilitiesToRemove.add(st);
                 }
             }
         UnlockedAbilities.removeAll(AbilitiesToRemove);
-        AddPoints(CurrentElement,totalcost);
-        try {
-            SaveInDatabaes();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        // Only refund points if we have a current element context
+        if (CurrentElement != null && totalcost > 0) {
+            AddPoints(CurrentElement, totalcost);
+        } else {
+            try {
+                SaveInDatabaes();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
     public void AddAllPoints(int amount){
@@ -105,13 +137,14 @@ public class PlayerBendingBranch {
         ResultSet rs = stmt.executeQuery("select * from BendingTree WHERE Player='" + Name+"'");
         String elementsText = ElementsInPossesion.stream().map(Element::getName).collect(Collectors.joining(","));
         String abilitiesText = String.join(",", UnlockedAbilities);
+        String currentElementName = (CurrentElement != null) ? CurrentElement.getName() : "";
         if (rs.next()) {
             String st = "UPDATE BendingTree SET" +
                     " AirPoints = '" + AirPoints + "'," +
                     " FirePoints = '" + FirePoints + "'," +
                     " WaterPoints = '" + WaterPoints + "'," +
                     " EarthPoints = '" + EarthPoints + "'," +
-                    " CurrentElement = '" + CurrentElement.getName().toString() + "'," +
+                    " CurrentElement = '" + currentElementName + "'," +
                     " AllElements = '" + elementsText + "'," +
                     " UnlockedAbilities = '" + abilitiesText + "'" +
                     " WHERE Player = '"+ Name+"';";
@@ -123,7 +156,7 @@ public class PlayerBendingBranch {
                     "'" + FirePoints + "', " +
                     "'" + WaterPoints + "', " +
                     "'" + EarthPoints + "', " +
-                    "'" + CurrentElement.getName().toString() + "', " +
+                    "'" + currentElementName + "', " +
                     "'" + elementsText + "', " +
                     "'" + abilitiesText + "');";
             ExecuteQuery(st);
@@ -169,5 +202,8 @@ public class PlayerBendingBranch {
         if(element.equals(Element.FIRE))return FirePoints;
         if(element.equals(Element.EARTH))return EarthPoints;
         return 0;
+    }
+    public boolean hasUpgrade(String upgradeName) {
+        return UnlockedAbilities.contains(upgradeName);
     }
 }

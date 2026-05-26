@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.projectkorra.projectkorra.util.TempBlock;
 import Plugin.Methods;
+import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -31,6 +32,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
     private long armedDuration = 10000;
     private long cooldown = 6000;
     private int ammo = 2;
+    private int maxAmmo = 2;
     private long interval;
     private double radius = 1.75;
     private List<Location> NearBlocks;
@@ -43,6 +45,11 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
         if (!bPlayer.canBend(this)) {
             return;
         }
+
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        boolean hasProbender = (branch != null && branch.hasUpgrade("Probender"));
+        this.maxAmmo = hasProbender ? 3 : 2;
+        this.ammo = this.maxAmmo;
 
         if (hasAbility(player, EarthDiscs.class)) {
             return;
@@ -125,7 +132,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
                 break;
 
             case ARMED:
-                if (System.currentTimeMillis() - startTime > armedDuration && ammo == 2) {
+                if (System.currentTimeMillis() - startTime > armedDuration && ammo == maxAmmo) {
                     remove();
                     return;
                 }
@@ -138,18 +145,13 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
                 if (ammo > 0) {
                     Location eye = player.getEyeLocation();
                     double time = System.currentTimeMillis() / 1000.0;
+                    double angleOffset = (2 * Math.PI) / maxAmmo;
 
-                    if (ammo >= 1) {
-                        double angle1 = time * 4;
-                        double x1 = radius * Math.cos(angle1);
-                        double z1 = radius * Math.sin(angle1);
-                        EarthDisc.displayParticle(eye.clone().add(x1, -0.7, z1));
-                    }
-                    if (ammo >= 2) {
-                        double angle2 = time * 4 + Math.PI;
-                        double x2 = radius * Math.cos(angle2);
-                        double z2 = radius * Math.sin(angle2);
-                        EarthDisc.displayParticle(eye.clone().add(x2, -0.7, z2));
+                    for (int j = 0; j < ammo; j++) {
+                        double angle = time * 4 + (j * angleOffset);
+                        double x = radius * Math.cos(angle);
+                        double z = radius * Math.sin(angle);
+                        EarthDisc.displayParticle(eye.clone().add(x, -0.7, z));
                     }
                 }
                 break;

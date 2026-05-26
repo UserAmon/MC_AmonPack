@@ -1,0 +1,303 @@
+AmonPack:
+  Menu:
+    fire:
+      Material: PAPER
+      Path: 10014
+      Green: 10017
+      Orange: 10016
+      Red: 10015
+    air:
+      Material: PAPER
+      Path: 10022
+      Green: 10025
+      Orange: 10024
+      Red: 10023
+    water:
+      Material: PAPER
+      Path: 10018
+      Green: 10021
+      Orange: 10020
+      Red: 10019
+    earth:
+      Material: PAPER
+      Path: 10026
+      Green: 10029
+      Orange: 10028
+      Red: 10027
+  Tree:
+    Fire:
+      PathDecoration:
+        - 39
+        - 40
+        - 41
+        - 29
+        - 33
+      FireBlast:
+        Cost: 0
+        Place: 49
+        ReqAbilities: []
+      FlameSpins:
+        Cost: 5
+        Place: 38
+        ReqAbilities:
+        - FireBlast
+      FireJet:
+        Cost: 15
+        Place: 20
+        ReqAbilities:
+        - FlameSpins
+      Firefly:
+        Cost: 20
+        Place: 19
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - FlameSpins
+        Description:
+          - "&7Pozwala na &e3 strzały &7LPM dla FlameSpins,"
+          - "&7wydłuża czas opadania w powietrzu o &e1 sekundę&7,"
+          - "&7oraz skraca cooldown o &epołowę&7."
+      Blaze:
+        Cost: 5
+        Place: 42
+        ReqAbilities:
+        - FireBlast
+      FlameWeave:
+        Cost: 15
+        Place: 24
+        ReqAbilities:
+          - Blaze
+      Ionization:
+        Cost: 20
+        Place: 25
+        ReqAbilities:
+          - Blaze
+      Static:
+        Cost: 20
+        Place: 16
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - Ionization
+        Description:
+          - "&7Ionization wypuszcza &e2 dodatkowe pociski &7na boki,"
+          - "&7będące mniejszymi kopiami oryginalnej wiązki."
+      SteadyHand:
+        Cost: 20
+        Place: 18
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - FlameSpins
+        Description:
+          - "&7Ulepsza &eSmokeDaggers&7."
+          - "&7Umiejętność rzuca &e2 sztyletami &7zamiast 3."
+          - "&7Ruch ma &e3 użycia LPM &7zanim wejdzie w cooldown."
+          - "&7Pierwsze dwa rzuty nie zostawiają dymu."
+          - "&7Dopiero &etrzecie użycie &7zostawia źródło dymu (smokesource)."
+          - "&7Czas na wykonanie całej sekwencji wynosi hojne &e6 sekund&7."
+      Strategist:
+        Cost: 20
+        Place: 28
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - Blaze
+        Description:
+          - "&7Przyciągane źródła dymu (&eSmokePull&7, &eSmokeBarrage&7, &eSmokeCamouflage&7)"
+          - "&7zadają &edodatkowe obrażenia &7wrogom, przez których przechodzą."
+      BOOrst:
+        Cost: 20
+        Place: 29
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - Blaze
+        Description:
+          - "&7Jeśli masz przypisaną umiejętność &eSmokeBurst &7na dowolnym slocie,"
+          - "&7dotknięcie źródła dymu &eSmokeSource &7powoduje jego &enatychmiastowy wybuch&7."
+    Earth:
+      PathDecoration:
+        - 1
+        - 2
+      EarthDiscs:
+        Cost: 0
+        Place: 0
+        ReqAbilities: []
+      SandRupture:
+        Cost: 1
+        Place: 9
+        ReqAbilities:
+          - SandDisc
+      SandDisc:
+        Cost: 1
+        Place: 10
+        ReqAbilities:
+          - EarthDiscs
+      Probender:
+        Cost: 2
+        Place: 18
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - SandDisc
+          - EarthDiscs
+        Description:
+          - "&7Dodaje &edodatkowy dysk &7do umiejętności"
+          - "&eEarthDiscs &7oraz &eSandDisc&7."
+      EarthShater:
+        Cost: 2
+        Place: 19
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - SandRupture
+        Description:
+          - "&7Pozwala na użycie &eSandRupture (LPM)"
+          - "&7na &edowolnym bloku &7podlegającym magii ziemi,"
+          - "&7generując spadające bloki z tego materiału."
+      Chunky:
+        Cost: 2
+        Place: 11
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthDiscs
+        Description:
+          - "&7Zwiększa zasięg i promień &eEarthShift &7i &eEarthHammer &7o &e1 blok&7."
+          - "&7Pomyślne przyciągnięcie EarthShiftem daje efekt pośpiechu na &e10s&7,"
+          - "&7który sprawia, że kolejny EarthHammer nie wymaga ładowania i jest szybszy."
+      Trickshot:
+        Cost: 2
+        Place: 13
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthDiscs
+        Description:
+          - "&7Z każdym odbiciem DiscHurl, EarthDiscs i SandDisc"
+          - "&7zwiększa swoje obrażenia o &e0.5&7,"
+          - "&7aż do osiągnięcia &edwukrotności &7obrażeń bazowych."
+      EarthBlast:
+        Cost: 10
+        Place: 4
+        ReqAbilities: []
+      RaiseEarth:
+        Cost: 25
+        Place: 12
+        ReqAbilities:
+        - EarthBlast
+      EarthKick:
+        Cost: 25
+        Place: 20
+        ReqAbilities: []
+      EarthShard:
+        Cost: 40
+        Place: 21
+        ReqAbilities:
+        - EarthKick
+    Water:
+      PathDecoration:
+        - 38
+        - 39
+        - 40
+        - 41
+        - 29
+        - 42
+        - 22
+        - 22
+        - 28
+      WaterManipulation:
+        Cost: 0
+        Place: 49
+        ReqAbilities: []
+      Torrent:
+        Cost: 20
+        Place: 31
+        ReqAbilities:
+        - WaterManipulation
+      PhaseChange:
+        Cost: 30
+        Place: 13
+        ReqAbilities:
+        - Torrent
+
+      HealingWaters:
+        Cost: 10
+        Place: 33
+        ReqAbilities: []
+      CalmTide:
+        Cost: 30
+        Place: 24
+        ReqAbilities:
+        - HealingWaters
+
+      WaterFist:
+        Cost: 15
+        Place: 37
+        ReqAbilities:
+          - Torrent
+      Uppercut:
+        Cost: 2
+        Place: 20
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - WaterFist
+        Description:
+          - "&7Zmniejsza cooldown &eWaterFist o połowę&7,"
+          - "&7zwiększa zasięg ataku o &e1 kratkę&7,"
+          - "&7daje &e1 dodatkowe użycie LPM&7,"
+          - "&7oraz sprawia, że &ekażdy atak zamraża cel&7."
+      WaterArms:
+        Cost: 75
+        Place: 19
+        ReqAbilities:
+        - WaterFist
+    Air:
+      PathDecoration:
+        - 39
+        - 40
+        - 41
+        - 37
+        - 9
+        - 1
+        - 20
+        - 36
+        - 18
+      AirSwipe:
+        Cost: 0
+        Place: 49
+        ReqAbilities: []
+      Echo:
+        Cost: 15
+        Place: 38
+        ReqAbilities:
+          - AirSwipe
+      Resonance:
+        Cost: 25
+        Place: 27
+        ReqAbilities:
+          - Echo
+      Dysonance:
+        Cost: 35
+        Place: 21
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - Acoustics
+        Description:
+          - "&7Zwiększa limit stacków dźwięku przed wybuchem do &e25&7."
+          - "&7Przeciwnicy tracą nałożone stacki &edwukrotnie wolniej&7."
+          - "&7Dodaje &e2 dodatkowe pociski &7do umiejętności &eEcho&7."
+          - "&7Umiejętność &eResonance &7ładuje się &edwukrotnie szybciej&7."
+      Acoustics:
+        Cost: 15
+        Place: 19
+        ReqAbilities:
+          - Resonance
+      SoundCrash:
+        Cost: 20
+        Place: 0
+        ReqAbilities:
+          - Resonance
+      Encore:
+        Cost: 50
+        Place: 2
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - Acoustics
+        Description:
+          - "&7Pozwala na użycie &eAcoustics &7nawet na celach bez stacków."
+          - "&7Zwiększa &ezasięg łączenia &7oraz zasięg maksymalny linów w Acoustics."
+          - "&7Każda umiejętność dźwiękowa nakłada o &e1 stack więcej&7."
+          - "&7Pocisk &eSoundCrash &7podczas lotu &elekko podąża za celownikiem&7."

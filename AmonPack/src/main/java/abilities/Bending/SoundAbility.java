@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 public abstract class SoundAbility extends AirAbility implements SubAbility {
     public static HashMap<Entity, Double> AfffectedEntities = new HashMap<>();
+    public static HashMap<Entity, Player> stackAppliers = new HashMap<>();
 
     public SoundAbility(Player player) {
         super(player);
@@ -43,6 +44,18 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
     }
 
     public static void HandleDamage(Entity entity, double i) {
+        HandleDamage(null, entity, i);
+    }
+
+    public static void HandleDamage(Player player, Entity entity, double i) {
+        if (entity == null) return;
+        if (player != null) {
+            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+            if (branch != null && branch.hasUpgrade("Encore")) {
+                i += 1.0;
+            }
+            stackAppliers.put(entity, player);
+        }
         entity.getWorld().spawnParticle(org.bukkit.Particle.SCULK_CHARGE_POP, entity.getLocation(), 15, 1.4, 1.7, 1.4, 0.1);
         if (Math.random() < 0.2) {
             entity.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, entity.getLocation(), 1, 0, 0, 0, 0);
@@ -69,7 +82,18 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                             } else {
                                 double time = AfffectedEntities.get(entity);
                                 if (time > 0) {
-                                    if (time >= 20.0) {
+                                    double limit = 20.0;
+                                    double decay = 0.5;
+                                    Player applier = stackAppliers.get(entity);
+                                    if (applier != null) {
+                                        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(applier.getName());
+                                        if (branch != null && branch.hasUpgrade("Dysonance")) {
+                                            limit = 25.0;
+                                            decay = 0.25;
+                                        }
+                                    }
+                                    
+                                    if (time >= limit) {
                                         ((LivingEntity) entity).damage(4);
                                         ((LivingEntity) entity).addPotionEffect(new PotionEffect(
                                                 PotionEffectType.BLINDNESS, 40, 3, false, false, false));
@@ -88,11 +112,11 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                                         ParticleEffect.NOTE.display(entity.getLocation(), (int) time, 0.4, 1.7, 0.4, 0);
                                         
                                         // Rising pitch note sound effect
-                                        float volume = 0.4f + 0.6f * (float)(time / 20.0);
-                                        float pitch = 0.5f + 1.5f * (float)(time / 20.0);
+                                        float volume = 0.4f + 0.6f * (float)(time / limit);
+                                        float pitch = 0.5f + 1.5f * (float)(time / limit);
                                         entity.getWorld().playSound(entity.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, volume, pitch);
                                         
-                                        AfffectedEntities.put(entity, (time - 0.5));
+                                        AfffectedEntities.put(entity, (time - decay));
                                     }
                                 }
                             }
@@ -100,6 +124,7 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                     }
                     for (Entity ent : ToRemove) {
                         AfffectedEntities.remove(ent);
+                        stackAppliers.remove(ent);
                     }
                 }
             }

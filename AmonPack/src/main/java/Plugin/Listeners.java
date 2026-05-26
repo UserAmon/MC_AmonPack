@@ -831,6 +831,99 @@ public class Listeners implements Listener {
                         && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
                     AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                 }
+            } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SelectElementMenu)) {
+                event.setCancelled(true);
+                if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) {
+                    return;
+                }
+                PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+                if (playersBranch == null) {
+                    List<Element> elements = new ArrayList<>();
+                    List<String> abilities = new ArrayList<>();
+                    playersBranch = new PlayerBendingBranch(0, null, 0, elements, 0, p.getName(), abilities, 0);
+                    AmonPackPlugin.levelsBending.AddNewBranch(playersBranch);
+                }
+
+                Material clicked = event.getCurrentItem().getType();
+                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(p);
+
+                if (clicked == Material.BARRIER) {
+                    // Clear only paid (cost > 0) abilities via ClearAbilities.
+                    // Free abilities (cost == 0) are preserved automatically.
+                    for (com.projectkorra.projectkorra.Element el : new com.projectkorra.projectkorra.Element[]{
+                            Element.AIR, Element.WATER, Element.FIRE, Element.EARTH}) {
+                        RPG.Levels.BendingTree.ElementTree tree = AmonPackPlugin.levelsBending.GetElement(el);
+                        if (tree != null) {
+                            playersBranch.ClearAbilities(tree);
+                        }
+                    }
+
+                    playersBranch.getElementsInPossesion().clear();
+                    playersBranch.SetCurrentElement(null);
+                    playersBranch.AddPoints(Element.AIR, -playersBranch.getAirPoints());
+                    playersBranch.AddPoints(Element.WATER, -playersBranch.getWaterPoints());
+                    playersBranch.AddPoints(Element.FIRE, -playersBranch.getFirePoints());
+                    playersBranch.AddPoints(Element.EARTH, -playersBranch.getEarthPoints());
+
+                    bPlayer.getElements().clear();
+                    bPlayer.getAbilities().clear();
+                    bPlayer.removeUnusableAbilities();
+                    bPlayer.saveElements();
+                    for (int i = 1; i <= 9; i++) {
+                        bPlayer.saveAbility("", i);
+                    }
+
+                    p.sendMessage("§aZresetowano wszystkie żywioły i drzewko magii!");
+                    p.closeInventory();
+                } else if (clicked == Material.BLAZE_POWDER) {
+                    bPlayer.getElements().clear();
+                    bPlayer.addElement(Element.FIRE);
+                    bPlayer.saveElements();
+                    if (!playersBranch.getElementsInPossesion().contains(Element.FIRE)) {
+                        playersBranch.getElementsInPossesion().add(Element.FIRE);
+                    }
+                    playersBranch.SetCurrentElement(Element.FIRE);
+                    playersBranch.AddPoints(Element.FIRE, 5000);
+                    playersBranch.unlockDefaultAbilities();
+                    p.sendMessage("§aWybrano żywioł Ognia! Otrzymałeś +5000 punktów!");
+                    p.closeInventory();
+                } else if (clicked == Material.GRASS_BLOCK) {
+                    bPlayer.getElements().clear();
+                    bPlayer.addElement(Element.EARTH);
+                    bPlayer.saveElements();
+                    if (!playersBranch.getElementsInPossesion().contains(Element.EARTH)) {
+                        playersBranch.getElementsInPossesion().add(Element.EARTH);
+                    }
+                    playersBranch.SetCurrentElement(Element.EARTH);
+                    playersBranch.AddPoints(Element.EARTH, 5000);
+                    playersBranch.unlockDefaultAbilities();
+                    p.sendMessage("§aWybrano żywioł Ziemi! Otrzymałeś +5000 punktów!");
+                    p.closeInventory();
+                } else if (clicked == Material.WATER_BUCKET) {
+                    bPlayer.getElements().clear();
+                    bPlayer.addElement(Element.WATER);
+                    bPlayer.saveElements();
+                    if (!playersBranch.getElementsInPossesion().contains(Element.WATER)) {
+                        playersBranch.getElementsInPossesion().add(Element.WATER);
+                    }
+                    playersBranch.SetCurrentElement(Element.WATER);
+                    playersBranch.AddPoints(Element.WATER, 5000);
+                    playersBranch.unlockDefaultAbilities();
+                    p.sendMessage("§aWybrano żywioł Wody! Otrzymałeś +5000 punktów!");
+                    p.closeInventory();
+                } else if (clicked == Material.FEATHER) {
+                    bPlayer.getElements().clear();
+                    bPlayer.addElement(Element.AIR);
+                    bPlayer.saveElements();
+                    if (!playersBranch.getElementsInPossesion().contains(Element.AIR)) {
+                        playersBranch.getElementsInPossesion().add(Element.AIR);
+                    }
+                    playersBranch.SetCurrentElement(Element.AIR);
+                    playersBranch.AddPoints(Element.AIR, 5000);
+                    playersBranch.unlockDefaultAbilities();
+                    p.sendMessage("§aWybrano żywioł Powietrza! Otrzymałeś +5000 punktów!");
+                    p.closeInventory();
+                }
             } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillTree)) {
                 event.setCancelled(true);
                 PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
@@ -1228,7 +1321,7 @@ public class Listeners implements Listener {
     public void test(AbilityDamageEntityEvent event) {
         if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")) {
             event.setCancelled(true);
-            SoundAbility.HandleDamage(event.getEntity(), 10);
+            SoundAbility.HandleDamage(event.getAbility().getPlayer(), event.getEntity(), 10.0);
         }
         // if(MagicEffects.AffectedAbilities.contains(event.getAbility().getName())){
         // if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")) {

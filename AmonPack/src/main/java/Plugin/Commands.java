@@ -26,6 +26,11 @@ public class Commands implements CommandExecutor {
     @SuppressWarnings("deprecation")
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         switch (cmd.getName().toLowerCase()) {
+            case "selectelement":
+                if (sender instanceof Player) {
+                    PlayerLevelMenager.OpenSelectElementMenu((Player) sender);
+                }
+                break;
             case "level":
                 if (args != null && args.length == 4 && args[0].equalsIgnoreCase("magic")) {
                     try {

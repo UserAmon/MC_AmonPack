@@ -5,6 +5,7 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.AirAbility;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import Abilities.Bending.SoundAbility;
+import Plugin.AmonPackPlugin;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -23,6 +24,8 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 	private List<LivingEntity> allTargets = new ArrayList<>();
 	private int ticksElapsed = 0;
 	private int spreadCooldown = 0;
+	private boolean hasEncore = false;
+	private int maxstacks = 20;
 
 	public Acoustics(Player player) {
 		super(player);
@@ -33,6 +36,11 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 			return;
 		}
 
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
+				.GetBranchByPlayerName(player.getName());
+		this.hasEncore = (branch != null && branch.hasUpgrade("Encore"));
+		maxstacks = this.hasEncore ? 25 : 20;
+
 		LivingEntity target = findInitialTarget();
 		if (target == null) {
 			return;
@@ -40,33 +48,9 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 
 		chain.add(target);
 		allTargets.add(target);
+		HandleDamage(player, target, 5.0);
 		bPlayer.addCooldown(this);
 		start();
-	}
-
-	private LivingEntity findInitialTarget() {
-		LivingEntity bestTarget = null;
-		double bestDot = -1.0;
-		Vector direction = player.getEyeLocation().getDirection().normalize();
-
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), 12.0)) {
-			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-				LivingEntity le = (LivingEntity) entity;
-				if (AfffectedEntities.containsKey(le) && AfffectedEntities.get(le) > 0) {
-					Vector toEntity = le.getEyeLocation().toVector().subtract(player.getEyeLocation().toVector());
-					double dist = toEntity.length();
-					if (dist > 0) {
-						toEntity.normalize();
-						double dot = direction.dot(toEntity);
-						if (dot > 0.8 && dot > bestDot) {
-							bestDot = dot;
-							bestTarget = le;
-						}
-					}
-				}
-			}
-		}
-		return bestTarget;
 	}
 
 	@Override
@@ -82,7 +66,8 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 		}
 
 		LivingEntity mainTarget = chain.get(0);
-		if (mainTarget.isDead() || player.getLocation().distance(mainTarget.getLocation()) > 15.0) {
+		double maxDistance = this.hasEncore ? 16 : 10;
+		if (mainTarget.isDead() || player.getLocation().distance(mainTarget.getLocation()) > maxDistance) {
 			remove();
 			return;
 		}
@@ -93,10 +78,11 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				com.projectkorra.projectkorra.util.DamageHandler.damageEntity(target, 2.0, this);
 				target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 1));
 				target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20, 1));
-				
+
 				for (int i = 0; i < 2; i++) {
-					Vector randomDir = new Vector(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
-					new EchoProjectile(player, target.getLocation().clone().add(0, 1.0, 0), randomDir, 2.0, 0.0, new java.util.ArrayList<>());
+					Vector randomDir = new Vector(Math.random() - 0.5, 0.75, Math.random() - 0.5).normalize();
+					new EchoProjectile(player, target.getLocation().clone().add(0, 1.0, 0), randomDir, 2.0, 0,
+							new java.util.ArrayList<>());
 				}
 			}
 			remove();
@@ -104,10 +90,9 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 		}
 
 		Location pStart = player.getLocation().clone().add(
-				(Math.random() - 0.5), 
-				0.5 + (Math.random() - 0.5), 
-				(Math.random() - 0.5)
-		);
+				(Math.random() - 0.5),
+				0.35 + (Math.random() - 0.5),
+				(Math.random() - 0.5));
 		drawTether(pStart, chain.get(0).getEyeLocation());
 
 		for (int i = 0; i < chain.size() - 1; i++) {
@@ -126,13 +111,13 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				}
 
 				double currentStack = AfffectedEntities.get(target);
-				if (currentStack >= 20.0) {
-					HandleDamage(target, 1.0);
+				if (currentStack >= maxstacks) {
+					HandleDamage(player, target, 1.0);
 					deadOrShocked.add(target);
 					continue;
 				}
 
-				HandleDamage(target, 3.0);
+				HandleDamage(player, target, 4.0);
 				target.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, target.getLocation(), 1, 0, 0, 0, 0);
 
 				double newStack = currentStack + 3.0;
@@ -152,15 +137,17 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				if (nextTarget != null) {
 					chain.add(nextTarget);
 					allTargets.add(nextTarget);
-					HandleDamage(nextTarget, 3.0);
-					nextTarget.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, nextTarget.getLocation(), 1, 0, 0, 0, 0);
+					HandleDamage(player, nextTarget, 3.0);
+					nextTarget.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, nextTarget.getLocation(), 1, 0,
+							0, 0, 0);
 				}
 			}
 		}
 	}
 
 	private LivingEntity findNextTarget(LivingEntity source) {
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(source.getLocation(), 6.0)) {
+		double chainRadius = this.hasEncore ? 12.0 : 8.0;
+		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(source.getLocation(), chainRadius)) {
 			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
 				LivingEntity le = (LivingEntity) entity;
 				if (!allTargets.contains(le) && !le.isDead()) {
@@ -185,6 +172,33 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				ParticleEffect.NOTE.display(point, 1, 0.0, 0.0, 0.0, Color.fromRGB(192, 192, 192));
 			}
 		}
+	}
+
+	private LivingEntity findInitialTarget() {
+		LivingEntity bestTarget = null;
+		double bestDot = -1.0;
+		Vector direction = player.getEyeLocation().getDirection().normalize();
+		double searchRadius = this.hasEncore ? 18.0 : 12.0;
+
+		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), searchRadius)) {
+			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+				LivingEntity le = (LivingEntity) entity;
+				boolean hasStacks = (AfffectedEntities.containsKey(le) && AfffectedEntities.get(le) > 0);
+				if (this.hasEncore || hasStacks) {
+					Vector toEntity = le.getEyeLocation().toVector().subtract(player.getEyeLocation().toVector());
+					double dist = toEntity.length();
+					if (dist > 0) {
+						toEntity.normalize();
+						double dot = direction.dot(toEntity);
+						if (dot > 0.8 && dot > bestDot) {
+							bestDot = dot;
+							bestTarget = le;
+						}
+					}
+				}
+			}
+		}
+		return bestTarget;
 	}
 
 	@Override

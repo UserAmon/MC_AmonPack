@@ -56,6 +56,13 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 			return;
 		}
 
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasEncore = (branch != null && branch.hasUpgrade("Encore"));
+		if (hasEncore) {
+			Vector targetDir = player.getEyeLocation().getDirection().normalize();
+			direction = direction.multiply(0.85).add(targetDir.multiply(0.15)).normalize();
+		}
+
 		currentLoc.add(direction.clone().multiply(speed));
 		distanceTraveled += speed;
 
@@ -114,7 +121,7 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 		}
 
 		if (S <= 0.0) {
-			HandleDamage(target, 10.0);
+			HandleDamage(player, target, 10.0);
 			Vector push = target.getLocation().toVector().subtract(player.getLocation().toVector());
 			if (push.lengthSquared() > 0) {
 				push.normalize().multiply(0.8).setY(0.2);
@@ -191,7 +198,7 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 					if (victim instanceof LivingEntity) {
 						applySoundCrashEffect((LivingEntity) victim);
 					} else {
-						HandleDamage(victim, 10);
+						HandleDamage(player, victim, 10);
 					}
 					bPlayer.addCooldown("Major_Sound_OnHit", 5000);
 					break;

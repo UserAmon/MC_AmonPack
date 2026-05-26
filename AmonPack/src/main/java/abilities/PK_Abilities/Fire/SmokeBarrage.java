@@ -48,18 +48,16 @@ public class SmokeBarrage extends SmokeAbility implements AddonAbility {
 
 	public SmokeBarrage(Player player) {
 		super(player);
-		if (!player.isSneaking()) {
-			if (!this.bPlayer.isOnCooldown(getName()) && this.bPlayer.canBend(this)) {
-				SmokeSource source = SmokeAbility.UseSmokeSource(player, 20);
-				if (source != null) {
-					UseSmokeSource = true;
-					AbilityState = State.BENDABLE;
-					Source = source;
-					interval = 0;
-					Progress = 0.75;
-					Projectiles = new ArrayList<>();
-					start();
-				}
+		if (!this.bPlayer.isOnCooldown(getName()) && this.bPlayer.canBend(this)) {
+			SmokeSource source = SmokeAbility.UseSmokeSource(player, 20);
+			if (source != null) {
+				UseSmokeSource = true;
+				AbilityState = State.BENDABLE;
+				Source = source;
+				interval = 0;
+				Progress = 0.75;
+				Projectiles = new ArrayList<>();
+				start();
 			}
 		}
 	}

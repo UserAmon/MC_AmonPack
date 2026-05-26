@@ -136,7 +136,7 @@ public class SandRupture extends SandAbility implements AddonAbility {
 			}
 
 			if (waveDistanceTraveled >= 12.0 || waveLoc.getBlock().getType().isSolid()) {
-				explodeSand(waveLoc);
+				explodeSand(waveLoc, Material.SAND);
 				bPlayer.addCooldown(this);
 				remove();
 			}
@@ -164,20 +164,34 @@ public class SandRupture extends SandAbility implements AddonAbility {
 		}
 
 		Block targetBlock = player.getTargetBlockExact(15);
-		if (targetBlock == null || (targetBlock.getType() != Material.SAND && targetBlock.getType() != Material.RED_SAND)) {
+		if (targetBlock == null) {
 			return;
 		}
 
-		explodeSand(targetBlock.getLocation().add(0.5, 0.5, 0.5));
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasEarthShater = (branch != null && branch.hasUpgrade("EarthShater"));
+
+		Material mat = targetBlock.getType();
+		if (hasEarthShater) {
+			if (!com.projectkorra.projectkorra.ability.EarthAbility.isEarthbendable(player, targetBlock)) {
+				return;
+			}
+		} else {
+			if (mat != Material.SAND && mat != Material.RED_SAND) {
+				return;
+			}
+		}
+
+		explodeSand(targetBlock.getLocation().add(0.5, 0.5, 0.5), mat);
 		bPlayer.addCooldown(this);
 		remove();
 	}
 
-	private void explodeSand(Location loc) {
-		loc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, loc, 40, 0.6, 0.6, 0.6, 0.1, Material.SAND.createBlockData());
+	private void explodeSand(Location loc, Material mat) {
+		loc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, loc, 40, 0.6, 0.6, 0.6, 0.1, mat.createBlockData());
 		loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1f, 1.2f);
 
-		Methods.spawnFallingBlocks(loc, Material.SAND, 8, 4.0, player);
+		Methods.spawnFallingBlocks(loc, mat, 8, 4.0, player);
 
 		double radius = 3.0;
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius)) {
@@ -193,7 +207,17 @@ public class SandRupture extends SandAbility implements AddonAbility {
 				for (int z = -3; z <= 3; z++) {
 					Block b = loc.clone().add(x, y, z).getBlock();
 					if (loc.distance(b.getLocation()) <= radius && EarthAbility.isEarthbendable(player, b)) {
-						new TempBlock(b, Material.SAND).setRevertTime(5000);
+						int delay = new java.util.Random().nextInt(20);
+						new org.bukkit.scheduler.BukkitRunnable() {
+							@Override
+							public void run() {
+								if (b.getType().isAir() || !EarthAbility.isEarthbendable(player, b)) {
+									return;
+								}
+								new TempBlock(b, Material.SAND).setRevertTime(5000);
+								b.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, b.getLocation().add(0.5, 0.5, 0.5), 5, 0.2, 0.2, 0.2, 0.05, Material.SAND.createBlockData());
+							}
+						}.runTaskLater(AmonPackPlugin.plugin, delay);
 					}
 				}
 			}

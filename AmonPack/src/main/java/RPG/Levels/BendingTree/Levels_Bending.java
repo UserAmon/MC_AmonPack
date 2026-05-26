@@ -86,13 +86,27 @@ public class Levels_Bending {
                 if ((playersBranch.getUnlockedAbilities().contains(STA.getName())|| playersBranch.getTemporaryAbilities().contains(STA.getName()) || STA.isdef())){
                     modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Green");
 
-
+                    List<String> modifiedList = new ArrayList<>();
+                    modifiedList.add(ChatColor.GREEN + "ODBLOKOWANO");
+                    List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
+                    if (desc != null && !desc.isEmpty()) {
+                        for (String line : desc) {
+                            modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
+                        }
+                    }
+                    meta.setLore(modifiedList);
                 } else if (playersBranch.GetPoints(element) >= STA.getCost() && (new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().isEmpty())) {
                     modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Orange");
 
                     List<String> modifiedList = new ArrayList<>(Collections.singleton("Koszt: " + STA.getCost()));
                     for (String st:STA.getListOfPreAbility()) {
                         modifiedList.add("Wymagane: "+st);
+                    }
+                    List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
+                    if (desc != null && !desc.isEmpty()) {
+                        for (String line : desc) {
+                            modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
+                        }
                     }
                     meta.setLore(modifiedList);
 
@@ -102,6 +116,12 @@ public class Levels_Bending {
                     List<String> modifiedList = new ArrayList<>(Collections.singleton("Koszt: " + STA.getCost()));
                     for (String st:STA.getListOfPreAbility()) {
                         modifiedList.add("Wymagane: "+st);
+                    }
+                    List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
+                    if (desc != null && !desc.isEmpty()) {
+                        for (String line : desc) {
+                            modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
+                        }
                     }
                     meta.setLore(modifiedList);
 

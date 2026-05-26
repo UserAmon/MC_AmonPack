@@ -47,8 +47,11 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f);
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 0.8f);
 
-		// Slow falling - 2.5 sekundy opadania
-		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 50, 0, false, false));
+		// Slow falling - 2.5 sekundy opadania (3.5 dla Firefly)
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
+		int hoverTicks = hasFirefly ? 70 : 50;
+		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, hoverTicks, 0, false, false));
 
 		// Dash - poziome w 100% z ruchu gracza
 		Vector motion  = player.getVelocity().clone().setY(0).multiply(1.35);
@@ -161,7 +164,11 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 			}
 		}.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
-		if (clicksUsed >= 2) {
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
+		int maxClicks = hasFirefly ? 3 : 2;
+
+		if (clicksUsed >= maxClicks) {
 			bPlayer.addCooldown(this);
 			remove();
 		}
@@ -169,7 +176,9 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 6000;
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
+		return hasFirefly ? 3000 : 6000;
 	}
 
 	@Override

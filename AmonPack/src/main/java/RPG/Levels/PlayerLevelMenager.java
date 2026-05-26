@@ -36,6 +36,7 @@ public class PlayerLevelMenager {
     public static InventoryXHolder BendingSkillMenu;
     public static InventoryXHolder BendingSkillTree;
     public static InventoryXHolder BindingAbilitiesMenu;
+    public static InventoryXHolder SelectElementMenu;
     public static List<LevelSkill.SkillType> EnabledSkillTypes;
 
     public PlayerLevelMenager() throws SQLException {
@@ -458,6 +459,62 @@ public class PlayerLevelMenager {
         BendingSkillMenu = new InventoryXHolder(54, "");
         BendingSkillTree = new InventoryXHolder(54, "");
         BindingAbilitiesMenu = new InventoryXHolder(18, "");
+        SelectElementMenu = new InventoryXHolder(27, "§0§lWybierz Żywioł");
+    }
+
+    public static void OpenSelectElementMenu(Player player) {
+        Inventory inv = Bukkit.createInventory(SelectElementMenu, SelectElementMenu.getSize(), SelectElementMenu.getTitle());
+
+        ItemStack blank = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta blankMeta = blank.getItemMeta();
+        blankMeta.setDisplayName(" ");
+        blank.setItemMeta(blankMeta);
+
+        for (int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, blank);
+        }
+
+        // Reset button (Slot 10)
+        ItemStack reset = new ItemStack(Material.BARRIER);
+        ItemMeta resetMeta = reset.getItemMeta();
+        resetMeta.setDisplayName("§c§lRESET ELEMENTU I SKILLI");
+        resetMeta.setLore(Arrays.asList("§7Czyści wybrane żywioły i", "§7resetuje drzewko skilli."));
+        reset.setItemMeta(resetMeta);
+        inv.setItem(10, reset);
+
+        // Fire button (Slot 12)
+        ItemStack fire = new ItemStack(Material.BLAZE_POWDER);
+        ItemMeta fireMeta = fire.getItemMeta();
+        fireMeta.setDisplayName("§c§lOGIEŃ (FIRE)");
+        fireMeta.setLore(Arrays.asList("§7Daje żywioł Ognia oraz", "§e+5000 punktów ognia."));
+        fire.setItemMeta(fireMeta);
+        inv.setItem(12, fire);
+
+        // Earth button (Slot 13)
+        ItemStack earth = new ItemStack(Material.GRASS_BLOCK);
+        ItemMeta earthMeta = earth.getItemMeta();
+        earthMeta.setDisplayName("§a§lZIEMIA (EARTH)");
+        earthMeta.setLore(Arrays.asList("§7Daje żywioł Ziemi oraz", "§e+5000 punktów ziemi."));
+        earth.setItemMeta(earthMeta);
+        inv.setItem(13, earth);
+
+        // Water button (Slot 14)
+        ItemStack water = new ItemStack(Material.WATER_BUCKET);
+        ItemMeta waterMeta = water.getItemMeta();
+        waterMeta.setDisplayName("§b§lWODA (WATER)");
+        waterMeta.setLore(Arrays.asList("§7Daje żywioł Wody oraz", "§e+5000 punktów wody."));
+        water.setItemMeta(waterMeta);
+        inv.setItem(14, water);
+
+        // Air button (Slot 16)
+        ItemStack air = new ItemStack(Material.FEATHER);
+        ItemMeta airMeta = air.getItemMeta();
+        airMeta.setDisplayName("§f§lPOWIETRZE (AIR)");
+        airMeta.setLore(Arrays.asList("§7Daje żywioł Powietrza oraz", "§e+5000 punktów powietrza."));
+        air.setItemMeta(airMeta);
+        inv.setItem(16, air);
+
+        player.openInventory(inv);
     }
 
     private void LoadPlayersFromDatabase() throws SQLException {
