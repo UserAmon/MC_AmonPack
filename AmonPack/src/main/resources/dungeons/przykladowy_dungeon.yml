@@ -194,7 +194,7 @@ encounters:
     pool_lists:
       - ["ENC_SEQ1_1", "ENC_SEQ1_2"]
       - ["ENC_SEQ2_1", "ENC_SEQ2_2"]
-    enc_after_clears: "ENC3"
+    enc_after_clears: "ENC_FINAL_CHALLENGE"
 
   ENC_SEQ1_1:
     description: "Ścieżka Wojownika: Oczyszczenie komnaty"
@@ -260,6 +260,79 @@ encounters:
         y: 61
         z: 5
         range: 2
+
+  ENC_FINAL_CHALLENGE:
+    description: "Komnata Strażnika Prawdy - Wyzwanie środowiskowe i boss"
+    title: "&5Strażnik Prawdy &8- &fKary za: %time%s"
+    conditions:
+      - type: "PERIODIC_CHECK"
+        interval: 15
+        requirement: "SNEAKING"
+        fail-effects:
+          - type: "SEND_MESSAGE"
+            message: "&cStrażnik Prawdy uderza w tych, którzy nie pochylają czoła!"
+          - type: "DAMAGE"
+            amount: 2
+          - type: "KNOCKBACK"
+            x: 0.0
+            y: 0.5
+            z: 0.0
+        success-effects:
+          - type: "SEND_MESSAGE"
+            message: "&aPrzetrwałeś kolejny wzrok Strażnika!"
+      - type: "LOOKING_AT"
+        x: 0.0
+        y: 65.0
+        z: 5.0
+        interval: 5
+        fail-effects:
+          - type: "SPAWN_MOB"
+            mob-name: "SKELETON"
+            amount: 1
+            level: 1
+            x: 0
+            y: 61
+            z: 5
+            range: 2
+        success-effects:
+          - type: "SEND_MESSAGE"
+            message: "&dTwoje spojrzenie powstrzymało przyzwanie wrogów... Na razie!"
+      - type: "KILL_MOBS"
+        mob-name: "Straznik Prawdy"
+        amount: 1
+    platforms:
+      - x1: -2
+        y1: 60
+        z1: 3
+        x2: 2
+        y2: 60
+        z2: 7
+        material: "GLASS"
+        inverted: false
+        test-mode: "GLOBAL"
+        requirement: "MOB_NEAR:Straznik Prawdy"
+      - x1: -1
+        y1: 61
+        z1: 8
+        x2: 1
+        y2: 63
+        z2: 8
+        material: "GOLD_BLOCK"
+        inverted: true
+        test-mode: "NEAR"
+        requirement: "ITEM:cien_klucz"
+    effects:
+      - type: "SEND_MESSAGE"
+        message: "&d[Dungeon] &fWszedłeś do Serca Cieni. Kucaj co 15 sekund, obserwuj kryształ (0, 65, 5) wzrokiem i pokonaj bossa!"
+      - type: "SPAWN_MOB"
+        mob-name: "Straznik Prawdy"
+        amount: 1
+        level: 3
+        x: 0
+        y: 61
+        z: 5
+        range: 0
+    next: "ENC3"
 
   ENC3:
     description: "Wyjście i nagrody"

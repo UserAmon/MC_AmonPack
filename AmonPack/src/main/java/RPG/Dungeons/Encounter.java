@@ -15,8 +15,9 @@ public class Encounter {
     private final String title;
     private final List<String> pool;
     private final List<List<String>> poolLists;
+    private final List<DungeonPlatform> platforms;
 
-    public Encounter(String id, String description, List<DungeonCondition> conditions, List<DungeonEffect> effects, List<String> nextEncounters, List<String> exclude, int reqClears, String encAfterClears, String title, List<String> pool, List<List<String>> poolLists) {
+    public Encounter(String id, String description, List<DungeonCondition> conditions, List<DungeonEffect> effects, List<String> nextEncounters, List<String> exclude, int reqClears, String encAfterClears, String title, List<String> pool, List<List<String>> poolLists, List<DungeonPlatform> platforms) {
         this.id = id;
         this.description = description;
         this.conditions = conditions != null ? conditions : new ArrayList<>();
@@ -28,6 +29,7 @@ public class Encounter {
         this.title = title;
         this.pool = pool != null ? pool : new ArrayList<>();
         this.poolLists = poolLists != null ? poolLists : new ArrayList<>();
+        this.platforms = platforms != null ? platforms : new ArrayList<>();
     }
 
     public String getId() {
@@ -72,5 +74,9 @@ public class Encounter {
 
     public List<List<String>> getPoolLists() {
         return poolLists;
+    }
+
+    public List<DungeonPlatform> getPlatforms() {
+        return platforms;
     }
 }

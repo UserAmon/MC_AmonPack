@@ -18,7 +18,10 @@ public class DungeonCondition {
         ZONE,
         THROW_AT,
         THROW_AT_ENEMY,
-        DROP_ON_DEATH
+        DROP_ON_DEATH,
+        PERIODIC_CHECK,
+        LOOKING_AT,
+        ALIVE
     }
 
     private final ConditionType type;
@@ -37,6 +40,13 @@ public class DungeonCondition {
     private double chance;
     private int timeRequired;
     private List<DungeonEffect> onCompleteEffects = new ArrayList<>();
+    private String requirement;
+    private int interval;
+    private List<DungeonEffect> failEffects = new ArrayList<>();
+    private List<DungeonEffect> successEffects = new ArrayList<>();
+    private boolean once = false;
+    private boolean requiredAllPlayers = false;
+    private boolean requiredItems = true;
 
     public DungeonCondition(ConditionType type) {
         this.type = type;
@@ -110,12 +120,28 @@ public class DungeonCondition {
             case PLAYER_ENTER_AREA:
                 Location center = new Location(instance.getWorld(), x, y, z);
                 double radiusSq = radius * radius;
-                for (Player player : instance.getOnlinePlayers()) {
-                    if (player.getLocation().distanceSquared(center) <= radiusSq) {
-                        return true;
+                List<Player> activePlayers = new ArrayList<>();
+                for (Player p : instance.getOnlinePlayers()) {
+                    if (!instance.isPlayerSpectator(p)) {
+                        activePlayers.add(p);
                     }
                 }
-                return false;
+                if (activePlayers.isEmpty()) return false;
+                if (requiredAllPlayers) {
+                    for (Player p : activePlayers) {
+                        if (p.getLocation().distanceSquared(center) > radiusSq) {
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    for (Player player : activePlayers) {
+                        if (player.getLocation().distanceSquared(center) <= radiusSq) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
 
             case KILL_MOBS:
                 int currentKills = instance.getKilledMobsCount(mobName);
@@ -133,6 +159,34 @@ public class DungeonCondition {
             case DROP_ON_DEATH:
                 return true;
 
+            case PERIODIC_CHECK:
+                return true;
+
+            case LOOKING_AT:
+                for (Player player : instance.getOnlinePlayers()) {
+                    if (!instance.isPlayerSpectator(player) && instance.isLookingAt(player, x, y, z)) {
+                        return true;
+                    }
+                }
+                return false;
+
+            case ALIVE:
+                int count = 0;
+                Location centerLoc = new Location(instance.getWorld(), x, y, z);
+                double rSq = radius * radius;
+                for (org.bukkit.entity.Entity entity : instance.getWorld().getNearbyEntities(centerLoc, radius, radius, radius)) {
+                    if (entity instanceof org.bukkit.entity.LivingEntity && !(entity instanceof Player) && !entity.isDead()) {
+                        String name = entity.getName();
+                        String cleanName = ChatColor.stripColor(name);
+                        if (cleanName.equalsIgnoreCase(mobName) || entity.getType().name().equalsIgnoreCase(mobName)) {
+                            if (entity.getLocation().distanceSquared(centerLoc) <= rSq) {
+                                count++;
+                            }
+                        }
+                    }
+                }
+                return count >= amount;
+
             default:
                 return false;
         }
@@ -146,26 +200,28 @@ public class DungeonCondition {
 
         if (blockMaterial != null && clickedBlock != blockMaterial) return false;
 
-        if (itemMaterial != null) {
-            if (heldItem == null || heldItem.getType() != itemMaterial) return false;
-            
-            if (itemDisplayName != null) {
-                if (!heldItem.hasItemMeta() || heldItem.getItemMeta().getDisplayName() == null) return false;
+        if (requiredItems) {
+            if (itemMaterial != null) {
+                if (heldItem == null || heldItem.getType() != itemMaterial) return false;
                 
-                String cleanMetaName = ChatColor.stripColor(heldItem.getItemMeta().getDisplayName());
-                String cleanTargetName = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', itemDisplayName));
-                
-                if (!cleanMetaName.equalsIgnoreCase(cleanTargetName)) return false;
+                if (itemDisplayName != null) {
+                    if (!heldItem.hasItemMeta() || heldItem.getItemMeta().getDisplayName() == null) return false;
+                    
+                    String cleanMetaName = ChatColor.stripColor(heldItem.getItemMeta().getDisplayName());
+                    String cleanTargetName = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', itemDisplayName));
+                    
+                    if (!cleanMetaName.equalsIgnoreCase(cleanTargetName)) return false;
+                }
+            } else if (customItemId != null) {
+                if (heldItem == null) return false;
+                org.bukkit.persistence.PersistentDataContainer pdc = heldItem.getItemMeta().getPersistentDataContainer();
+                org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_item_id");
+                if (!pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) return false;
+                String itemId = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
+                if (!customItemId.equalsIgnoreCase(itemId)) return false;
+            } else {
+                if (heldItem != null && !heldItem.getType().isAir()) return false;
             }
-        } else if (customItemId != null) {
-            if (heldItem == null) return false;
-            org.bukkit.persistence.PersistentDataContainer pdc = heldItem.getItemMeta().getPersistentDataContainer();
-            org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_item_id");
-            if (!pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) return false;
-            String itemId = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
-            if (!customItemId.equalsIgnoreCase(itemId)) return false;
-        } else {
-            if (heldItem != null && !heldItem.getType().isAir()) return false;
         }
 
         return true;
@@ -233,5 +289,85 @@ public class DungeonCondition {
 
     public void setCustomItemId(String customItemId) {
         this.customItemId = customItemId;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
+
+    public void setZ(double z) {
+        this.z = z;
+    }
+
+    public void setRadius(double radius) {
+        this.radius = radius;
+    }
+
+    public void setMobName(String mobName) {
+        this.mobName = mobName;
+    }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
+    public String getRequirement() {
+        return requirement;
+    }
+
+    public void setRequirement(String requirement) {
+        this.requirement = requirement;
+    }
+
+    public int getInterval() {
+        return interval;
+    }
+
+    public void setInterval(int interval) {
+        this.interval = interval;
+    }
+
+    public List<DungeonEffect> getFailEffects() {
+        return failEffects;
+    }
+
+    public void setFailEffects(List<DungeonEffect> failEffects) {
+        this.failEffects = failEffects;
+    }
+
+    public List<DungeonEffect> getSuccessEffects() {
+        return successEffects;
+    }
+
+    public void setSuccessEffects(List<DungeonEffect> successEffects) {
+        this.successEffects = successEffects;
+    }
+
+    public boolean isOnce() {
+        return once;
+    }
+
+    public void setOnce(boolean once) {
+        this.once = once;
+    }
+
+    public boolean isRequiredAllPlayers() {
+        return requiredAllPlayers;
+    }
+
+    public void setRequiredAllPlayers(boolean requiredAllPlayers) {
+        this.requiredAllPlayers = requiredAllPlayers;
+    }
+
+    public boolean isRequiredItems() {
+        return requiredItems;
+    }
+
+    public void setRequiredItems(boolean requiredItems) {
+        this.requiredItems = requiredItems;
     }
 }

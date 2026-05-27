@@ -50,6 +50,14 @@ public class DungeonInstance {
     private List<String> currentPoolListSequence = new ArrayList<>();
     private int poolListIndex = 0;
 
+    private final Map<DungeonCondition, Integer> periodicCheckTimers = new HashMap<>();
+    private final Map<DungeonCondition, Boolean> lookingStateMap = new HashMap<>();
+    private final Map<DungeonCondition, Integer> lookingTimerMap = new HashMap<>();
+    private final Map<DungeonCondition, Boolean> aliveStateMap = new HashMap<>();
+    private final Map<DungeonPlatform, Boolean> activePlatformsState = new HashMap<>();
+    private final Map<UUID, Location> playerLastLocations = new HashMap<>();
+
+
     public DungeonInstance(Dungeon template, List<Player> party) {
         this.template = template;
         this.instanceId = UUID.randomUUID();
@@ -102,6 +110,13 @@ public class DungeonInstance {
                 DungeonPlayerStats stats = playerStatsMap.get(uuid);
                 stats.applyStatsToPlayer(player);
             }
+        }
+
+        for (DungeonPlatform platform : template.getPlatforms()) {
+            boolean met = checkPlatformRequirement(platform);
+            boolean shouldExist = met ^ platform.isInverted();
+            activePlatformsState.put(platform, shouldExist);
+            updatePlatformBlocksInWorld(platform, shouldExist, false);
         }
 
         executeActiveEncounterEffects();
@@ -216,12 +231,127 @@ public class DungeonInstance {
                             break;
                         }
                     }
+                    int remaining = 0;
+                    for (DungeonCondition condition : encounter.getConditions()) {
+                        if (condition.getType() == DungeonCondition.ConditionType.PERIODIC_CHECK) {
+                            remaining = periodicCheckTimers.getOrDefault(condition, 0);
+                            break;
+                        }
+                    }
                     String titleText = titleTemplate
                         .replace("$ActNumber$", String.valueOf(act))
-                        .replace("$ReqNumber$", String.valueOf(req));
+                        .replace("$ReqNumber$", String.valueOf(req))
+                        .replace("%time%", String.valueOf(remaining));
                     bossBar.setTitle(ChatColor.translateAlternateColorCodes('&', titleText));
                     double progress = (double) act / req;
                     bossBar.setProgress(Math.max(0.0, Math.min(1.0, progress)));
+                }
+            }
+
+            for (DungeonCondition condition : encounter.getConditions()) {
+                if (condition.getType() == DungeonCondition.ConditionType.PERIODIC_CHECK) {
+                    Integer rem = periodicCheckTimers.get(condition);
+                    if (rem != null) {
+                        rem--;
+                        if (rem <= 0) {
+                            boolean met = checkPeriodicRequirement(condition.getRequirement());
+                            if (met) {
+                                for (DungeonEffect eff : condition.getSuccessEffects()) {
+                                    eff.execute(this);
+                                }
+                                if (condition.isOnce()) {
+                                    periodicCheckTimers.remove(condition);
+                                    continue;
+                                }
+                            } else {
+                                for (DungeonEffect eff : condition.getFailEffects()) {
+                                    eff.execute(this);
+                                }
+                            }
+                            rem = condition.getInterval();
+                        }
+                        periodicCheckTimers.put(condition, rem);
+                    }
+                } else if (condition.getType() == DungeonCondition.ConditionType.LOOKING_AT) {
+                    boolean currentLook = false;
+                    for (Player p : getOnlinePlayers()) {
+                        if (!isPlayerSpectator(p) && isLookingAt(p, condition.getX(), condition.getY(), condition.getZ())) {
+                            currentLook = true;
+                            break;
+                        }
+                    }
+                    Boolean prevLook = lookingStateMap.get(condition);
+                    if (prevLook == null) prevLook = false;
+                    if (currentLook != prevLook) {
+                        lookingStateMap.put(condition, currentLook);
+                        if (currentLook) {
+                            for (DungeonEffect eff : condition.getSuccessEffects()) {
+                                  eff.execute(this);
+                            }
+                        } else {
+                            for (DungeonEffect eff : condition.getFailEffects()) {
+                                  eff.execute(this);
+                            }
+                        }
+                    }
+
+                    if (!currentLook) {
+                        Integer timer = lookingTimerMap.get(condition);
+                        if (timer != null) {
+                            timer--;
+                            if (timer <= 0) {
+                                for (DungeonEffect eff : condition.getFailEffects()) {
+                                    eff.execute(this);
+                                }
+                                timer = condition.getInterval();
+                            }
+                            lookingTimerMap.put(condition, timer);
+                        }
+                    } else {
+                        lookingTimerMap.put(condition, condition.getInterval());
+                    }
+                } else if (condition.getType() == DungeonCondition.ConditionType.ALIVE) {
+                    boolean currentAlive = condition.isMet(this);
+                    Boolean prevAlive = aliveStateMap.get(condition);
+                    if (prevAlive == null) prevAlive = false;
+                    if (currentAlive != prevAlive) {
+                        aliveStateMap.put(condition, currentAlive);
+                        if (currentAlive) {
+                            for (DungeonEffect eff : condition.getSuccessEffects()) {
+                                eff.execute(this);
+                            }
+                        } else {
+                            for (DungeonEffect eff : condition.getFailEffects()) {
+                                eff.execute(this);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (DungeonPlatform platform : template.getPlatforms()) {
+                boolean met = checkPlatformRequirement(platform);
+                boolean shouldExist = met ^ platform.isInverted();
+                Boolean currentState = activePlatformsState.get(platform);
+                if (currentState == null || currentState != shouldExist) {
+                    activePlatformsState.put(platform, shouldExist);
+                    updatePlatformBlocksInWorld(platform, shouldExist, true);
+                }
+            }
+
+            for (DungeonPlatform platform : encounter.getPlatforms()) {
+                boolean met = checkPlatformRequirement(platform);
+                boolean shouldExist = met ^ platform.isInverted();
+                Boolean currentState = activePlatformsState.get(platform);
+                if (currentState == null || currentState != shouldExist) {
+                    activePlatformsState.put(platform, shouldExist);
+                    updatePlatformBlocksInWorld(platform, shouldExist, true);
+                }
+            }
+
+            for (Player p : getOnlinePlayers()) {
+                if (!isPlayerSpectator(p)) {
+                    playerLastLocations.put(p.getUniqueId(), p.getLocation().clone());
                 }
             }
 
@@ -397,6 +527,37 @@ public class DungeonInstance {
     private void executeActiveEncounterEffects() {
         Encounter encounter = getActiveEncounter();
         if (encounter != null) {
+            periodicCheckTimers.clear();
+            lookingStateMap.clear();
+            lookingTimerMap.clear();
+            aliveStateMap.clear();
+            activePlatformsState.clear();
+
+            for (DungeonCondition condition : encounter.getConditions()) {
+                if (condition.getType() == DungeonCondition.ConditionType.PERIODIC_CHECK) {
+                    periodicCheckTimers.put(condition, condition.getInterval());
+                } else if (condition.getType() == DungeonCondition.ConditionType.LOOKING_AT) {
+                    lookingStateMap.put(condition, false);
+                    lookingTimerMap.put(condition, condition.getInterval());
+                } else if (condition.getType() == DungeonCondition.ConditionType.ALIVE) {
+                    aliveStateMap.put(condition, false);
+                }
+            }
+
+            for (DungeonPlatform platform : template.getPlatforms()) {
+                boolean met = checkPlatformRequirement(platform);
+                boolean shouldExist = met ^ platform.isInverted();
+                activePlatformsState.put(platform, shouldExist);
+                updatePlatformBlocksInWorld(platform, shouldExist, false);
+            }
+
+            for (DungeonPlatform platform : encounter.getPlatforms()) {
+                boolean met = checkPlatformRequirement(platform);
+                boolean shouldExist = met ^ platform.isInverted();
+                activePlatformsState.put(platform, shouldExist);
+                updatePlatformBlocksInWorld(platform, shouldExist, false);
+            }
+
             if (encounter.getTitle() != null && !encounter.getTitle().isEmpty()) {
                 if (bossBar == null) {
                     bossBar = Bukkit.createBossBar(encounter.getTitle(), org.bukkit.boss.BarColor.RED, org.bukkit.boss.BarStyle.SOLID);
@@ -445,6 +606,262 @@ public class DungeonInstance {
                 }
             }
         }
+    }
+
+    private boolean checkPeriodicRequirement(String requirement) {
+        if (requirement == null || requirement.isEmpty()) return true;
+        List<Player> active = new ArrayList<>();
+        for (Player p : getOnlinePlayers()) {
+            if (!isPlayerSpectator(p)) {
+                active.add(p);
+            }
+        }
+        if (active.isEmpty()) return true;
+
+        String upper = requirement.toUpperCase();
+        if (upper.startsWith("AWAY_FROM_EACH_OTHER")) {
+            double minDist = 8.0;
+            String[] parts = requirement.split(",");
+            if (parts.length > 1) {
+                try {
+                    minDist = Double.parseDouble(parts[1].trim());
+                } catch (NumberFormatException e) {}
+            }
+            double minDistSq = minDist * minDist;
+            for (Player p1 : active) {
+                for (Player p2 : active) {
+                    if (p1 != p2 && p1.getLocation().distanceSquared(p2.getLocation()) < minDistSq) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        if (upper.startsWith("HAVE_ITEMS:")) {
+            String details = requirement.substring(11).trim();
+            String[] itemEntries = details.split(";");
+            for (Player p : active) {
+                boolean playerHasAll = true;
+                for (String entry : itemEntries) {
+                    String[] parts = entry.split(",");
+                    String itemId = parts[0].trim();
+                    int reqAmount = 1;
+                    if (parts.length > 1) {
+                        try {
+                            reqAmount = Integer.parseInt(parts[1].trim());
+                        } catch (NumberFormatException e) {}
+                    }
+                    if (getItemCount(p, itemId) < reqAmount) {
+                        playerHasAll = false;
+                        break;
+                    }
+                }
+                if (playerHasAll) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (upper.startsWith("ALL_HAVE_ITEMS:")) {
+            String details = requirement.substring(15).trim();
+            String[] itemEntries = details.split(";");
+            for (Player p : active) {
+                for (String entry : itemEntries) {
+                    String[] parts = entry.split(",");
+                    String itemId = parts[0].trim();
+                    int reqAmount = 1;
+                    if (parts.length > 1) {
+                        try {
+                            reqAmount = Integer.parseInt(parts[1].trim());
+                        } catch (NumberFormatException e) {}
+                    }
+                    if (getItemCount(p, itemId) < reqAmount) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        for (Player p : active) {
+            boolean ok = false;
+            switch (upper) {
+                case "SNEAKING":
+                    ok = p.isSneaking();
+                    break;
+                case "IN_AIR":
+                case "AIR":
+                    ok = !p.isOnGround();
+                    break;
+                case "SPRINTING":
+                    ok = p.isSprinting();
+                    break;
+                case "MOVING":
+                    Location last = playerLastLocations.get(p.getUniqueId());
+                    if (last != null) {
+                        ok = p.getLocation().distanceSquared(last) > 0.005;
+                    } else {
+                        ok = false;
+                    }
+                    break;
+                case "NEAR_EACH_OTHER":
+                    ok = true;
+                    for (Player other : active) {
+                        if (p != other && p.getLocation().distanceSquared(other.getLocation()) > 36.0) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    ok = true;
+                    break;
+            }
+            if (!ok) return false;
+        }
+        return true;
+    }
+
+    private int getItemCount(Player p, String itemId) {
+        int total = 0;
+        for (ItemStack stack : p.getInventory().getContents()) {
+            if (stack != null && !stack.getType().isAir() && isMatchingItem(stack, itemId)) {
+                total += stack.getAmount();
+            }
+        }
+        return total;
+    }
+
+    private boolean checkPlatformRequirement(DungeonPlatform platform) {
+        String req = platform.getRequirement();
+        if (req == null || req.isEmpty()) return true;
+        if (req.equalsIgnoreCase("SNEAKING")) {
+            if (platform.getTestMode().equalsIgnoreCase("NEAR")) {
+                for (Player p : getOnlinePlayers()) {
+                    if (!isPlayerSpectator(p) && isNearPlatform(p.getLocation(), platform) && p.isSneaking()) {
+                        return true;
+                    }
+                }
+            } else {
+                for (Player p : getOnlinePlayers()) {
+                    if (!isPlayerSpectator(p) && p.isSneaking()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        if (req.startsWith("ITEM:")) {
+            String itemId = req.substring(5).trim();
+            if (platform.getTestMode().equalsIgnoreCase("NEAR")) {
+                for (Player p : getOnlinePlayers()) {
+                    if (!isPlayerSpectator(p) && isNearPlatform(p.getLocation(), platform) && hasItemInHandOrInv(p, itemId)) {
+                        return true;
+                    }
+                }
+            } else {
+                for (Player p : getOnlinePlayers()) {
+                    if (!isPlayerSpectator(p) && hasItemInHandOrInv(p, itemId)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        if (req.startsWith("MOB_NEAR:")) {
+            String targetMobName = req.substring(9).trim();
+            Location center = getPlatformCenter(platform);
+            for (org.bukkit.entity.Entity entity : world.getNearbyEntities(center, 5.0, 5.0, 5.0)) {
+                if (entity instanceof org.bukkit.entity.LivingEntity && !(entity instanceof Player) && !entity.isDead()) {
+                    String cleanName = ChatColor.stripColor(entity.getName());
+                    if (cleanName.equalsIgnoreCase(targetMobName) || entity.getType().name().equalsIgnoreCase(targetMobName)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isNearPlatform(Location loc, DungeonPlatform platform) {
+        double minX = Math.min(platform.getX1(), platform.getX2()) - 1.5;
+        double maxX = Math.max(platform.getX1(), platform.getX2()) + 1.5;
+        double minY = Math.min(platform.getY1(), platform.getY2()) - 1.5;
+        double maxY = Math.max(platform.getY1(), platform.getY2()) + 1.5;
+        double minZ = Math.min(platform.getZ1(), platform.getZ2()) - 1.5;
+        double maxZ = Math.max(platform.getZ1(), platform.getZ2()) + 1.5;
+        return loc.getX() >= minX && loc.getX() <= maxX &&
+               loc.getY() >= minY && loc.getY() <= maxY &&
+               loc.getZ() >= minZ && loc.getZ() <= maxZ;
+    }
+
+    private boolean hasItemInHandOrInv(Player p, String itemId) {
+        ItemStack mainHand = p.getInventory().getItemInMainHand();
+        if (mainHand != null && !mainHand.getType().isAir() && isMatchingItem(mainHand, itemId)) return true;
+        for (ItemStack stack : p.getInventory().getContents()) {
+            if (stack != null && !stack.getType().isAir() && isMatchingItem(stack, itemId)) return true;
+        }
+        return false;
+    }
+
+    private boolean isMatchingItem(ItemStack stack, String itemId) {
+        if (stack.hasItemMeta()) {
+            org.bukkit.persistence.PersistentDataContainer pdc = stack.getItemMeta().getPersistentDataContainer();
+            org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_item_id");
+            if (pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) {
+                String id = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
+                if (itemId.equalsIgnoreCase(id)) return true;
+            }
+        }
+        if (stack.getType().name().equalsIgnoreCase(itemId)) return true;
+        if (stack.hasItemMeta() && stack.getItemMeta().getDisplayName() != null) {
+            String cleanName = ChatColor.stripColor(stack.getItemMeta().getDisplayName());
+            if (cleanName.equalsIgnoreCase(itemId)) return true;
+        }
+        return false;
+    }
+
+    private Location getPlatformCenter(DungeonPlatform platform) {
+        double cx = (platform.getX1() + platform.getX2()) / 2.0;
+        double cy = (platform.getY1() + platform.getY2()) / 2.0;
+        double cz = (platform.getZ1() + platform.getZ2()) / 2.0;
+        return new Location(world, cx, cy, cz);
+    }
+
+    private void updatePlatformBlocksInWorld(DungeonPlatform platform, boolean exist, boolean spawnParticles) {
+        Material mat = exist ? platform.getMaterial() : Material.AIR;
+        int minX = (int) Math.min(platform.getX1(), platform.getX2());
+        int minY = (int) Math.min(platform.getY1(), platform.getY2());
+        int minZ = (int) Math.min(platform.getZ1(), platform.getZ2());
+        int maxX = (int) Math.max(platform.getX1(), platform.getX2());
+        int maxY = (int) Math.max(platform.getY1(), platform.getY2());
+        int maxZ = (int) Math.max(platform.getZ1(), platform.getZ2());
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    Block block = world.getBlockAt(x, y, z);
+                    block.setType(mat);
+                    if (spawnParticles) {
+                        Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
+                        world.spawnParticle(org.bukkit.Particle.CLOUD, blockCenter, 5, 0.2, 0.2, 0.2, 0.0);
+                        world.spawnParticle(org.bukkit.Particle.GLOW, blockCenter, 3, 0.2, 0.2, 0.2, 0.0);
+                    }
+                }
+            }
+        }
+    }
+
+    public boolean isLookingAt(Player player, double tx, double ty, double tz) {
+        Location eye = player.getEyeLocation();
+        Vector toTarget = new Vector(tx - eye.getX(), ty - eye.getY(), tz - eye.getZ());
+        if (toTarget.lengthSquared() == 0.0) return true;
+        toTarget.normalize();
+        Vector lookDir = eye.getDirection();
+        double dot = lookDir.dot(toTarget);
+        return dot > 0.95;
     }
 
     public void completeDungeon() {

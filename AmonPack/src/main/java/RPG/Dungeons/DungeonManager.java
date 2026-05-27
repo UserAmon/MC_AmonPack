@@ -183,15 +183,27 @@ public class DungeonManager implements Listener {
                                 } catch (IllegalArgumentException ex) {
                                 }
                                 if (cType != null) {
-                                    List<DungeonEffect> onComp = new ArrayList<>();
-                                    List<?> rawOnComp = (List<?>) map.get("oncomplete");
-                                    if (rawOnComp != null) {
-                                        for (Object rawObj : rawOnComp) {
+                                    List<DungeonEffect> failEffs = new ArrayList<>();
+                                    List<?> rawFail = (List<?>) map.get("fail-effects");
+                                    if (rawFail != null) {
+                                        for (Object rawObj : rawFail) {
                                             if (rawObj instanceof Map) {
-                                                Map<String, Object> compMap = (Map<String, Object>) rawObj;
-                                                DungeonEffect eff = parseSingleEffect(compMap);
+                                                DungeonEffect eff = parseSingleEffect((Map<String, Object>) rawObj);
                                                 if (eff != null) {
-                                                    onComp.add(eff);
+                                                    failEffs.add(eff);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    List<DungeonEffect> successEffs = new ArrayList<>();
+                                    List<?> rawSuccess = (List<?>) map.get("success-effects");
+                                    if (rawSuccess != null) {
+                                        for (Object rawObj : rawSuccess) {
+                                            if (rawObj instanceof Map) {
+                                                DungeonEffect eff = parseSingleEffect((Map<String, Object>) rawObj);
+                                                if (eff != null) {
+                                                    successEffs.add(eff);
                                                 }
                                             }
                                         }
@@ -206,6 +218,7 @@ public class DungeonManager implements Listener {
                                             cond = new DungeonCondition(
                                                 asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), asDouble(map.get("radius"))
                                             );
+                                            cond.setRequiredAllPlayers(map.containsKey("required_all_players") ? (Boolean) map.get("required_all_players") : false);
                                             break;
                                         case KILL_MOBS:
                                             cond = new DungeonCondition(
@@ -223,6 +236,7 @@ public class DungeonManager implements Listener {
                                             if (iMat == null && !itemMatStr.isEmpty()) {
                                                 cond.setCustomItemId(itemMatStr);
                                             }
+                                            cond.setRequiredItems(map.containsKey("required_items") ? (Boolean) map.get("required_items") : true);
                                             break;
                                         case ZONE:
                                             cond = new DungeonCondition(
@@ -249,9 +263,45 @@ public class DungeonManager implements Listener {
                                                 (String) map.get("mob-name"), (String) map.get("item"), asDouble(map.get("chance"))
                                             );
                                             break;
+                                        case PERIODIC_CHECK:
+                                            cond = new DungeonCondition(DungeonCondition.ConditionType.PERIODIC_CHECK);
+                                            cond.setInterval(asInt(map.getOrDefault("interval", 5)));
+                                            cond.setRequirement((String) map.getOrDefault("requirement", ""));
+                                            cond.setOnce(map.containsKey("once") ? (Boolean) map.get("once") : false);
+                                            break;
+                                        case LOOKING_AT:
+                                            cond = new DungeonCondition(DungeonCondition.ConditionType.LOOKING_AT);
+                                            cond.setX(asDouble(map.get("x")));
+                                            cond.setY(asDouble(map.get("y")));
+                                            cond.setZ(asDouble(map.get("z")));
+                                            cond.setInterval(asInt(map.getOrDefault("interval", 5)));
+                                            break;
+                                        case ALIVE:
+                                            cond = new DungeonCondition(DungeonCondition.ConditionType.ALIVE);
+                                            cond.setX(asDouble(map.get("x")));
+                                            cond.setY(asDouble(map.get("y")));
+                                            cond.setZ(asDouble(map.get("z")));
+                                            cond.setRadius(asDouble(map.getOrDefault("radius", 20.0)));
+                                            cond.setMobName((String) map.get("mob-name"));
+                                            cond.setAmount(asInt(map.getOrDefault("amount", 1)));
+                                            break;
                                     }
                                     if (cond != null) {
+                                        List<DungeonEffect> onComp = new ArrayList<>();
+                                        List<?> rawOnComp = (List<?>) map.get("oncomplete");
+                                        if (rawOnComp != null) {
+                                            for (Object rawObj : rawOnComp) {
+                                                if (rawObj instanceof Map) {
+                                                    DungeonEffect eff = parseSingleEffect((Map<String, Object>) rawObj);
+                                                    if (eff != null) {
+                                                        onComp.add(eff);
+                                                    }
+                                                }
+                                            }
+                                        }
                                         cond.setOnCompleteEffects(onComp);
+                                        cond.setFailEffects(failEffs);
+                                        cond.setSuccessEffects(successEffs);
                                         conditions.add(cond);
                                     }
                                 }
@@ -313,14 +363,52 @@ public class DungeonManager implements Listener {
                             }
                         }
 
-                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next, exclude, reqClears, encAfterClears, etitle, epool, epoolLists));
+                        List<DungeonPlatform> platforms = new ArrayList<>();
+                        List<Map<?, ?>> platList = config.getMapList(path + ".platforms");
+                        if (platList != null) {
+                            for (Map<?, ?> rawMap : platList) {
+                                Map<String, Object> map = (Map<String, Object>) rawMap;
+                                double px1 = asDouble(map.get("x1"));
+                                double py1 = asDouble(map.get("y1"));
+                                double pz1 = asDouble(map.get("z1"));
+                                double px2 = asDouble(map.get("x2"));
+                                double py2 = asDouble(map.get("y2"));
+                                double pz2 = asDouble(map.get("z2"));
+                                Material mat = Material.getMaterial((String) map.getOrDefault("material", "STONE"));
+                                boolean inverted = map.containsKey("inverted") ? (Boolean) map.get("inverted") : false;
+                                String testMode = (String) map.getOrDefault("test-mode", "GLOBAL");
+                                String requirement = (String) map.getOrDefault("requirement", "");
+                                platforms.add(new DungeonPlatform(px1, py1, pz1, px2, py2, pz2, mat, inverted, testMode, requirement));
+                            }
+                        }
+
+                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next, exclude, reqClears, encAfterClears, etitle, epool, epoolLists, platforms));
+                    }
+                }
+
+                List<DungeonPlatform> globalPlatforms = new ArrayList<>();
+                List<Map<?, ?>> globalPlatList = config.getMapList("platforms");
+                if (globalPlatList != null) {
+                    for (Map<?, ?> rawMap : globalPlatList) {
+                        Map<String, Object> map = (Map<String, Object>) rawMap;
+                        double px1 = asDouble(map.get("x1"));
+                        double py1 = asDouble(map.get("y1"));
+                        double pz1 = asDouble(map.get("z1"));
+                        double px2 = asDouble(map.get("x2"));
+                        double py2 = asDouble(map.get("y2"));
+                        double pz2 = asDouble(map.get("z2"));
+                        Material mat = Material.getMaterial((String) map.getOrDefault("material", "STONE"));
+                        boolean inverted = map.containsKey("inverted") ? (Boolean) map.get("inverted") : false;
+                        String testMode = (String) map.getOrDefault("test-mode", "GLOBAL");
+                        String requirement = (String) map.getOrDefault("requirement", "");
+                        globalPlatforms.add(new DungeonPlatform(px1, py1, pz1, px2, py2, pz2, mat, inverted, testMode, requirement));
                     }
                 }
 
                 List<String> allowedStats = config.getStringList("loot-chest.allowed-stats");
                 List<String> allowedBlessings = config.getStringList("loot-chest.allowed-blessings");
 
-                Dungeon dungeon = new Dungeon(id, name, schematic, pasteLoc, spawnLoc, exitWorld, exitLoc, initialEncounter, encounters, rewards, allowedStats, allowedBlessings, customItems);
+                Dungeon dungeon = new Dungeon(id, name, schematic, pasteLoc, spawnLoc, exitWorld, exitLoc, initialEncounter, encounters, rewards, allowedStats, allowedBlessings, customItems, globalPlatforms);
                 templates.put(id.toLowerCase(), dungeon);
                 System.out.println("[Dungeons] Pomyslnie wczytano szablon lochu: " + id);
             } catch (Exception e) {
@@ -376,6 +464,23 @@ public class DungeonManager implements Listener {
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), asDouble(map.get("range")),
                     asInt(map.get("interval"))
                 );
+            case KNOCKBACK:
+                return new DungeonEffect(
+                    DungeonEffect.EffectType.KNOCKBACK, "", 0, 0,
+                    asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), 0.0, 0
+                );
+            case PULL:
+                return new DungeonEffect(
+                    DungeonEffect.EffectType.PULL, "", asInt(map.get("amount")), 0,
+                    asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), 0.0, 0
+                );
+            case DAMAGE:
+                return new DungeonEffect(
+                    DungeonEffect.EffectType.DAMAGE, "", asInt(map.get("amount")), 0,
+                    0.0, 0.0, 0.0, 0.0, 0
+                );
+            case FORCE_FAIL:
+                return new DungeonEffect(DungeonEffect.EffectType.FORCE_FAIL);
         }
         return null;
     }

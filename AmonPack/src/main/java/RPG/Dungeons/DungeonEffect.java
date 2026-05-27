@@ -12,6 +12,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.Color;
+import org.bukkit.Particle;
+import org.bukkit.util.Vector;
 
 import static Plugin.AmonPackPlugin.FastEasyStack;
 
@@ -26,7 +31,11 @@ public class DungeonEffect {
         GIVE_READY_COMPASS,
         SPAWN_CHEST,
         COMPLETE_DUNGEON,
-        SPAWN_UNTIL
+        SPAWN_UNTIL,
+        KNOCKBACK,
+        PULL,
+        DAMAGE,
+        FORCE_FAIL
     }
 
     private final EffectType type;
@@ -192,6 +201,87 @@ public class DungeonEffect {
                     }
                 }.runTaskTimer(Plugin.AmonPackPlugin.plugin, 0L, interval * 20L);
                 instance.addSpawnUntilTaskId(task.getTaskId());
+                break;
+
+            case KNOCKBACK:
+                Vector kbVec = new Vector(x, y, z);
+                for (Player player : instance.getOnlinePlayers()) {
+                    if (!instance.isPlayerSpectator(player)) {
+                        player.setVelocity(kbVec);
+                    }
+                }
+                break;
+
+            case PULL:
+                Location pullLoc = new Location(instance.getWorld(), x, y, z);
+                double force = amount > 0 ? amount : 1.0;
+                for (Player player : instance.getOnlinePlayers()) {
+                    if (!instance.isPlayerSpectator(player)) {
+                        Location pLoc = player.getLocation();
+                        Vector dir = pullLoc.toVector().subtract(pLoc.toVector());
+                        if (dir.lengthSquared() > 0.25) {
+                            dir.normalize().multiply(force);
+                            player.setVelocity(dir);
+                        }
+                    }
+                }
+                break;
+
+            case DAMAGE:
+                double dmgVal = amount > 0 ? amount : 2.0;
+                for (Player player : instance.getOnlinePlayers()) {
+                    if (!instance.isPlayerSpectator(player)) {
+                        player.damage(dmgVal);
+                    }
+                }
+                break;
+
+            case FORCE_FAIL:
+                new org.bukkit.scheduler.BukkitRunnable() {
+                    private int ticks = 0;
+                    @Override
+                    public void run() {
+                        if (instance.isFinished()) {
+                            cancel();
+                            return;
+                        }
+                        ticks++;
+                        List<Player> playersToDamage = new ArrayList<>();
+                        for (Player p : instance.getOnlinePlayers()) {
+                            if (!instance.isPlayerSpectator(p)) {
+                                playersToDamage.add(p);
+                            }
+                        }
+                        if (playersToDamage.isEmpty() || ticks > 10) {
+                            for (Player p : instance.getOnlinePlayers()) {
+                                if (!instance.isPlayerSpectator(p)) {
+                                    p.setHealth(0.0);
+                                }
+                            }
+                            instance.broadcast(ChatColor.RED + "[Dungeons] Dungeon zakończył się sromotną klęską!");
+                            instance.cleanup();
+                            cancel();
+                            return;
+                        }
+                        for (Player p : playersToDamage) {
+                            double maxHp = p.getMaxHealth();
+                            double currentHp = p.getHealth();
+                            double damagePerSec = maxHp / 10.0;
+                            double nextHp = Math.max(0.0, currentHp - damagePerSec);
+                            p.setHealth(nextHp);
+                            if (nextHp <= 0.0) {
+                                p.damage(99999.0);
+                            }
+                            int amp = ticks / 2;
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, amp));
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 0));
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 40, amp));
+                            Location pLoc = p.getLocation();
+                            p.getWorld().spawnParticle(Particle.LARGE_SMOKE, pLoc, ticks * 5, 0.5, 1.0, 0.5, 0.05);
+                            p.getWorld().spawnParticle(Particle.DUST, pLoc.add(0, 1, 0), ticks * 10, 0.5, 0.5, 0.5, new Particle.DustOptions(Color.RED, 1.5f));
+                        }
+                    }
+                }.runTaskTimer(Plugin.AmonPackPlugin.plugin, 0L, 20L);
                 break;
         }
     }

@@ -26,8 +26,9 @@ public class Dungeon {
     private final List<String> allowedStats;
     private final List<String> allowedBlessings;
     private final Map<String, DungeonCustomItem> customItems;
+    private final List<DungeonPlatform> platforms;
 
-    public Dungeon(String id, String name, String schematicFile, Vector pasteLocation, Vector spawnLocation, String exitWorld, Vector exitLocation, String initialEncounterId, Map<String, Encounter> encounters, DungeonRewards rewards, List<String> allowedStats, List<String> allowedBlessings, Map<String, DungeonCustomItem> customItems) {
+    public Dungeon(String id, String name, String schematicFile, Vector pasteLocation, Vector spawnLocation, String exitWorld, Vector exitLocation, String initialEncounterId, Map<String, Encounter> encounters, DungeonRewards rewards, List<String> allowedStats, List<String> allowedBlessings, Map<String, DungeonCustomItem> customItems, List<DungeonPlatform> platforms) {
         this.id = id;
         this.name = name;
         this.schematicFile = schematicFile;
@@ -41,6 +42,7 @@ public class Dungeon {
         this.allowedStats = allowedStats != null ? allowedStats : new ArrayList<>();
         this.allowedBlessings = allowedBlessings != null ? allowedBlessings : new ArrayList<>();
         this.customItems = customItems != null ? customItems : new HashMap<>();
+        this.platforms = platforms != null ? platforms : new ArrayList<>();
     }
 
     public String getId() {
@@ -93,6 +95,10 @@ public class Dungeon {
 
     public Map<String, DungeonCustomItem> getCustomItems() {
         return customItems;
+    }
+
+    public List<DungeonPlatform> getPlatforms() {
+        return platforms;
     }
 
     /**

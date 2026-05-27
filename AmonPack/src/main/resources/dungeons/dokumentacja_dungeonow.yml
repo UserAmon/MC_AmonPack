@@ -1,331 +1,478 @@
 # =========================================================================
-# DOKUMENTACJA SYSTEMU DUNGEONÓW - WARUNKI, EFEKTY I REJESTR PRZEDMIOTÓW
+# PODRĘCZNIK SKRYPTOWANIA DUNGEONÓW - KOMPLETNY PRZEWODNIK (AMONPACK LOCHY V2)
 # =========================================================================
-# Ten plik służy wyłącznie jako dokumentacja i instrukcja dla administratora.
-# Pokazuje wszystkie dostępne Warunki (Conditions), Efekty (Effects) oraz
-# strukturę własnych przedmiotów, które można wykorzystać w lochach.
+# Ten plik stanowi oficjalny poradnik i kompletną dokumentację techniczną
+# dla systemu dynamicznych lochów rogue-lite wtyczki AmonPack.
+# Wszystkie sekcje, właściwości, efekty i warunki zostały opisane poniżej
+# wraz z dokładnymi parametrami oraz przejrzystymi przykładami.
+#
 # =========================================================================
+# CZĘŚĆ I: STRUKTURA GŁÓWNA SZABLONU LOCHU
+# =========================================================================
+# Każdy szablon lochu musi posiadać poprawny format nagłówka konfigurującego
+# parametry bazowe, rejestr przedmiotów, skrzynię ulepszeń oraz nagrody.
 
-dokumentacja:
-  informacje-ogolne:
-    opis: "Dungeon składa się z etapów (encounters). Każdy etap posiada warunki zakończenia oraz efekty wywoływane na starcie i na końcu."
-    uwagi: "Wielkości liter w typach warunków i efektów MAJĄ znaczenie i muszą być pisane wielkimi literami (UPPERCASE)."
+name: "Komnata Cieni"                    # Unikalna, wyświetlana nazwa lochu (obsługuje kolory &)
+schematic: "komnata_cieni.schem"         # Nazwa pliku WorldEdit .schem/.schematic znajdującego się w folderze wtyczki
+paste-location:
+  x: 0                                   # Koordynaty wklejenia schematu w nowo utworzonym świecie
+  y: 60
+  z: 0
+spawn-location:
+  x: 0                                   # Początkowy punkt startowy (teleport graczy po wejściu)
+  y: 61
+  z: 0
+exit-location:
+  world: "world"                         # Świat docelowy po zakończeniu lub opuszczeniu lochu
+  x: 100
+  y: 64
+  z: 100
+initial-encounter: "ENC1"                # Pierwszy, startowy etap lochu od którego rozpoczyna się gra
 
-  # =========================================================================
-  # 0. REJESTR PRZEDMIOTÓW (ITEMS) - Definiowany przed encounterami w lochu
-  # =========================================================================
-  przedmioty:
-    opis: "Umożliwia stworzenie unikalnych kluczy lub przedmiotów rzucanych, do których można się odwołać w warunkach."
-    struktura:
-      items:
-        klucz_cieni:
-          material: "TRIPWIRE_HOOK"
-          nazwa: "&6Klucz Bramy Cieni"
-          opis:
-            - "&7Służy do otwarcia starożytnych wrót."
-          typ: "key"
-          custom-model-id: 1001
-        kamien_ognia:
-          material: "FIRE_CHARGE"
-          nazwa: "&cOgnisty Pocisk"
-          opis:
-            - "&7Rzuć nim PPM, aby trafić w cel."
-          typ: "throwable"
-          custom-model-id: 1002
+# =========================================================================
+# CZĘŚĆ II: REJESTR PRZEDMIOTÓW NIESTANDARDOWYCH (items)
+# =========================================================================
+# Sekcja umożliwiająca tworzenie unikalnych kluczy cieni i rzucanych pocisków.
+# Przedmioty te są automatycznie rejestrowane i mogą być używane w warunkach.
+#
+# Właściwości przedmiotu:
+#   - material: Materiał bazowy przedmiotu ze Spigota (String)
+#   - nazwa/name: Nazwa wyświetlana przedmiotu w eq (obsługuje kolory &)
+#   - opis/lore: Kilkulinijkowy opis lore przedmiotu (Lista String)
+#   - typ/type: Typ zachowania: 'key' (klucz), 'throwable' (pocisk rzucany PPM)
+#   - custom-model-id: (Opcjonalne) CustomModelData dla ItemsAdder/ResourcePack (Integer)
 
-  # =========================================================================
-  # 1. WARUNKI (CONDITIONS) - Decydują o ukończeniu danego etapu (Encounter)
-  # =========================================================================
-  warunki:
-    ALL_PLAYERS_READY:
-      opis: "Wymaga, aby wszyscy gracze w lochu potwierdzili gotowość kompasem (PPM na kompas gotowości w ręce)."
-      przyklad:
-        - type: "ALL_PLAYERS_READY"
+items:
+  cien_klucz:
+    material: "TRIPWIRE_HOOK"
+    nazwa: "&6Klucz Bramy Cieni"
+    opis:
+      - "&7Służy do otwarcia starożytnych wrót."
+    typ: "key"
+    custom-model-id: 1001
+  cien_kamien:
+    material: "FIRE_CHARGE"
+    nazwa: "&cOgnisty Pocisk"
+    opis:
+      - "&7Rzuć nim PPM, aby trafić w punkt lub w shielded bossa!"
+    typ: "throwable"
+    custom-model-id: 1002
 
-    PLAYER_ENTER_AREA:
-      opis: "Wymaga, aby co najmniej jeden gracz zbliżył się do podanego punktu na określony promień."
-      parametry:
-        x: "Współrzędna X środka strefy (Double)"
-        y: "Współrzędna Y środka strefy (Double)"
-        z: "Współrzędna Z środka strefy (Double)"
-        radius: "Promień strefy detekcji (Double)"
-      przyklad:
-        - type: "PLAYER_ENTER_AREA"
-          x: 10.5
-          y: 61.0
-          z: 25.0
-          radius: 3.0
+# =========================================================================
+# CZĘŚĆ III: SKRZYNIA ULEPSZEŃ (loot-chest)
+# =========================================================================
+# Definiuje dozwolone statystyki i ulepszenia rogue-lite (błogosławieństwa)
+# wypadające ze skrzyni w trakcie rozgrywki lochu.
+#
+# Właściwości:
+#   - allowed-stats: Lista statystyk bazowych (HP, DEF, DMG, SPEED)
+#   - allowed-blessings: Lista błogosławieństw (VAMPIRISM, DODGE, ADRENALINE)
 
-    KILL_MOBS:
-      opis: "Wymaga pokonania określonej liczby konkretnych potworów (po typie moba lub nazwie wyświetlanej)."
-      parametry:
-        mob-name: "Typ potwora (np. ZOMBIE, CREEPER) lub jego customowa nazwa wyświetlana (String)"
-        amount: "Wymagana liczba potworów do zabicia (Integer)"
-      przyklad:
-        - type: "KILL_MOBS"
-          mob-name: "ShadowCreeper"
-          amount: 5
+loot-chest:
+  allowed-stats:
+    - HP
+    - DEF
+    - DMG
+    - SPEED
+  allowed-blessings:
+    - VAMPIRISM
+    - DODGE
+    - ADRENALINE
 
-    INTERACT_BLOCK_WITH_ITEM:
-      opis: "Wymaga kliknięcia PPM na blok o konkretnych współrzędnych przy użyciu określonego klucza/przedmiotu (przedmiot ulega zużyciu)."
-      parametry:
-        x: "Współrzędna X bloku (Double)"
-        y: "Współrzędna Y bloku (Double)"
-        z: "Współrzędna Z bloku (Double)"
-        block-material: "Materiał bloku, na który trzeba kliknąć (np. IRON_DOOR, STONE_BUTTON) (String)"
-        item-material: "Identyfikator przedmiotu z sekcji rejestru 'items' lub standardowy Material Spigota (String)"
-        item-display-name: "Dokładna nazwa klucza (Opcjonalna, String)"
-      przyklad:
-        - type: "INTERACT_BLOCK_WITH_ITEM"
-          x: 12.0
-          y: 62.0
-          z: -5.0
-          block-material: "IRON_DOOR"
-          item-material: "klucz_cieni"
+# =========================================================================
+# CZĘŚĆ IV: NAGRODY KOŃCOWE (rewards)
+# =========================================================================
+# Nagrody przyznawane wszystkim graczom po pomyślnym ukończeniu lochu.
+#
+# Właściwości:
+#   - dungeon-xp: Doświadczenie poziomu lochu (Integer)
+#   - money: Waluta w grze (Double)
+#   - commands: Lista komend wykonywanych przez konsolę (%player% zastępuje gracza)
+#   - items: Dowolna liczba niestandardowych przedmiotów do wręczenia
 
-    ZONE:
-      opis: "Wymaga przejęcia strefy o promieniu R poprzez ciągłe stanie w niej przez X sekund. Na ziemi pojawia się wirujący krąg z cząsteczek GLOW."
-      parametry:
-        x: "Współrzędna X środka strefy (Double)"
-        y: "Współrzędna Y środka strefy (Double)"
-        z: "Współrzędna Z środka strefy (Double)"
-        radius: "Promień strefy przejęcia (Double)"
-        time: "Czas stania w sekundach wymagany do przejęcia (Integer)"
-      przyklad:
-        - type: "ZONE"
-          x: 20.0
-          y: 61.0
-          z: 0.0
-          radius: 3.5
-          time: 15
+rewards:
+  dungeon-xp: 250
+  money: 500
+  commands:
+    - "give %player% gold_ingot 5"
+  items:
+    nagroda_miecz:
+      material: "DIAMOND_SWORD"
+      amount: 1
+      display-name: "&cMiecz Cienia"
+      lore:
+        - "&7Potężne ostrze wyjęte z ruin."
 
-    THROW_AT:
-      opis: "Wymaga trafienia określonym przedmiotem rzucanym (o typie throwable) we wskazane współrzędne X razy."
-      parametry:
-        x: "Współrzędna X celu (Double)"
-        y: "Współrzędna Y celu (Double)"
-        z: "Współrzędna Z celu (Double)"
-        radius: "Margines tolerancji trafienia (Double)"
-        item: "Identyfikator rzucanego przedmiotu z sekcji 'items' (String)"
-        amount: "Wymagana liczba celnych rzutów (Integer)"
-      przyklad:
-        - type: "THROW_AT"
-          x: 15.0
-          y: 64.0
-          z: 22.0
-          radius: 2.0
-          item: "kamien_ognia"
-          amount: 3
+# =========================================================================
+# CZĘŚĆ V: KOMPLETNY KATALOG WARUNKÓW (Conditions)
+# =========================================================================
+# Warunki (conditions) określają wymagania do ukończenia danego etapu (Encounter).
+# Mogą zawierać sekcję 'oncomplete' - listę efektów wyzwalanych przy ukończeniu
+# tego konkretnego warunku.
+#
+# 1. ALL_PLAYERS_READY
+#    Sprawdza, czy wszyscy gracze kliknęli gotowość przy użyciu Kompasu Gotowości.
+#    Przykład:
+#      - type: "ALL_PLAYERS_READY"
+#
+# 2. PLAYER_ENTER_AREA
+#    Zwraca prawda, jeśli chociaż jeden gracz wejdzie w obszar o promieniu R od punktu XYZ.
+#    Parametry: x, y, z (Double), radius (Double), required_all_players (Opcjonalne, domyślnie false. Jeśli true, wymaga aby wszyscy gracze byli w polu, Boolean)
+#    Przykład:
+#      - type: "PLAYER_ENTER_AREA"
+#        x: 10.0
+#        y: 61.0
+#        z: -5.0
+#        radius: 2.5
+#        required_all_players: true
+#
+# 3. KILL_MOBS
+#    Zaliczane gdy gracze pokonają wymaganą liczbę potworów o danej nazwie.
+#    Śmierć moba jest rejestrowana z DOWOLNEGO źródła (podpalenie, upadek, gracze).
+#    Parametry: mob-name (String) minecraftowy typ moba np ZOMBIE lub displayname "&7Duch" trzeba jako "Duch", amount (Integer)
+#    Przykład:
+#      - type: "KILL_MOBS"
+#        mob-name: "ZOMBIE"
+#        amount: 5
+#
+# 4. INTERACT_BLOCK_WITH_ITEM
+#    Zaliczane przy kliknięciu PPM na określony blok za pomocą przedmiotu z rejestru.
+#    Parametry: x, y, z (Double), block-material (Material), item-material (ID przedmiotu z rejestru lub materiał Spigot), required_items (Opcjonalne, domyślnie true. Jeśli false, warunek zaliczy się przy samym kliknięciu, bez potrzeby posiadania/trzymania przedmiotu, Boolean)
+#    Przykład:
+#      - type: "INTERACT_BLOCK_WITH_ITEM"
+#        x: 5.0
+#        y: 62.0
+#        z: 10.0
+#        block-material: "IRON_DOOR"
+#        item-material: "cien_klucz"
+#        required_items: false
+#
+# 5. ZONE
+#    Przejęcie wyznaczonej strefy (okręgu na ziemi) poprzez stanie w niej łącznie przez X sekund.
+#    Wychodzenie ze strefy cofa postęp o 1 sekundę na sekundę nieobecności. Rysuje cząsteczki GLOW wokół strefy.
+#    Parametry: x, y, z (Double), radius (Double), time (Sekundy, Integer)
+#    Przykład:
+#      - type: "ZONE"
+#        x: 15.0
+#        y: 61.0
+#        z: 15.0
+#        radius: 3.0
+#        time: 20
+#
+# 6. THROW_AT
+#    Trafienie rzucanym pociskiem (typu PPM 'throwable') w określone współrzędne X razy.
+#    Pociski mają grawitację, parabolę lotu oraz efektowne particle.
+#    Parametry: x, y, z (Double), radius (Double), item (ID pocisku), amount (Integer)
+#    Przykład:
+#      - type: "THROW_AT"
+#        x: 20.0
+#        y: 65.0
+#        z: 0.0
+#        radius: 1.5
+#        item: "cien_kamien"
+#        amount: 3
+#
+# 7. THROW_AT_ENEMY
+#    Mechanika przeciwnika z tarczą (odpornego na zwykły DMG). Trzeba zniszczyć jego tarczę
+#    poprzez trafienie go rzucanym pociskiem X razy.
+#    Parametry: mob-name (String "nazwa moba", np. "ZOMBIE" lub skryptowy name z MythicMobsa NIE DISPLAYNAME TO CO SIĘ KOMENDĄ wklepuje np. "dark_spirit_1"), item (ID pocisku), amount (Integer), x, y, z (Double - kordy spawnu moba)
+#    Przykład:
+#      - type: "THROW_AT_ENEMY"
+#        mob-name: "dark_spirit_1"
+#        item: "cien_kamien"
+#        amount: 4
+#        x: 12.0
+#        y: 61.0
+#        z: 12.0
+#
+# 8. DROP_ON_DEATH
+#    (Pasywny warunek) Szansa na dropnięcie określonego przedmiotu bezpośrednio po śmierci moba o danej nazwie.
+#    Parametry: mob-name (String), item (ID przedmiotu z rejestru), chance (Double 0.0-100.0)
+#    Przykład:
+#      - type: "DROP_ON_DEATH"
+#        mob-name: "ZOMBIE"
+#        item: "cien_kamien"
+#        chance: 50.0
+#
+# 9. PERIODIC_CHECK
+#    Cyklicznie co X sekund sprawdza wyznaczony stan graczy. Niezaliczenie uruchamia kary/efekty fail-effects,
+#    zaliczenie wyzwala success-effects.
+#    Parametry:
+#      - interval: interwał czasu w sekundach (Integer)
+#      - requirement: Wymóg do sprawdzenia (String):
+#          * SNEAKING (wszyscy gracze kucają)
+#          * IN_AIR (wszyscy gracze w powietrzu)
+#          * SPRINTING (wszyscy gracze biegną)
+#          * MOVING (wszyscy gracze w ruchu w ostatniej sekundzie)
+#          * NEAR_EACH_OTHER (wszyscy gracze w odległości max 6.0 bloków od siebie)
+#          * AWAY_FROM_EACH_OTHER,<dystans> (gracze oddaleni o min. podany dystans, np. AWAY_FROM_EACH_OTHER,10.0)
+#          * HAVE_ITEMS:<id>,<ilość>;<id2>,<ilość> (sprawdza czy PRZYNAJMNIEJ JEDEN gracz posiada podane przedmioty, np. HAVE_ITEMS:cien_klucz,1)
+#          * ALL_HAVE_ITEMS:<id>,<ilość>;<id2>,<ilość> (sprawdza czy WSZYSCY gracze posiadają podane przedmioty, np. ALL_HAVE_ITEMS:cien_klucz,1)
+#      - once: (Opcjonalne, Boolean) Jeśli ustawione na true, pierwszy pomyślny sukces na stałe wyłącza sprawdzanie w trwającym etapie.
+#      - fail-effects: Lista efektów wykonywanych przy porażce sprawdzania.
+#      - success-effects: Lista efektów wykonywanych przy sukcesie sprawdzania.
+#    Wykorzystanie zmiennej: W tytule etapu lochu można użyć tagu %time% pokazującego odliczanie pozostałych sekund.
+#    Przykład:
+#      - type: "PERIODIC_CHECK"
+#        interval: 30
+#        requirement: "ALL_HAVE_ITEMS:cien_klucz,1"
+#        once: true
+#        fail-effects:
+#          - type: "DAMAGE"
+#            amount: 4
+#          - type: "SEND_MESSAGE"
+#            message: "&cNikt z was nie posiada klucza! Otrzymujecie obrażenia krytyczne."
+#        success-effects:
+#          - type: "SEND_MESSAGE"
+#            message: "&aZadanie zaliczone! Wszyscy gracze posiadają wymagany klucz cieni."
+#
+# 10. LOOKING_AT
+#     Sensor kierunku spojrzenia. Sprawdza, czy chociaż jeden z graczy patrzy bezpośrednio na cel XYZ.
+#     Zmiana stanu z patrzenia na nie-patrzenie wyzwala odpowiednie pakiety efektów.
+#     Dodatkowo, jeśli nikt się nie patrzy, co 'interval' sekund wyzwalają się fail-effects.
+#     Parametry: x, y, z (Double - punkt obserwacji), interval (Sekundy powtórzeń kar, Integer)
+#     Przykład:
+#       - type: "LOOKING_AT"
+#         x: 0.0
+#         y: 65.0
+#         z: 5.0
+#         interval: 5
+#         fail-effects:
+#           - type: "SPAWN_MOB"
+#             mob-name: "SKELETON"
+#             amount: 1
+#             x: 0.0
+#             y: 61.0
+#             z: 5.0
+#         success-effects:
+#           - type: "SEND_MESSAGE"
+#             message: "&dKryształ cieni został uwięziony twoim wzrokiem. Szkielety przestały się rodzić!"
+#
+# 11. ALIVE
+#     Bieżący sensor obecności potworów. Zwraca true jeśli określony potwór o danej nazwie żyje w promieniu R od XYZ.
+#     Zmiana stanu obecności potwora wyzwala natychmiast success-effects lub fail-effects.
+#     Parametry: x, y, z (Double), radius (Double), mob-name (String), amount (Wymagana liczba potworów, Integer)
+#     Przykład:
+#       - type: "ALIVE"
+#         x: 10.0
+#         y: 61.0
+#         z: 10.0
+#         radius: 20.0
+#         mob-name: "Boss_Cienia"
+#         amount: 1
+#         fail-effects:
+#           - type: "OPEN_DOOR"
+#             x1: 10.0
+#             y1: 60.0
+#             z1: -1.0
+#             x2: 12.0
+#             y2: 63.0
+#             z2: -1.0
+#             material: "AIR"
+#           - type: "SEND_MESSAGE"
+#             message: "&aBoss poległ! Skalne drzwi do skarbca zostały otwarte!"
 
-    THROW_AT_ENEMY:
-      opis: "Przywołuje wroga z wirującą tarczą z cząsteczek SOUL_FIRE_FLAME. Wróg jest całkowicie uodporniony na zwykłe obrażenia. Jedynym sposobem na zadanie mu ciosów jest bezpośrednie trafienie go określonym przedmiotem rzucanym X razy."
-      parametry:
-        mob-name: "Nazwa wroga ze Spigota lub MythicMobs (String)"
-        item: "Identyfikator rzucanego przedmiotu z sekcji 'items' (String)"
-        amount: "Liczba wymaganych trafień pociskiem (Integer)"
-        x: "Współrzędna X spawnu (Double)"
-        y: "Współrzędna Y spawnu (Double)"
-        z: "Współrzędna Z spawnu (Double)"
-      przyklad:
-        - type: "THROW_AT_ENEMY"
-          mob-name: "ShieldedBoss"
-          item: "kamien_ognia"
-          amount: 5
-          x: 20.0
-          y: 61.0
-          z: 0.0
+# =========================================================================
+# CZĘŚĆ VI: KOMPLETNY KATALOG EFEKTÓW (Effects)
+# =========================================================================
+# Efekty (effects) są akcjami uruchamianymi przy starcie etapu, na ukończenie
+# pojedynczego warunku (oncomplete), bądź okresowo przez sensory.
+#
+# 1. SEND_MESSAGE
+#    Wysyła wiadomość czatu do wszystkich graczy w lochu.
+#    Parametry: message (String, obsługuje kolory &)
+#    Przykład:
+#      - type: "SEND_MESSAGE"
+#        message: "&eBrama cieni została otwarta!"
+#
+# 2. TELEPORT_PLAYERS
+#    Teleportuje wszystkich graczy w lochu do wskazanego punktu XYZ.
+#    Parametry: x, y, z (Double)
+#    Przykład:
+#      - type: "TELEPORT_PLAYERS"
+#        x: 0.0
+#        y: 61.0
+#        z: -10.0
+#
+# 3. SPAWN_MOB
+#    Spawnuje wybranego potwora MythicMobs wokół punktu z losowym rozrzutem.
+#    Parametry: mob-name (String) lub typ moba np. ZOMBIE, SKELETON, amount (Integer), level (Integer), x, y, z (Double), range (Rozrzut, Double)
+#    Przykład:
+#      - type: "SPAWN_MOB"
+#        mob-name: "Spirit_Earth_1"
+#        amount: 3
+#        level: 1
+#        x: 15.0
+#        y: 61.0
+#        z: 0.0
+#        range: 3.5
+#
+# 4. OPEN_DOOR
+#    Otwiera przejście zamieniając bloki w prostopadłościanie x1/y1/z1 -> x2/y2/z2 na AIR.
+#    Parametry: x1, y1, z1, x2, y2, z2 (Double)
+#    Przykład:
+#      - type: "OPEN_DOOR"
+#        x1: 5.0
+#        y1: 60.0
+#        z1: -1.0
+#        x2: 8.0
+#        y2: 63.0
+#        z2: -1.0
+#
+# 5. CLOSE_DOOR
+#    Buduje lub barykaduje przejście określonym blokiem w wyznaczonym prostopadłościanie.
+#    Parametry: x1, y1, z1, x2, y2, z2 (Double), material (Material, np. IRON_BARS)
+#    Przykład:
+#      - type: "CLOSE_DOOR"
+#        x1: 5.0
+#        y1: 60.0
+#        z1: -1.0
+#        x2: 8.0
+#        y2: 63.0
+#        z2: -1.0
+#        material: "IRON_BARS"
+#
+# 6. GIVE_READY_COMPASS
+#    Usuwa stare i rozdaje wszystkim graczom Kompas Gotowości oraz Skrzynię Menu Umiejętności.
+#    Przykład:
+#      - type: "GIVE_READY_COMPASS"
+#
+# 7. SPAWN_CHEST
+#    Tworzy interaktywną skrzynię nagród rogue-lite na danych kordach.
+#    Parametry: x, y, z (Double), chest-type (domyślnie 'ROGUELITE_CHEST')
+#    Przykład:
+#      - type: "SPAWN_CHEST"
+#        x: 0.0
+#        y: 61.0
+#        z: 5.0
+#        chest-type: "ROGUELITE_CHEST"
+#
+# 8. COMPLETE_DUNGEON
+#    Wysyła status sukcesu, rozdaje nagrody ze struktury 'rewards' i zamyka świat.
+#    Przykład:
+#      - type: "COMPLETE_DUNGEON"
+#
+# 9. SPAWN_UNTIL
+#    Cykliczne spawnowanie potworów co X sekund, dopóki etap lochu nie zostanie ukończony.
+#    Parametry: mob-name (String), amount (Integer), level (Integer), x, y, z (Double), range (Double), interval (Sekundy, Integer)
+#    Przykład:
+#      - type: "SPAWN_UNTIL"
+#        mob-name: "ZOMBIE"
+#        amount: 2
+#        level: 1
+#        x: 0.0
+#        y: 61.0
+#        z: 10.0
+#        range: 3.0
+#        interval: 10
+#
+# 10. KNOCKBACK
+#     Gwałtownie odrzuca wszystkich aktywnych graczy wektorem prędkości XYZ.
+#     Parametry: x, y, z (Double)
+#     Przykład:
+#       - type: "KNOCKBACK"
+#         x: 0.0
+#         y: 0.6
+#         z: -0.8
+#
+# 11. PULL
+#     Przyciąga graczy w stronę koordynatów XYZ z siłą określoną w amount.
+#     Parametry: x, y, z (Double), amount (Mnożnik siły, Integer/Double)
+#     Przykład:
+#       - type: "PULL"
+#         x: 10.0
+#         y: 65.0
+#         z: 10.0
+#         amount: 2
+#
+# 12. DAMAGE
+#     Zadaje określoną liczbę punktów bezpośrednich obrażeń wszystkim graczom w instancji.
+#     Parametry: amount (Ilość obrażeń, 2 = 1 serce, Integer)
+#     Przykład:
+#       - type: "DAMAGE"
+#         amount: 4
+#
+# 13. FORCE_FAIL
+#     Filmowe, dramatyczne uśmiercenie całej drużyny. Przez 10 sekund co sekundę zabiera
+#     10% maksymalnego zdrowia każdemu graczowi, nakładając narastające particle DUST (czerwone)
+#     i LARGE_SMOKE oraz potężne negatywne efekty (Spowolnienie, Ślepota, Nudności), gwarantując
+#     przegraną lochu i oczyszczenie instancji.
+#     Przykład:
+#       - type: "FORCE_FAIL"
 
-    DROP_ON_DEATH:
-      opis: "Pasywny warunek aktywujący szansę na drop zarejestrowanego przedmiotu z określonego potwora zabitego w trakcie trwania tego etapu."
-      parametry:
-        mob-name: "Nazwa potwora (String)"
-        item: "Identyfikator przedmiotu z sekcji 'items' do wydropienia (String)"
-        chance: "Szansa procentowa na drop przedmiotu, od 0.0 do 100.0 (Double)"
-      przyklad:
-        - type: "DROP_ON_DEATH"
-          mob-name: "ShadowGhost"
-          item: "kamien_ognia"
-          chance: 50.0
+# =========================================================================
+# CZĘŚĆ VII: SYSTEM DYNAMICZNYCH PLATFORM (platforms)
+# =========================================================================
+# Bloki tworzące mosty, zapadnie, przejścia lub labirynty, reagujące w czasie
+# rzeczywistym na określone stany lochu.
+# Rejestracja może odbywać się na dwa sposoby:
+#   1. Globalnie: Zdefiniowana w głównym korzeniu szablonu lochu (obok 'items' lub 'rewards').
+#      Platformy te działają zawsze i są sprawdzane/aktualizowane przez całą rozgrywkę lochu.
+#   2. Lokalnie: Zdefiniowana wewnątrz konkretnego etapu pod kluczem 'platforms'.
+#      Platformy te działają i są aktualizowane wyłącznie wtedy, gdy ten konkretny etap jest aktywny.
+# Powstanie/znikanie platformy generuje cząsteczki CLOUD oraz GLOW.
+#
+# Właściwości:
+#   - x1, y1, z1, x2, y2, z2: Wymiary prostopadłościanu platformy (Double/Integer)
+#   - material: Blok z jakiego ma powstać platforma (np. GLASS, OAK_PLANKS)
+#   - inverted: Jeśli false - bloki są gdy warunek jest spełniony, znikają gdy nie.
+#               Jeśli true - bloki znikają gdy warunek jest spełniony, są gdy nie.
+#   - test-mode: GLOBAL (sprawdza gracza w całej instancji) lub NEAR (w promieniu 1.5 bloku od platformy)
+#   - requirement: Wybrany warunek fizyczny:
+#       * SNEAKING (gracz kuca)
+#       * ITEM:<id_przedmiotu> (gracz posiada w dłoni/eq podany przedmiot, np. ITEM:cien_klucz)
+#       * MOB_NEAR:<nazwa_moba> (potwór o danej nazwie znajduje się w odległości max 5 bloków od środka platformy)
+#
+# Przykład kompletnego użycia platformy:
+#   platforms:
+#     - x1: 5
+#       y1: 60
+#       z1: 1
+#       x2: 7
+#       y2: 60
+#       z2: 5
+#       material: "GLASS"
+#       inverted: false
+#       test-mode: "NEAR"
+#       requirement: "ITEM:cien_klucz"
 
-    oncomplete:
-      opis: "Dowolny warunek może posiadać zagnieżdżoną sekcję 'oncomplete', zawierającą listę efektów, które zostaną uruchomione jednorazowo po spełnieniu tego pojedynczego warunku."
-      przyklad:
-        - type: "KILL_MOBS"
-          mob-name: "ShadowGhost"
-          amount: 2
-          oncomplete:
-            - type: "SEND_MESSAGE"
-              message: "&a[Dungeon] &fRozległ się ryk! Jeden z warunków został spełniony."
-
-  # =========================================================================
-  # 2. EFEKTY (EFFECTS) - Akcje wykonywane na starcie etapu lub przy jego ukończeniu
-  # =========================================================================
-  efekty:
-    SEND_MESSAGE:
-      opis: "Wysyła sformatowaną wiadomość tekstową (obsługuje kolory '&') do wszystkich uczestników lochu."
-      parametry:
-        message: "Treść wiadomości do wysłania (String)"
-      przyklad:
-        - type: "SEND_MESSAGE"
-          message: "&a[Dungeon] &fBrama Cieni została otwarta! Ruszaj dalej."
-
-    TELEPORT_PLAYERS:
-      opis: "Teleportuje całą drużynę do podanego punktu wewnątrz instancji lochu."
-      parametry:
-        x: "Współrzędna X (Double)"
-        y: "Współrzędna Y (Double)"
-        z: "Współrzędna Z (Double)"
-      przyklad:
-        - type: "TELEPORT_PLAYERS"
-          x: 0.0
-          y: 61.0
-          z: 50.0
-
-    SPAWN_MOB:
-      opis: "Respi określoną grupę potworów wokół podanej lokacji z losowym rozrzutem."
-      parametry:
-        mob-name: "Nazwa typu potwora ze Spigota lub nazwa customowa (String)"
-        amount: "Ilość potworów do zrespienia (Integer)"
-        level: "Poziom potwora wpływający na jego atrybuty (Integer)"
-        x: "Środkowa współrzędna X respawnu (Double)"
-        y: "Środkowa współrzędna Y respawnu (Double)"
-        z: "Środkowa współrzędna Z respawnu (Double)"
-        range: "Maksymalny rozrzut od punktu środkowego w poziomie (Double)"
-      przyklad:
-        - type: "SPAWN_MOB"
-          mob-name: "ZOMBIE"
-          amount: 3
-          level: 5
-          x: 0.0
-          y: 61.0
-          z: 15.0
-          range: 2.5
-
-    OPEN_DOOR:
-      opis: "Zastępuje bloki w wyznaczonym obszarze (prostopadłościanie) powietrzem lub innym wybranym blokiem."
-      parametry:
-        x1: "Punkt A - Współrzędna X (Double)"
-        y1: "Punkt A - Współrzędna Y (Double)"
-        z1: "Punkt A - Współrzędna Z (Double)"
-        x2: "Punkt B - Współrzędna X (Double)"
-        y2: "Punkt B - Współrzędna Y (Double)"
-        z2: "Punkt B - Współrzędna Z (Double)"
-        material: "Blok, na jaki zostanie zamieniony obszar (domyślnie AIR) (Opcjonalny, String)"
-      przyklad:
-        - type: "OPEN_DOOR"
-          x1: 10.0
-          y1: 60.0
-          z1: 5.0
-          x2: 12.0
-          y2: 63.0
-          z2: 5.0
-          material: "AIR"
-
-    CLOSE_DOOR:
-      opis: "Zabudowuje wyznaczony obszar (prostopadłościan) określonym rodzajem bloków (np. blokuje przejście)."
-      parametry:
-        x1: "Punkt A - Współrzędna X (Double)"
-        y1: "Punkt A - Współrzędna Y (Double)"
-        z1: "Punkt A - Współrzędna Z (Double)"
-        x2: "Punkt B - Współrzędna X (Double)"
-        y2: "Punkt B - Współrzędna Y (Double)"
-        z2: "Punkt B - Współrzędna Z (Double)"
-        material: "Blok, którym zostanie zabudowany obszar (np. IRON_BARS, STONE) (String)"
-      przyklad:
-        - type: "CLOSE_DOOR"
-          x1: 10.0
-          y1: 60.0
-          z1: 5.0
-          x2: 12.0
-          y2: 63.0
-          z2: 5.0
-          material: "IRON_BARS"
-
-    GIVE_READY_COMPASS:
-      opis: "Rozdaje wszystkim graczom w drużynie Kompas Gotowości oraz Skrzynię Menu Umiejętności w celu przygotowania."
-      przyklad:
-        - type: "GIVE_READY_COMPASS"
-
-    SPAWN_CHEST:
-      opis: "Tworzy interaktywną skrzynię nagród rogue-lite na wyznaczonych współrzędnych."
-      parametry:
-        x: "Współrzędna X (Double)"
-        y: "Współrzędna Y (Double)"
-        z: "Współrzędna Z (Double)"
-        chest-type: "Typ skrzyni (obecnie 'ROGUELITE_CHEST') (String)"
-      przyklad:
-        - type: "SPAWN_CHEST"
-          x: 0.0
-          y: 61.0
-          z: 12.0
-          chest-type: "ROGUELITE_CHEST"
-
-    COMPLETE_DUNGEON:
-      opis: "Kończy loch sukcesem, rozdaje nagrody końcowe, przywraca ekwipunek i usuwa dynamiczny świat."
-      przyklad:
-        - type: "COMPLETE_DUNGEON"
-
-    SPAWN_UNTIL:
-      opis: "Cyklicznie spawnuje określoną grupę potworów wokół wskazanych współrzędnych co X sekund, dopóki wszystkie warunki trwającego etapu nie zostaną w pełni ukończone."
-      parametry:
-        mob-name: "Nazwa potwora ze Spigota lub MythicMobs (String)"
-        amount: "Ilość spawnowana na falę (Integer)"
-        level: "Poziom potwora (Integer)"
-        x: "Współrzędna X (Double)"
-        y: "Współrzędna Y (Double)"
-        z: "Współrzędna Z (Double)"
-        range: "Rozrzut spawnu (Double)"
-        interval: "Czas w sekundach pomiędzy falami (Integer)"
-      przyklad:
-        - type: "SPAWN_UNTIL"
-          mob-name: "ZOMBIE"
-          amount: 2
-          level: 3
-          x: 15.0
-          y: 61.0
-          z: 15.0
-          range: 2.0
-          interval: 5
-
-  # =========================================================================
-  # 3. ZAAWANSOWANE POLE LOSOWE I TWORZENIE ETAPÓW (POOL & RANDOM PROG)
-  # =========================================================================
-  losowosc-puli:
-    opis: "Pozwala na definicję zaawansowanej puli losowania pokoi w lochu Rogue-lite."
-    zasady:
-      - "W etapie startowym deklarujemy next: random oraz pool (listę dozwolonych losowych pokoi), req_clears (ile losowych pokoi gracz musi przejść) i enc_after_clears (gdzie trafi po ich zaliczeniu)."
-      - "Poszczególne losowe pokoje w pool NIE potrzebują w ogóle zadeklarowanego pola 'next' - plugin sam obsłuży ich powrót do losowania."
-    przyklad:
-      ENC1:
-        description: "Start lochu"
-        conditions:
-          - type: "ALL_PLAYERS_READY"
-        effects:
-          - type: "GIVE_READY_COMPASS"
-        next: "random"
-        pool:
-          - "ENC2_1"
-          - "ENC2_2"
-          - "ENC2_3"
-        req_clears: 2
-        enc_after_clears: "ENC3"
-
-  # =========================================================================
-  # 4. GRUPOWANIE POOL_LISTS (Ordered Pool Lists Progression)
-  # =========================================================================
-  sekwencje-puli:
-    opis: "Pozwala na zdefiniowanie gotowych list/sekwencji encounterów, które muszą zostać wykonane po kolei jako całe pakiety."
-    zasady:
-      - "W etapie startowym deklarujemy next: random oraz pool_lists (listę list) i enc_after_clears."
-      - "Plugin wybierze losowo JEDNĄ listę ze wszystkich dozwolonych (taką, w której ŻADEN encounter nie został jeszcze ukończony)."
-      - "Encountery z wybranej listy są odgrywane po kolei. Po przejściu ostatniego z nich, gracz przechodzi do etapu wskazanego w enc_after_clears."
-    przyklad:
-      ENC_LOSOWA_SEKWENCJA:
-        description: "Wybór losowej sekwencji"
-        conditions:
-          - type: "ALL_PLAYERS_READY"
-        next: "random"
-        pool_lists:
-          - ["ENC_DUNG_1", "ENC_DUNG_2", "ENC_DUNG_3"]
-          - ["ENC_ALT_1", "ENC_ALT_2", "ENC_ALT_3"]
-        enc_after_clears: "ENC_BOSS"
+# =========================================================================
+# CZĘŚĆ VIII: POOLE, PULSE I PĘTLE PROGRESJI
+# =========================================================================
+# Wtyczka obsługuje nieliniowe przechodzenie pokoi oraz pakiety sekwencyjne.
+#
+# 1. Losowość typu POOL (next: random):
+#    Etap wejściowy deklaruje przejście na 'next: random', pulę dozwolonych pokoi 'pool',
+#    liczbę wymaganych pokoi do przejścia 'req_clears' oraz etap wyjściowy 'enc_after_clears'.
+#    Pokoje wewnątrz pool NIE potrzebują zadeklarowanego pola 'next'. Zostaną automatycznie
+#    odegrane w losowej kolejności bez powtórzeń.
+#
+# 2. Pakiet sekwencyjny POOL_LISTS (next: random):
+#    Zamiast pojedynczych pokoi, można zadeklarować gotowe, spięte łańcuchy etapów.
+#    Plugin wybierze losowo JEDNĄ kompletną listę, w której żaden z etapów nie jest jeszcze zużyty,
+#    odegra ją po kolei i przejdzie do 'enc_after_clears'.
+#
+# Przykład losowości POOL_LISTS:
+#   ENC_START:
+#     description: "Wybór losowej drogi"
+#     conditions:
+#       - type: "ALL_PLAYERS_READY"
+#     next: "random"
+#     pool_lists:
+#       - ["ENC_WOJ_1", "ENC_WOJ_2"]
+#       - ["ENC_LOW_1", "ENC_LOW_2"]
+#     enc_after_clears: "ENC_BOSS"
+# ENC1:
+#   description: "Start lochu - Przygotowanie"
+#   conditions:
+#     - type: "ALL_PLAYERS_READY"
+#   effects:
+#     - type: "GIVE_READY_COMPASS"
+#   next: "random"
+# pool:
+#   - "ENC2_1"
+#   - "ENC2_2"
+#   - "ENC2_3"
+#   - "ENC2_4"
+# req_clears: 2
+# enc_after_clears: "ENC_BOSS"
