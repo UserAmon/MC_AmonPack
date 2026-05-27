@@ -17,12 +17,16 @@ import java.util.*;
 
 import static Plugin.AmonPackPlugin.FastEasyStack;
 
+import org.bukkit.Location;
+
 public class DungeonLootChest implements InventoryHolder {
 
     private final Inventory inventory;
     private final Map<Integer, RewardOption> options = new HashMap<>();
+    private final Location chestLocation;
 
-    public DungeonLootChest(Player player, DungeonPlayerStats stats, Dungeon template) {
+    public DungeonLootChest(Player player, DungeonPlayerStats stats, Dungeon template, Location chestLocation) {
+        this.chestLocation = chestLocation;
         this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_PURPLE + "Wybierz Swoja Nagrode");
         
         // Fill inventory with black stained glass panes
@@ -42,22 +46,38 @@ public class DungeonLootChest implements InventoryHolder {
         return options;
     }
 
+    public Location getChestLocation() {
+        return chestLocation;
+    }
+
     /**
      * Generates 3 distinct reward options for the player.
      */
     private void generateRewardOptions(Player player, DungeonPlayerStats stats, Dungeon template) {
-        List<RewardOption> pool = new ArrayList<>();
+        List<RewardOption> eligibleSkills = new ArrayList<>();
+        List<RewardOption> eligibleOthers = new ArrayList<>();
 
-        // 1. Generate available skills from player's global SkillTree
         PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-        if (branch != null) {
-            List<String> globallyUnlocked = branch.getUnlockedAbilities();
-            List<String> alreadyBound = stats.getBoundDungeonSkills();
-            
-            for (String skillName : globallyUnlocked) {
-                if (!alreadyBound.contains(skillName)) {
-                    ItemStack icon = createSkillIcon(skillName, branch);
-                    pool.add(new RewardOption(RewardOption.RewardType.SKILL, skillName, icon));
+        List<String> globallyUnlocked = branch != null ? branch.getUnlockedAbilities() : new ArrayList<>();
+        List<String> alreadyBound = stats.getBoundDungeonSkills();
+
+        // 1. Gather eligible locked skills from ALL element trees in the skill tree config
+        org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
+        if (branch != null && skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
+            for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
+                com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
+                if (pkEl != null) {
+                    ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
+                    if (tree != null) {
+                        for (SkillTree_Ability ability : tree.getAbilities()) {
+                            String skillName = ability.getName();
+                            // Offer skills that are NOT upgrades, NOT default/starting skills, NOT unlocked globally, and not already bound
+                            if (!ability.isUpgrade() && !ability.isdef() && !globallyUnlocked.contains(skillName) && !alreadyBound.contains(skillName)) {
+                                ItemStack icon = createSkillIcon(skillName, branch);
+                                eligibleSkills.add(new RewardOption(RewardOption.RewardType.SKILL, skillName, icon));
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -68,7 +88,6 @@ public class DungeonLootChest implements InventoryHolder {
             org.bukkit.configuration.ConfigurationSection statsSec = config.getConfigurationSection("stats");
             if (statsSec != null) {
                 for (String statKey : statsSec.getKeys(false)) {
-                    // Filter by allowed stats if specified in the template
                     if (template != null && template.getAllowedStats() != null && !template.getAllowedStats().isEmpty()) {
                         if (!template.getAllowedStats().contains(statKey)) {
                             continue;
@@ -96,7 +115,7 @@ public class DungeonLootChest implements InventoryHolder {
                     
                     RewardOption.RewardType type = getStatType(statKey);
                     if (type != null) {
-                        pool.add(new RewardOption(type, String.valueOf(value), item));
+                        eligibleOthers.add(new RewardOption(type, String.valueOf(value), item));
                     }
                 }
             }
@@ -105,7 +124,6 @@ public class DungeonLootChest implements InventoryHolder {
             org.bukkit.configuration.ConfigurationSection blessingsSec = config.getConfigurationSection("blessings");
             if (blessingsSec != null) {
                 for (String blessingKey : blessingsSec.getKeys(false)) {
-                    // Filter by allowed blessings if specified in the template
                     if (template != null && template.getAllowedBlessings() != null && !template.getAllowedBlessings().isEmpty()) {
                         if (!template.getAllowedBlessings().contains(blessingKey)) {
                             continue;
@@ -134,26 +152,42 @@ public class DungeonLootChest implements InventoryHolder {
                         item.setItemMeta(meta);
                     }
                     
-                    pool.add(new RewardOption(RewardOption.RewardType.BLESSING, blessingKey, item));
+                    eligibleOthers.add(new RewardOption(RewardOption.RewardType.BLESSING, blessingKey, item));
                 }
             }
         }
 
-        // Fallback to defaults if pool is empty
-        if (pool.isEmpty()) {
-            pool.add(createHpOption());
-            pool.add(createDefOption());
-            pool.add(createDmgOption());
-            pool.add(createSpeedOption());
+        // 4. Assemble the final 3 choices
+        List<RewardOption> selected = new ArrayList<>();
+
+        // Guarantee at least one skill in the choices if any are available
+        if (!eligibleSkills.isEmpty()) {
+            Collections.shuffle(eligibleSkills);
+            selected.add(eligibleSkills.remove(0));
         }
 
-        // Shuffle and pick 3 distinct options
-        Collections.shuffle(pool);
-        List<RewardOption> selected = pool.subList(0, Math.min(3, pool.size()));
+        // Combine remaining eligible items
+        List<RewardOption> combinedPool = new ArrayList<>();
+        combinedPool.addAll(eligibleSkills);
+        combinedPool.addAll(eligibleOthers);
+
+        // Fallback to defaults if combined pool is completely empty
+        if (combinedPool.isEmpty() && selected.isEmpty()) {
+            combinedPool.add(createHpOption());
+            combinedPool.add(createDefOption());
+            combinedPool.add(createDmgOption());
+            combinedPool.add(createSpeedOption());
+        }
+
+        // Shuffle combined pool and pick items until we have 3 choices
+        Collections.shuffle(combinedPool);
+        while (selected.size() < 3 && !combinedPool.isEmpty()) {
+            selected.add(combinedPool.remove(0));
+        }
 
         // Set slots 11, 13, and 15 with these options
         int[] slots = {11, 13, 15};
-        for (int i = 0; i < selected.size(); i++) {
+        for (int i = 0; i < selected.size() && i < slots.length; i++) {
             RewardOption option = selected.get(i);
             inventory.setItem(slots[i], option.item);
             options.put(slots[i], option);
@@ -174,8 +208,29 @@ public class DungeonLootChest implements InventoryHolder {
         int customModelData = 0;
         
         try {
-            if (branch.getCurrentElement() != null) {
-                String elementname = branch.getCurrentElement().getName().toLowerCase();
+            // Find actual element of this skill instead of player's current element
+            com.projectkorra.projectkorra.Element skillElement = null;
+            org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
+            if (skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
+                for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
+                    com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
+                    if (pkEl != null) {
+                        ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
+                        if (tree != null) {
+                            for (SkillTree_Ability ability : tree.getAbilities()) {
+                                if (ability.getName().equalsIgnoreCase(skillName)) {
+                                    skillElement = pkEl;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (skillElement != null) break;
+                }
+            }
+
+            if (skillElement != null) {
+                String elementname = skillElement.getName().toLowerCase();
                 String matName = AmonPackPlugin.getSkillTreeConfig().getString("AmonPack.Menu." + elementname + ".Material");
                 if (matName != null) {
                     mat = Material.getMaterial(matName);

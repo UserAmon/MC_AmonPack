@@ -247,4 +247,90 @@ public class Levels_Bending {
     public ElementTree GetElement(Element element){
         return ListOfElements.stream().filter(ele->ele.element.equals(element)).findFirst().orElse(null);
     }
+
+    public boolean isPlayerInDungeon(Player player) {
+        return player.getWorld().getName().startsWith("dungeon_");
+    }
+
+    public void OpenDungeonSkillMenu(String name) {
+        PlayerBendingBranch playersBranch = GetBranchByPlayerName(name);
+        if (playersBranch == null) return;
+
+        DungeonSkillMenuHolder holder = new DungeonSkillMenuHolder(54, ChatColor.DARK_PURPLE + "Dungeonowe Umiejętności");
+        dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper inventory = new dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper(
+                holder, 54, ChatColor.DARK_PURPLE + "Dungeonowe Umiejętności", new dev.lone.itemsadder.api.FontImages.FontImageWrapper("amonpack:bending_abilities_list")
+        );
+        Inventory inv = inventory.getInternal();
+
+        List<SkillTree_Ability> unlockedAbilities = new ArrayList<>();
+        org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
+        if (skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
+            for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
+                com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
+                if (pkEl != null) {
+                    ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
+                    if (tree != null) {
+                        for (SkillTree_Ability ability : tree.getAbilities()) {
+                            if (!ability.isUpgrade()) {
+                                if (ability.isdef() && playersBranch.getElementsInPossesion().contains(pkEl)) {
+                                    unlockedAbilities.add(ability);
+                                } else if (playersBranch.getUnlockedAbilities().contains(ability.getName()) || playersBranch.getTemporaryAbilities().contains(ability.getName())) {
+                                    unlockedAbilities.add(ability);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        int slot = 0;
+        for (SkillTree_Ability STA : unlockedAbilities) {
+            if (slot >= 45) break;
+            String elementname = STA.getElement().getName().toLowerCase();
+            org.bukkit.Material material = org.bukkit.Material.getMaterial(SkillTreeConfig.getString("AmonPack.Menu." + elementname + ".Material", "PAPER"));
+            int modelid = SkillTreeConfig.getInt("AmonPack.Menu." + elementname + ".Green", 0);
+            org.bukkit.inventory.ItemStack item = AmonPackPlugin.FastEasyStack(material, STA.getName());
+            if (modelid > 0) {
+                org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    meta.setCustomModelData(modelid);
+                    item.setItemMeta(meta);
+                }
+            }
+            inv.setItem(slot, item);
+            slot++;
+        }
+
+        org.bukkit.inventory.ItemStack CloseButton = AmonPackPlugin.FastEasyStack(org.bukkit.Material.PAPER, ChatColor.RED + "Zamknij");
+        org.bukkit.inventory.meta.ItemMeta CloseMeta = CloseButton.getItemMeta();
+        if (CloseMeta != null) {
+            CloseMeta.setCustomModelData(10036);
+            CloseButton.setItemMeta(CloseMeta);
+        }
+        inv.setItem(53, CloseButton);
+
+        inventory.showInventory(Bukkit.getPlayer(name));
+    }
+
+    public static class DungeonSkillMenuHolder implements org.bukkit.inventory.InventoryHolder {
+        private final Inventory inventory;
+        private final int size;
+        private final String title;
+        public DungeonSkillMenuHolder(int size, String title) {
+            this.inventory = Bukkit.createInventory(this, size, title);
+            this.size = size;
+            this.title = title;
+        }
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+        public int getSize() {
+            return size;
+        }
+        public String getTitle() {
+            return title;
+        }
+    }
 }

@@ -330,13 +330,21 @@ public class PlayerLevelMenager {
             PlayerLevel Level = AllPlayerLevels.stream()
                     .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName()))
                     .findFirst().orElse(null);
-            if (Level == null)
-                return;
+            if (Level == null) {
+                List<LevelSkill> Skills = new ArrayList<>();
+                for (LevelSkill.SkillType skillType : EnabledSkillTypes) {
+                    Skills.add(new LevelSkill(0, skillType, new ArrayList<>(), 0));
+                }
+                Level = new PlayerLevel(player.getName(), Skills);
+                AllPlayerLevels.add(Level);
+            }
             LevelSkill skill = Level.getPlayerSkills().stream()
                     .filter(sk -> sk.getType().equals(Type))
                     .findFirst().orElse(null);
-            if (skill == null)
-                return;
+            if (skill == null) {
+                skill = new LevelSkill(0, Type, new ArrayList<>(), 0);
+                Level.getPlayerSkills().add(skill);
+            }
             FileConfiguration config = AmonPackPlugin.getLevelConfig();
             String path = "AmonPack.Levels." + skill.getType().toString();
             int actualLevel = 0;
@@ -365,6 +373,27 @@ public class PlayerLevelMenager {
                 }
             }
             skill.setExpPoints(skill.getExpPoints() + points);
+            
+            try {
+                Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
+                ResultSet rs = stmt.executeQuery("select * from Level" + skill.getType().toString() + " where Player='" + player.getName() + "'");
+                String usedRewardsStr = skill.getUsedRewards().stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","));
+                if (!rs.next()) {
+                    ExecuteQuery("INSERT INTO Level" + skill.getType().toString()
+                            + " (Player,GeneralLevel,UsedRewards,UpgradePercent)" +
+                            " VALUES ('" + player.getName() + "'," + skill.getExpPoints() + ",'" + usedRewardsStr + "'"
+                            + "," + skill.getUpgradePercent() + ")");
+                } else {
+                    ExecuteQuery("UPDATE Level" + skill.getType().toString() + " SET GeneralLevel = '"
+                            + skill.getExpPoints() + "' WHERE Player = '" + player.getName() + "'");
+                }
+                stmt.close();
+            } catch (SQLException dbEx) {
+                System.out.println("Error saving player level to database: " + dbEx.getMessage());
+            }
+
             int newTotalExp = totalExpBefore + points;
             if (points > 1 || newTotalExp % 5 == 0) {
                 double progress = (double) (expPool + points) / neededExp;
@@ -377,7 +406,7 @@ public class PlayerLevelMenager {
                     color = ChatColor.GREEN;
                 }
                 String icon = getSkillIcon(Type);
-                String skillName = Type.toString().substring(0, 1) + Type.toString().substring(1).toLowerCase(); // Capitalize
+                String skillName = Type.toString().substring(0, 1) + Type.toString().substring(1).toLowerCase();
                 String msg = ChatColor.DARK_GRAY + "[" +
                         ChatColor.AQUA + icon + " " + ChatColor.BOLD + skillName +
                         ChatColor.DARK_GRAY + "] " +

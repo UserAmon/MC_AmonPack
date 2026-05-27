@@ -852,6 +852,16 @@ public class Listeners implements Listener {
                         && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
                     PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
                 }
+            } else if (event.getInventory().getHolder() instanceof RPG.Levels.BendingTree.Levels_Bending.DungeonSkillMenuHolder) {
+                event.setCancelled(true);
+                if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
+                    if (event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
+                        p.closeInventory();
+                    } else {
+                        AmonPackPlugin.levelsBending.OpenBindingMenu(p.getName(),
+                                event.getCurrentItem().getItemMeta().getDisplayName());
+                    }
+                }
             } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BindingAbilitiesMenu)) {
                 event.setCancelled(true);
                 Material clickedItem = event.getCurrentItem().getType();
@@ -865,11 +875,19 @@ public class Listeners implements Listener {
                             Objects.requireNonNull(event.getClickedInventory().getItem(4)).getItemMeta()
                                     .getDisplayName(),
                             Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
-                    AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
+                    if (AmonPackPlugin.levelsBending.isPlayerInDungeon(p)) {
+                        AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(p.getName());
+                    } else {
+                        AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
+                    }
                 }
                 if (event.getCurrentItem().getType() == Material.PAPER
                         && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
-                    AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
+                    if (AmonPackPlugin.levelsBending.isPlayerInDungeon(p)) {
+                        AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(p.getName());
+                    } else {
+                        AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
+                    }
                 }
             } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.SelectElementMenu)) {
                 event.setCancelled(true);

@@ -39,6 +39,10 @@ public class DungeonManager implements Listener {
     private static DungeonManager instance;
     private final Map<String, Dungeon> templates = new HashMap<>();
     private final Map<World, DungeonInstance> activeInstances = new HashMap<>();
+
+    public Map<String, Dungeon> getTemplates() {
+        return templates;
+    }
     
     public DungeonManager() {
         instance = this;
@@ -242,7 +246,12 @@ public class DungeonManager implements Listener {
                             }
                         }
 
-                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next));
+                        // Parse Excludes, Clears, and transition targets for Rogue-lite Random Progression
+                        List<String> exclude = config.getStringList(path + ".exclude");
+                        int reqClears = config.getInt(path + ".req_clears", 0);
+                        String encAfterClears = config.getString(path + ".enc_after_clears", "");
+
+                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next, exclude, reqClears, encAfterClears));
                     }
                 }
 
@@ -346,6 +355,20 @@ public class DungeonManager implements Listener {
         DungeonInstance run = activeInstances.get(player.getWorld());
         if (run == null) return;
 
+        // If they are already a spectator, cancel any further damage
+        if (run.isPlayerSpectator(player)) {
+            event.setCancelled(true);
+            return;
+        }
+
+        // Intercept fatal damage and set as spectator
+        if (player.getHealth() - event.getFinalDamage() <= 0.0) {
+            event.setCancelled(true);
+            player.setHealth(20.0);
+            run.setPlayerSpectator(player, true);
+            return;
+        }
+
         DungeonPlayerStats stats = run.getPlayerStats(player);
         
         // Handle Dodge blessing
@@ -390,6 +413,12 @@ public class DungeonManager implements Listener {
         DungeonInstance run = activeInstances.get(player.getWorld());
         if (run == null) return;
 
+        // Spectator check
+        if (run.isPlayerSpectator(player)) {
+            event.setCancelled(true);
+            return;
+        }
+
         // 1. Clicked block checks
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
             Block block = event.getClickedBlock();
@@ -397,17 +426,14 @@ public class DungeonManager implements Listener {
             // Check if is Loot Chest
             if (run.isRegisteredLootChest(block.getLocation())) {
                 event.setCancelled(true);
-                DungeonPlayerStats stats = run.getPlayerStats(player);
+                if (run.hasClaimedChest(player, block.getLocation())) {
+                    player.sendMessage(ChatColor.RED + "[Dungeons] Juz odebrales swoja nagrode z tej skrzyni!");
+                    return;
+                }
                 
-                // Open GUI
-                DungeonLootChest gui = new DungeonLootChest(player, stats, run.getTemplate());
+                // Retrieve pre-generated, persistent chest GUI for this player
+                DungeonLootChest gui = run.getChestGuiForPlayer(block.getLocation(), player);
                 player.openInventory(gui.getInventory());
-                
-                // Break block with cool effect and remove chest so it is one-time use
-                block.setType(Material.AIR);
-                block.getWorld().spawnParticle(Particle.BLOCK, block.getLocation().add(0.5, 0.5, 0.5), 20, 0.3, 0.3, 0.3, Material.CHEST.createBlockData());
-                block.getWorld().playSound(block.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.2f);
-                run.removeLootChest(block.getLocation());
                 return;
             }
 
@@ -443,11 +469,10 @@ public class DungeonManager implements Listener {
         if (item != null && event.getAction().name().startsWith("RIGHT_CLICK")) {
             if (item.getType() == Material.COMPASS && item.hasItemMeta() && item.getItemMeta().getDisplayName().contains("Gotowy?")) {
                 event.setCancelled(true);
-                run.setPlayerReady(player, !run.areAllPlayersReady());
+                run.setPlayerReady(player, !run.isPlayerReady(player));
             } else if (item.getType() == Material.CHEST && item.hasItemMeta() && item.getItemMeta().getDisplayName().contains("Menu Umiejętności")) {
                 event.setCancelled(true);
-                // Open global skills bending list
-                AmonPackPlugin.levelsBending.OpenBendingSkillMenu(player.getName());
+                AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(player.getName());
             }
         }
     }
@@ -478,6 +503,45 @@ public class DungeonManager implements Listener {
                         stats.addBoundDungeonSkill(option.value);
                         if (branch != null) {
                             branch.getTemporaryAbilities().add(option.value);
+                            
+                            // Find which element this ability belongs to
+                            com.projectkorra.projectkorra.Element skillElement = null;
+                            org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
+                            if (skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
+                                for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
+                                    com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
+                                    if (pkEl != null) {
+                                        RPG.Levels.BendingTree.ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
+                                        if (tree != null) {
+                                            for (RPG.Levels.BendingTree.SkillTree_Ability ability : tree.getAbilities()) {
+                                                if (ability.getName().equalsIgnoreCase(option.value)) {
+                                                    skillElement = pkEl;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (skillElement != null) break;
+                                }
+                            }
+                            
+                            // If player doesn't have the element, grant it temporarily!
+                            if (skillElement != null) {
+                                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
+                                if (bPlayer != null) {
+                                    if (!bPlayer.hasElement(skillElement)) {
+                                        bPlayer.getElements().add(skillElement);
+                                        branch.getTemporaryElements().add(skillElement);
+                                        player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Przyznano Ci tymczasowy żywioł/subżywioł: " + skillElement.getName() + " na czas tego dungeonu!");
+                                    }
+                                    com.projectkorra.projectkorra.Element parentElement = AmonPackPlugin.ElementBasedOnSubElement(skillElement);
+                                    if (parentElement != null && !bPlayer.hasElement(parentElement)) {
+                                        bPlayer.getElements().add(parentElement);
+                                        branch.getTemporaryElements().add(parentElement);
+                                        player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Przyznano Ci tymczasowy żywioł główny: " + parentElement.getName() + " na czas tego dungeonu!");
+                                    }
+                                }
+                            }
                         }
                         player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Odblokowano ruch: " + option.value + " na czas tego dungeonu!");
                         break;
@@ -537,6 +601,7 @@ public class DungeonManager implements Listener {
                 }
                 
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
+                run.markChestClaimed(player, gui.getChestLocation());
                 player.closeInventory();
             }
         }
@@ -571,5 +636,56 @@ public class DungeonManager implements Listener {
 
     public DungeonInstance getActiveInstance(Player player) {
         return activeInstances.get(player.getWorld());
+    }
+
+    public boolean isWorldInUse(String worldName) {
+        for (World world : activeInstances.keySet()) {
+            if (world.getName().equalsIgnoreCase(worldName)) {
+                return true;
+            }
+        }
+        World world = Bukkit.getWorld(worldName);
+        if (world != null && !world.getPlayers().isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    @EventHandler
+    public void onPlayerMove(org.bukkit.event.player.PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        DungeonInstance run = activeInstances.get(player.getWorld());
+        if (run == null) return;
+
+        if (run.isPlayerSpectator(player)) {
+            Location from = event.getFrom();
+            Location to = event.getTo();
+            if (to != null && (from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ())) {
+                event.setTo(from);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDropItem(org.bukkit.event.player.PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        DungeonInstance run = activeInstances.get(player.getWorld());
+        if (run == null) return;
+
+        if (run.isPlayerSpectator(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerPickupItem(org.bukkit.event.entity.EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+        Player player = (Player) event.getEntity();
+        DungeonInstance run = activeInstances.get(player.getWorld());
+        if (run == null) return;
+
+        if (run.isPlayerSpectator(player)) {
+            event.setCancelled(true);
+        }
     }
 }

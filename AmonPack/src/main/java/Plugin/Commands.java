@@ -17,12 +17,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import java.util.Arrays;
 
-public class Commands implements CommandExecutor {
+public class Commands implements CommandExecutor, TabCompleter {
 
     @SuppressWarnings("deprecation")
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
@@ -493,6 +495,51 @@ public class Commands implements CommandExecutor {
             ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
             Bukkit.dispatchCommand(console, command);
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+        
+        if (cmd.getName().equalsIgnoreCase("dungeons")) {
+            if (args.length == 1) {
+                List<String> subCommands = Arrays.asList("start", "leave", "skills", "reload");
+                String currentArg = args[0].toLowerCase();
+                for (String sub : subCommands) {
+                    if (sub.startsWith(currentArg)) {
+                        completions.add(sub);
+                    }
+                }
+            } else if (args.length == 2 && args[0].equalsIgnoreCase("start")) {
+                String currentArg = args[1].toLowerCase();
+                if (RPG.Dungeons.DungeonManager.getInstance() != null) {
+                    for (String key : RPG.Dungeons.DungeonManager.getInstance().getTemplates().keySet()) {
+                        if (key.startsWith(currentArg)) {
+                            completions.add(key);
+                        }
+                    }
+                }
+            }
+        } else if (cmd.getName().equalsIgnoreCase("party")) {
+            if (args.length == 1) {
+                List<String> subCommands = Arrays.asList("invite", "accept", "leave", "kick", "pvp", "list", "chat", "togglechat");
+                String currentArg = args[0].toLowerCase();
+                for (String sub : subCommands) {
+                    if (sub.startsWith(currentArg)) {
+                        completions.add(sub);
+                    }
+                }
+            } else if (args.length == 2 && (args[0].equalsIgnoreCase("invite") || args[0].equalsIgnoreCase("kick"))) {
+                String currentArg = args[1].toLowerCase();
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    if (onlinePlayer.getName().toLowerCase().startsWith(currentArg)) {
+                        completions.add(onlinePlayer.getName());
+                    }
+                }
+            }
+        }
+        
+        return completions;
     }
 
 }

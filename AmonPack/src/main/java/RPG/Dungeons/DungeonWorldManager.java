@@ -5,83 +5,111 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Comparator;
 
 public class DungeonWorldManager {
 
     /**
-     * Generates a new, completely empty world for a dungeon run instance.
+     * Generates or reuses a completely empty world for a dungeon run instance.
      * Uses SimpleWorldGenerator as the custom empty chunk generator.
      */
     public static World createDungeonWorld(String dungeonId) {
-        String worldName = generateUniqueWorldName(dungeonId);
+        String baseName = "dungeon_" + dungeonId.toLowerCase() + "_world_";
+        int number = 1;
         
-        WorldCreator creator = new WorldCreator(worldName);
-        creator.generator(new SimpleWorldGenerator());
-        
-        World world = creator.createWorld();
-        if (world == null) {
-            System.err.println("[Dungeons] Blad podczas tworzenia swiata dla dungeonu: " + worldName);
-            return null;
+        while (true) {
+            String worldName = baseName + number;
+            
+            // Check if this world is currently in active use
+            boolean inUse = false;
+            if (DungeonManager.getInstance() != null) {
+                inUse = DungeonManager.getInstance().isWorldInUse(worldName);
+            }
+            
+            if (!inUse) {
+                // We can reuse or create this world name!
+                World loadedWorld = Bukkit.getWorld(worldName);
+                if (loadedWorld != null) {
+                    // World is already loaded! Just clean and configure it.
+                    configureWorldRules(loadedWorld);
+                    cleanWorldEntities(loadedWorld);
+                    System.out.println("[Dungeons] Ponownie uzyto załadowanego swiata lochu: " + worldName);
+                    return loadedWorld;
+                }
+                
+                // Check if directory exists on disk (unloaded world)
+                File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
+                if (worldFolder.exists() && worldFolder.isDirectory()) {
+                    // Load the existing world from disk! Very fast!
+                    WorldCreator creator = new WorldCreator(worldName);
+                    creator.generator(new SimpleWorldGenerator());
+                    World world = creator.createWorld();
+                    if (world != null) {
+                        configureWorldRules(world);
+                        cleanWorldEntities(world);
+                        System.out.println("[Dungeons] Załadowano i uzyto ponownie swiat lochu z dysku: " + worldName);
+                        return world;
+                    }
+                }
+                
+                // If neither loaded nor exists on disk, create a brand new one!
+                WorldCreator creator = new WorldCreator(worldName);
+                creator.generator(new SimpleWorldGenerator());
+                World world = creator.createWorld();
+                if (world != null) {
+                    configureWorldRules(world);
+                    System.out.println("[Dungeons] Utworzono nowy swiat instancji lochu: " + worldName);
+                    return world;
+                }
+            }
+            
+            number++;
         }
+    }
 
-        // Configure game rules for a controlled dungeon environment
+    private static void configureWorldRules(World world) {
         world.setAutoSave(false); // Do not save modifications (saves I/O and RAM)
+        world.setKeepSpawnInMemory(false); // Optimize memory and prevent spawn chunk load lag
+        world.setSpawnLocation(0, 60, 0); // Hardcode spawn point to prevent searching safe spawn lag
         world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
         world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
         world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
         world.setSpawnFlags(false, false);
         world.setTime(6000L); // Set constant noon
-
-        return world;
     }
 
     /**
-     * Unloads the dungeon world and recursively deletes its directory from the server files.
+     * Clears all entities in a world, except players.
+     */
+    public static void cleanWorldEntities(World world) {
+        if (world == null) return;
+        for (Entity entity : world.getEntities()) {
+            if (!(entity instanceof Player)) {
+                entity.remove();
+            }
+        }
+    }
+
+    /**
+     * Unloads the dungeon world to save memory but preserves it on disk.
      */
     public static void deleteDungeonWorld(World world) {
         if (world == null) return;
         
         String worldName = world.getName();
         
-        // 1. Unload the world (false means do not save changes)
+        // Clear all remaining entities (monsters, item drops) first
+        cleanWorldEntities(world);
+        
+        // 1. Unload the world (false means do not save changes, reverting player modifications!)
         boolean unloaded = Bukkit.unloadWorld(world, false);
-        if (!unloaded) {
+        if (unloaded) {
+            System.out.println("[Dungeons] Pomyslnie rozladowano swiat instancji i zachowano go na dysku: " + worldName);
+        } else {
             System.err.println("[Dungeons] Nie udalo sie rozladowac swiata: " + worldName);
-            return;
         }
-
-        // 2. Delete the directory recursively
-        File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
-        if (worldFolder.exists() && worldFolder.isDirectory()) {
-            try {
-                Files.walk(worldFolder.toPath())
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
-                System.out.println("[Dungeons] Pomyslnie usunieto swiat instancji z dysku: " + worldName);
-            } catch (IOException e) {
-                System.err.println("[Dungeons] Blad podczas usuwania folderu swiata " + worldName + ": " + e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Finds a unique name for the dungeon instance world, e.g., dungeon_pyro_world_1.
-     */
-    private static String generateUniqueWorldName(String dungeonId) {
-        String baseName = "dungeon_" + dungeonId.toLowerCase() + "_world_";
-        int number = 1;
-        
-        while (new File(Bukkit.getWorldContainer(), baseName + number).exists() || Bukkit.getWorld(baseName + number) != null) {
-            number++;
-        }
-        
-        return baseName + number;
     }
 }

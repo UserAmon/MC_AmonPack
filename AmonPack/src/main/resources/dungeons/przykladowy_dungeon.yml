@@ -15,7 +15,6 @@ exit-location:
   z: 100
 initial-encounter: "ENC1"
 
-# Ograniczenie puli ulepszeń/błogosławieństw w skrzyniach (opcjonalne - brak oznacza dostęp do wszystkich z pliku dungeon_config.yml)
 loot-chest:
   allowed-stats:
     - HP
@@ -46,31 +45,106 @@ encounters:
     conditions:
       - type: "ALL_PLAYERS_READY"
     effects:
+      - type: "GIVE_READY_COMPASS"
       - type: "SEND_MESSAGE"
         message: "&a[Dungeon] &fRozpoczalem przygode! Przygotuj sie!"
-      - type: "SPAWN_MOB"
-        mob-name: "ShadowCreeper"
-        amount: 3
-        level: 1
-        x: 0
+      - type: "SPAWN_CHEST"
+        x: 4
         y: 61
-        z: 10
-        range: 2
-    next: "ENC2"
+        z: 0
+        chest-type: "ROGUELITE_CHEST"
+    next: "random"
+    exclude:
+      - "ENC3"
+    req_clears: 2
+    enc_after_clears: "ENC3"
 
-  ENC2:
+
+
+  ENC2_1:
     description: "Loot ze skrzyni"
     conditions:
       - type: "KILL_MOBS"
-        mob-name: "ShadowCreeper"
+        mob-name: "Duch Ziemi"
+        amount: 1
+    effects:
+      - type: "SPAWN_MOB"
+        mob-name: "Spirit_Earth_1"
+        amount: 1
+        level: 1
+        x: 20
+        y: 61
+        z: 0
+        range: 2
+    next: "random"
+    exclude:
+      - "ENC3"
+  ENC2_2:
+    description: "Loot ze skrzyni"
+    conditions:
+      - type: "KILL_MOBS"
+        mob-name: "Duch Cienia"
+        amount: 4
+    effects:
+      - type: "SPAWN_MOB"
+        mob-name: "ShadowGhost"
+        amount: 4
+        level: 1
+        x: 20
+        y: 61
+        z: 0
+        range: 2
+    next: "random"
+    exclude:
+      - "ENC3"
+  ENC2_3:
+    description: "Loot ze skrzyni"
+    conditions:
+      - type: "KILL_MOBS"
+        mob-name: "Duch Cienia"
         amount: 3
     effects:
-      - type: "SPAWN_CHEST"
-        x: 0
+      - type: "SPAWN_MOB"
+        mob-name: "ShadowGhost"
+        amount: 3
+        level: 1
+        x: 20
         y: 61
-        z: 12
-        chest-type: "ROGUELITE_CHEST"
-    next: "ENC3"
+        z: 0
+        range: 4
+    next: "random"
+    exclude:
+      - "ENC3"
+  ENC2_4:
+    description: "Loot ze skrzyni"
+    conditions:
+      - type: "KILL_MOBS"
+        mob-name: "Duch Cienia"
+        amount: 2
+      - type: "KILL_MOBS"
+        mob-name: "Duch Ziemi"
+        amount: 1
+    effects:
+      - type: "SPAWN_MOB"
+        mob-name: "ShadowGhost"
+        amount: 2
+        level: 1
+        x: 22
+        y: 61
+        z: 0
+        range: 2
+      - type: "SPAWN_MOB"
+        mob-name: "Spirit_Earth_1"
+        amount: 1
+        level: 1
+        x: 20
+        y: 61
+        z: 0
+        range: 2
+    next: "random"
+    exclude:
+      - "ENC3"
+
 
   ENC3:
     description: "Wyjscie"
@@ -78,7 +152,11 @@ encounters:
       - type: "PLAYER_ENTER_AREA"
         x: 0
         y: 61
-        z: 15
-        radius: 2.0
+        z: 9
+        radius: 3.0
     effects:
-      - type: "COMPLETE_DUNGEON"
+      - type: "SPAWN_CHEST"
+        x: 0
+        y: 61
+        z: 0
+        chest-type: "ROGUELITE_CHEST"

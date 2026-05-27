@@ -145,10 +145,19 @@ public class DungeonEffect {
 
             case GIVE_READY_COMPASS:
                 ItemStack compass = FastEasyStack(Material.COMPASS, ChatColor.RED + "Gotowy?");
+                ItemStack skillChest = FastEasyStack(Material.CHEST, ChatColor.GREEN + "Menu Umiejętności");
                 for (Player player : instance.getOnlinePlayers()) {
                     // Remove existing first to prevent duplicate
                     player.getInventory().remove(Material.COMPASS);
+                    ItemStack[] contents = player.getInventory().getContents();
+                    for (int i = 0; i < contents.length; i++) {
+                        ItemStack is = contents[i];
+                        if (is != null && is.getType() == Material.CHEST && is.hasItemMeta() && is.getItemMeta().getDisplayName().contains("Menu Umiejętności")) {
+                            player.getInventory().setItem(i, null);
+                        }
+                    }
                     player.getInventory().addItem(compass);
+                    player.getInventory().addItem(skillChest);
                 }
                 break;
 
@@ -159,6 +168,7 @@ public class DungeonEffect {
                 
                 // Track this chest block in the instance as an interactive loot chest
                 instance.registerLootChest(block.getLocation(), chestType == null ? "ROGUELITE_CHEST" : chestType);
+                instance.preGenerateChestGuis(block.getLocation());
                 break;
 
             case COMPLETE_DUNGEON:

@@ -21,6 +21,7 @@ public class PlayerBendingBranch {
     List<Element> ElementsInPossesion;
     List<String> UnlockedAbilities;
     List<String> TemporaryAbilities;
+    List<Element> TemporaryElements;
     Element CurrentElement;
     int CurrentPage;
 
@@ -34,6 +35,7 @@ public class PlayerBendingBranch {
         Name = name;
         UnlockedAbilities = new ArrayList<>(unlockedAbilities);
         TemporaryAbilities=new ArrayList<>();
+        TemporaryElements=new ArrayList<>();
         WaterPoints = waterPoints;
 
         unlockDefaultAbilities();
@@ -183,6 +185,12 @@ public class PlayerBendingBranch {
     }
     public List<String> getTemporaryAbilities() {
         return TemporaryAbilities;
+    }
+    public List<Element> getTemporaryElements() {
+        if (TemporaryElements == null) {
+            TemporaryElements = new ArrayList<>();
+        }
+        return TemporaryElements;
     }
     public List<String> getUnlockedAbilities() {
         return UnlockedAbilities;
