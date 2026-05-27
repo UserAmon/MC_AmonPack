@@ -9,7 +9,6 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -19,48 +18,43 @@ import static Plugin.AmonPackPlugin.FastEasyStack;
 public class DungeonEffect {
 
     public enum EffectType {
-        SEND_MESSAGE,          // Send message to all players in the instance
-        TELEPORT_PLAYERS,      // Teleport players to specific coordinates
-        SPAWN_MOB,             // Spawn MythicMob/vanilla mob
-        OPEN_DOOR,             // Set block cuboid to AIR
-        CLOSE_DOOR,            // Set block cuboid to Material
-        GIVE_READY_COMPASS,    // Give the ready compass prep item
-        SPAWN_CHEST,           // Spawns a physical loot chest
-        COMPLETE_DUNGEON       // Completes the dungeon and triggers rewards
+        SEND_MESSAGE,
+        TELEPORT_PLAYERS,
+        SPAWN_MOB,
+        OPEN_DOOR,
+        CLOSE_DOOR,
+        GIVE_READY_COMPASS,
+        SPAWN_CHEST,
+        COMPLETE_DUNGEON,
+        SPAWN_UNTIL
     }
 
     private final EffectType type;
 
-    // SEND_MESSAGE fields
     private String message;
 
-    // TELEPORT_PLAYERS & SPAWN_MOB & SPAWN_CHEST fields
     private double x, y, z;
 
-    // OPEN_DOOR & CLOSE_DOOR fields
     private double x1, y1, z1, x2, y2, z2;
     private Material material;
 
-    // SPAWN_MOB fields
     private String mobName;
     private int amount = 1;
     private int level = 1;
     private double range = 0.0;
 
-    // SPAWN_CHEST fields
-    private String chestType; // "ROGUELITE_CHEST" or custom
+    private String chestType;
+    private int interval = 5;
 
     public DungeonEffect(EffectType type) {
         this.type = type;
     }
 
-    // Constructor for SEND_MESSAGE
     public DungeonEffect(String message) {
         this.type = EffectType.SEND_MESSAGE;
         this.message = message;
     }
 
-    // Constructor for TELEPORT_PLAYERS
     public DungeonEffect(double x, double y, double z) {
         this.type = EffectType.TELEPORT_PLAYERS;
         this.x = x;
@@ -68,7 +62,6 @@ public class DungeonEffect {
         this.z = z;
     }
 
-    // Constructor for SPAWN_MOB
     public DungeonEffect(String mobName, int amount, int level, double x, double y, double z, double range) {
         this.type = EffectType.SPAWN_MOB;
         this.mobName = mobName;
@@ -80,7 +73,6 @@ public class DungeonEffect {
         this.range = range;
     }
 
-    // Constructor for OPEN_DOOR / CLOSE_DOOR
     public DungeonEffect(EffectType type, double x1, double y1, double z1, double x2, double y2, double z2, Material material) {
         this.type = type;
         this.x1 = x1;
@@ -92,7 +84,6 @@ public class DungeonEffect {
         this.material = material;
     }
 
-    // Constructor for SPAWN_CHEST
     public DungeonEffect(double x, double y, double z, String chestType) {
         this.type = EffectType.SPAWN_CHEST;
         this.x = x;
@@ -101,9 +92,18 @@ public class DungeonEffect {
         this.chestType = chestType;
     }
 
-    /**
-     * Executes this effect in the context of the active DungeonInstance.
-     */
+    public DungeonEffect(EffectType type, String mobName, int amount, int level, double x, double y, double z, double range, int interval) {
+        this.type = type;
+        this.mobName = mobName;
+        this.amount = amount;
+        this.level = level;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.range = range;
+        this.interval = interval;
+    }
+
     public void execute(DungeonInstance instance) {
         ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
         
@@ -126,8 +126,6 @@ public class DungeonEffect {
                     double rx = x + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
                     double rz = z + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
                     
-                    // Construct MythicMobs console command spawn command
-                    // mm mobs spawn -s [Name]:[Lvl] 1 [World],[X],[Y],[Z]
                     String command = "mm mobs spawn -s " + mobName + ":" + level + " 1 " +
                                      instance.getWorld().getName() + "," + rx + "," + y + "," + rz;
                     
@@ -147,7 +145,6 @@ public class DungeonEffect {
                 ItemStack compass = FastEasyStack(Material.COMPASS, ChatColor.RED + "Gotowy?");
                 ItemStack skillChest = FastEasyStack(Material.CHEST, ChatColor.GREEN + "Menu Umiejętności");
                 for (Player player : instance.getOnlinePlayers()) {
-                    // Remove existing first to prevent duplicate
                     player.getInventory().remove(Material.COMPASS);
                     ItemStack[] contents = player.getInventory().getContents();
                     for (int i = 0; i < contents.length; i++) {
@@ -166,7 +163,6 @@ public class DungeonEffect {
                 Block block = chestLoc.getBlock();
                 block.setType(Material.CHEST);
                 
-                // Track this chest block in the instance as an interactive loot chest
                 instance.registerLootChest(block.getLocation(), chestType == null ? "ROGUELITE_CHEST" : chestType);
                 instance.preGenerateChestGuis(block.getLocation());
                 break;
@@ -174,12 +170,32 @@ public class DungeonEffect {
             case COMPLETE_DUNGEON:
                 instance.completeDungeon();
                 break;
+
+            case SPAWN_UNTIL:
+                final DungeonEffect self = this;
+                org.bukkit.scheduler.BukkitTask task = new org.bukkit.scheduler.BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (instance.isFinished() || instance.getActiveEncounter() == null || !instance.getActiveEncounter().getEffects().contains(self)) {
+                            cancel();
+                            return;
+                        }
+                        ConsoleCommandSender cmdConsole = Bukkit.getServer().getConsoleSender();
+                        Random spawnRand = new Random();
+                        for (int i = 0; i < amount; i++) {
+                            double rx = x + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
+                            double rz = z + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
+                            String command = "mm mobs spawn -s " + mobName + ":" + level + " 1 " +
+                                             instance.getWorld().getName() + "," + rx + "," + y + "," + rz;
+                            Bukkit.dispatchCommand(cmdConsole, command);
+                        }
+                    }
+                }.runTaskTimer(Plugin.AmonPackPlugin.plugin, 0L, interval * 20L);
+                instance.addSpawnUntilTaskId(task.getTaskId());
+                break;
         }
     }
 
-    /**
-     * Fills a cuboid volume with the specified block material.
-     */
     private void manipulateBlocks(org.bukkit.World world, Material mat) {
         int minX = (int) Math.min(x1, x2);
         int minY = (int) Math.min(y1, y2);
@@ -263,5 +279,9 @@ public class DungeonEffect {
 
     public String getChestType() {
         return chestType;
+    }
+
+    public int getInterval() {
+        return interval;
     }
 }

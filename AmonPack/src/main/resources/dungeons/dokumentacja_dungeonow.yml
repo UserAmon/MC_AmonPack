@@ -1,15 +1,37 @@
 # =========================================================================
-# DOKUMENTACJA SYSTEMU DUNGEONÓW - WARUNKI I EFEKTY DLA ENCOUNTERS (ETAPÓW)
+# DOKUMENTACJA SYSTEMU DUNGEONÓW - WARUNKI, EFEKTY I REJESTR PRZEDMIOTÓW
 # =========================================================================
 # Ten plik służy wyłącznie jako dokumentacja i instrukcja dla administratora.
-# Pokazuje wszystkie dostępne Warunki (Conditions) oraz Efekty (Effects),
-# które można wykorzystać w plikach skryptów lochów w folderze "dungeons/".
+# Pokazuje wszystkie dostępne Warunki (Conditions), Efekty (Effects) oraz
+# strukturę własnych przedmiotów, które można wykorzystać w lochach.
 # =========================================================================
 
 dokumentacja:
   informacje-ogolne:
     opis: "Dungeon składa się z etapów (encounters). Każdy etap posiada warunki zakończenia oraz efekty wywoływane na starcie i na końcu."
     uwagi: "Wielkości liter w typach warunków i efektów MAJĄ znaczenie i muszą być pisane wielkimi literami (UPPERCASE)."
+
+  # =========================================================================
+  # 0. REJESTR PRZEDMIOTÓW (ITEMS) - Definiowany przed encounterami w lochu
+  # =========================================================================
+  przedmioty:
+    opis: "Umożliwia stworzenie unikalnych kluczy lub przedmiotów rzucanych, do których można się odwołać w warunkach."
+    struktura:
+      items:
+        klucz_cieni:
+          material: "TRIPWIRE_HOOK"
+          nazwa: "&6Klucz Bramy Cieni"
+          opis:
+            - "&7Służy do otwarcia starożytnych wrót."
+          typ: "key"
+          custom-model-id: 1001
+        kamien_ognia:
+          material: "FIRE_CHARGE"
+          nazwa: "&cOgnisty Pocisk"
+          opis:
+            - "&7Rzuć nim PPM, aby trafić w cel."
+          typ: "throwable"
+          custom-model-id: 1002
 
   # =========================================================================
   # 1. WARUNKI (CONDITIONS) - Decydują o ukończeniu danego etapu (Encounter)
@@ -51,16 +73,89 @@ dokumentacja:
         y: "Współrzędna Y bloku (Double)"
         z: "Współrzędna Z bloku (Double)"
         block-material: "Materiał bloku, na który trzeba kliknąć (np. IRON_DOOR, STONE_BUTTON) (String)"
-        item-material: "Materiał przedmiotu wymagany jako klucz (np. TRIPWIRE_HOOK, LEVER) (Opcjonalny, String)"
-        item-display-name: "Dokładna nazwa klucza (np. '&6Klucz Bramy') (Opcjonalna, String)"
+        item-material: "Identyfikator przedmiotu z sekcji rejestru 'items' lub standardowy Material Spigota (String)"
+        item-display-name: "Dokładna nazwa klucza (Opcjonalna, String)"
       przyklad:
         - type: "INTERACT_BLOCK_WITH_ITEM"
           x: 12.0
           y: 62.0
           z: -5.0
           block-material: "IRON_DOOR"
-          item-material: "TRIPWIRE_HOOK"
-          item-display-name: "&6Klucz Cieni"
+          item-material: "klucz_cieni"
+
+    ZONE:
+      opis: "Wymaga przejęcia strefy o promieniu R poprzez ciągłe stanie w niej przez X sekund. Na ziemi pojawia się wirujący krąg z cząsteczek GLOW."
+      parametry:
+        x: "Współrzędna X środka strefy (Double)"
+        y: "Współrzędna Y środka strefy (Double)"
+        z: "Współrzędna Z środka strefy (Double)"
+        radius: "Promień strefy przejęcia (Double)"
+        time: "Czas stania w sekundach wymagany do przejęcia (Integer)"
+      przyklad:
+        - type: "ZONE"
+          x: 20.0
+          y: 61.0
+          z: 0.0
+          radius: 3.5
+          time: 15
+
+    THROW_AT:
+      opis: "Wymaga trafienia określonym przedmiotem rzucanym (o typie throwable) we wskazane współrzędne X razy."
+      parametry:
+        x: "Współrzędna X celu (Double)"
+        y: "Współrzędna Y celu (Double)"
+        z: "Współrzędna Z celu (Double)"
+        radius: "Margines tolerancji trafienia (Double)"
+        item: "Identyfikator rzucanego przedmiotu z sekcji 'items' (String)"
+        amount: "Wymagana liczba celnych rzutów (Integer)"
+      przyklad:
+        - type: "THROW_AT"
+          x: 15.0
+          y: 64.0
+          z: 22.0
+          radius: 2.0
+          item: "kamien_ognia"
+          amount: 3
+
+    THROW_AT_ENEMY:
+      opis: "Przywołuje wroga z wirującą tarczą z cząsteczek SOUL_FIRE_FLAME. Wróg jest całkowicie uodporniony na zwykłe obrażenia. Jedynym sposobem na zadanie mu ciosów jest bezpośrednie trafienie go określonym przedmiotem rzucanym X razy."
+      parametry:
+        mob-name: "Nazwa wroga ze Spigota lub MythicMobs (String)"
+        item: "Identyfikator rzucanego przedmiotu z sekcji 'items' (String)"
+        amount: "Liczba wymaganych trafień pociskiem (Integer)"
+        x: "Współrzędna X spawnu (Double)"
+        y: "Współrzędna Y spawnu (Double)"
+        z: "Współrzędna Z spawnu (Double)"
+      przyklad:
+        - type: "THROW_AT_ENEMY"
+          mob-name: "ShieldedBoss"
+          item: "kamien_ognia"
+          amount: 5
+          x: 20.0
+          y: 61.0
+          z: 0.0
+
+    DROP_ON_DEATH:
+      opis: "Pasywny warunek aktywujący szansę na drop zarejestrowanego przedmiotu z określonego potwora zabitego w trakcie trwania tego etapu."
+      parametry:
+        mob-name: "Nazwa potwora (String)"
+        item: "Identyfikator przedmiotu z sekcji 'items' do wydropienia (String)"
+        chance: "Szansa procentowa na drop przedmiotu, od 0.0 do 100.0 (Double)"
+      przyklad:
+        - type: "DROP_ON_DEATH"
+          mob-name: "ShadowGhost"
+          item: "kamien_ognia"
+          chance: 50.0
+
+    oncomplete:
+      opis: "Dowolny warunek może posiadać zagnieżdżoną sekcję 'oncomplete', zawierającą listę efektów, które zostaną uruchomione jednorazowo po spełnieniu tego pojedynczego warunku."
+      przyklad:
+        - type: "KILL_MOBS"
+          mob-name: "ShadowGhost"
+          amount: 2
+          oncomplete:
+            - type: "SEND_MESSAGE"
+              message: "&a[Dungeon] &fRozległ się ryk! Jeden z warunków został spełniony."
 
   # =========================================================================
   # 2. EFEKTY (EFFECTS) - Akcje wykonywane na starcie etapu lub przy jego ukończeniu
@@ -89,7 +184,7 @@ dokumentacja:
     SPAWN_MOB:
       opis: "Respi określoną grupę potworów wokół podanej lokacji z losowym rozrzutem."
       parametry:
-        mob-name: "Nazwa typu potwora ze Spigota (np. ZOMBIE, SKELETON) lub nazwa customowa (String)"
+        mob-name: "Nazwa typu potwora ze Spigota lub nazwa customowa (String)"
         amount: "Ilość potworów do zrespienia (Integer)"
         level: "Poziom potwora wpływający na jego atrybuty (Integer)"
         x: "Środkowa współrzędna X respawnu (Double)"
@@ -169,3 +264,68 @@ dokumentacja:
       opis: "Kończy loch sukcesem, rozdaje nagrody końcowe, przywraca ekwipunek i usuwa dynamiczny świat."
       przyklad:
         - type: "COMPLETE_DUNGEON"
+
+    SPAWN_UNTIL:
+      opis: "Cyklicznie spawnuje określoną grupę potworów wokół wskazanych współrzędnych co X sekund, dopóki wszystkie warunki trwającego etapu nie zostaną w pełni ukończone."
+      parametry:
+        mob-name: "Nazwa potwora ze Spigota lub MythicMobs (String)"
+        amount: "Ilość spawnowana na falę (Integer)"
+        level: "Poziom potwora (Integer)"
+        x: "Współrzędna X (Double)"
+        y: "Współrzędna Y (Double)"
+        z: "Współrzędna Z (Double)"
+        range: "Rozrzut spawnu (Double)"
+        interval: "Czas w sekundach pomiędzy falami (Integer)"
+      przyklad:
+        - type: "SPAWN_UNTIL"
+          mob-name: "ZOMBIE"
+          amount: 2
+          level: 3
+          x: 15.0
+          y: 61.0
+          z: 15.0
+          range: 2.0
+          interval: 5
+
+  # =========================================================================
+  # 3. ZAAWANSOWANE POLE LOSOWE I TWORZENIE ETAPÓW (POOL & RANDOM PROG)
+  # =========================================================================
+  losowosc-puli:
+    opis: "Pozwala na definicję zaawansowanej puli losowania pokoi w lochu Rogue-lite."
+    zasady:
+      - "W etapie startowym deklarujemy next: random oraz pool (listę dozwolonych losowych pokoi), req_clears (ile losowych pokoi gracz musi przejść) i enc_after_clears (gdzie trafi po ich zaliczeniu)."
+      - "Poszczególne losowe pokoje w pool NIE potrzebują w ogóle zadeklarowanego pola 'next' - plugin sam obsłuży ich powrót do losowania."
+    przyklad:
+      ENC1:
+        description: "Start lochu"
+        conditions:
+          - type: "ALL_PLAYERS_READY"
+        effects:
+          - type: "GIVE_READY_COMPASS"
+        next: "random"
+        pool:
+          - "ENC2_1"
+          - "ENC2_2"
+          - "ENC2_3"
+        req_clears: 2
+        enc_after_clears: "ENC3"
+
+  # =========================================================================
+  # 4. GRUPOWANIE POOL_LISTS (Ordered Pool Lists Progression)
+  # =========================================================================
+  sekwencje-puli:
+    opis: "Pozwala na zdefiniowanie gotowych list/sekwencji encounterów, które muszą zostać wykonane po kolei jako całe pakiety."
+    zasady:
+      - "W etapie startowym deklarujemy next: random oraz pool_lists (listę list) i enc_after_clears."
+      - "Plugin wybierze losowo JEDNĄ listę ze wszystkich dozwolonych (taką, w której ŻADEN encounter nie został jeszcze ukończony)."
+      - "Encountery z wybranej listy są odgrywane po kolei. Po przejściu ostatniego z nich, gracz przechodzi do etapu wskazanego w enc_after_clears."
+    przyklad:
+      ENC_LOSOWA_SEKWENCJA:
+        description: "Wybór losowej sekwencji"
+        conditions:
+          - type: "ALL_PLAYERS_READY"
+        next: "random"
+        pool_lists:
+          - ["ENC_DUNG_1", "ENC_DUNG_2", "ENC_DUNG_3"]
+          - ["ENC_ALT_1", "ENC_ALT_2", "ENC_ALT_3"]
+        enc_after_clears: "ENC_BOSS"

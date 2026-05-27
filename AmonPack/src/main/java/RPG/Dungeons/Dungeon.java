@@ -25,8 +25,9 @@ public class Dungeon {
     private final DungeonRewards rewards;
     private final List<String> allowedStats;
     private final List<String> allowedBlessings;
+    private final Map<String, DungeonCustomItem> customItems;
 
-    public Dungeon(String id, String name, String schematicFile, Vector pasteLocation, Vector spawnLocation, String exitWorld, Vector exitLocation, String initialEncounterId, Map<String, Encounter> encounters, DungeonRewards rewards, List<String> allowedStats, List<String> allowedBlessings) {
+    public Dungeon(String id, String name, String schematicFile, Vector pasteLocation, Vector spawnLocation, String exitWorld, Vector exitLocation, String initialEncounterId, Map<String, Encounter> encounters, DungeonRewards rewards, List<String> allowedStats, List<String> allowedBlessings, Map<String, DungeonCustomItem> customItems) {
         this.id = id;
         this.name = name;
         this.schematicFile = schematicFile;
@@ -39,6 +40,7 @@ public class Dungeon {
         this.rewards = rewards != null ? rewards : new DungeonRewards();
         this.allowedStats = allowedStats != null ? allowedStats : new ArrayList<>();
         this.allowedBlessings = allowedBlessings != null ? allowedBlessings : new ArrayList<>();
+        this.customItems = customItems != null ? customItems : new HashMap<>();
     }
 
     public String getId() {
@@ -87,6 +89,10 @@ public class Dungeon {
 
     public List<String> getAllowedBlessings() {
         return allowedBlessings;
+    }
+
+    public Map<String, DungeonCustomItem> getCustomItems() {
+        return customItems;
     }
 
     /**

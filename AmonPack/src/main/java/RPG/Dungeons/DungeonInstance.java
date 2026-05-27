@@ -25,12 +25,10 @@ public class DungeonInstance {
     private final Map<Location, Set<UUID>> claimedChests = new HashMap<>();
     private final Map<Location, Map<UUID, DungeonLootChest>> chestGuis = new HashMap<>();
 
-    // Active state machine
     private String activeEncounterId;
     private final Map<String, Integer> killedMobsCounter = new HashMap<>();
     private final Map<Location, String> activeLootChests = new HashMap<>();
 
-    // Rogue-lite Random Room Progression tracking
     private boolean randomPhaseActive = false;
     private int randomClearsCount = 0;
     private int reqClears = 0;
@@ -40,14 +38,23 @@ public class DungeonInstance {
 
     private boolean isFinished = false;
 
+    private org.bukkit.boss.BossBar bossBar;
+    private final Map<DungeonCondition, Integer> zoneCaptureCounters = new HashMap<>();
+    private final Map<DungeonCondition, Integer> throwHitsCounter = new HashMap<>();
+    private final Set<UUID> activeShieldedEnemyUuids = new HashSet<>();
+    private final List<Integer> spawnUntilTaskIds = new ArrayList<>();
+    private final Set<Integer> completedConditionsIndices = new HashSet<>();
+    private final List<String> randomPool = new ArrayList<>();
+
+    private boolean poolListPhaseActive = false;
+    private List<String> currentPoolListSequence = new ArrayList<>();
+    private int poolListIndex = 0;
+
     public DungeonInstance(Dungeon template, List<Player> party) {
         this.template = template;
         this.instanceId = UUID.randomUUID();
-
-        // 1. Create a dynamic empty world
         this.world = DungeonWorldManager.createDungeonWorld(template.getId());
 
-        // 2. Initialize players
         for (Player p : party) {
             this.players.add(p.getUniqueId());
             this.playerStatsMap.put(p.getUniqueId(), new DungeonPlayerStats(p.getUniqueId(), p.getName()));
@@ -57,10 +64,6 @@ public class DungeonInstance {
         this.activeEncounterId = template.getInitialEncounterId();
     }
 
-    /**
-     * Starts the dungeon run instance: backups inventories, pastes schematic,
-     * teleports players, and starts loop.
-     */
     public void start() {
         if (world == null) {
             broadcast(ChatColor.RED + "[Dungeons] Blad krytyczny: Nie udalo sie wygenerowac swiata!");
@@ -68,7 +71,6 @@ public class DungeonInstance {
             return;
         }
 
-        // 1. Backup inventories (excluding crafted items)
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && player.isOnline()) {
@@ -76,7 +78,6 @@ public class DungeonInstance {
             }
         }
 
-        // 2. Paste WorldEdit schematic
         Vector paste = template.getPasteLocation();
         boolean pasted = SchematicManager.pasteSchematic(world, template.getSchematicFile(), paste.getBlockX(),
                 paste.getBlockY(), paste.getBlockZ(), AmonPackPlugin.plugin);
@@ -87,7 +88,6 @@ public class DungeonInstance {
             return;
         }
 
-        // 3. Teleport players to spawn location and apply dungeon attributes
         Vector spawn = template.getSpawnLocation();
         Location spawnLoc = new Location(world, spawn.getX(), spawn.getY(), spawn.getZ());
 
@@ -104,19 +104,13 @@ public class DungeonInstance {
             }
         }
 
-        // 4. Trigger initial encounter effects
         executeActiveEncounterEffects();
     }
 
-    /**
-     * Runs periodic updates (e.g., area checking, player status, condition
-     * evaluations).
-     */
     public void update() {
         if (isFinished)
             return;
 
-        // Check if all players left or offline
         List<Player> online = getOnlinePlayers();
         if (online.isEmpty()) {
             System.out.println("[Dungeons] Wszyscy gracze opuscili instancje: " + world.getName() + ". Czyszczenie...");
@@ -124,7 +118,6 @@ public class DungeonInstance {
             return;
         }
 
-        // Check if all online players are spectators
         boolean allSpectators = true;
         for (Player p : online) {
             if (!isPlayerSpectator(p)) {
@@ -139,9 +132,99 @@ public class DungeonInstance {
             return;
         }
 
-        // Evaluate active encounter conditions
         Encounter encounter = getActiveEncounter();
         if (encounter != null) {
+            List<DungeonCondition> conds = encounter.getConditions();
+            for (int i = 0; i < conds.size(); i++) {
+                DungeonCondition condition = conds.get(i);
+                if (condition.isMet(this)) {
+                    if (!completedConditionsIndices.contains(i)) {
+                        completedConditionsIndices.add(i);
+                        for (DungeonEffect effect : condition.getOnCompleteEffects()) {
+                            effect.execute(this);
+                        }
+                    }
+                }
+            }
+
+            for (DungeonCondition condition : encounter.getConditions()) {
+                if (condition.getType() == DungeonCondition.ConditionType.ZONE) {
+                    double cx = condition.getX();
+                    double cy = condition.getY();
+                    double cz = condition.getZ();
+                    double radius = condition.getRadius();
+                    Location center = new Location(world, cx, cy, cz);
+                    
+                    for (double angle = 0; angle < 2 * Math.PI; angle += Math.PI / 16) {
+                        double px = cx + radius * Math.cos(angle);
+                        double pz = cz + radius * Math.sin(angle);
+                        world.spawnParticle(Particle.GLOW, px, cy + 0.1, pz, 1, 0, 0, 0, 0);
+                    }
+                    
+                    boolean playerInZone = false;
+                    for (Player player : getOnlinePlayers()) {
+                        if (!isPlayerSpectator(player) && player.getLocation().distanceSquared(center) <= radius * radius) {
+                            playerInZone = true;
+                            break;
+                        }
+                    }
+                    
+                    if (playerInZone) {
+                        incrementZoneProgress(condition);
+                    } else {
+                        int current = getZoneProgress(condition);
+                        if (current > 0) {
+                            zoneCaptureCounters.put(condition, current - 1);
+                        }
+                    }
+                }
+            }
+
+            if (!activeShieldedEnemyUuids.isEmpty()) {
+                double angle = (System.currentTimeMillis() / 200.0) % (2 * Math.PI);
+                for (UUID uuid : activeShieldedEnemyUuids) {
+                    org.bukkit.entity.Entity entity = Bukkit.getEntity(uuid);
+                    if (entity instanceof org.bukkit.entity.LivingEntity && !entity.isDead()) {
+                        Location center = entity.getLocation().add(0, 1, 0);
+                        for (int i = 0; i < 8; i++) {
+                            double finalAngle = angle + (i * Math.PI / 4);
+                            double px = 1.0 * Math.cos(finalAngle);
+                            double pz = 1.0 * Math.sin(finalAngle);
+                            world.spawnParticle(Particle.SOUL_FIRE_FLAME, center.getX() + px, center.getY(), center.getZ() + pz, 1, 0, 0, 0, 0);
+                        }
+                    }
+                }
+            }
+
+            if (bossBar != null && bossBar.isVisible()) {
+                String titleTemplate = encounter.getTitle();
+                if (titleTemplate != null) {
+                    int act = 0;
+                    int req = 1;
+                    for (DungeonCondition condition : encounter.getConditions()) {
+                        if (condition.getType() == DungeonCondition.ConditionType.KILL_MOBS) {
+                            act = getKilledMobsCount(condition.getMobName());
+                            req = condition.getAmount();
+                            break;
+                        } else if (condition.getType() == DungeonCondition.ConditionType.ZONE) {
+                            act = getZoneProgress(condition);
+                            req = condition.getTimeRequired();
+                            break;
+                        } else if (condition.getType() == DungeonCondition.ConditionType.THROW_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
+                            act = getThrowHits(condition);
+                            req = condition.getAmount();
+                            break;
+                        }
+                    }
+                    String titleText = titleTemplate
+                        .replace("$ActNumber$", String.valueOf(act))
+                        .replace("$ReqNumber$", String.valueOf(req));
+                    bossBar.setTitle(ChatColor.translateAlternateColorCodes('&', titleText));
+                    double progress = (double) act / req;
+                    bossBar.setProgress(Math.max(0.0, Math.min(1.0, progress)));
+                }
+            }
+
             boolean allMet = true;
             for (DungeonCondition condition : encounter.getConditions()) {
                 if (!condition.isMet(this)) {
@@ -151,15 +234,11 @@ public class DungeonInstance {
             }
 
             if (allMet && !encounter.getConditions().isEmpty()) {
-                // Execute effects and transition
                 transitionToNext();
             }
         }
     }
 
-    /**
-     * Executes the effects of the active encounter, and moves to the next.
-     */
     public void transitionToNext() {
         Encounter current = getActiveEncounter();
         if (current == null)
@@ -168,39 +247,46 @@ public class DungeonInstance {
         System.out.println("[Dungeons] Zrealizowano etap: " + current.getId() + " (" + current.getDescription()
                 + ") na " + world.getName());
 
-        // If completed dungeon, do not transition
         if (isFinished)
             return;
 
-        // Mark the current encounter as completed in this run
         completedEncounters.add(current.getId());
+        clearSpawnUntilTasks();
+        completedConditionsIndices.clear();
 
         String nextId = null;
 
-        if (randomPhaseActive) {
-            // We are in the middle of a random phase!
+        if (poolListPhaseActive) {
+            poolListIndex++;
+            if (poolListIndex >= currentPoolListSequence.size()) {
+                poolListPhaseActive = false;
+                nextId = encAfterClears;
+                System.out.println("[Dungeons] Sekwencja pool_lists ukonczona! Nastepny: " + nextId);
+            } else {
+                nextId = currentPoolListSequence.get(poolListIndex);
+                System.out.println("[Dungeons] Pool list krok " + (poolListIndex + 1) + "/" + currentPoolListSequence.size() + ": " + nextId);
+            }
+        } else if (randomPhaseActive) {
             randomClearsCount++;
             System.out.println("[Dungeons] Postep fazy losowej: " + randomClearsCount + "/" + reqClears);
 
             if (randomClearsCount >= reqClears) {
-                // Completed all required random rooms!
                 randomPhaseActive = false;
                 nextId = encAfterClears;
                 System.out.println("[Dungeons] Faza losowa ukonczona! Nastepny etap: " + nextId);
             } else {
-                // Select next random room
                 List<String> eligible = new ArrayList<>();
-                for (String id : template.getEncounters().keySet()) {
+                Collection<String> sourceCollection = randomPool.isEmpty() ? template.getEncounters().keySet() : randomPool;
+                for (String id : sourceCollection) {
                     if (!completedEncounters.contains(id) && !randomExcludes.contains(id)) {
                         eligible.add(id);
                     }
                 }
 
                 if (eligible.isEmpty()) {
-                    // Repeat room fallback: reset completed list but keep excludes and current
                     completedEncounters.clear();
                     completedEncounters.add(current.getId());
-                    for (String id : template.getEncounters().keySet()) {
+                    for (String id : sourceCollection) {
                         if (!completedEncounters.contains(id) && !randomExcludes.contains(id)) {
                             eligible.add(id);
                         }
@@ -208,7 +294,6 @@ public class DungeonInstance {
                 }
 
                 if (eligible.isEmpty()) {
-                    // Still empty? Skip random phase and go to exit
                     randomPhaseActive = false;
                     nextId = encAfterClears;
                 } else {
@@ -217,32 +302,64 @@ public class DungeonInstance {
             }
         } else if (!current.getNextEncounters().isEmpty()
                 && current.getNextEncounters().get(0).equalsIgnoreCase("random")) {
-            // Activate the random room progression phase!
-            randomPhaseActive = true;
-            randomClearsCount = 0;
-            reqClears = current.getReqClears();
-            encAfterClears = current.getEncAfterClears();
-            randomExcludes.clear();
-            randomExcludes.addAll(current.getExclude());
 
-            System.out.println("[Dungeons] Inicjalizacja fazy losowej! Wymagane ukonczenia: " + reqClears
-                    + ", Nastepny cel po zakonczeniu: " + encAfterClears);
+            List<List<String>> poolLists = current.getPoolLists();
+            if (!poolLists.isEmpty()) {
+                List<List<String>> eligible = new ArrayList<>();
+                for (List<String> candidate : poolLists) {
+                    boolean available = true;
+                    for (String encId : candidate) {
+                        if (completedEncounters.contains(encId)) {
+                            available = false;
+                            break;
+                        }
+                    }
+                    if (available) {
+                        eligible.add(candidate);
+                    }
+                }
 
-            List<String> eligible = new ArrayList<>();
-            for (String id : template.getEncounters().keySet()) {
-                if (!completedEncounters.contains(id) && !randomExcludes.contains(id)) {
-                    eligible.add(id);
+                if (eligible.isEmpty()) {
+                    nextId = current.getEncAfterClears();
+                    System.out.println("[Dungeons] Brak dostepnych pool_lists! Nastepny: " + nextId);
+                } else {
+                    List<String> chosen = eligible.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(eligible.size()));
+                    poolListPhaseActive = true;
+                    currentPoolListSequence = new ArrayList<>(chosen);
+                    poolListIndex = 0;
+                    encAfterClears = current.getEncAfterClears();
+                    nextId = currentPoolListSequence.get(0);
+                    System.out.println("[Dungeons] Wybrana lista pool_lists " + chosen + ". Start: " + nextId);
+                }
+            } else {
+                randomPhaseActive = true;
+                randomClearsCount = 0;
+                reqClears = current.getReqClears();
+                encAfterClears = current.getEncAfterClears();
+                randomExcludes.clear();
+                randomExcludes.addAll(current.getExclude());
+                randomPool.clear();
+                randomPool.addAll(current.getPool());
+
+                System.out.println("[Dungeons] Inicjalizacja fazy losowej! Wymagane ukonczenia: " + reqClears
+                        + ", Nastepny cel po zakonczeniu: " + encAfterClears);
+
+                List<String> eligiblePool = new ArrayList<>();
+                Collection<String> sourceCollection = randomPool.isEmpty() ? template.getEncounters().keySet() : randomPool;
+                for (String id : sourceCollection) {
+                    if (!completedEncounters.contains(id) && !randomExcludes.contains(id)) {
+                        eligiblePool.add(id);
+                    }
+                }
+
+                if (eligiblePool.isEmpty()) {
+                    randomPhaseActive = false;
+                    nextId = encAfterClears;
+                } else {
+                    nextId = eligiblePool.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(eligiblePool.size()));
                 }
             }
-
-            if (eligible.isEmpty()) {
-                randomPhaseActive = false;
-                nextId = encAfterClears;
-            } else {
-                nextId = eligible.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(eligible.size()));
-            }
         } else {
-            // Standard progression logic
             List<String> nextList = current.getNextEncounters();
             if (nextList == null || nextList.isEmpty()) {
                 completeDungeon();
@@ -261,10 +378,8 @@ public class DungeonInstance {
             return;
         }
 
-        // Reset state for new encounter
         killedMobsCounter.clear();
 
-        // Reset ready statuses for prep phases
         for (UUID uuid : readyPlayers.keySet()) {
             readyPlayers.put(uuid, false);
             Player p = Bukkit.getPlayer(uuid);
@@ -276,15 +391,55 @@ public class DungeonInstance {
         this.activeEncounterId = nextId;
         System.out.println("[Dungeons] Aktywowano nowy etap: " + nextId + " na " + world.getName());
 
-        // 3. Trigger new active encounter effects
         executeActiveEncounterEffects();
     }
 
     private void executeActiveEncounterEffects() {
         Encounter encounter = getActiveEncounter();
         if (encounter != null) {
+            if (encounter.getTitle() != null && !encounter.getTitle().isEmpty()) {
+                if (bossBar == null) {
+                    bossBar = Bukkit.createBossBar(encounter.getTitle(), org.bukkit.boss.BarColor.RED, org.bukkit.boss.BarStyle.SOLID);
+                } else {
+                    bossBar.setTitle(encounter.getTitle());
+                }
+                bossBar.removeAll();
+                for (Player p : getOnlinePlayers()) {
+                    bossBar.addPlayer(p);
+                }
+                bossBar.setVisible(true);
+            } else {
+                if (bossBar != null) {
+                    bossBar.removeAll();
+                    bossBar.setVisible(false);
+                }
+            }
+
+            for (DungeonCondition condition : encounter.getConditions()) {
+                if (condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
+                    String command = "mm mobs spawn -s " + condition.getMobName() + ":1 1 " +
+                                     world.getName() + "," + condition.getX() + "," + condition.getY() + "," + condition.getZ();
+                    Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), command);
+                    
+                    new org.bukkit.scheduler.BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            Location loc = new Location(world, condition.getX(), condition.getY(), condition.getZ());
+                            for (org.bukkit.entity.Entity entity : world.getNearbyEntities(loc, 3.0, 3.0, 3.0)) {
+                                if (entity instanceof org.bukkit.entity.LivingEntity && !(entity instanceof Player)) {
+                                    String name = entity.getName();
+                                    String cleanName = ChatColor.stripColor(name);
+                                    if (cleanName.equalsIgnoreCase(condition.getMobName()) || entity.getType().name().equalsIgnoreCase(condition.getMobName())) {
+                                        activeShieldedEnemyUuids.add(entity.getUniqueId());
+                                    }
+                                }
+                            }
+                        }
+                    }.runTaskLater(Plugin.AmonPackPlugin.plugin, 2L);
+                }
+            }
+
             for (DungeonEffect effect : encounter.getEffects()) {
-                // Exclude spawn chest or complete dungeon on start unless they are prep effects
                 if (effect.getType() != DungeonEffect.EffectType.COMPLETE_DUNGEON) {
                     effect.execute(this);
                 }
@@ -292,14 +447,18 @@ public class DungeonInstance {
         }
     }
 
-    /**
-     * Safely ends the dungeon with success, awarding players, restoring
-     * inventories, and deleting world.
-     */
     public void completeDungeon() {
         if (isFinished)
             return;
         isFinished = true;
+
+        if (bossBar != null) {
+            bossBar.removeAll();
+            bossBar.setVisible(false);
+        }
+
+        clearSpawnUntilTasks();
+        completedConditionsIndices.clear();
 
         broadcast(ChatColor.GREEN + "[Dungeons] ========================================");
         broadcast(ChatColor.YELLOW + "      DUNGEON UKONCZONY POMYSLNIE!");
@@ -307,27 +466,21 @@ public class DungeonInstance {
 
         ConsoleCommandSender console = Bukkit.getServer().getConsoleSender();
 
-        // Process rewards for each player
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && player.isOnline()) {
 
-                // 1. Restore Inventory
                 DungeonInventoryBackup.restoreInventory(player, AmonPackPlugin.plugin);
 
-                // 2. Reset Attributes
                 DungeonPlayerStats stats = playerStatsMap.get(uuid);
                 if (stats != null) {
                     stats.resetAttributes(player);
                 }
 
-                // Restore Gamemode
                 player.setGameMode(GameMode.SURVIVAL);
 
-                // Clear temporary abilities and elements
                 clearPlayerTemporaryStatsAndAbilities(player);
 
-                // 3. Award Dungeoneering EXP
                 int xp = template.getRewards().getDungeonXp();
                 if (xp > 0) {
                     AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.DUNGEON, player, xp);
@@ -335,18 +488,15 @@ public class DungeonInstance {
                             ChatColor.GOLD + "[Levels] " + ChatColor.YELLOW + "+" + xp + " EXP Eksploracji Dungeonow!");
                 }
 
-                // 4. Award Vault money (if commands or Vault API is used)
                 double money = template.getRewards().getMoney();
                 if (money > 0) {
                     player.sendMessage(
                             ChatColor.GOLD + "[Portfel] " + ChatColor.YELLOW + "+" + money + "$ za ukonczenie lochu!");
                 }
 
-                // 5. Award Items
                 for (ItemStack item : template.getRewards().getItems()) {
                     HashMap<Integer, ItemStack> left = player.getInventory().addItem(item.clone());
                     if (!left.isEmpty()) {
-                        // Drop at their feet at survival exit point
                         Location dropLoc = getExitLocation();
                         for (ItemStack drop : left.values()) {
                             dropLoc.getWorld().dropItemNaturally(dropLoc, drop);
@@ -356,49 +506,44 @@ public class DungeonInstance {
                     }
                 }
 
-                // 6. Execute console commands
                 for (String cmd : template.getRewards().getCommands()) {
                     String finalCmd = cmd.replace("%player%", player.getName());
                     Bukkit.dispatchCommand(console, finalCmd);
                 }
 
-                // 7. Teleport to exit location
                 player.teleport(getExitLocation());
                 player.sendMessage(
                         ChatColor.GREEN + "Zostales bezpiecznie przeteleportowany z powrotem na glowny swiat.");
             }
         }
 
-        // Delete backup files and dynamic world folder
         cleanupWorldAndBackups();
     }
 
-    /**
-     * Handles emergency cleanup (e.g., party failure, empty world, server
-     * shutdown).
-     */
     public void cleanup() {
         isFinished = true;
+
+        if (bossBar != null) {
+            bossBar.removeAll();
+            bossBar.setVisible(false);
+        }
+
+        clearSpawnUntilTasks();
+        completedConditionsIndices.clear();
 
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && player.isOnline()) {
-                // Restore inventory
                 DungeonInventoryBackup.restoreInventory(player, AmonPackPlugin.plugin);
 
-                // Reset stats
                 DungeonPlayerStats stats = playerStatsMap.get(uuid);
                 if (stats != null) {
                     stats.resetAttributes(player);
                 }
 
-                // Restore Gamemode
                 player.setGameMode(GameMode.SURVIVAL);
 
-                // Clear temporary abilities and elements
                 clearPlayerTemporaryStatsAndAbilities(player);
-
-                // Teleport to exit
                 player.teleport(getExitLocation());
                 player.sendMessage(ChatColor.RED + "Dungeon zostal zamkniety. Przywrocono Twoj ekwipunek survivalowy.");
             }
@@ -408,7 +553,6 @@ public class DungeonInstance {
     }
 
     private void cleanupWorldAndBackups() {
-        // Delete all backup files on disk to prevent leaks
         File backupsFolder = new File(AmonPackPlugin.plugin.getDataFolder(), "backups");
         for (UUID uuid : players) {
             File file = new File(backupsFolder, uuid.toString() + ".yml");
@@ -417,13 +561,9 @@ public class DungeonInstance {
             }
         }
 
-        // Delete dynamic world
         DungeonWorldManager.deleteDungeonWorld(world);
     }
 
-    /**
-     * Teleports a single player out of the dungeon, restoring their items.
-     */
     public void ejectPlayer(Player player) {
         if (player == null)
             return;
@@ -434,7 +574,10 @@ public class DungeonInstance {
             readyPlayers.remove(uuid);
             spectatorPlayers.remove(uuid);
 
-            // Restore inventory & stats
+            if (bossBar != null) {
+                bossBar.removePlayer(player);
+            }
+
             DungeonInventoryBackup.restoreInventory(player, AmonPackPlugin.plugin);
             DungeonPlayerStats stats = playerStatsMap.remove(uuid);
             if (stats != null) {
@@ -443,7 +586,6 @@ public class DungeonInstance {
 
             player.setGameMode(GameMode.SURVIVAL);
 
-            // Clear temporary abilities and elements
             clearPlayerTemporaryStatsAndAbilities(player);
             player.teleport(getExitLocation());
             player.sendMessage(ChatColor.YELLOW + "Opusciles dungeon. Twoje przedmioty zostaly przywrocone.");
@@ -464,12 +606,10 @@ public class DungeonInstance {
     }
 
     public void onMobKill(String mobName) {
-        // Increment kill counter
         String cleanName = mobName.toLowerCase();
         int count = killedMobsCounter.getOrDefault(cleanName, 0) + 1;
         killedMobsCounter.put(cleanName, count);
 
-        // Check if this satisfies active conditions
         Encounter encounter = getActiveEncounter();
         if (encounter != null) {
             boolean allMet = true;
@@ -509,7 +649,6 @@ public class DungeonInstance {
                 broadcast(ChatColor.RED + player.getName() + " nie jest gotowy.");
             }
 
-            // Check if this satisfies conditions immediately
             Encounter encounter = getActiveEncounter();
             if (encounter != null) {
                 boolean allMet = true;
@@ -601,7 +740,6 @@ public class DungeonInstance {
         Set<UUID> claimants = claimedChests.computeIfAbsent(loc, k -> new HashSet<>());
         claimants.add(player.getUniqueId());
 
-        // Get list of active living (non-spectator) online players
         List<UUID> activeLiving = new ArrayList<>();
         for (UUID uuid : players) {
             Player p = Bukkit.getPlayer(uuid);
@@ -610,7 +748,6 @@ public class DungeonInstance {
             }
         }
 
-        // If everyone active has claimed their reward, break the chest
         if (claimants.containsAll(activeLiving)) {
             org.bukkit.block.Block block = loc.getBlock();
             block.setType(Material.AIR);
@@ -666,7 +803,6 @@ public class DungeonInstance {
         if (branch != null) {
             branch.getTemporaryAbilities().clear();
             
-            // Remove temporary elements from ProjectKorra BendingPlayer
             com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
             if (bPlayer != null) {
                 for (com.projectkorra.projectkorra.Element tempEl : branch.getTemporaryElements()) {
@@ -675,6 +811,77 @@ public class DungeonInstance {
                 bPlayer.removeUnusableAbilities();
             }
             branch.getTemporaryElements().clear();
+        }
+    }
+
+    public void addSpawnUntilTaskId(int id) {
+        spawnUntilTaskIds.add(id);
+    }
+
+    public void clearSpawnUntilTasks() {
+        for (int id : spawnUntilTaskIds) {
+            Bukkit.getScheduler().cancelTask(id);
+        }
+        spawnUntilTaskIds.clear();
+    }
+
+    public int getZoneProgress(DungeonCondition condition) {
+        return zoneCaptureCounters.getOrDefault(condition, 0);
+    }
+
+    public void incrementZoneProgress(DungeonCondition condition) {
+        int val = getZoneProgress(condition) + 1;
+        zoneCaptureCounters.put(condition, val);
+    }
+
+    public int getThrowHits(DungeonCondition condition) {
+        return throwHitsCounter.getOrDefault(condition, 0);
+    }
+
+    public void incrementThrowHits(DungeonCondition condition) {
+        int val = getThrowHits(condition) + 1;
+        throwHitsCounter.put(condition, val);
+    }
+
+    public void registerProjectileHitCoord(Location hitLoc) {
+        Encounter encounter = getActiveEncounter();
+        if (encounter == null) return;
+        for (DungeonCondition condition : encounter.getConditions()) {
+            if (condition.getType() == DungeonCondition.ConditionType.THROW_AT) {
+                Location target = new Location(world, condition.getX(), condition.getY(), condition.getZ());
+                if (hitLoc.distanceSquared(target) <= condition.getRadius() * condition.getRadius()) {
+                    incrementThrowHits(condition);
+                    world.playSound(hitLoc, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.5f);
+                    world.spawnParticle(Particle.HAPPY_VILLAGER, hitLoc, 10, 0.2, 0.2, 0.2, 0.05);
+                    break;
+                }
+            }
+        }
+    }
+
+    public boolean isShieldedEnemy(UUID uuid) {
+        return activeShieldedEnemyUuids.contains(uuid);
+    }
+
+    public void registerShieldedEnemyHit(org.bukkit.entity.LivingEntity entity, DungeonCustomItem customItem) {
+        Encounter encounter = getActiveEncounter();
+        if (encounter == null) return;
+        for (DungeonCondition condition : encounter.getConditions()) {
+            if (condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
+                if (activeShieldedEnemyUuids.contains(entity.getUniqueId()) && condition.getCustomItemId().equalsIgnoreCase(customItem.getId())) {
+                    incrementThrowHits(condition);
+                    world.playSound(entity.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 0.8f);
+                    world.spawnParticle(Particle.FLASH, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.01);
+                    
+                    if (getThrowHits(condition) >= condition.getAmount()) {
+                        activeShieldedEnemyUuids.remove(entity.getUniqueId());
+                        entity.damage(100.0);
+                        world.spawnParticle(Particle.EXPLOSION, entity.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.05);
+                        world.playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
+                    }
+                    break;
+                }
+            }
         }
     }
 }

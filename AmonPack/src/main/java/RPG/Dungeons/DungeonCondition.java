@@ -5,38 +5,43 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class DungeonCondition {
 
     public enum ConditionType {
-        ALL_PLAYERS_READY,          // Wszyscy gracze zatwierdzili gotowosc kompasem
-        PLAYER_ENTER_AREA,          // Gracz wszedł w dany okrag/obszar
-        KILL_MOBS,                  // Pokonanie wyznaczonej liczby mobow o danej nazwie
-        INTERACT_BLOCK_WITH_ITEM    // PPM na dany blok trzymajac konkretny przedmiot
+        ALL_PLAYERS_READY,
+        PLAYER_ENTER_AREA,
+        KILL_MOBS,
+        INTERACT_BLOCK_WITH_ITEM,
+        ZONE,
+        THROW_AT,
+        THROW_AT_ENEMY,
+        DROP_ON_DEATH
     }
 
     private final ConditionType type;
     
-    // PLAYER_ENTER_AREA & INTERACT_BLOCK_WITH_ITEM fields
     private double x, y, z;
     private double radius;
 
-    // KILL_MOBS fields
     private String mobName;
     private int amount;
 
-    // INTERACT_BLOCK_WITH_ITEM fields
     private Material blockMaterial;
     private Material itemMaterial;
     private String itemDisplayName;
+
+    private String customItemId;
+    private double chance;
+    private int timeRequired;
+    private List<DungeonEffect> onCompleteEffects = new ArrayList<>();
 
     public DungeonCondition(ConditionType type) {
         this.type = type;
     }
 
-    // Constructor for PLAYER_ENTER_AREA
     public DungeonCondition(double x, double y, double z, double radius) {
         this.type = ConditionType.PLAYER_ENTER_AREA;
         this.x = x;
@@ -45,14 +50,12 @@ public class DungeonCondition {
         this.radius = radius;
     }
 
-    // Constructor for KILL_MOBS
     public DungeonCondition(String mobName, int amount) {
         this.type = ConditionType.KILL_MOBS;
         this.mobName = mobName;
         this.amount = amount;
     }
 
-    // Constructor for INTERACT_BLOCK_WITH_ITEM
     public DungeonCondition(double x, double y, double z, Material blockMaterial, Material itemMaterial, String itemDisplayName) {
         this.type = ConditionType.INTERACT_BLOCK_WITH_ITEM;
         this.x = x;
@@ -63,9 +66,42 @@ public class DungeonCondition {
         this.itemDisplayName = itemDisplayName;
     }
 
-    /**
-     * Checks if this condition is satisfied inside a running DungeonInstance.
-     */
+    public DungeonCondition(double x, double y, double z, double radius, int timeRequired) {
+        this.type = ConditionType.ZONE;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.radius = radius;
+        this.timeRequired = timeRequired;
+    }
+
+    public DungeonCondition(ConditionType type, double x, double y, double z, double radius, String customItemId, int amount) {
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.radius = radius;
+        this.customItemId = customItemId;
+        this.amount = amount;
+    }
+
+    public DungeonCondition(ConditionType type, String mobName, String customItemId, int amount, double x, double y, double z) {
+        this.type = type;
+        this.mobName = mobName;
+        this.customItemId = customItemId;
+        this.amount = amount;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    public DungeonCondition(String mobName, String customItemId, double chance) {
+        this.type = ConditionType.DROP_ON_DEATH;
+        this.mobName = mobName;
+        this.customItemId = customItemId;
+        this.chance = chance;
+    }
+
     public boolean isMet(DungeonInstance instance) {
         switch (type) {
             case ALL_PLAYERS_READY:
@@ -74,7 +110,6 @@ public class DungeonCondition {
             case PLAYER_ENTER_AREA:
                 Location center = new Location(instance.getWorld(), x, y, z);
                 double radiusSq = radius * radius;
-                
                 for (Player player : instance.getOnlinePlayers()) {
                     if (player.getLocation().distanceSquared(center) <= radiusSq) {
                         return true;
@@ -86,29 +121,34 @@ public class DungeonCondition {
                 int currentKills = instance.getKilledMobsCount(mobName);
                 return currentKills >= amount;
 
+            case ZONE:
+                return instance.getZoneProgress(this) >= timeRequired;
+
+            case THROW_AT:
+                return instance.getThrowHits(this) >= amount;
+
+            case THROW_AT_ENEMY:
+                return instance.getThrowHits(this) >= amount;
+
+            case DROP_ON_DEATH:
+                return true;
+
             default:
                 return false;
         }
     }
 
-    /**
-     * Specialized check for block interaction condition.
-     */
     public boolean isMetInteract(Location blockLoc, Material clickedBlock, ItemStack heldItem) {
         if (type != ConditionType.INTERACT_BLOCK_WITH_ITEM) return false;
 
-        // Check distance/location
         Location targetLoc = new Location(blockLoc.getWorld(), x, y, z);
         if (blockLoc.distanceSquared(targetLoc) > 1.5) return false;
 
-        // Check block material
         if (blockMaterial != null && clickedBlock != blockMaterial) return false;
 
-        // Check held item material
         if (itemMaterial != null) {
             if (heldItem == null || heldItem.getType() != itemMaterial) return false;
             
-            // Check item display name (if specified)
             if (itemDisplayName != null) {
                 if (!heldItem.hasItemMeta() || heldItem.getItemMeta().getDisplayName() == null) return false;
                 
@@ -117,8 +157,14 @@ public class DungeonCondition {
                 
                 if (!cleanMetaName.equalsIgnoreCase(cleanTargetName)) return false;
             }
+        } else if (customItemId != null) {
+            if (heldItem == null) return false;
+            org.bukkit.persistence.PersistentDataContainer pdc = heldItem.getItemMeta().getPersistentDataContainer();
+            org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_item_id");
+            if (!pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) return false;
+            String itemId = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
+            if (!customItemId.equalsIgnoreCase(itemId)) return false;
         } else {
-            // If itemMaterial is null, player should click with empty hand or anything
             if (heldItem != null && !heldItem.getType().isAir()) return false;
         }
 
@@ -163,5 +209,29 @@ public class DungeonCondition {
 
     public String getItemDisplayName() {
         return itemDisplayName;
+    }
+
+    public String getCustomItemId() {
+        return customItemId;
+    }
+
+    public double getChance() {
+        return chance;
+    }
+
+    public int getTimeRequired() {
+        return timeRequired;
+    }
+
+    public List<DungeonEffect> getOnCompleteEffects() {
+        return onCompleteEffects;
+    }
+
+    public void setOnCompleteEffects(List<DungeonEffect> onCompleteEffects) {
+        this.onCompleteEffects = onCompleteEffects;
+    }
+
+    public void setCustomItemId(String customItemId) {
+        this.customItemId = customItemId;
     }
 }
