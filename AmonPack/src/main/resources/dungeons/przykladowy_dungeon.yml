@@ -79,24 +79,7 @@ encounters:
     next: "random"
     exclude:
       - "ENC3"
-  ENC2_2:
-    description: "Loot ze skrzyni"
-    conditions:
-      - type: "KILL_MOBS"
-        mob-name: "Duch Cienia"
-        amount: 4
-    effects:
-      - type: "SPAWN_MOB"
-        mob-name: "ShadowGhost"
-        amount: 4
-        level: 1
-        x: 20
-        y: 61
-        z: 0
-        range: 2
-    next: "random"
-    exclude:
-      - "ENC3"
+
   ENC2_3:
     description: "Loot ze skrzyni"
     conditions:
@@ -115,6 +98,7 @@ encounters:
     next: "random"
     exclude:
       - "ENC3"
+      
   ENC2_4:
     description: "Loot ze skrzyni"
     conditions:

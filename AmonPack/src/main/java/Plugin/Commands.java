@@ -113,7 +113,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                         Player player = (Player) sender;
                         RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance().getActiveInstance(player);
                         if (run != null) {
-                            AmonPackPlugin.levelsBending.OpenBendingSkillMenu(player.getName());
+                            AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(player.getName());
                         } else {
                             player.sendMessage(ChatColor.RED + "Ta komenda dziala tylko w dungeonie!");
                         }

@@ -388,6 +388,10 @@ public class Listeners implements Listener {
     @EventHandler
     public void BlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
+        if (event.getItemInHand() != null && event.getItemInHand().getType() == Material.CHEST && event.getItemInHand().hasItemMeta() && event.getItemInHand().getItemMeta().getDisplayName().contains("Menu Umiejętności")) {
+            event.setCancelled(true);
+            return;
+        }
         if (player.getGameMode().equals(GameMode.CREATIVE)) {
             return;
         }
