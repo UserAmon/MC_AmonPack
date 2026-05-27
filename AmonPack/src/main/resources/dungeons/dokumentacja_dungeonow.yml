@@ -64,20 +64,59 @@ items:
 # Definiuje dozwolone statystyki i ulepszenia rogue-lite (błogosławieństwa)
 # wypadające ze skrzyni w trakcie rozgrywki lochu.
 #
-# Właściwości:
-#   - allowed-stats: Lista statystyk bazowych (HP, DEF, DMG, SPEED)
-#   - allowed-blessings: Lista błogosławieństw (VAMPIRISM, DODGE, ADRENALINE)
-
-loot-chest:
-  allowed-stats:
-    - HP
-    - DEF
-    - DMG
-    - SPEED
-  allowed-blessings:
-    - VAMPIRISM
-    - DODGE
-    - ADRENALINE
+# Statystyki bazowe (allowed-stats):
+#   - HP: Zwiększa maksymalne zdrowie (+4 HP / +2 Serca).
+#   - DEF: Zwiększa obronę (+10 DEF), zmniejszając procentowo obrażenia.
+#   - DMG: Zwiększa zadawane obrażenia fizyczne i magiczne o 15% (+0.15).
+#   - SPEED: Zwiększa prędkość poruszania się (+10% / +0.02).
+#   - P_CRIT_RATE: Szansa na Fizyczny Kryt bronią lub pięścią (+10% szansy). Bazowa: 5%.
+#   - P_CRIT_DMG: Mnożnik obrażeń Fizycznego Kryta (+20% mocy). Bazowa: +50% (x1.5).
+#   - M_CRIT_RATE: Szansa na Magiczny Kryt umiejętnościami/czarami (+10% szansy). Bazowa: 5%.
+#   - M_CRIT_DMG: Mnożnik obrażeń Magicznego Kryta (+20% mocy). Bazowa: +50% (x1.5).
+#   - REGEN: Regeneracja lochowa. Naturalna regeneracja w lochach jest wyłączona.
+#            Każdy poziom REGEN leczy gracza o 10% maksymalnego HP co 10 sekund.
+#
+# Błogosławieństwa (allowed-blessings):
+#   Każde wylosowanie już odblokowanego błogosławieństwa podnosi jego poziom (Tier).
+#   Wszystkie błogosławieństwa mają bazową szansę aktywacji równą 5% * Poziom.
+#   - VAMPIRISM: Szansa (5% * lvl) przy zabiciu płonącego przeciwnika na uleczenie o 4 HP (2 serca).
+#   - DODGE: Szansa (5% * lvl) na całkowity unik i anulowanie otrzymywanych obrażeń.
+#   - ADRENALINE: Szansa (5% * lvl) przy zadawaniu obrażeń mając poniżej 20% HP na zwiększenie ich o 50% (+0.50).
+#   - LIFESTEAL: Trafienia mają szansę (5% * lvl) uleczyć gracza o 20% zadanych obrażeń.
+#   - HEAL: Otrzymane leczenie ma szansę (5% * lvl) zostać wzmocnione o 50% (+0.50).
+#   - KNOCKBACK: Ataki mają szansę (5% * lvl) mocno odrzucić wroga w tył.
+#   - COUNTER: Szansa (5% * lvl) na zignorowanie obrażeń i natychmiastowe odbicie ich w atakującego.
+#   - FLAMING: Ataki mają szansę (5% * lvl) podpalić wroga na 4 sekundy za każdy poziom (4s * lvl).
+#   - POISON: Fizyczne ataki mają szansę (5% * lvl) otruć wroga na 4 sekundy.
+#   - COMBUSTION: Ataki w podpalonych wrogów mają szansę (5% * lvl) zadać zwiększone o 25% obrażenia.
+#
+# Inne mechaniki walki lochów:
+#   * Blokada ognia: Moby płonące w lochach nie podpalają graczy przy ataku (vanilla combust zablokowany).
+#   * Kompas gotowości / rozpoczęcie etapu: Daje wszystkim graczom pełne uleczenie i nasycenie głodu.
+#
+# Przykład konfiguracji w pliku lochu:
+# loot-chest:
+#   allowed-stats:
+#     - HP
+#     - DEF
+#     - DMG
+#     - SPEED
+#     - P_CRIT_RATE
+#     - P_CRIT_DMG
+#     - M_CRIT_RATE
+#     - M_CRIT_DMG
+#     - REGEN
+#   allowed-blessings:
+#     - VAMPIRISM
+#     - DODGE
+#     - ADRENALINE
+#     - LIFESTEAL
+#     - HEAL
+#     - KNOCKBACK
+#     - COUNTER
+#     - FLAMING
+#     - POISON
+#     - COMBUSTION
 
 # =========================================================================
 # CZĘŚĆ IV: NAGRODY KOŃCOWE (rewards)
@@ -399,6 +438,16 @@ rewards:
 #     przegraną lochu i oczyszczenie instancji.
 #     Przykład:
 #       - type: "FORCE_FAIL"
+#
+# 14. GIVE_ITEM
+#     Daje wszystkim aktywnym graczom przedmiot z rejestru 'items' lub standardowy materiał Spigota.
+#     Zasada bezpiecznego wręczania: wrzuca przedmiot bezpośrednio do głównej ręki (jeśli jest pusta),
+#     w przeciwnym razie dodaje go do pierwszego wolnego slotu ekwipunku, zapobiegając usunięciu trzymanego itemu.
+#     Parametry: item (ID przedmiotu z rejestru lub materiału Spigot, String), amount (Ilość, Integer, domyślnie 1)
+#     Przykład:
+#       - type: "GIVE_ITEM"
+#         item: "cien_klucz"
+#         amount: 1
 
 # =========================================================================
 # CZĘŚĆ VII: SYSTEM DYNAMICZNYCH PLATFORM (platforms)
@@ -422,6 +471,9 @@ rewards:
 #       * SNEAKING (gracz kuca)
 #       * ITEM:<id_przedmiotu> (gracz posiada w dłoni/eq podany przedmiot, np. ITEM:cien_klucz)
 #       * MOB_NEAR:<nazwa_moba> (potwór o danej nazwie znajduje się w odległości max 5 bloków od środka platformy)
+#   - delay: (Opcjonalne, Integer) Opóźnienie aktywacji/dezaktywacji stanu platformy w sekundach (np. zapadająca się podłoga po 3 sekundach).
+#   - check-interval: (Opcjonalne, Integer) Interwał sprawdzania warunku platformy w sekundach. Warunek nie jest sprawdzany co sekundę, lecz
+#                     wyłącznie co X sekund (np. naprawa podłoża po 5 sekundach, jeśli nie ma nikogo w pobliżu).
 #
 # Przykład kompletnego użycia platformy:
 #   platforms:
@@ -435,6 +487,8 @@ rewards:
 #       inverted: false
 #       test-mode: "NEAR"
 #       requirement: "ITEM:cien_klucz"
+#       delay: 3
+#       check-interval: 5
 
 # =========================================================================
 # CZĘŚĆ VIII: POOLE, PULSE I PĘTLE PROGRESJI

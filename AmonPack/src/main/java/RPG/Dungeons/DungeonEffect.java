@@ -35,7 +35,8 @@ public class DungeonEffect {
         KNOCKBACK,
         PULL,
         DAMAGE,
-        FORCE_FAIL
+        FORCE_FAIL,
+        GIVE_ITEM
     }
 
     private final EffectType type;
@@ -54,9 +55,16 @@ public class DungeonEffect {
 
     private String chestType;
     private int interval = 5;
+    private String itemId;
 
     public DungeonEffect(EffectType type) {
         this.type = type;
+    }
+
+    public DungeonEffect(EffectType type, String itemId, int amount) {
+        this.type = type;
+        this.itemId = itemId;
+        this.amount = amount;
     }
 
     public DungeonEffect(String message) {
@@ -164,6 +172,9 @@ public class DungeonEffect {
                     }
                     player.getInventory().addItem(compass);
                     player.getInventory().addItem(skillChest);
+                    double maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                    player.setHealth(maxHealth);
+                    player.setFoodLevel(20);
                 }
                 break;
 
@@ -283,6 +294,32 @@ public class DungeonEffect {
                     }
                 }.runTaskTimer(Plugin.AmonPackPlugin.plugin, 0L, 20L);
                 break;
+            case GIVE_ITEM:
+                int giveQty = amount > 0 ? amount : 1;
+                ItemStack stackToGive = null;
+                DungeonCustomItem customItem = instance.getTemplate().getCustomItems().get(itemId);
+                if (customItem != null) {
+                    stackToGive = customItem.toItemStack();
+                    stackToGive.setAmount(giveQty);
+                } else {
+                    Material matToGive = Material.getMaterial(itemId.toUpperCase());
+                    if (matToGive != null) {
+                        stackToGive = new ItemStack(matToGive, giveQty);
+                    }
+                }
+                if (stackToGive != null) {
+                    for (Player player : instance.getOnlinePlayers()) {
+                        if (!instance.isPlayerSpectator(player)) {
+                            ItemStack copy = stackToGive.clone();
+                            if (player.getInventory().getItemInMainHand().getType().isAir()) {
+                                player.getInventory().setItemInMainHand(copy);
+                            } else {
+                                player.getInventory().addItem(copy);
+                            }
+                        }
+                    }
+                }
+                break;
         }
     }
 
@@ -373,5 +410,9 @@ public class DungeonEffect {
 
     public int getInterval() {
         return interval;
+    }
+
+    public String getItemId() {
+        return itemId;
     }
 }

@@ -35,10 +35,22 @@ loot-chest:
     - DEF
     - DMG
     - SPEED
+    - P_CRIT_RATE
+    - P_CRIT_DMG
+    - M_CRIT_RATE
+    - M_CRIT_DMG
+    - REGEN
   allowed-blessings:
     - VAMPIRISM
     - DODGE
     - ADRENALINE
+    - LIFESTEAL
+    - HEAL
+    - KNOCKBACK
+    - COUNTER
+    - FLAMING
+    - POISON
+    - COMBUSTION
 
 rewards:
   dungeon-xp: 250
@@ -321,6 +333,8 @@ encounters:
         inverted: true
         test-mode: "NEAR"
         requirement: "ITEM:cien_klucz"
+        delay: 3
+        check-interval: 5
     effects:
       - type: "SEND_MESSAGE"
         message: "&d[Dungeon] &fWszedłeś do Serca Cieni. Kucaj co 15 sekund, obserwuj kryształ (0, 65, 5) wzrokiem i pokonaj bossa!"

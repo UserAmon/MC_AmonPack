@@ -378,7 +378,9 @@ public class DungeonManager implements Listener {
                                 boolean inverted = map.containsKey("inverted") ? (Boolean) map.get("inverted") : false;
                                 String testMode = (String) map.getOrDefault("test-mode", "GLOBAL");
                                 String requirement = (String) map.getOrDefault("requirement", "");
-                                platforms.add(new DungeonPlatform(px1, py1, pz1, px2, py2, pz2, mat, inverted, testMode, requirement));
+                                Integer checkInterval = map.containsKey("check-interval") ? ((Number) map.get("check-interval")).intValue() : null;
+                                Integer delay = map.containsKey("delay") ? ((Number) map.get("delay")).intValue() : null;
+                                platforms.add(new DungeonPlatform(px1, py1, pz1, px2, py2, pz2, mat, inverted, testMode, requirement, checkInterval, delay));
                             }
                         }
 
@@ -401,7 +403,9 @@ public class DungeonManager implements Listener {
                         boolean inverted = map.containsKey("inverted") ? (Boolean) map.get("inverted") : false;
                         String testMode = (String) map.getOrDefault("test-mode", "GLOBAL");
                         String requirement = (String) map.getOrDefault("requirement", "");
-                        globalPlatforms.add(new DungeonPlatform(px1, py1, pz1, px2, py2, pz2, mat, inverted, testMode, requirement));
+                        Integer checkInterval = map.containsKey("check-interval") ? ((Number) map.get("check-interval")).intValue() : null;
+                        Integer delay = map.containsKey("delay") ? ((Number) map.get("delay")).intValue() : null;
+                        globalPlatforms.add(new DungeonPlatform(px1, py1, pz1, px2, py2, pz2, mat, inverted, testMode, requirement, checkInterval, delay));
                     }
                 }
 
@@ -481,6 +485,12 @@ public class DungeonManager implements Listener {
                 );
             case FORCE_FAIL:
                 return new DungeonEffect(DungeonEffect.EffectType.FORCE_FAIL);
+            case GIVE_ITEM:
+                return new DungeonEffect(
+                    DungeonEffect.EffectType.GIVE_ITEM,
+                    (String) map.get("item"),
+                    asInt(map.getOrDefault("amount", 1))
+                );
         }
         return null;
     }
@@ -606,9 +616,53 @@ public class DungeonManager implements Listener {
             Player attacker = (Player) event.getDamager();
             DungeonPlayerStats stats = run.getPlayerStats(attacker);
             if (stats != null) {
-                double newDmg = stats.calculateOutgoingDamage(event.getDamage());
-                event.setDamage(newDmg);
+                double damage = event.getDamage();
+                damage = stats.calculateOutgoingDamage(damage);
+                
+                boolean isPhysical = event.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK 
+                    || event.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK;
+                
+                java.util.Random rnd = new java.util.Random();
+                if (isPhysical) {
+                    if (rnd.nextDouble() < stats.getPCritRate()) {
+                        damage *= stats.getPCritDmg();
+                        attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+                        if (event.getEntity() instanceof LivingEntity) {
+                            LivingEntity vic = (LivingEntity) event.getEntity();
+                            vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
+                        }
+                    }
+                    if (event.getEntity() instanceof LivingEntity) {
+                        LivingEntity vic = (LivingEntity) event.getEntity();
+                        DungeonBlessingManager.handlePoison(attacker, vic, stats);
+                    }
+                } else {
+                    if (rnd.nextDouble() < stats.getMCritRate()) {
+                        damage *= stats.getMCritDmg();
+                        attacker.playSound(attacker.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.8f);
+                        if (event.getEntity() instanceof LivingEntity) {
+                            LivingEntity vic = (LivingEntity) event.getEntity();
+                            vic.getWorld().spawnParticle(Particle.FLASH, vic.getLocation().add(0, 1.0, 0), 1, 0.0, 0.0, 0.0, 0.0);
+                            vic.getWorld().spawnParticle(Particle.ENCHANTED_HIT, vic.getLocation().add(0, 1.0, 0), 8, 0.2, 0.2, 0.2, 0.15);
+                        }
+                    }
+                }
+                
+                event.setDamage(damage);
+                
+                if (event.getEntity() instanceof LivingEntity) {
+                    LivingEntity vic = (LivingEntity) event.getEntity();
+                    DungeonBlessingManager.handleCombustion(attacker, vic, stats, event);
+                }
+                
                 DungeonBlessingManager.handleAdrenaline(attacker, event, stats);
+                
+                if (event.getEntity() instanceof LivingEntity) {
+                    LivingEntity vic = (LivingEntity) event.getEntity();
+                    DungeonBlessingManager.handleFlaming(attacker, vic, stats);
+                    DungeonBlessingManager.handleLifesteal(attacker, vic, event.getDamage(), stats);
+                    DungeonBlessingManager.handleKnockback(attacker, vic, stats);
+                }
             }
         }
 
@@ -616,6 +670,13 @@ public class DungeonManager implements Listener {
             Player victim = (Player) event.getEntity();
             DungeonPlayerStats stats = run.getPlayerStats(victim);
             if (stats != null) {
+                if (event.getDamager() instanceof LivingEntity) {
+                    LivingEntity attacker = (LivingEntity) event.getDamager();
+                    boolean countered = DungeonBlessingManager.handleCounter(victim, attacker, event.getDamage(), stats, event);
+                    if (countered) {
+                        return;
+                    }
+                }
                 double newDmg = stats.calculateIncomingDamage(event.getDamage());
                 event.setDamage(newDmg);
             }
@@ -728,9 +789,9 @@ public class DungeonManager implements Listener {
                 
                 switch (option.type) {
                     case SKILL:
-                        stats.addBoundDungeonSkill(option.value);
+                        stats.addBoundDungeonSkill(option.key);
                         if (branch != null) {
-                            branch.getTemporaryAbilities().add(option.value);
+                            branch.getTemporaryAbilities().add(option.key);
                             
                             com.projectkorra.projectkorra.Element skillElement = null;
                             org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
@@ -741,7 +802,7 @@ public class DungeonManager implements Listener {
                                         RPG.Levels.BendingTree.ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
                                         if (tree != null) {
                                             for (RPG.Levels.BendingTree.SkillTree_Ability ability : tree.getAbilities()) {
-                                                if (ability.getName().equalsIgnoreCase(option.value)) {
+                                                if (ability.getName().equalsIgnoreCase(option.key)) {
                                                     skillElement = pkEl;
                                                     break;
                                                 }
@@ -769,60 +830,56 @@ public class DungeonManager implements Listener {
                                 }
                             }
                         }
-                        player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Odblokowano ruch: " + option.value + " na czas tego dungeonu!");
+                        player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Odblokowano ruch: " + option.key + " na czas tego dungeonu!");
                         break;
                         
-                    case STAT_HP:
+                    case STAT:
                         try {
-                            double hpVal = Double.parseDouble(option.value);
-                            stats.addHpBoost(hpVal);
-                            stats.applyStatsToPlayer(player);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + hpVal + " Maksymalnego HP!");
+                            double val = Double.parseDouble(option.value);
+                            String statName = option.key.toUpperCase();
+                            if (statName.equals("HP")) {
+                                stats.addHpBoost(val);
+                                stats.applyStatsToPlayer(player);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + val + " Maksymalnego HP!");
+                            } else if (statName.equals("DEF")) {
+                                stats.addDefBoost(val);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.BLUE + "Zwiekszono statystyke: +" + val + " Obrony (DEF)!");
+                            } else if (statName.equals("DMG")) {
+                                stats.addDmgMultiplier(val);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GOLD + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Zadawanych Obrazen!");
+                            } else if (statName.equals("SPEED")) {
+                                stats.addSpeedBoost(val);
+                                stats.applyStatsToPlayer(player);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Zwiekszono statystyke: Predkosc Ruchu!");
+                            } else if (statName.equals("P_CRIT_RATE")) {
+                                stats.addPCritRate(val);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Szansy na Fizyczny Kryt!");
+                            } else if (statName.equals("P_CRIT_DMG")) {
+                                stats.addPCritDmg(val);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Mnoznika Fizycznego Kryta!");
+                            } else if (statName.equals("M_CRIT_RATE")) {
+                                stats.addMCritRate(val);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Szansy na Magiczny Kryt!");
+                            } else if (statName.equals("M_CRIT_DMG")) {
+                                stats.addMCritDmg(val);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Mnoznika Magicznego Kryta!");
+                            } else if (statName.equals("REGEN")) {
+                                stats.addRegenLevel((int) val);
+                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GREEN + "Zwiekszono statystyke: +" + (int) val + " poziomu Regeneracji!");
+                            }
                         } catch (NumberFormatException e) {
-                            stats.addHpBoost(4.0);
-                            stats.applyStatsToPlayer(player);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +4 Maksymalnego HP!");
-                        }
-                        break;
-                        
-                    case STAT_DEF:
-                        try {
-                            double defVal = Double.parseDouble(option.value);
-                            stats.addDefBoost(defVal);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.BLUE + "Zwiekszono statystyke: +" + defVal + " Obrony (DEF)!");
-                        } catch (NumberFormatException e) {
-                            stats.addDefBoost(10.0);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.BLUE + "Zwiekszono statystyke: +10 Obrony (DEF)!");
-                        }
-                        break;
-                        
-                    case STAT_DMG:
-                        try {
-                            double dmgVal = Double.parseDouble(option.value);
-                            stats.addDmgMultiplier(dmgVal);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GOLD + "Zwiekszono statystyke: +" + (int)(dmgVal * 100) + "% Zadawanych Obrazen!");
-                        } catch (NumberFormatException e) {
-                            stats.addDmgMultiplier(0.15);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GOLD + "Zwiekszono statystyke: +15% Zadawanych Obrazen!");
-                        }
-                        break;
-                        
-                    case STAT_SPEED:
-                        try {
-                            double speedVal = Double.parseDouble(option.value);
-                            stats.addSpeedBoost(speedVal);
-                            stats.applyStatsToPlayer(player);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Zwiekszono statystyke: Predkosc Ruchu!");
-                        } catch (NumberFormatException e) {
-                            stats.addSpeedBoost(0.02);
-                            stats.applyStatsToPlayer(player);
-                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Zwiekszono statystyke: +10% Predkosci Ruchu!");
                         }
                         break;
                         
                     case BLESSING:
-                        stats.addActiveBlessing(option.value);
-                        player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Zdobyles Blogoslawienstwo: " + option.value + "!");
+                        if (!stats.hasBlessing(option.key)) {
+                            stats.addActiveBlessing(option.key);
+                            stats.upgradeBlessing(option.key);
+                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Zdobyles Blogoslawienstwo: " + option.key + " (Poziom 1)!");
+                        } else {
+                            stats.upgradeBlessing(option.key);
+                            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Ulepszyles Blogoslawienstwo: " + option.key + " do poziomu " + stats.getBlessingLevel(option.key) + "!");
+                        }
                         break;
                 }
                 
@@ -970,5 +1027,38 @@ public class DungeonManager implements Listener {
                 ticks++;
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onPlayerRegen(org.bukkit.event.entity.EntityRegainHealthEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            DungeonInstance run = activeInstances.get(player.getWorld());
+            if (run != null) {
+                org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason reason = event.getRegainReason();
+                if (reason == org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.SATIATED 
+                    || reason == org.bukkit.event.entity.EntityRegainHealthEvent.RegainReason.REGEN) {
+                    event.setCancelled(true);
+                    return;
+                }
+                DungeonPlayerStats stats = run.getPlayerStats(player);
+                if (stats != null) {
+                    DungeonBlessingManager.handleHeal(player, event, stats);
+                }
+            }
+        }
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onEntityCombustByEntity(org.bukkit.event.entity.EntityCombustByEntityEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            DungeonInstance run = activeInstances.get(player.getWorld());
+            if (run != null) {
+                if (event.getCombuster() != null && !(event.getCombuster() instanceof Player)) {
+                    event.setCancelled(true);
+                }
+            }
+        }
     }
 }

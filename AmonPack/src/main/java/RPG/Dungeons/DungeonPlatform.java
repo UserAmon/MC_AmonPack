@@ -9,8 +9,10 @@ public class DungeonPlatform {
     private final boolean inverted;
     private final String testMode;
     private final String requirement;
+    private final Integer checkInterval;
+    private final Integer delay;
 
-    public DungeonPlatform(double x1, double y1, double z1, double x2, double y2, double z2, Material material, boolean inverted, String testMode, String requirement) {
+    public DungeonPlatform(double x1, double y1, double z1, double x2, double y2, double z2, Material material, boolean inverted, String testMode, String requirement, Integer checkInterval, Integer delay) {
         this.x1 = x1;
         this.y1 = y1;
         this.z1 = z1;
@@ -21,6 +23,8 @@ public class DungeonPlatform {
         this.inverted = inverted;
         this.testMode = testMode != null ? testMode : "GLOBAL";
         this.requirement = requirement != null ? requirement : "";
+        this.checkInterval = checkInterval;
+        this.delay = delay;
     }
 
     public double getX1() {
@@ -61,5 +65,13 @@ public class DungeonPlatform {
 
     public String getRequirement() {
         return requirement;
+    }
+
+    public Integer getCheckInterval() {
+        return checkInterval;
+    }
+
+    public Integer getDelay() {
+        return delay;
     }
 }

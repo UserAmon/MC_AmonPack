@@ -55,6 +55,10 @@ public class DungeonInstance {
     private final Map<DungeonCondition, Integer> lookingTimerMap = new HashMap<>();
     private final Map<DungeonCondition, Boolean> aliveStateMap = new HashMap<>();
     private final Map<DungeonPlatform, Boolean> activePlatformsState = new HashMap<>();
+    private int regenTickTimer = 0;
+    private final Map<DungeonPlatform, Integer> platformCheckTimers = new HashMap<>();
+    private final Map<DungeonPlatform, Integer> platformDelayTimers = new HashMap<>();
+    private final Map<DungeonPlatform, Boolean> platformTargetStates = new HashMap<>();
     private final Map<UUID, Location> playerLastLocations = new HashMap<>();
 
 
@@ -125,6 +129,23 @@ public class DungeonInstance {
     public void update() {
         if (isFinished)
             return;
+
+        regenTickTimer++;
+        if (regenTickTimer >= 10) {
+            regenTickTimer = 0;
+            for (Player p : getOnlinePlayers()) {
+                if (!isPlayerSpectator(p)) {
+                    DungeonPlayerStats stats = getPlayerStats(p);
+                    if (stats != null && stats.getRegenLevel() > 0) {
+                        double maxHP = p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                        double curHP = p.getHealth();
+                        double heal = maxHP * (0.10 * stats.getRegenLevel());
+                        p.setHealth(Math.min(maxHP, curHP + heal));
+                        p.getWorld().spawnParticle(Particle.HEART, p.getLocation().add(0, 1.5, 0), 2, 0.2, 0.2, 0.2, 0.0);
+                    }
+                }
+            }
+        }
 
         List<Player> online = getOnlinePlayers();
         if (online.isEmpty()) {
@@ -330,23 +351,11 @@ public class DungeonInstance {
             }
 
             for (DungeonPlatform platform : template.getPlatforms()) {
-                boolean met = checkPlatformRequirement(platform);
-                boolean shouldExist = met ^ platform.isInverted();
-                Boolean currentState = activePlatformsState.get(platform);
-                if (currentState == null || currentState != shouldExist) {
-                    activePlatformsState.put(platform, shouldExist);
-                    updatePlatformBlocksInWorld(platform, shouldExist, true);
-                }
+                tickPlatform(platform);
             }
 
             for (DungeonPlatform platform : encounter.getPlatforms()) {
-                boolean met = checkPlatformRequirement(platform);
-                boolean shouldExist = met ^ platform.isInverted();
-                Boolean currentState = activePlatformsState.get(platform);
-                if (currentState == null || currentState != shouldExist) {
-                    activePlatformsState.put(platform, shouldExist);
-                    updatePlatformBlocksInWorld(platform, shouldExist, true);
-                }
+                tickPlatform(platform);
             }
 
             for (Player p : getOnlinePlayers()) {
@@ -786,6 +795,59 @@ public class DungeonInstance {
         return true;
     }
 
+    private void tickPlatform(DungeonPlatform platform) {
+        Integer interval = platform.getCheckInterval();
+        boolean shouldEvaluate = true;
+        if (interval != null && interval > 0) {
+            int ticks = platformCheckTimers.getOrDefault(platform, 0) + 1;
+            if (ticks < interval) {
+                platformCheckTimers.put(platform, ticks);
+                shouldEvaluate = false;
+            } else {
+                platformCheckTimers.put(platform, 0);
+            }
+        }
+        Boolean currentActualState = activePlatformsState.get(platform);
+        if (currentActualState == null) {
+            currentActualState = !platform.isInverted();
+            activePlatformsState.put(platform, currentActualState);
+        }
+        Boolean lastTarget = platformTargetStates.get(platform);
+        boolean targetShouldExist = lastTarget != null ? lastTarget : currentActualState;
+        if (shouldEvaluate) {
+            boolean met = checkPlatformRequirement(platform);
+            targetShouldExist = met ^ platform.isInverted();
+        }
+        Integer delay = platform.getDelay();
+        if (delay != null && delay > 0) {
+            if (currentActualState == targetShouldExist) {
+                platformDelayTimers.remove(platform);
+                platformTargetStates.remove(platform);
+            } else {
+                Boolean pendingTarget = platformTargetStates.get(platform);
+                if (pendingTarget == null || pendingTarget != targetShouldExist) {
+                    platformDelayTimers.put(platform, delay);
+                    platformTargetStates.put(platform, targetShouldExist);
+                } else {
+                    int secondsLeft = platformDelayTimers.get(platform) - 1;
+                    if (secondsLeft <= 0) {
+                        activePlatformsState.put(platform, targetShouldExist);
+                        updatePlatformBlocksInWorld(platform, targetShouldExist, true);
+                        platformDelayTimers.remove(platform);
+                        platformTargetStates.remove(platform);
+                    } else {
+                        platformDelayTimers.put(platform, secondsLeft);
+                    }
+                }
+            }
+        } else {
+            if (currentActualState != targetShouldExist) {
+                activePlatformsState.put(platform, targetShouldExist);
+                updatePlatformBlocksInWorld(platform, targetShouldExist, true);
+            }
+        }
+    }
+
     private boolean isNearPlatform(Location loc, DungeonPlatform platform) {
         double minX = Math.min(platform.getX1(), platform.getX2()) - 1.5;
         double maxX = Math.max(platform.getX1(), platform.getX2()) + 1.5;
@@ -1062,6 +1124,9 @@ public class DungeonInstance {
 
             if (ready) {
                 broadcast(ChatColor.GREEN + player.getName() + " jest gotowy!");
+                double maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                player.setHealth(maxHealth);
+                player.setFoodLevel(20);
             } else {
                 broadcast(ChatColor.RED + player.getName() + " nie jest gotowy.");
             }

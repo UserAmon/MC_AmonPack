@@ -18,6 +18,13 @@ public class DungeonPlayerStats {
     private double dmgMultiplier = 1.0; // Damage multiplier (default 1.0 = 100%)
     private double speedBoost = 0;   // Added to default speed (standard walk speed is 0.2)
 
+    private double pCritRate = 0.05;
+    private double pCritDmg = 1.5;
+    private double mCritRate = 0.05;
+    private double mCritDmg = 1.5;
+    private int regenLevel = 0;
+    private final java.util.Map<String, Integer> blessingLevels = new java.util.HashMap<>();
+
     // Unlocked and bound dungeon abilities for this run
     private final List<String> boundDungeonSkills = new ArrayList<>();
     private final List<String> activeBlessings = new ArrayList<>();
@@ -156,5 +163,54 @@ public class DungeonPlayerStats {
 
     public boolean hasBlessing(String blessing) {
         return activeBlessings.contains(blessing);
+    }
+
+    public double getPCritRate() {
+        return pCritRate;
+    }
+
+    public void addPCritRate(double amount) {
+        this.pCritRate += amount;
+    }
+
+    public double getPCritDmg() {
+        return pCritDmg;
+    }
+
+    public void addPCritDmg(double amount) {
+        this.pCritDmg += amount;
+    }
+
+    public double getMCritRate() {
+        return mCritRate;
+    }
+
+    public void addMCritRate(double amount) {
+        this.mCritRate += amount;
+    }
+
+    public double getMCritDmg() {
+        return mCritDmg;
+    }
+
+    public void addMCritDmg(double amount) {
+        this.mCritDmg += amount;
+    }
+
+    public int getRegenLevel() {
+        return regenLevel;
+    }
+
+    public void addRegenLevel(int amount) {
+        this.regenLevel += amount;
+    }
+
+    public int getBlessingLevel(String blessing) {
+        return blessingLevels.getOrDefault(blessing.toUpperCase(), 0);
+    }
+
+    public void upgradeBlessing(String blessing) {
+        String key = blessing.toUpperCase();
+        blessingLevels.put(key, getBlessingLevel(key) + 1);
     }
 }

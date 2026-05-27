@@ -16,41 +16,36 @@ public class DungeonBlessingManager {
 
     private static final Random random = new Random();
 
-    /**
-     * Handles the VAMPIRISM blessing: heals the killer if the killed entity was on fire.
-     */
     public static void handleVampirism(Player killer, LivingEntity victim, DungeonPlayerStats stats) {
-        if (stats == null || !stats.hasBlessing("VAMPIRISM")) return;
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("VAMPIRISM");
+        if (lvl <= 0) return;
 
-        // Check if victim was on fire
         if (victim.getFireTicks() > 0) {
-            double maxHealth = killer.getAttribute(Attribute.MAX_HEALTH).getValue();
-            double currentHealth = killer.getHealth();
-            double newHealth = Math.min(maxHealth, currentHealth + 4.0); // Heal 2 hearts (4 HP)
-            
-            killer.setHealth(newHealth);
-            
-            // Visual and audio effects
-            killer.getWorld().spawnParticle(Particle.HEART, killer.getLocation().add(0, 1.5, 0), 5, 0.3, 0.3, 0.3, 0.1);
-            killer.getWorld().spawnParticle(Particle.FLAME, killer.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0.05);
-            killer.playSound(killer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
-            killer.sendMessage(ChatColor.DARK_RED + "[Wampiryzm] " + ChatColor.RED + "+4 HP za zgładzenie płonącego wroga!");
+            if (random.nextInt(100) < (5 * lvl)) {
+                double maxHealth = killer.getAttribute(Attribute.MAX_HEALTH).getValue();
+                double currentHealth = killer.getHealth();
+                double newHealth = Math.min(maxHealth, currentHealth + 4.0);
+                
+                killer.setHealth(newHealth);
+                
+                killer.getWorld().spawnParticle(Particle.HEART, killer.getLocation().add(0, 1.5, 0), 5, 0.3, 0.3, 0.3, 0.1);
+                killer.getWorld().spawnParticle(Particle.FLAME, killer.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0.05);
+                killer.playSound(killer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
+                killer.sendMessage(ChatColor.DARK_RED + "[Wampiryzm] " + ChatColor.RED + "+4 HP za zgładzenie płonącego wroga!");
+            }
         }
     }
 
-    /**
-     * Handles the DODGE blessing: 10% chance to dodge all incoming damage.
-     * Returns true if the damage was dodged (and thus event should be modified/cancelled).
-     */
     public static boolean handleDodge(Player player, EntityDamageEvent event, DungeonPlayerStats stats) {
-        if (stats == null || !stats.hasBlessing("DODGE")) return false;
+        if (stats == null) return false;
+        int lvl = stats.getBlessingLevel("DODGE");
+        if (lvl <= 0) return false;
 
-        // 10% chance
-        if (random.nextInt(100) < 10) {
+        if (random.nextInt(100) < (5 * lvl)) {
             event.setDamage(0);
             event.setCancelled(true);
             
-            // Visual and audio effects
             player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, player.getLocation().add(0, 1, 0), 3, 0.1, 0.1, 0.1, 0.0);
             player.playSound(player.getLocation(), Sound.ENTITY_BAT_LOOP, 1.0f, 2.0f);
             player.sendMessage(ChatColor.GREEN + "[Unik!] Uniknąłeś ciosu cieni!");
@@ -59,24 +54,112 @@ public class DungeonBlessingManager {
         return false;
     }
 
-    /**
-     * Handles the ADRENALINE blessing: +35% damage when health is below 20%.
-     */
     public static void handleAdrenaline(Player player, EntityDamageByEntityEvent event, DungeonPlayerStats stats) {
-        if (stats == null || !stats.hasBlessing("ADRENALINE")) return;
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("ADRENALINE");
+        if (lvl <= 0) return;
 
         double maxHealth = player.getAttribute(Attribute.MAX_HEALTH).getValue();
         double currentHealth = player.getHealth();
 
-        // Check if below 20% health
         if (currentHealth < (maxHealth * 0.20)) {
-            double originalDamage = event.getDamage();
-            double newDamage = originalDamage * 1.35; // +35% boost
-            event.setDamage(newDamage);
-            
-            // Visual and audio effects
-            player.getWorld().spawnParticle(Particle.CRIT, event.getEntity().getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.2);
-            player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.8f);
+            if (random.nextInt(100) < (5 * lvl)) {
+                double originalDamage = event.getDamage();
+                double newDamage = originalDamage * 1.50;
+                event.setDamage(newDamage);
+                
+                player.getWorld().spawnParticle(Particle.CRIT, event.getEntity().getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.2);
+                player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.8f);
+            }
+        }
+    }
+
+    public static void handleLifesteal(Player attacker, LivingEntity victim, double damage, DungeonPlayerStats stats) {
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("LIFESTEAL");
+        if (lvl <= 0) return;
+        if (random.nextInt(100) < (5 * lvl)) {
+            double maxHealth = attacker.getAttribute(Attribute.MAX_HEALTH).getValue();
+            double healAmount = damage * 0.20;
+            attacker.setHealth(Math.min(maxHealth, attacker.getHealth() + healAmount));
+            attacker.getWorld().spawnParticle(Particle.HEART, attacker.getLocation().add(0, 1.5, 0), 3, 0.2, 0.2, 0.2, 0.0);
+            attacker.playSound(attacker.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.2f);
+        }
+    }
+
+    public static void handleHeal(Player player, org.bukkit.event.entity.EntityRegainHealthEvent event, DungeonPlayerStats stats) {
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("HEAL");
+        if (lvl <= 0) return;
+        if (random.nextInt(100) < (5 * lvl)) {
+            double extra = event.getAmount() * 0.50;
+            event.setAmount(event.getAmount() + extra);
+            player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1.0, 0), 5, 0.3, 0.3, 0.3, 0.05);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.8f);
+        }
+    }
+
+    public static void handleKnockback(Player attacker, LivingEntity victim, DungeonPlayerStats stats) {
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("KNOCKBACK");
+        if (lvl <= 0) return;
+        if (random.nextInt(100) < (5 * lvl)) {
+            org.bukkit.util.Vector dir = victim.getLocation().toVector().subtract(attacker.getLocation().toVector());
+            if (dir.lengthSquared() > 0) {
+                dir.normalize();
+            } else {
+                dir = new org.bukkit.util.Vector(0, 0, 1);
+            }
+            dir.setY(0.35);
+            victim.setVelocity(dir.multiply(1.2));
+            victim.getWorld().spawnParticle(Particle.CLOUD, victim.getLocation().add(0, 1.0, 0), 5, 0.2, 0.2, 0.2, 0.05);
+            attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
+        }
+    }
+
+    public static boolean handleCounter(Player player, LivingEntity attacker, double damage, DungeonPlayerStats stats, EntityDamageByEntityEvent event) {
+        if (stats == null) return false;
+        int lvl = stats.getBlessingLevel("COUNTER");
+        if (lvl <= 0) return false;
+        if (random.nextInt(100) < (5 * lvl)) {
+            event.setDamage(0);
+            event.setCancelled(true);
+            attacker.damage(damage, player);
+            player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, player.getLocation().add(0, 1.0, 0), 3, 0.1, 0.1, 0.1, 0.0);
+            player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 1.2f);
+            return true;
+        }
+        return false;
+    }
+
+    public static void handleFlaming(Player attacker, LivingEntity victim, DungeonPlayerStats stats) {
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("FLAMING");
+        if (lvl <= 0) return;
+        if (random.nextInt(100) < (5 * lvl)) {
+            victim.setFireTicks(80 * lvl);
+            victim.getWorld().spawnParticle(Particle.FLAME, victim.getLocation().add(0, 1.0, 0), 8, 0.2, 0.2, 0.2, 0.05);
+            attacker.playSound(attacker.getLocation(), Sound.ITEM_FIRECHARGE_USE, 0.8f, 1.2f);
+        }
+    }
+
+    public static void handlePoison(Player attacker, LivingEntity victim, DungeonPlayerStats stats) {
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("POISON");
+        if (lvl <= 0) return;
+        if (random.nextInt(100) < (5 * lvl)) {
+            victim.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.POISON, 80, 0));
+        }
+    }
+
+    public static void handleCombustion(Player attacker, LivingEntity victim, DungeonPlayerStats stats, EntityDamageByEntityEvent event) {
+        if (stats == null) return;
+        int lvl = stats.getBlessingLevel("COMBUSTION");
+        if (lvl <= 0) return;
+        if (victim.getFireTicks() > 0) {
+            if (random.nextInt(100) < (5 * lvl)) {
+                event.setDamage(event.getDamage() * 1.25);
+            }
         }
     }
 }
