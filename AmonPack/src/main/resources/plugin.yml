@@ -32,3 +32,6 @@ commands:
   p:
     usage: /<command>
     description: "Wbudowany czat druzyny"
+  dungbuild:
+    usage: /<command>
+    description: "Poczatkowe ulepszenia lochow"

@@ -27,6 +27,7 @@ public class DungeonPlayerStats {
     private double earthMaceDurability = 5.0;
     private double windSickleDurability = 5.0;
     private double waterStaffDurability = 99.0;
+    private double maiDaggersDurability = 0.0;
 
     private final List<String> boundDungeonSkills = new ArrayList<>();
     private final List<String> activeBlessings = new ArrayList<>();
@@ -250,11 +251,16 @@ public class DungeonPlayerStats {
         blessingLevels.put(key, getBlessingLevel(key) + 1);
     }
 
+    public void setBlessingLevel(String blessing, int level) {
+        blessingLevels.put(blessing.toUpperCase(), level);
+    }
+
     public double getWeaponDurability(String key) {
         String upper = key.toUpperCase();
         if ("EARTH_MACE".equals(upper)) return earthMaceDurability;
         if ("WIND_SICKLE".equals(upper)) return windSickleDurability;
         if ("WATER_STAFF".equals(upper)) return waterStaffDurability;
+        if ("MAI_DAGGERS".equals(upper)) return maiDaggersDurability;
         return 0;
     }
 
@@ -264,6 +270,7 @@ public class DungeonPlayerStats {
         if ("EARTH_MACE".equals(upper)) earthMaceDurability = clamped;
         if ("WIND_SICKLE".equals(upper)) windSickleDurability = clamped;
         if ("WATER_STAFF".equals(upper)) waterStaffDurability = clamped;
+        if ("MAI_DAGGERS".equals(upper)) maiDaggersDurability = clamped;
     }
 
     public boolean hasWeaponInInventory(Player player, String key) {

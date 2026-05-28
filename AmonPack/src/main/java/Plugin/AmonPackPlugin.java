@@ -174,16 +174,16 @@ public class AmonPackPlugin extends JavaPlugin {
 		this.getCommand("party").setExecutor(cmdExecutor);
 		this.getCommand("party").setTabCompleter(cmdExecutor);
 		this.getCommand("p").setExecutor(new Commands());
+		this.getCommand("dungbuild").setExecutor(cmdExecutor);
 		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
 		this.getServer().getPluginManager().registerEvents(bountiesMenager, this);
-		// new newPvP();
+		this.getServer().getPluginManager().registerEvents(new RPG.Dungeons.DungBuildManager(), this);
+		RPG.Dungeons.DungBuildManager.init();
 		try {
 			StartDeafnessTimer();
 			PlayerMenager = new PlayerLevelMenager();
 			PlayerMenager.CreateInventories();
-			// new ForestMenager();
-			// MenaMenager = new MenagerieMenager();
 			new UpgradesMenager();
 			new RPG.Dungeons.DungeonManager();
 			this.getServer().getPluginManager().registerEvents(RPG.Dungeons.DungeonManager.getInstance(), this);

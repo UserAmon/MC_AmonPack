@@ -285,7 +285,7 @@ encounters:
         amount: 2
         level: 1
         x: 22
-        y: 6
+        y: 60
         z: 4
         range: 2
         interval: 10

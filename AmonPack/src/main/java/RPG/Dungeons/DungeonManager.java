@@ -42,6 +42,8 @@ public class DungeonManager implements Listener {
     private static DungeonManager instance;
     private final Map<String, Dungeon> templates = new HashMap<>();
     private final Map<World, DungeonInstance> activeInstances = new HashMap<>();
+    private final Map<UUID, Long> dungeonConsumableChargingPlayers = new HashMap<>();
+    private final Map<UUID, Integer> dungeonConsumableChargingTasks = new HashMap<>();
 
     public Map<String, Dungeon> getTemplates() {
         return templates;
@@ -160,7 +162,30 @@ public class DungeonManager implements Listener {
                                 itype = config.getString(ipath + ".typ");
                             }
                             int modelId = config.getInt(ipath + ".custom-model-id", 0);
-                            customItems.put(key, new DungeonCustomItem(key, mat, nameStr, lore, itype, modelId));
+                            DungeonCustomItem customItem = new DungeonCustomItem(key, mat, nameStr, lore, itype, modelId);
+                            if (itype.equalsIgnoreCase("consumable") || itype.equalsIgnoreCase("consumables")) {
+                                String mode = config.getString(ipath + ".use-mode", "PPM");
+                                if (config.contains(ipath + ".tryb-uzycia")) {
+                                    mode = config.getString(ipath + ".tryb-uzycia");
+                                }
+                                String effType = config.getString(ipath + ".effect", "");
+                                if (config.contains(ipath + ".efekt")) {
+                                    effType = config.getString(ipath + ".efekt");
+                                }
+                                int dur = config.getInt(ipath + ".duration", 0);
+                                if (config.contains(ipath + ".czas-trwania")) {
+                                    dur = config.getInt(ipath + ".czas-trwania");
+                                }
+                                double val = config.getDouble(ipath + ".value", 0.0);
+                                if (config.contains(ipath + ".wartosc")) {
+                                    val = config.getDouble(ipath + ".wartosc");
+                                }
+                                customItem.setUseMode(mode);
+                                customItem.setEffectType(effType);
+                                customItem.setDuration(dur);
+                                customItem.setEffectValue(val);
+                            }
+                            customItems.put(key, customItem);
                         }
                     }
                 }
@@ -286,6 +311,27 @@ public class DungeonManager implements Listener {
                                             cond.setRadius(asDouble(map.getOrDefault("radius", 20.0)));
                                             cond.setMobName((String) map.get("mob-name"));
                                             cond.setAmount(asInt(map.getOrDefault("amount", 1)));
+                                            break;
+                                        case COLLECT_POINTS:
+                                            cond = new DungeonCondition(DungeonCondition.ConditionType.COLLECT_POINTS);
+                                            cond.setRadius(asDouble(map.getOrDefault("radius", 3.0)));
+                                            cond.setTimeRequired(asInt(map.getOrDefault("time", 60)));
+                                            List<Location> pts = new ArrayList<>();
+                                            List<?> rawPoints = (List<?>) map.get("points");
+                                            if (rawPoints != null) {
+                                                for (Object pObj : rawPoints) {
+                                                    if (pObj instanceof String) {
+                                                        String[] parts = ((String) pObj).split(",");
+                                                        if (parts.length >= 3) {
+                                                            double px = Double.parseDouble(parts[0].trim());
+                                                            double py = Double.parseDouble(parts[1].trim());
+                                                            double pz = Double.parseDouble(parts[2].trim());
+                                                            pts.add(new Location(null, px, py, pz));
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            cond.setPoints(pts);
                                             break;
                                     }
                                     if (cond != null) {
@@ -460,9 +506,12 @@ public class DungeonManager implements Listener {
             case GIVE_READY_COMPASS:
                 return new DungeonEffect(DungeonEffect.EffectType.GIVE_READY_COMPASS);
             case SPAWN_CHEST:
-                return new DungeonEffect(
+                DungeonEffect eff = new DungeonEffect(
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), (String) map.getOrDefault("chest-type", "ROGUELITE_CHEST")
                 );
+                eff.setBlessingType((String) map.getOrDefault("blessing_type", "Chest_General"));
+                eff.setSlotsCount(asInt(map.getOrDefault("slots", 3)));
+                return eff;
             case COMPLETE_DUNGEON:
                 return new DungeonEffect(DungeonEffect.EffectType.COMPLETE_DUNGEON);
             case SPAWN_UNTIL:
@@ -548,6 +597,30 @@ public class DungeonManager implements Listener {
 
         DungeonInstance run = activeInstances.get(world);
         if (run == null) return;
+
+        if (run.isEnemyMarked(victim.getUniqueId())) {
+            Player marker = run.getMarkerPlayer(victim.getUniqueId());
+            if (marker != null && marker.isOnline()) {
+                double maxHP = marker.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                double curHP = marker.getHealth();
+                marker.setHealth(Math.min(maxHP, curHP + 4.0));
+                marker.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY, 20, 0));
+                marker.playSound(marker.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.2f);
+                marker.getWorld().spawnParticle(org.bukkit.Particle.HEART, marker.getLocation().add(0, 1.5, 0), 3, 0.2, 0.2, 0.2, 0.0);
+
+                if (run.isWaterMarked(victim.getUniqueId())) {
+                    for (Player other : run.getOnlinePlayers()) {
+                        if (!run.isPlayerSpectator(other)) {
+                            double oMax = other.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                            double oCur = other.getHealth();
+                            other.setHealth(Math.min(oMax, oCur + 4.0));
+                            other.playSound(other.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.2f);
+                            other.getWorld().spawnParticle(org.bukkit.Particle.HEART, other.getLocation().add(0, 1.5, 0), 3, 0.2, 0.2, 0.2, 0.0);
+                        }
+                    }
+                }
+            }
+        }
 
         event.getDrops().clear();
         event.setDroppedExp(0);
@@ -669,7 +742,8 @@ public class DungeonManager implements Listener {
                 
                 boolean isBow = false;
                 boolean isGlove = false;
-                boolean isDaggers = false;
+                boolean isBlueSpirit = false;
+                boolean isMaiDaggers = false;
                 boolean isEarthMace = false;
                 boolean isWindSickle = false;
                 boolean isWaterStaff = false;
@@ -685,8 +759,10 @@ public class DungeonManager implements Listener {
                         );
                         if ("AMON_GLOVE".equals(tag)) {
                             isGlove = true;
+                        } else if ("BLUE_SPIRIT_SWORDS".equals(tag)) {
+                            isBlueSpirit = true;
                         } else if ("MAI_DAGGERS".equals(tag)) {
-                            isDaggers = true;
+                            isMaiDaggers = true;
                         } else if ("EARTH_MACE".equals(tag)) {
                             isEarthMace = true;
                         } else if ("WIND_SICKLE".equals(tag)) {
@@ -802,15 +878,15 @@ public class DungeonManager implements Listener {
                             triggerAmonChainLightning(attacker, vic, baseGloveDmg * 1.0, amonLvl >= 3);
                         }
                     }
-                } else if (isDaggers) {
+                } else if (isBlueSpirit) {
                     double baseDaggerDmg = 2.0;
-                    if (cfg != null) baseDaggerDmg = cfg.getDouble("blessings.MAI_DAGGERS.base-damage", 2.0);
+                    if (cfg != null) baseDaggerDmg = cfg.getDouble("blessings.BLUE_SPIRIT_SWORDS.base-damage", 2.0);
 
                     damage = baseDaggerDmg;
 
                     if (event.getEntity() instanceof LivingEntity) {
                         LivingEntity vic = (LivingEntity) event.getEntity();
-                        int maiLvl = stats.getBlessingLevel("MAI_DAGGERS");
+                        int maiLvl = stats.getBlessingLevel("BLUE_SPIRIT_SWORDS");
 
                         UUID lastTarget = stats.getLastMaiHitTarget();
                         UUID curTarget = vic.getUniqueId();
@@ -856,6 +932,14 @@ public class DungeonManager implements Listener {
                             }
                         }
                     }
+                } else if (isMaiDaggers) {
+                    double baseDaggerDmg = 1.0;
+                    if (cfg != null) baseDaggerDmg = cfg.getDouble("blessings.MAI_DAGGERS.base-damage", 1.0);
+
+                    damage = baseDaggerDmg;
+
+                    double curDur = stats.getWeaponDurability("MAI_DAGGERS");
+                    stats.setWeaponDurability("MAI_DAGGERS", curDur + 33.0);
                 } else if (isEarthMace) {
                     double earthBase = 3.0;
                     if (cfg != null) earthBase = cfg.getDouble("blessings.EARTH_MACE.base-damage", 3.0);
@@ -996,7 +1080,7 @@ public class DungeonManager implements Listener {
                             vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
                         }
                     }
-                } else if (isDaggers) {
+                } else if (isBlueSpirit) {
                     if (landsCrit) {
                         damage *= critMultiplier;
                         attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
@@ -1005,7 +1089,7 @@ public class DungeonManager implements Listener {
                             vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
                         }
                     }
-                } else if (isEarthMace || isWindSickle || isWaterStaff) {
+                } else if (isEarthMace || isWindSickle || isWaterStaff || isMaiDaggers) {
                     if (rnd.nextDouble() < stats.getPCritRate()) {
                         damage *= stats.getPCritDmg();
                         attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
@@ -1123,6 +1207,25 @@ public class DungeonManager implements Listener {
                         }
                     }
                 }
+
+                int maiLvl = stats.getBlessingLevel("MAI_DAGGERS");
+                if (maiLvl > 0) {
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    if (meta != null) {
+                        org.bukkit.persistence.PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                        org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
+                        if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING) && "MAI_DAGGERS".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                            double dur = stats.getWeaponDurability("MAI_DAGGERS");
+                            if (dur >= 100.0) {
+                                event.setCancelled(true);
+                                stats.setWeaponDurability("MAI_DAGGERS", 0.0);
+                                run.updateVisualDurability(item, 0.0);
+                                triggerMaiDaggersThrow(player, stats, maiLvl, run);
+                                return;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -1130,6 +1233,26 @@ public class DungeonManager implements Listener {
             DungeonPlayerStats stats = run.getPlayerStats(player);
             if (stats != null && stats.getBlessingLevel("POUHAI_BOW") > 0) {
                 stats.setPouhaiBowPullStartTime(System.currentTimeMillis());
+                org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    org.bukkit.persistence.PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                    org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
+                    if (pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING) && "POUHAI_BOW".equals(pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING))) {
+                        if (!player.getInventory().contains(Material.ARROW)) {
+                            ItemStack virtualArrow = new ItemStack(Material.ARROW, 1);
+                            org.bukkit.inventory.meta.ItemMeta arrowMeta = virtualArrow.getItemMeta();
+                            if (arrowMeta != null) {
+                                arrowMeta.setDisplayName(ChatColor.GRAY + "Virtual Arrow");
+                                org.bukkit.persistence.PersistentDataContainer arrowPdc = arrowMeta.getPersistentDataContainer();
+                                org.bukkit.NamespacedKey vKey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_virtual_arrow");
+                                arrowPdc.set(vKey, org.bukkit.persistence.PersistentDataType.STRING, "true");
+                                virtualArrow.setItemMeta(arrowMeta);
+                            }
+                            player.getInventory().addItem(virtualArrow);
+                            player.updateInventory();
+                        }
+                    }
+                }
             }
         }
 
@@ -1150,6 +1273,19 @@ public class DungeonManager implements Listener {
                             player.getInventory().setItemInMainHand(null);
                         }
                         throwProjectile(player, customItem, run);
+                        return;
+                    }
+                    if (customItem != null && ("consumable".equalsIgnoreCase(customItem.getType()) || "consumables".equalsIgnoreCase(customItem.getType()))) {
+                        event.setCancelled(true);
+                        if ("PPM".equalsIgnoreCase(customItem.getUseMode())) {
+                            int newAmt = item.getAmount() - 1;
+                            if (newAmt > 0) {
+                                item.setAmount(newAmt);
+                            } else {
+                                player.getInventory().setItemInMainHand(null);
+                            }
+                            applyConsumableEffect(player, customItem, run);
+                        }
                         return;
                     }
                 }
@@ -1213,6 +1349,20 @@ public class DungeonManager implements Listener {
         DungeonInstance run = activeInstances.get(player.getWorld());
         if (run == null) return;
 
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem != null && clickedItem.getType() == Material.ARROW && clickedItem.hasItemMeta()) {
+            org.bukkit.persistence.PersistentDataContainer pdc = clickedItem.getItemMeta().getPersistentDataContainer();
+            org.bukkit.NamespacedKey vKey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_virtual_arrow");
+            if (pdc.has(vKey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                event.setCancelled(true);
+                event.getWhoClicked().getInventory().remove(clickedItem);
+                if (event.getWhoClicked() instanceof Player) {
+                    ((Player) event.getWhoClicked()).updateInventory();
+                }
+                return;
+            }
+        }
+
         if (event.getSlot() == 40 || event.getRawSlot() == 45) {
             ItemStack off = player.getInventory().getItemInOffHand();
             if (off != null && off.hasItemMeta()) {
@@ -1220,7 +1370,7 @@ public class DungeonManager implements Listener {
                     new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
                     PersistentDataType.STRING
                 );
-                if ("MAI_DAGGERS_OFFHAND".equals(tag) || "WIND_SICKLE_OFFHAND".equals(tag)) {
+                if ("BLUE_SPIRIT_SWORDS_OFFHAND".equals(tag) || "MAI_DAGGERS_OFFHAND".equals(tag) || "WIND_SICKLE_OFFHAND".equals(tag)) {
                     event.setCancelled(true);
                     return;
                 }
@@ -1228,7 +1378,8 @@ public class DungeonManager implements Listener {
         }
 
         org.bukkit.Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
-            checkAndSwapMaiDaggers(player, player.getInventory().getItemInMainHand());
+            checkAndSwapBlueSpiritSwords(player, player.getInventory().getItemInMainHand());
+            checkAndSwapNewMaiDaggers(player, player.getInventory().getItemInMainHand());
         });
 
         if (event.getInventory().getHolder() instanceof DungeonLootChest) {
@@ -1335,7 +1486,7 @@ public class DungeonManager implements Listener {
                                 }
                             }
                         }
-                        if (option.key.equals("POUHAI_BOW") || option.key.equals("AMON_GLOVE") || option.key.equals("MAI_DAGGERS") || option.key.equals("EARTH_MACE") || option.key.equals("WIND_SICKLE") || option.key.equals("WATER_STAFF")) {
+                        if (option.key.equals("POUHAI_BOW") || option.key.equals("AMON_GLOVE") || option.key.equals("MAI_DAGGERS") || option.key.equals("BLUE_SPIRIT_SWORDS") || option.key.equals("EARTH_MACE") || option.key.equals("WIND_SICKLE") || option.key.equals("WATER_STAFF")) {
                             giveOrUpdateLegendaryWeapon(player, stats, option.key);
                         }
                         break;
@@ -1550,7 +1701,7 @@ public class DungeonManager implements Listener {
         }
     }
 
-    private void giveOrUpdateLegendaryWeapon(Player player, DungeonPlayerStats stats, String key) {
+    public void giveOrUpdateLegendaryWeapon(Player player, DungeonPlayerStats stats, String key) {
         org.bukkit.configuration.file.FileConfiguration cfg = AmonPackPlugin.getDungeonConfig();
         org.bukkit.configuration.ConfigurationSection sec = cfg != null ? cfg.getConfigurationSection("blessings." + key) : null;
         if (sec != null) {
@@ -1611,12 +1762,14 @@ public class DungeonManager implements Listener {
         Player player = event.getPlayer();
         DungeonInstance run = activeInstances.get(player.getWorld());
         if (run == null) return;
+        removeVirtualArrows(player);
 
         DungeonPlayerStats stats = run.getPlayerStats(player);
         if (stats == null) return;
 
         ItemStack newHeld = player.getInventory().getItem(event.getNewSlot());
-        checkAndSwapMaiDaggers(player, newHeld);
+        checkAndSwapBlueSpiritSwords(player, newHeld);
+        checkAndSwapNewMaiDaggers(player, newHeld);
         checkAndSwapWindSickle(player, newHeld);
     }
 
@@ -1660,6 +1813,9 @@ public class DungeonManager implements Listener {
         org.bukkit.entity.Entity arrow = event.getProjectile();
         arrow.setMetadata("drawing_factor", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, factor));
         arrow.setMetadata("bow_owner_uuid", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, player.getUniqueId().toString()));
+        if (arrow instanceof org.bukkit.entity.AbstractArrow) {
+            ((org.bukkit.entity.AbstractArrow) arrow).setPickupStatus(org.bukkit.entity.AbstractArrow.PickupStatus.DISALLOWED);
+        }
         if (isThird) {
             arrow.setMetadata("third_shot", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, true));
             if (arrow instanceof org.bukkit.entity.AbstractArrow) {
@@ -1668,9 +1824,75 @@ public class DungeonManager implements Listener {
         }
     }
 
-    public void checkAndSwapMaiDaggers(Player player, ItemStack held) {
-        boolean isMai = false;
+    public void checkAndSwapBlueSpiritSwords(Player player, ItemStack held) {
+        boolean isSpirit = false;
         if (held != null && held.getType() == Material.STONE_SWORD && held.hasItemMeta()) {
+            String tag = held.getItemMeta().getPersistentDataContainer().get(
+                new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                PersistentDataType.STRING
+            );
+            if ("BLUE_SPIRIT_SWORDS".equals(tag)) {
+                isSpirit = true;
+            }
+        }
+
+        if (isSpirit) {
+            ItemStack off = player.getInventory().getItemInOffHand();
+            boolean already = false;
+            if (off != null && off.hasItemMeta()) {
+                String tag = off.getItemMeta().getPersistentDataContainer().get(
+                    new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                    PersistentDataType.STRING
+                );
+                if ("BLUE_SPIRIT_SWORDS_OFFHAND".equals(tag)) {
+                    already = true;
+                }
+            }
+
+            if (!already) {
+                ItemStack oldOff = player.getInventory().getItemInOffHand();
+                if (oldOff != null && oldOff.getType() != Material.AIR) {
+                    player.setMetadata("blue_spirit_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, oldOff));
+                } else {
+                    player.setMetadata("blue_spirit_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, new ItemStack(Material.AIR)));
+                }
+
+                ItemStack duplicate = held.clone();
+                duplicate.setAmount(1);
+                ItemMeta meta = duplicate.getItemMeta();
+                if (meta != null) {
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&d&lLewy Miecz Niebieskiego Ducha"));
+                    meta.getPersistentDataContainer().set(
+                        new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                        PersistentDataType.STRING,
+                        "BLUE_SPIRIT_SWORDS_OFFHAND"
+                    );
+                    duplicate.setItemMeta(meta);
+                }
+                player.getInventory().setItemInOffHand(duplicate);
+            }
+        } else {
+            if (player.hasMetadata("blue_spirit_offhand_backup")) {
+                ItemStack backup = null;
+                for (org.bukkit.metadata.MetadataValue val : player.getMetadata("blue_spirit_offhand_backup")) {
+                    if (val.getOwningPlugin().equals(AmonPackPlugin.plugin)) {
+                        backup = (ItemStack) val.value();
+                        break;
+                    }
+                }
+                player.removeMetadata("blue_spirit_offhand_backup", AmonPackPlugin.plugin);
+                if (backup != null && backup.getType() != Material.AIR) {
+                    player.getInventory().setItemInOffHand(backup);
+                } else {
+                    player.getInventory().setItemInOffHand(null);
+                }
+            }
+        }
+    }
+
+    public void checkAndSwapNewMaiDaggers(Player player, ItemStack held) {
+        boolean isMai = false;
+        if (held != null && held.getType() == Material.GOLDEN_SWORD && held.hasItemMeta()) {
             String tag = held.getItemMeta().getPersistentDataContainer().get(
                 new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
                 PersistentDataType.STRING
@@ -1696,16 +1918,16 @@ public class DungeonManager implements Listener {
             if (!already) {
                 ItemStack oldOff = player.getInventory().getItemInOffHand();
                 if (oldOff != null && oldOff.getType() != Material.AIR) {
-                    player.setMetadata("daggers_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, oldOff));
+                    player.setMetadata("mai_daggers_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, oldOff));
                 } else {
-                    player.setMetadata("daggers_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, new ItemStack(Material.AIR)));
+                    player.setMetadata("mai_daggers_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, new ItemStack(Material.AIR)));
                 }
 
                 ItemStack duplicate = held.clone();
                 duplicate.setAmount(1);
                 ItemMeta meta = duplicate.getItemMeta();
                 if (meta != null) {
-                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&d&lLewy Sztylet Mai"));
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&e&lLewy Sztylet Mai"));
                     meta.getPersistentDataContainer().set(
                         new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
                         PersistentDataType.STRING,
@@ -1716,15 +1938,15 @@ public class DungeonManager implements Listener {
                 player.getInventory().setItemInOffHand(duplicate);
             }
         } else {
-            if (player.hasMetadata("daggers_offhand_backup")) {
+            if (player.hasMetadata("mai_daggers_offhand_backup")) {
                 ItemStack backup = null;
-                for (org.bukkit.metadata.MetadataValue val : player.getMetadata("daggers_offhand_backup")) {
+                for (org.bukkit.metadata.MetadataValue val : player.getMetadata("mai_daggers_offhand_backup")) {
                     if (val.getOwningPlugin().equals(AmonPackPlugin.plugin)) {
                         backup = (ItemStack) val.value();
                         break;
                     }
                 }
-                player.removeMetadata("daggers_offhand_backup", AmonPackPlugin.plugin);
+                player.removeMetadata("mai_daggers_offhand_backup", AmonPackPlugin.plugin);
                 if (backup != null && backup.getType() != Material.AIR) {
                     player.getInventory().setItemInOffHand(backup);
                 } else {
@@ -1913,7 +2135,7 @@ public class DungeonManager implements Listener {
         player.sendMessage(org.bukkit.ChatColor.GREEN + "[Sierp Wiatru] Wyzwolono fale powietrza!");
     }
 
-    private void applyUniversalStat(DungeonPlayerStats stats, String statName, double val, Player player) {
+    public void applyUniversalStat(DungeonPlayerStats stats, String statName, double val, Player player) {
         String name = statName.toUpperCase();
         if (name.equals("HP")) {
             stats.addHpBoost(val);
@@ -1981,5 +2203,297 @@ public class DungeonManager implements Listener {
                 run.registerSpawnedMob(event.getEntity().getUniqueId());
             }
         }
+    }
+
+    public void removeVirtualArrows(Player player) {
+        for (int i = 0; i < player.getInventory().getSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack != null && stack.getType() == Material.ARROW && stack.hasItemMeta()) {
+                org.bukkit.persistence.PersistentDataContainer pdc = stack.getItemMeta().getPersistentDataContainer();
+                org.bukkit.NamespacedKey vKey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_virtual_arrow");
+                if (pdc.has(vKey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                    player.getInventory().setItem(i, null);
+                }
+            }
+        }
+        player.updateInventory();
+    }
+
+    public void triggerMaiDaggersThrow(Player player, DungeonPlayerStats stats, int level, DungeonInstance run) {
+        World world = player.getWorld();
+        ItemStack held = player.getInventory().getItemInMainHand();
+        ItemStack daggersStack = held != null ? held.clone() : new ItemStack(Material.GOLDEN_SWORD);
+        daggersStack.setAmount(1);
+
+        org.bukkit.configuration.file.FileConfiguration cfg = AmonPackPlugin.getDungeonConfig();
+        final double baseDmg = (cfg != null) ? cfg.getDouble("blessings.MAI_DAGGERS.base-damage", 1.0) : 1.0;
+
+        com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
+        final boolean isFire = bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"));
+        final boolean isWater = bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Water"));
+
+        org.bukkit.util.Vector dir = player.getEyeLocation().getDirection().clone();
+        org.bukkit.util.Vector right = new org.bukkit.util.Vector(-dir.getZ(), 0.0, dir.getX()).normalize();
+
+        List<org.bukkit.util.Vector> velocities = new ArrayList<>();
+        if (level >= 3) {
+            velocities.add(dir.clone().add(right.clone().multiply(-0.15)).normalize().multiply(0.8));
+            velocities.add(dir.clone().normalize().multiply(0.8));
+            velocities.add(dir.clone().add(right.clone().multiply(0.15)).normalize().multiply(0.8));
+        } else {
+            velocities.add(dir.clone().add(right.clone().multiply(-0.15)).normalize().multiply(0.8));
+            velocities.add(dir.clone().add(right.clone().multiply(0.15)).normalize().multiply(0.8));
+        }
+
+        world.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1.0f, 1.5f);
+
+        for (org.bukkit.util.Vector vel : velocities) {
+            final Location startLoc = player.getEyeLocation().subtract(0, 0.2, 0);
+            final org.bukkit.entity.Item thrownItem = world.dropItem(startLoc, daggersStack);
+            thrownItem.setPickupDelay(32767);
+            thrownItem.setGravity(false);
+            thrownItem.setVelocity(vel);
+
+            final org.bukkit.util.Vector finalVel = vel.clone();
+
+            new BukkitRunnable() {
+                int ticks = 0;
+                Location currentLoc = startLoc.clone();
+                org.bukkit.util.Vector velocity = finalVel.clone();
+
+                @Override
+                public void run() {
+                    if (ticks > 100 || thrownItem.isDead() || run.isFinished()) {
+                        thrownItem.remove();
+                        cancel();
+                        return;
+                    }
+
+                    currentLoc.add(velocity);
+                    velocity.setY(velocity.getY() - 0.02);
+
+                    thrownItem.teleport(currentLoc);
+                    thrownItem.setVelocity(velocity);
+
+                    world.spawnParticle(Particle.CRIT, currentLoc, 3, 0.05, 0.05, 0.05, 0.01);
+
+                    if (currentLoc.getBlock().getType().isSolid()) {
+                        world.playSound(currentLoc, Sound.BLOCK_STONE_BREAK, 1.0f, 1.2f);
+                        world.spawnParticle(Particle.BLOCK, currentLoc, 8, 0.1, 0.1, 0.1, Material.GOLD_BLOCK.createBlockData());
+                        thrownItem.remove();
+                        cancel();
+                        return;
+                    }
+
+                    for (org.bukkit.entity.Entity entity : thrownItem.getNearbyEntities(0.6, 0.6, 0.6)) {
+                        if (entity instanceof LivingEntity && entity != player) {
+                            LivingEntity living = (LivingEntity) entity;
+                            double multi = (level >= 2) ? 2.0 : 1.5;
+                            if (level >= 2 && isWater) {
+                                multi = 1.0;
+                            }
+                            double finalDmg = baseDmg * multi;
+                            living.damage(finalDmg, player);
+
+                            living.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 80, 1));
+                            living.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS, 80, 0));
+
+                            long durMs = (level >= 3) ? 7000L : 5000L;
+                            boolean waterMark = (level >= 2 && isWater);
+                            run.markEnemy(living, player, durMs, waterMark);
+
+                            if (isFire) {
+                                int fireSec = (level >= 3) ? 7 : 5;
+                                living.setFireTicks(fireSec * 20);
+                            }
+
+                            world.playSound(currentLoc, Sound.ENTITY_ITEM_BREAK, 1.0f, 1.4f);
+                            thrownItem.remove();
+                            cancel();
+                            return;
+                        }
+                    }
+
+                    ticks++;
+                }
+            }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
+        }
+    }
+
+    @EventHandler
+    public void onBlockBreak(org.bukkit.event.block.BlockBreakEvent event) {
+        if (activeInstances.containsKey(event.getBlock().getWorld())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBlockPlace(org.bukkit.event.block.BlockPlaceEvent event) {
+        if (activeInstances.containsKey(event.getBlock().getWorld())) {
+            event.setCancelled(true);
+        }
+    }
+
+    public void applyConsumableEffect(Player player, DungeonCustomItem customItem, DungeonInstance run) {
+        String effect = customItem.getEffectType();
+        double value = customItem.getEffectValue();
+        int duration = customItem.getDuration();
+        if (effect == null || effect.isEmpty()) return;
+
+        if ("heal".equalsIgnoreCase(effect)) {
+            double maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+            player.setHealth(Math.min(maxHealth, player.getHealth() + value));
+            player.sendMessage(ChatColor.GREEN + "[Dungeons] Uleczono o " + value + " HP!");
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f);
+        } else if ("speed".equalsIgnoreCase(effect)) {
+            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, duration * 20, (int) value - 1));
+            player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Speed " + (int) value + " na " + duration + " sekund!");
+        } else if ("jumpboost".equalsIgnoreCase(effect) || "jump_boost".equalsIgnoreCase(effect)) {
+            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.JUMP_BOOST, duration * 20, (int) value - 1));
+            player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Jump Boost " + (int) value + " na " + duration + " sekund!");
+        } else if ("damage_boost".equalsIgnoreCase(effect) || "strength".equalsIgnoreCase(effect)) {
+            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.STRENGTH, duration * 20, (int) value - 1));
+            player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Sile " + (int) value + " na " + duration + " sekund!");
+        } else if ("hp_boost".equalsIgnoreCase(effect) || "health_boost".equalsIgnoreCase(effect)) {
+            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.HEALTH_BOOST, duration * 20, (int) value - 1));
+            player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano HP Boost na " + duration + " sekund!");
+        } else if ("crit_rate_boost".equalsIgnoreCase(effect)) {
+            DungeonPlayerStats stats = run.getPlayerStats(player);
+            if (stats != null) {
+                stats.addPCritRate(value);
+                stats.addMCritRate(value);
+                player.sendMessage(ChatColor.GREEN + "[Dungeons] Zwiekszono szanse na krytyk o " + (int)(value * 100) + "% na " + duration + " sekund!");
+                new org.bukkit.scheduler.BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (run.getOnlinePlayers().contains(player)) {
+                            DungeonPlayerStats s = run.getPlayerStats(player);
+                            if (s != null) {
+                                s.addPCritRate(-value);
+                                s.addMCritRate(-value);
+                                player.sendMessage(ChatColor.RED + "[Dungeons] Efekt szansy na krytyk wygasl!");
+                            }
+                        }
+                    }
+                }.runTaskLater(AmonPackPlugin.plugin, duration * 20L);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onSneak(org.bukkit.event.player.PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+        DungeonInstance run = activeInstances.get(player.getWorld());
+        if (run == null) return;
+        if (run.isPlayerSpectator(player)) return;
+
+        if (event.isSneaking()) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+            if (item == null) return;
+            org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+            org.bukkit.persistence.PersistentDataContainer pdc = meta != null ? meta.getPersistentDataContainer() : null;
+            if (pdc != null) {
+                org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_item_id");
+                if (pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) {
+                    String itemId = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
+                    DungeonCustomItem customItem = run.getTemplate().getCustomItems().get(itemId);
+                    if (customItem != null && ("consumable".equalsIgnoreCase(customItem.getType()) || "consumables".equalsIgnoreCase(customItem.getType()))) {
+                        if ("SNEAK".equalsIgnoreCase(customItem.getUseMode()) || "SHIFT".equalsIgnoreCase(customItem.getUseMode())) {
+                            dungeonConsumableChargingPlayers.put(player.getUniqueId(), System.currentTimeMillis());
+                            int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(AmonPackPlugin.plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (!player.isSneaking() || !player.isOnline()) {
+                                        cancelCharging(player);
+                                        return;
+                                    }
+                                    ItemStack currentItem = player.getInventory().getItemInMainHand();
+                                    if (currentItem == null) {
+                                        cancelCharging(player);
+                                        return;
+                                    }
+                                    org.bukkit.inventory.meta.ItemMeta currentMeta = currentItem.getItemMeta();
+                                    org.bukkit.persistence.PersistentDataContainer cPdc = currentMeta != null ? currentMeta.getPersistentDataContainer() : null;
+                                    if (cPdc == null || !cPdc.has(key, org.bukkit.persistence.PersistentDataType.STRING) || !itemId.equalsIgnoreCase(cPdc.get(key, org.bukkit.persistence.PersistentDataType.STRING))) {
+                                        cancelCharging(player);
+                                        return;
+                                    }
+                                    long chargeTime = 2500;
+                                    long startTime = dungeonConsumableChargingPlayers.get(player.getUniqueId());
+                                    long elapsed = System.currentTimeMillis() - startTime;
+                                    if (elapsed >= chargeTime) {
+                                        player.spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5, 0);
+                                        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 0.5f, 2.0f);
+                                    } else {
+                                        player.spawnParticle(org.bukkit.Particle.ENCHANTED_HIT, player.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5, 0);
+                                    }
+                                }
+                            }, 0L, 5L);
+                            dungeonConsumableChargingTasks.put(player.getUniqueId(), taskId);
+                        }
+                    }
+                }
+            }
+        } else {
+            if (dungeonConsumableChargingPlayers.containsKey(player.getUniqueId())) {
+                long startTime = dungeonConsumableChargingPlayers.get(player.getUniqueId());
+                int taskId = dungeonConsumableChargingTasks.remove(player.getUniqueId());
+                Bukkit.getScheduler().cancelTask(taskId);
+                dungeonConsumableChargingPlayers.remove(player.getUniqueId());
+
+                ItemStack item = player.getInventory().getItemInMainHand();
+                if (item != null) {
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    org.bukkit.persistence.PersistentDataContainer pdc = meta != null ? meta.getPersistentDataContainer() : null;
+                    if (pdc != null) {
+                        org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_item_id");
+                        if (pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) {
+                            String itemId = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
+                            DungeonCustomItem customItem = run.getTemplate().getCustomItems().get(itemId);
+                            if (customItem != null && ("consumable".equalsIgnoreCase(customItem.getType()) || "consumables".equalsIgnoreCase(customItem.getType()))) {
+                                long chargeTime = 2500;
+                                if (System.currentTimeMillis() - startTime >= chargeTime) {
+                                    int newAmt = item.getAmount() - 1;
+                                    if (newAmt > 0) {
+                                        item.setAmount(newAmt);
+                                    } else {
+                                        player.getInventory().setItemInMainHand(null);
+                                    }
+                                    applyConsumableEffect(player, customItem, run);
+                                } else {
+                                    player.sendMessage(ChatColor.RED + "Rytual przerwany!");
+                                    player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 1.0f);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void cancelCharging(Player player) {
+        if (dungeonConsumableChargingPlayers.containsKey(player.getUniqueId())) {
+            if (dungeonConsumableChargingTasks.containsKey(player.getUniqueId())) {
+                int taskId = dungeonConsumableChargingTasks.remove(player.getUniqueId());
+                Bukkit.getScheduler().cancelTask(taskId);
+            }
+            dungeonConsumableChargingPlayers.remove(player.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onItemHeld(org.bukkit.event.player.PlayerItemHeldEvent event) {
+        cancelCharging(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onDrop(org.bukkit.event.player.PlayerDropItemEvent event) {
+        cancelCharging(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        cancelCharging(event.getPlayer());
     }
 }

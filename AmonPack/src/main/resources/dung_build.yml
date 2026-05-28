@@ -1,0 +1,135 @@
+# Konfiguracja ulepszeń startowych dla dungeonów na podstawie poziomu Dungeoneering (DUNGEON skill)
+DungBuild:
+  Gui:
+    Title: "&d&lPoczątkowe Ulepszenia Lochu"
+    Size: 27
+  Levels:
+    0:
+      MaxChoices: 1
+      Upgrades:
+        stat_hp:
+          name: "&c&lDodatkowe Zdrowie I"
+          material: "RED_DYE"
+          lore:
+            - "&7Daje +4.0 HP na starcie lochu."
+            - "&aPoziom Dungeoneering: 0"
+          type: "STAT"
+          key: "HP"
+          value: 4.0
+          slot: 10
+        stat_dmg:
+          name: "&4&lDodatkowe Obrażenia I"
+          material: "IRON_SWORD"
+          lore:
+            - "&7Daje +1.0 obrażeń na starcie lochu."
+            - "&aPoziom Dungeoneering: 0"
+          type: "STAT"
+          key: "DMG"
+          value: 1.0
+          slot: 12
+        blessing_wind:
+          name: "&f&lBłogosławieństwo Wiatru I"
+          material: "FEATHER"
+          lore:
+            - "&7Zaczynasz z Wind Sickle I."
+            - "&aPoziom Dungeoneering: 0"
+          type: "BLESSING"
+          key: "WIND_SICKLE"
+          value: 1
+          slot: 14
+        stat_def:
+          name: "&9&lDodatkowa Obrona I"
+          material: "SHIELD"
+          lore:
+            - "&7Daje +5.0 DEF na starcie lochu."
+            - "&aPoziom Dungeoneering: 0"
+          type: "STAT"
+          key: "DEF"
+          value: 5.0
+          slot: 16
+    5:
+      MaxChoices: 2
+      Upgrades:
+        stat_hp_2:
+          name: "&c&lDodatkowe Zdrowie II"
+          material: "RED_DYE"
+          lore:
+            - "&7Daje +8.0 HP na starcie lochu."
+            - "&aPoziom Dungeoneering: 5"
+          type: "STAT"
+          key: "HP"
+          value: 8.0
+          slot: 1
+        stat_dmg_2:
+          name: "&4&lDodatkowe Obrażenia II"
+          material: "DIAMOND_SWORD"
+          lore:
+            - "&7Daje +2.0 obrażeń na starcie lochu."
+            - "&aPoziom Dungeoneering: 5"
+          type: "STAT"
+          key: "DMG"
+          value: 2.0
+          slot: 3
+        blessing_mai:
+          name: "&e&lBłogosławieństwo Sztyletów Mai I"
+          material: "GOLDEN_SWORD"
+          lore:
+            - "&7Zaczynasz z Mai Daggers I."
+            - "&aPoziom Dungeoneering: 5"
+          type: "BLESSING"
+          key: "MAI_DAGGERS"
+          value: 1
+          slot: 5
+        stat_crit:
+          name: "&c&lSzansa na Krytyk I"
+          material: "FIREWORK_STAR"
+          lore:
+            - "&7Zwiększa szanse na krytyk o 10%."
+            - "&aPoziom Dungeoneering: 5"
+          type: "STAT"
+          key: "P_CRIT_RATE"
+          value: 0.10
+          slot: 7
+    10:
+      MaxChoices: 3
+      Upgrades:
+        stat_dmg_3:
+          name: "&4&lDodatkowe Obrażenia III"
+          material: "NETHERITE_SWORD"
+          lore:
+            - "&7Daje +3.0 obrażeń na starcie lochu."
+            - "&aPoziom Dungeoneering: 10"
+          type: "STAT"
+          key: "DMG"
+          value: 3.0
+          slot: 19
+        blessing_bow:
+          name: "&d&lBłogosławieństwo Łuku Pouhai I"
+          material: "BOW"
+          lore:
+            - "&7Zaczynasz z Pouhai Bow I."
+            - "&aPoziom Dungeoneering: 10"
+          type: "BLESSING"
+          key: "POUHAI_BOW"
+          value: 1
+          slot: 21
+        blessing_glove:
+          name: "&6&lBłogosławieństwo Rękawicy Amona I"
+          material: "LEATHER_CHESTPLATE"
+          lore:
+            - "&7Zaczynasz z Amon Glove I."
+            - "&aPoziom Dungeoneering: 10"
+          type: "BLESSING"
+          key: "AMON_GLOVE"
+          value: 1
+          slot: 23
+        stat_regen:
+          name: "&a&lRegeneracja I"
+          material: "APPLE"
+          lore:
+            - "&7Zwiększa poziom Regeneracji o 1."
+            - "&aPoziom Dungeoneering: 10"
+          type: "STAT"
+          key: "REGEN"
+          value: 1.0
+          slot: 25

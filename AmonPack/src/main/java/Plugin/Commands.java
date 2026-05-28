@@ -153,6 +153,11 @@ public class Commands implements CommandExecutor, TabCompleter {
                     }
                 }
                 break;
+            case "dungbuild":
+                if (sender instanceof Player) {
+                    RPG.Dungeons.DungBuildManager.openDungBuildGui((Player) sender);
+                }
+                break;
         }
         if (sender instanceof Player) {
             Player player = (Player) sender;

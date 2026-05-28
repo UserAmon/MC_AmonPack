@@ -24,9 +24,17 @@ public class DungeonLootChest implements InventoryHolder {
     private final Inventory inventory;
     private final Map<Integer, RewardOption> options = new HashMap<>();
     private final Location chestLocation;
+    private final String blessingType;
+    private final int slotsCount;
 
     public DungeonLootChest(Player player, DungeonPlayerStats stats, Dungeon template, Location chestLocation) {
+        this(player, stats, template, chestLocation, "Chest_General", 3);
+    }
+
+    public DungeonLootChest(Player player, DungeonPlayerStats stats, Dungeon template, Location chestLocation, String blessingType, int slotsCount) {
         this.chestLocation = chestLocation;
+        this.blessingType = blessingType;
+        this.slotsCount = slotsCount;
         this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_PURPLE + "Wybierz Swoja Nagrode");
         
         for (int i = 0; i < inventory.getSize(); i++) {
@@ -53,22 +61,24 @@ public class DungeonLootChest implements InventoryHolder {
         List<RewardOption> eligibleSkills = new ArrayList<>();
         List<RewardOption> eligibleOthers = new ArrayList<>();
 
-        PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-        List<String> globallyUnlocked = branch != null ? branch.getUnlockedAbilities() : new ArrayList<>();
-        List<String> alreadyBound = stats.getBoundDungeonSkills();
+        if (blessingType.equalsIgnoreCase("Chest_General") || blessingType.equalsIgnoreCase("Chest_Abilities")) {
+            PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+            List<String> globallyUnlocked = branch != null ? branch.getUnlockedAbilities() : new ArrayList<>();
+            List<String> alreadyBound = stats.getBoundDungeonSkills();
 
-        org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
-        if (branch != null && skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
-            for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
-                com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
-                if (pkEl != null) {
-                    ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
-                    if (tree != null) {
-                        for (SkillTree_Ability ability : tree.getAbilities()) {
-                            String skillName = ability.getName();
-                            if (!ability.isUpgrade() && !ability.isdef() && !globallyUnlocked.contains(skillName) && !alreadyBound.contains(skillName)) {
-                                ItemStack icon = createSkillIcon(skillName, branch);
-                                eligibleSkills.add(new RewardOption(RewardOption.RewardType.SKILL, skillName, icon));
+            org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
+            if (branch != null && skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
+                for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
+                    com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
+                    if (pkEl != null) {
+                        ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
+                        if (tree != null) {
+                            for (SkillTree_Ability ability : tree.getAbilities()) {
+                                String skillName = ability.getName();
+                                if (!ability.isUpgrade() && !ability.isdef() && !globallyUnlocked.contains(skillName) && !alreadyBound.contains(skillName)) {
+                                    ItemStack icon = createSkillIcon(skillName, branch);
+                                    eligibleSkills.add(new RewardOption(RewardOption.RewardType.SKILL, skillName, icon));
+                                }
                             }
                         }
                     }
@@ -78,66 +88,70 @@ public class DungeonLootChest implements InventoryHolder {
 
         org.bukkit.configuration.file.FileConfiguration config = AmonPackPlugin.getDungeonConfig();
         if (config != null) {
-            org.bukkit.configuration.ConfigurationSection statsSec = config.getConfigurationSection("stats");
-            if (statsSec != null) {
-                for (String statKey : statsSec.getKeys(false)) {
-                    if (template != null && template.getAllowedStats() != null && !template.getAllowedStats().isEmpty()) {
-                        if (!template.getAllowedStats().contains(statKey)) {
-                            continue;
-                        }
-                    }
-                    
-                    String dName = statsSec.getString(statKey + ".display-name", statKey);
-                    Material mat = Material.getMaterial(statsSec.getString(statKey + ".material", "RED_DYE"));
-                    List<String> lore = statsSec.getStringList(statKey + ".lore");
-                    double value = statsSec.getDouble(statKey + ".value", 0.0);
-                    
-                    ItemStack item = new ItemStack(mat == null ? Material.RED_DYE : mat);
-                    ItemMeta meta = item.getItemMeta();
-                    if (meta != null) {
-                        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', dName));
-                        if (lore != null && !lore.isEmpty()) {
-                            List<String> coloredLore = new ArrayList<>();
-                            for (String line : lore) {
-                                coloredLore.add(ChatColor.translateAlternateColorCodes('&', line));
+            if (blessingType.equalsIgnoreCase("Chest_General") || blessingType.equalsIgnoreCase("Chest_Stats")) {
+                org.bukkit.configuration.ConfigurationSection statsSec = config.getConfigurationSection("stats");
+                if (statsSec != null) {
+                    for (String statKey : statsSec.getKeys(false)) {
+                        if (template != null && template.getAllowedStats() != null && !template.getAllowedStats().isEmpty()) {
+                            if (!template.getAllowedStats().contains(statKey)) {
+                                continue;
                             }
-                            meta.setLore(coloredLore);
                         }
-                        item.setItemMeta(meta);
+                        
+                        String dName = statsSec.getString(statKey + ".display-name", statKey);
+                        Material mat = Material.getMaterial(statsSec.getString(statKey + ".material", "RED_DYE"));
+                        List<String> lore = statsSec.getStringList(statKey + ".lore");
+                        double value = statsSec.getDouble(statKey + ".value", 0.0);
+                        
+                        ItemStack item = new ItemStack(mat == null ? Material.RED_DYE : mat);
+                        ItemMeta meta = item.getItemMeta();
+                        if (meta != null) {
+                            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', dName));
+                            if (lore != null && !lore.isEmpty()) {
+                                List<String> coloredLore = new ArrayList<>();
+                                for (String line : lore) {
+                                    coloredLore.add(ChatColor.translateAlternateColorCodes('&', line));
+                                }
+                                meta.setLore(coloredLore);
+                            }
+                            item.setItemMeta(meta);
+                        }
+                        
+                        eligibleOthers.add(new RewardOption(RewardOption.RewardType.STAT, statKey, String.valueOf(value), item));
                     }
-                    
-                    eligibleOthers.add(new RewardOption(RewardOption.RewardType.STAT, statKey, String.valueOf(value), item));
                 }
             }
 
-            org.bukkit.configuration.ConfigurationSection blessingsSec = config.getConfigurationSection("blessings");
-            if (blessingsSec != null) {
-                for (String blessingKey : blessingsSec.getKeys(false)) {
-                    if (template != null && template.getAllowedBlessings() != null && !template.getAllowedBlessings().isEmpty()) {
-                        if (!template.getAllowedBlessings().contains(blessingKey)) {
-                            continue;
-                        }
-                    }
-                    
-                    String dName = blessingsSec.getString(blessingKey + ".display-name", blessingKey);
-                    Material mat = Material.getMaterial(blessingsSec.getString(blessingKey + ".material", "GHAST_TEAR"));
-                    List<String> lore = blessingsSec.getStringList(blessingKey + ".lore");
-                    
-                    ItemStack item = new ItemStack(mat == null ? Material.GHAST_TEAR : mat);
-                    ItemMeta meta = item.getItemMeta();
-                    if (meta != null) {
-                        meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', dName));
-                        if (lore != null && !lore.isEmpty()) {
-                            List<String> coloredLore = new ArrayList<>();
-                            for (String line : lore) {
-                                coloredLore.add(ChatColor.translateAlternateColorCodes('&', line));
+            if (blessingType.equalsIgnoreCase("Chest_General") || blessingType.equalsIgnoreCase("Chest_Blessings")) {
+                org.bukkit.configuration.ConfigurationSection blessingsSec = config.getConfigurationSection("blessings");
+                if (blessingsSec != null) {
+                    for (String blessingKey : blessingsSec.getKeys(false)) {
+                        if (template != null && template.getAllowedBlessings() != null && !template.getAllowedBlessings().isEmpty()) {
+                            if (!template.getAllowedBlessings().contains(blessingKey)) {
+                                continue;
                             }
-                            meta.setLore(coloredLore);
                         }
-                        item.setItemMeta(meta);
+                        
+                        String dName = blessingsSec.getString(blessingKey + ".display-name", blessingKey);
+                        Material mat = Material.getMaterial(blessingsSec.getString(blessingKey + ".material", "GHAST_TEAR"));
+                        List<String> lore = blessingsSec.getStringList(blessingKey + ".lore");
+                        
+                        ItemStack item = new ItemStack(mat == null ? Material.GHAST_TEAR : mat);
+                        ItemMeta meta = item.getItemMeta();
+                        if (meta != null) {
+                            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', dName));
+                            if (lore != null && !lore.isEmpty()) {
+                                List<String> coloredLore = new ArrayList<>();
+                                for (String line : lore) {
+                                    coloredLore.add(ChatColor.translateAlternateColorCodes('&', line));
+                                }
+                                meta.setLore(coloredLore);
+                            }
+                            item.setItemMeta(meta);
+                        }
+                        
+                        eligibleOthers.add(new RewardOption(RewardOption.RewardType.BLESSING, blessingKey, item));
                     }
-                    
-                    eligibleOthers.add(new RewardOption(RewardOption.RewardType.BLESSING, blessingKey, item));
                 }
             }
         }
@@ -182,11 +196,25 @@ public class DungeonLootChest implements InventoryHolder {
         }
 
         Collections.shuffle(combinedPool);
-        while (selected.size() < 3 && !combinedPool.isEmpty()) {
+        while (selected.size() < slotsCount && !combinedPool.isEmpty()) {
             selected.add(combinedPool.remove(0));
         }
 
-        int[] slots = {11, 13, 15};
+        int[] slots;
+        if (slotsCount == 1) {
+            slots = new int[]{13};
+        } else if (slotsCount == 2) {
+            slots = new int[]{11, 15};
+        } else if (slotsCount == 3) {
+            slots = new int[]{11, 13, 15};
+        } else if (slotsCount == 4) {
+            slots = new int[]{10, 12, 14, 16};
+        } else if (slotsCount == 5) {
+            slots = new int[]{11, 12, 13, 14, 15};
+        } else {
+            slots = new int[]{11, 13, 15};
+        }
+
         for (int i = 0; i < selected.size() && i < slots.length; i++) {
             RewardOption option = selected.get(i);
             inventory.setItem(slots[i], option.item);

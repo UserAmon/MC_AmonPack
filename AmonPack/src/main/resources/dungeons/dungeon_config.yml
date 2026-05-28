@@ -149,7 +149,7 @@ blessings:
       - "&eUlepszanie odblokowuje nowe poziomy i synergie."
   AMON_GLOVE:
     display-name: "&d&lRekawica elektryczna Amona"
-    material: "STONE_BUTTON"
+    material: "GOLDEN_HOE"
     custom-model-id: 10012
     base-damage: 1.0
     lore:
@@ -158,16 +158,29 @@ blessings:
       - "&7Laduje moc elektryczna. Przy pelnym naciagu"
       - "&7wystrzeliwuje ionization chain lightning!"
       - "&eUlepszanie odblokowuje nowe poziomy i synergie."
-  MAI_DAGGERS:
-    display-name: "&d&lSztylety Mai"
+  BLUE_SPIRIT_SWORDS:
+    display-name: "&d&lMiecze Niebieskiego Ducha"
     material: "STONE_SWORD"
-    custom-model-id: 10013
+    custom-model-id: 10017
     base-damage: 2.0
     lore:
-      - "&6Legendarne Sztylety Mai"
-      - "&7Automatyczne trzymanie sztyletu w offhandzie."
+      - "&6Legendarne Miecze Niebieskiego Ducha"
+      - "&7Automatyczne trzymanie drugiego miecza w offhandzie."
       - "&7Atak w nowy cel zawsze zadaje krytyk fizyczny."
       - "&eUlepszanie odblokowuje nowe poziomy i synergie."
+  MAI_DAGGERS:
+    display-name: "&e&lSztylety Mai"
+    material: "GOLDEN_SWORD"
+    custom-model-id: 10013
+    base-damage: 1.0
+    lore:
+      - "&6Legendarne Sztylety Mai"
+      - "&7Trzymane w głównej dłoni tworzą lewy sztylet w offhandzie."
+      - "&7Ataki wręcz i pasywny czas ładują durability (0-100%)."
+      - "&7PPM przy 100% rzuca sztyletami, które zadają 150%"
+      - "&7obrażeń, oślepiają i oznaczają wrogów na 5 sek."
+      - "&7Speedboost gdy idziesz w stronę oznaczonego wroga."
+      - "&7Zabicie oznaczonego wroga leczy i daje niewidzialność."
   EARTH_MACE:
     display-name: "&d&lObuch Ziemi"
     material: "STONE_AXE"

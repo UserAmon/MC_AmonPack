@@ -21,7 +21,8 @@ public class DungeonCondition {
         DROP_ON_DEATH,
         PERIODIC_CHECK,
         LOOKING_AT,
-        ALIVE
+        ALIVE,
+        COLLECT_POINTS
     }
 
     private final ConditionType type;
@@ -47,6 +48,15 @@ public class DungeonCondition {
     private boolean once = false;
     private boolean requiredAllPlayers = false;
     private boolean requiredItems = true;
+    private List<Location> points = new ArrayList<>();
+
+    public List<Location> getPoints() {
+        return points;
+    }
+
+    public void setPoints(List<Location> points) {
+        this.points = points;
+    }
 
     public DungeonCondition(ConditionType type) {
         this.type = type;
@@ -193,6 +203,9 @@ public class DungeonCondition {
                 }
                 return count >= amount;
 
+            case COLLECT_POINTS:
+                return instance.isCollectPointsMet(this);
+
             default:
                 return false;
         }
@@ -283,6 +296,10 @@ public class DungeonCondition {
 
     public int getTimeRequired() {
         return timeRequired;
+    }
+
+    public void setTimeRequired(int timeRequired) {
+        this.timeRequired = timeRequired;
     }
 
     public List<DungeonEffect> getOnCompleteEffects() {

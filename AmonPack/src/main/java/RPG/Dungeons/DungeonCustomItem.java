@@ -74,4 +74,41 @@ public class DungeonCustomItem {
         }
         return item;
     }
+
+    private String useMode = "PPM";
+    private String effectType = "";
+    private int duration = 0;
+    private double effectValue = 0.0;
+
+    public String getUseMode() {
+        return useMode;
+    }
+
+    public void setUseMode(String useMode) {
+        this.useMode = useMode;
+    }
+
+    public String getEffectType() {
+        return effectType;
+    }
+
+    public void setEffectType(String effectType) {
+        this.effectType = effectType;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public double getEffectValue() {
+        return effectValue;
+    }
+
+    public void setEffectValue(double effectValue) {
+        this.effectValue = effectValue;
+    }
 }

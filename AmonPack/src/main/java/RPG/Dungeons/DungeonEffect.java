@@ -56,6 +56,8 @@ public class DungeonEffect {
     private String chestType;
     private int interval = 5;
     private String itemId;
+    private String blessingType = "Chest_General";
+    private int slotsCount = 3;
 
     public DungeonEffect(EffectType type) {
         this.type = type;
@@ -195,7 +197,7 @@ public class DungeonEffect {
                 Block block = chestLoc.getBlock();
                 block.setType(Material.CHEST);
                 
-                instance.registerLootChest(block.getLocation(), chestType == null ? "ROGUELITE_CHEST" : chestType);
+                instance.registerLootChest(block.getLocation(), chestType == null ? "ROGUELITE_CHEST" : chestType, blessingType, slotsCount);
                 instance.preGenerateChestGuis(block.getLocation());
                 break;
 
@@ -438,5 +440,21 @@ public class DungeonEffect {
 
     public String getItemId() {
         return itemId;
+    }
+
+    public String getBlessingType() {
+        return blessingType;
+    }
+
+    public void setBlessingType(String blessingType) {
+        this.blessingType = blessingType;
+    }
+
+    public int getSlotsCount() {
+        return slotsCount;
+    }
+
+    public void setSlotsCount(int slotsCount) {
+        this.slotsCount = slotsCount;
     }
 }

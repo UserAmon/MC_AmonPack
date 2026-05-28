@@ -25,9 +25,11 @@ public class DungeonInstance {
     private final Map<Location, Set<UUID>> claimedChests = new HashMap<>();
     private final Map<Location, Map<UUID, DungeonLootChest>> chestGuis = new HashMap<>();
 
+    private final Map<Location, String> activeLootChests = new HashMap<>();
+    private final Map<Location, String> chestBlessingTypes = new HashMap<>();
+    private final Map<Location, Integer> chestSlotsCounts = new HashMap<>();
     private String activeEncounterId;
     private final Map<String, Integer> killedMobsCounter = new HashMap<>();
-    private final Map<Location, String> activeLootChests = new HashMap<>();
 
     private boolean randomPhaseActive = false;
     private int randomClearsCount = 0;
@@ -43,6 +45,7 @@ public class DungeonInstance {
     private final Map<DungeonCondition, Integer> throwHitsCounter = new HashMap<>();
     private final Set<UUID> activeShieldedEnemyUuids = new HashSet<>();
     private final Set<UUID> spawnedMobUuids = new HashSet<>();
+    private boolean transitioning = false;
     private long encounterStartTime = 0;
     private final List<Integer> spawnUntilTaskIds = new ArrayList<>();
     private final Set<Integer> completedConditionsIndices = new HashSet<>();
@@ -62,6 +65,53 @@ public class DungeonInstance {
     private final Map<DungeonPlatform, Integer> platformDelayTimers = new HashMap<>();
     private final Map<DungeonPlatform, Boolean> platformTargetStates = new HashMap<>();
     private final Map<UUID, Location> playerLastLocations = new HashMap<>();
+    private final Map<UUID, Long> markedEnemies = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<UUID, Player> markerSource = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<UUID, Boolean> waterMarked = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<DungeonCondition, Set<Integer>> collectedPointsMap = new HashMap<>();
+    private final Map<DungeonCondition, Long> collectPointsStartTimes = new HashMap<>();
+
+    public void markEnemy(org.bukkit.entity.LivingEntity enemy, Player source, long durationMs, boolean isWater) {
+        markedEnemies.put(enemy.getUniqueId(), System.currentTimeMillis() + durationMs);
+        markerSource.put(enemy.getUniqueId(), source);
+        if (isWater) {
+            waterMarked.put(enemy.getUniqueId(), true);
+        } else {
+            waterMarked.remove(enemy.getUniqueId());
+        }
+    }
+
+    public boolean isEnemyMarked(UUID enemyUUID) {
+        Long exp = markedEnemies.get(enemyUUID);
+        if (exp == null) return false;
+        if (System.currentTimeMillis() > exp) {
+            markedEnemies.remove(enemyUUID);
+            markerSource.remove(enemyUUID);
+            waterMarked.remove(enemyUUID);
+            return false;
+        }
+        return true;
+    }
+
+    public Player getMarkerPlayer(UUID enemyUUID) {
+        if (!isEnemyMarked(enemyUUID)) return null;
+        return markerSource.get(enemyUUID);
+    }
+
+    public boolean isWaterMarked(UUID enemyUUID) {
+        if (!isEnemyMarked(enemyUUID)) return false;
+        return waterMarked.getOrDefault(enemyUUID, false);
+    }
+
+    public boolean isCollectPointsMet(DungeonCondition cond) {
+        Set<Integer> collected = collectedPointsMap.get(cond);
+        if (collected == null) return false;
+        boolean met = collected.size() >= cond.getPoints().size();
+        if (met) {
+            collectPointsStartTimes.remove(cond);
+        }
+        return met;
+    }
 
 
     public DungeonInstance(Dungeon template, List<Player> party) {
@@ -114,6 +164,7 @@ public class DungeonInstance {
                 player.setFoodLevel(20);
 
                 DungeonPlayerStats stats = playerStatsMap.get(uuid);
+                RPG.Dungeons.DungBuildManager.applyStartingUpgrades(player, stats, this);
                 stats.applyStatsToPlayer(player);
             }
         }
@@ -135,6 +186,20 @@ public class DungeonInstance {
         for (Player p : getOnlinePlayers()) {
             DungeonPlayerStats stats = getPlayerStats(p);
             if (stats != null) {
+                boolean holdingPouhai = false;
+                for (ItemStack handItem : new ItemStack[]{p.getInventory().getItemInMainHand(), p.getInventory().getItemInOffHand()}) {
+                    if (handItem != null && handItem.getType() == Material.BOW && handItem.hasItemMeta()) {
+                        org.bukkit.persistence.PersistentDataContainer pdc = handItem.getItemMeta().getPersistentDataContainer();
+                        org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
+                        if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING) && "POUHAI_BOW".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                            holdingPouhai = true;
+                            break;
+                        }
+                    }
+                }
+                if (!holdingPouhai) {
+                    removeVirtualArrows(p);
+                }
                 int charge = stats.getAmonGloveCharge();
                 if (charge > 0) {
                     long lastChange = stats.getAmonGloveLastChangeTime();
@@ -149,7 +214,7 @@ public class DungeonInstance {
                 if (bar != null) {
                     org.bukkit.inventory.ItemStack held = p.getInventory().getItemInMainHand();
                     boolean holdingGlove = false;
-                    if (held != null && held.getType() == Material.STONE_BUTTON && held.hasItemMeta()) {
+                    if (held != null && held.hasItemMeta()) {
                         org.bukkit.persistence.PersistentDataContainer pdc = held.getItemMeta().getPersistentDataContainer();
                         org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
                         if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING)) {
@@ -199,6 +264,9 @@ public class DungeonInstance {
                         }
                         double currentDur = stats.getWeaponDurability("WIND_SICKLE");
                         stats.setWeaponDurability("WIND_SICKLE", currentDur + pct);
+                    } else {
+                        double currentDur = stats.getWeaponDurability("WIND_SICKLE");
+                        stats.setWeaponDurability("WIND_SICKLE", Math.max(5.0, currentDur - 5.0));
                     }
                     stats.applyStatsToPlayer(p);
                 }
@@ -244,7 +312,50 @@ public class DungeonInstance {
                     }
                 }
 
-                for (String key : new String[]{"EARTH_MACE", "WIND_SICKLE", "WATER_STAFF"}) {
+                int maiDaggersLvl = stats.getBlessingLevel("MAI_DAGGERS");
+                if (maiDaggersLvl > 0 && stats.hasWeaponInInventory(p, "MAI_DAGGERS")) {
+                    ItemStack mainHand = p.getInventory().getItemInMainHand();
+                    boolean holdingNewDaggers = false;
+                    if (mainHand != null && mainHand.hasItemMeta()) {
+                        org.bukkit.persistence.PersistentDataContainer pdc = mainHand.getItemMeta().getPersistentDataContainer();
+                        org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
+                        if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING) && "MAI_DAGGERS".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                            holdingNewDaggers = true;
+                        }
+                    }
+                    if (holdingNewDaggers) {
+                        double currentDur = stats.getWeaponDurability("MAI_DAGGERS");
+                        stats.setWeaponDurability("MAI_DAGGERS", currentDur + 10.0);
+                    }
+
+                    boolean hasSpeedBoost = false;
+                    Location pLoc = p.getLocation();
+                    Vector pDir = pLoc.getDirection().normalize();
+                    for (UUID mUuid : markedEnemies.keySet()) {
+                        if (isEnemyMarked(mUuid)) {
+                            Player marker = markerSource.get(mUuid);
+                            if (marker != null && marker.getUniqueId().equals(p.getUniqueId())) {
+                                org.bukkit.entity.Entity target = Bukkit.getEntity(mUuid);
+                                if (target instanceof org.bukkit.entity.LivingEntity && !target.isDead()) {
+                                    double distSq = pLoc.distanceSquared(target.getLocation());
+                                    if (distSq < 625.0) {
+                                        Vector toEnemy = target.getLocation().toVector().subtract(pLoc.toVector()).normalize();
+                                        double dot = pDir.dot(toEnemy);
+                                        if (dot > 0.6) {
+                                            hasSpeedBoost = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (hasSpeedBoost) {
+                        p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, 30, 1));
+                    }
+                }
+
+                for (String key : new String[]{"EARTH_MACE", "WIND_SICKLE", "WATER_STAFF", "MAI_DAGGERS"}) {
                     if (stats.getBlessingLevel(key) > 0) {
                         ItemStack item = getLegendaryWeaponItem(p, key);
                         if (item != null) {
@@ -252,13 +363,31 @@ public class DungeonInstance {
                         }
                     }
                 }
+                if (stats.getBlessingLevel("AMON_GLOVE") > 0) {
+                    ItemStack item = getLegendaryWeaponItem(p, "AMON_GLOVE");
+                    if (item != null) {
+                        int maxCharge = 5;
+                        int amonLvl = stats.getBlessingLevel("AMON_GLOVE");
+                        if (amonLvl == 2) {
+                            maxCharge = 4;
+                        } else if (amonLvl >= 3) {
+                            maxCharge = 3;
+                        }
+                        double pct = ((double) stats.getAmonGloveCharge() / maxCharge) * 100.0;
+                        updateVisualDurability(item, pct);
+                    }
+                }
 
                 ItemStack offhand = p.getInventory().getItemInOffHand();
                 if (offhand != null && offhand.hasItemMeta()) {
                     org.bukkit.persistence.PersistentDataContainer pdc = offhand.getItemMeta().getPersistentDataContainer();
                     org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
-                    if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING) && "WIND_SICKLE_OFFHAND".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
-                        updateVisualDurability(offhand, stats.getWeaponDurability("WIND_SICKLE"));
+                    if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                        if ("WIND_SICKLE_OFFHAND".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                            updateVisualDurability(offhand, stats.getWeaponDurability("WIND_SICKLE"));
+                        } else if ("MAI_DAGGERS_OFFHAND".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                            updateVisualDurability(offhand, stats.getWeaponDurability("MAI_DAGGERS"));
+                        }
                     }
                 }
             }
@@ -354,6 +483,18 @@ public class DungeonInstance {
             }
 
             for (DungeonCondition condition : encounter.getConditions()) {
+                if (condition.getType() == DungeonCondition.ConditionType.LOOKING_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
+                    double cx = condition.getX();
+                    double cy = condition.getY();
+                    double cz = condition.getZ();
+                    double r = 0.75;
+                    for (double angle = 0; angle < 2 * Math.PI; angle += Math.PI / 8) {
+                        double dy = Math.sin(angle) * r;
+                        double dCoord = Math.cos(angle) * r;
+                        world.spawnParticle(Particle.GLOW, cx, cy + dy, cz + dCoord, 1, 0, 0, 0, 0);
+                        world.spawnParticle(Particle.GLOW, cx + dCoord, cy + dy, cz, 1, 0, 0, 0, 0);
+                    }
+                }
                 if (condition.getType() == DungeonCondition.ConditionType.ZONE) {
                     double cx = condition.getX();
                     double cy = condition.getY();
@@ -538,6 +679,75 @@ public class DungeonInstance {
                             }
                         }
                     }
+                } else if (condition.getType() == DungeonCondition.ConditionType.COLLECT_POINTS) {
+                    List<Location> pts = condition.getPoints();
+                    double radius = condition.getRadius();
+                    int maxTime = condition.getTimeRequired();
+
+                    Set<Integer> collected = collectedPointsMap.computeIfAbsent(condition, k -> new HashSet<>());
+                    Long startTime = collectPointsStartTimes.get(condition);
+
+                    for (int idx = 0; idx < pts.size(); idx++) {
+                        if (!collected.contains(idx)) {
+                            Location loc = pts.get(idx).clone();
+                            loc.setWorld(world);
+                            for (double dy = 0.0; dy <= 2.0; dy += 0.4) {
+                                world.spawnParticle(Particle.END_ROD, loc.getX(), loc.getY() + dy, loc.getZ(), 1, 0.02, 0.02, 0.02, 0.0);
+                            }
+                            world.spawnParticle(Particle.GLOW, loc.getX(), loc.getY() + 1.0, loc.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+                            world.spawnParticle(Particle.HAPPY_VILLAGER, loc.getX(), loc.getY() + 1.0, loc.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+                        }
+                    }
+
+                    for (Player player : getOnlinePlayers()) {
+                        if (!isPlayerSpectator(player)) {
+                            Location pLoc = player.getLocation();
+                            for (int idx = 0; idx < pts.size(); idx++) {
+                                if (!collected.contains(idx)) {
+                                    Location loc = pts.get(idx).clone();
+                                    loc.setWorld(world);
+                                    if (pLoc.distanceSquared(loc) <= radius * radius) {
+                                        collected.add(idx);
+                                        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.2f);
+                                        world.spawnParticle(Particle.HAPPY_VILLAGER, loc.add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.1);
+                                        
+                                        if (startTime == null) {
+                                            startTime = System.currentTimeMillis();
+                                            collectPointsStartTimes.put(condition, startTime);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (startTime != null && collected.size() < pts.size()) {
+                        long elapsed = (System.currentTimeMillis() - startTime) / 1000L;
+                        long remaining = maxTime - elapsed;
+                        
+                        if (remaining < 0) {
+                            for (DungeonEffect eff : condition.getFailEffects()) {
+                                eff.execute(this);
+                            }
+                            broadcast(ChatColor.RED + "[Dungeons] Czas minal! Punkty sie zresetowaly.");
+                            collected.clear();
+                            collectPointsStartTimes.remove(condition);
+                        } else {
+                            String msg = ChatColor.GOLD + "[Punkty] Czas: " + ChatColor.YELLOW + remaining + "s" 
+                                    + ChatColor.GOLD + " | Zebrano: " + ChatColor.GREEN + collected.size() + "/" + pts.size();
+                            for (Player p : getOnlinePlayers()) {
+                                p.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText(msg));
+                            }
+                        }
+                    } else if (collected.size() >= pts.size()) {
+                        if (startTime != null) {
+                            for (DungeonEffect eff : condition.getSuccessEffects()) {
+                                eff.execute(this);
+                            }
+                            collectPointsStartTimes.remove(condition);
+                        }
+                    }
                 }
             }
 
@@ -552,6 +762,36 @@ public class DungeonInstance {
             for (Player p : getOnlinePlayers()) {
                 if (!isPlayerSpectator(p)) {
                     playerLastLocations.put(p.getUniqueId(), p.getLocation().clone());
+                }
+            }
+
+            for (UUID mUuid : markedEnemies.keySet()) {
+                if (isEnemyMarked(mUuid)) {
+                    org.bukkit.entity.Entity target = Bukkit.getEntity(mUuid);
+                    if (target instanceof org.bukkit.entity.LivingEntity && !target.isDead() && target.isValid()) {
+                        org.bukkit.entity.LivingEntity living = (org.bukkit.entity.LivingEntity) target;
+                        living.getWorld().spawnParticle(Particle.GLOW, living.getLocation().add(0, living.getHeight() + 0.25, 0), 3, 0.1, 0.1, 0.1, 0.0);
+
+                        Player marker = markerSource.get(mUuid);
+                        if (marker != null && marker.isOnline()) {
+                            DungeonPlayerStats mStats = getPlayerStats(marker);
+                            if (mStats != null) {
+                                int level = mStats.getBlessingLevel("MAI_DAGGERS");
+                                if (level >= 2) {
+                                    double baseDmg = 1.0;
+                                    org.bukkit.configuration.file.FileConfiguration cfg = AmonPackPlugin.getDungeonConfig();
+                                    if (cfg != null) {
+                                        baseDmg = cfg.getDouble("blessings.MAI_DAGGERS.base-damage", 1.0);
+                                    }
+                                    living.damage(baseDmg * 0.25, marker);
+                                }
+                            }
+                        }
+                    } else {
+                        markedEnemies.remove(mUuid);
+                        markerSource.remove(mUuid);
+                        waterMarked.remove(mUuid);
+                    }
                 }
             }
 
@@ -570,12 +810,17 @@ public class DungeonInstance {
     }
 
     public void transitionToNext() {
-        Encounter current = getActiveEncounter();
+        if (transitioning) {
+            return;
+        }
+        transitioning = true;
+        try {
+            Encounter current = getActiveEncounter();
         if (current == null)
             return;
 
         if (!current.isLeaveMobs()) {
-            for (UUID uuid : spawnedMobUuids) {
+            for (UUID uuid : new java.util.ArrayList<>(spawnedMobUuids)) {
                 org.bukkit.entity.Entity entity = Bukkit.getEntity(uuid);
                 if (entity instanceof org.bukkit.entity.LivingEntity && !entity.isDead()) {
                     ((org.bukkit.entity.LivingEntity) entity).setHealth(0.0);
@@ -732,6 +977,9 @@ public class DungeonInstance {
         System.out.println("[Dungeons] Aktywowano nowy etap: " + nextId + " na " + world.getName());
 
         executeActiveEncounterEffects();
+        } finally {
+            transitioning = false;
+        }
     }
 
     private void executeActiveEncounterEffects() {
@@ -1267,7 +1515,13 @@ public class DungeonInstance {
     }
 
     public void registerLootChest(Location loc, String type) {
+        registerLootChest(loc, type, "Chest_General", 3);
+    }
+
+    public void registerLootChest(Location loc, String type, String blessingType, int slotsCount) {
         activeLootChests.put(loc, type);
+        chestBlessingTypes.put(loc, blessingType);
+        chestSlotsCounts.put(loc, slotsCount);
     }
 
     public boolean isRegisteredLootChest(Location loc) {
@@ -1276,6 +1530,8 @@ public class DungeonInstance {
 
     public void removeLootChest(Location loc) {
         activeLootChests.remove(loc);
+        chestBlessingTypes.remove(loc);
+        chestSlotsCounts.remove(loc);
     }
 
     public void onMobKill(String mobName) {
@@ -1444,11 +1700,13 @@ public class DungeonInstance {
 
     public void preGenerateChestGuis(Location loc) {
         Map<UUID, DungeonLootChest> playerGuis = new HashMap<>();
+        String blessingType = chestBlessingTypes.getOrDefault(loc, "Chest_General");
+        int slotsCount = chestSlotsCounts.getOrDefault(loc, 3);
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && player.isOnline()) {
                 DungeonPlayerStats stats = getPlayerStats(player);
-                DungeonLootChest gui = new DungeonLootChest(player, stats, template, loc);
+                DungeonLootChest gui = new DungeonLootChest(player, stats, template, loc, blessingType, slotsCount);
                 playerGuis.put(uuid, gui);
             }
         }
@@ -1465,7 +1723,9 @@ public class DungeonInstance {
         DungeonLootChest gui = playerGuis.get(player.getUniqueId());
         if (gui == null) {
             DungeonPlayerStats stats = getPlayerStats(player);
-            gui = new DungeonLootChest(player, stats, template, loc);
+            String blessingType = chestBlessingTypes.getOrDefault(loc, "Chest_General");
+            int slotsCount = chestSlotsCounts.getOrDefault(loc, 3);
+            gui = new DungeonLootChest(player, stats, template, loc, blessingType, slotsCount);
             playerGuis.put(player.getUniqueId(), gui);
         }
 
@@ -1635,6 +1895,20 @@ public class DungeonInstance {
             }
         }
         return null;
+    }
+
+    private void removeVirtualArrows(Player player) {
+        for (int i = 0; i < player.getInventory().getSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack != null && stack.getType() == Material.ARROW && stack.hasItemMeta()) {
+                org.bukkit.persistence.PersistentDataContainer pdc = stack.getItemMeta().getPersistentDataContainer();
+                org.bukkit.NamespacedKey vKey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_virtual_arrow");
+                if (pdc.has(vKey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                    player.getInventory().setItem(i, null);
+                }
+            }
+        }
+        player.updateInventory();
     }
 
     public void triggerWaterStaffAura(Player p, int lvl) {

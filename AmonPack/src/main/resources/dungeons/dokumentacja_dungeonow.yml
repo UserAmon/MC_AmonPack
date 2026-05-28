@@ -42,6 +42,40 @@ initial-encounter: "ENC1"                # Pierwszy, startowy etap lochu od któ
 #   - typ/type: Typ zachowania: 'key' (klucz), 'throwable' (pocisk rzucany PPM)
 #   - custom-model-id: (Opcjonalne) CustomModelData dla ItemsAdder/ResourcePack (Integer)
 
+# Przedmioty Jednorazowego Użytku (consumables)
+#    W sekcji `items` szablonu lochu można zarejestrować materiały eksploatacyjne (consumables).
+#    Parametry konfiguracji przedmiotu:
+#    - typ/type: "consumable" lub "consumables"
+#    - use-mode / tryb-uzycia:
+#        * PPM: Szybkie, natychmiastowe użycie prawym przyciskiem myszy.
+#        * SNEAK / SHIFT: Rytualne ładowanie kucaniem przez 2.5 sekundy.
+#    - effect / efekt:
+#        * heal: Uleczenie o zdefiniowaną wartość HP (np. 4.0 HP = 2 serca).
+#        * speed: Daje potkę Speed o poziomie [wartość] na [czas-trwania] sekund.
+#        * jumpboost: Daje potkę Jump Boost o poziomie [wartość] na [czas-trwania] sekund.
+#        * damage_boost: Daje potkę Sile (Strength) o poziomie [wartość] na [czas-trwania] sekund.
+#        * hp_boost: Daje potkę Health Boost o poziomie [wartość] na [czas-trwania] sekund.
+#        * crit_rate_boost: Zwiększa czasowo szansę na Fizyczny i Magiczny Krytyk o [wartość] (np. 0.15 = 15%) na [czas-trwania] sekund.
+#    - duration / czas-trwania: Czas trwania efektu w sekundach.
+#    - value / wartosc: Wartość liczbowa (moc/poziom) efektu.
+#
+# Przykład przedmiotu jednorazowego:
+# items:
+#   mikstura_sily:
+#     material: "POTION"
+#     nazwa: "&c&lEliksir Gniewu"
+#     opis:
+#       - "&7Przytrzymaj SHIFT (kucanie), aby wypić."
+#       - "&7Zwiększa siłę na 10 sekund."
+#     typ: "consumable"
+#     tryb-uzycia: "SNEAK"
+#     efekt: "damage_boost"
+#     czas-trwania: 10
+#     wartosc: 2
+#     custom-model-id: 2005
+
+
+
 items:
   cien_klucz:
     material: "TRIPWIRE_HOOK"
@@ -314,6 +348,34 @@ rewards:
 #             material: "AIR"
 #           - type: "SEND_MESSAGE"
 #             message: "&aBoss poległ! Skalne drzwi do skarbca zostały otwarte!"
+#
+# 12. COLLECT_POINTS
+#     Czasowy warunek zbierania koordynatów. Zmusza graczy do zebrania wszystkich punktów w wyznaczonym promieniu
+#     przed upływem limitu czasu. Odliczanie rozpoczyna się od pierwszego zebranego punktu.
+#     W przypadku przekroczenia czasu, cały postęp się zeruje, a wtyczka wyzwala fail-effects, wymagając ponownej próby.
+#     Zaliczenie wszystkich punktów wyzwala success-effects oraz pozwala ukończyć warunek.
+#     Parametry: 
+#       - radius (Double - odległość gracza od bloku, by go zebrać, np. 3.0)
+#       - time (Sekundy na ukończenie próby, Integer, np. 60)
+#       - points (Lista Stringów w formacie 'x,y,z')
+#       - fail-effects (Efekty przy porażce czasowej)
+#       - success-effects (Efekty przy pełnym zebraniu wszystkich punktów)
+#     Przykład:
+#       - type: "COLLECT_POINTS"
+#         radius: 3.0
+#         time: 45
+#         points:
+#           - "15.0,61.0,-10.0"
+#           - "25.0,63.0,-8.0"
+#           - "10.0,62.0,-15.0"
+#         fail-effects:
+#           - type: "DAMAGE"
+#             amount: 4
+#           - type: "SEND_MESSAGE"
+#             message: "&cSpóźniliście się! Czas minął, punkty zostały zresetowane!"
+#         success-effects:
+#           - type: "SEND_MESSAGE"
+#             message: "&aDoskonale! Wszystkie punkty cieni zostały zebrane na czas!"
 
 # =========================================================================
 # CZĘŚĆ VI: KOMPLETNY KATALOG EFEKTÓW (Effects)
@@ -584,7 +646,7 @@ rewards:
 #                Jeśli gracz posiada żywioł ognia (Fire), wszyscy przebici i przyciągnięci wrogowie zostają podpaleni na 4 sekundy (80 ticks).
 #
 # 2. RĘKAWICA ELEKTRYCZNA AMONA (AMON_GLOVE)
-#    - Materiał bazowy: STONE_BUTTON (Kamienny Przycisk)
+#    - Materiał bazowy: GOLDEN_HOE (Złota Motyka - dla obsługi paska naładowania durability)
 #    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
 #    - Każdy atak wręcz zadaje lekki knockback i ładuje 1 poziom mocy elektrycznej (wywalono spowolnienie na Poziomie 1).
 #    - Poziom naładowania wyświetla się jako transient BossBar nad ekranem gracza (podobny do Flameweave i Bloodarrow).
@@ -601,12 +663,12 @@ rewards:
 #                Zabicie wroga daje 25% szansy na efekt Absorption I na 5 sekund.
 #    - Poziom 3: Trafienia piorunem łańcuchowym ogłuszają wrogów (Slowness X) oraz oślepiają (Blindness I) na 1 sekundę.
 #
-# 3. SZTYLETY MAI (MAI_DAGGERS)
+# 3. MIECZE NIEBIESKIEGO DUCHA (BLUE_SPIRIT_SWORDS)
 #    - Materiał bazowy: STONE_SWORD (Kamienny Miecz)
 #    - Obrażenia bazowe: 2.0 HP (konfigurowalne)
-#    - Mechanika Dual-wielding: Trzymanie sztyletu w głównej ręce automatycznie tworzy lewy sztylet (MAI_DAGGERS_OFFHAND) w drugiej dłoni.
+#    - Mechanika Dual-wielding: Trzymanie miecza w głównej ręce automatycznie tworzy lewy miecz (BLUE_SPIRIT_SWORDS_OFFHAND) w drugiej dłoni.
 #    - Poprzedni przedmiot z drugiej dłoni zostaje tymczasowo ukryty i bezpiecznie przywrócony po zmianie broni lub wyjściu z lochu.
-#    - Gracz nie może wyrzucić ani manualnie kliknąć lewego sztyletu w ekwipunku.
+#    - Gracz nie może wyrzucić ani manualnie kliknąć lewego miecza w ekwipunku.
 #    - Poziom 1: Atak w cel inny niż ostatnio trafiony gwarantuje 100% szansy na Fizyczny Kryt.
 #    - Poziom 2: Brak ataku przez 5 sekund (stan bezczynności) zwiększa obrażenia następnego ciosu krytycznego o +50% (+0.50 do crit damage).
 #    - Poziom 3: Trafienie krytyczne ma 33% szansy na uleczenie gracza o 2.0 HP.
@@ -665,4 +727,49 @@ rewards:
 #                Jeśli mag Powietrza: zwiększa bierne ładowanie kostura w EQ o 1% (do 3% na sekundę).
 #                Jeśli mag Ognia: każde zabójstwo potwora ładuje kostur o 10%.
 #                Jeśli mag Ziemi: nakłada klątwę -3 poziomy HP (-12.0 HP boost), a koszt aury leczenia rośnie do 33% durability na sekundę.
-
+#
+# 7. SZTYLETY MAI (MAI_DAGGERS)
+#    - Materiał bazowy: GOLDEN_SWORD (Złoty Miecz)
+#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
+#    - Mechanika Dual-wielding: Trzymanie sztyletu w głównej ręce automatycznie tworzy lewy sztylet (MAI_DAGGERS_OFFHAND) w offhandzie.
+#    - Durability broni: Pasywnie rośnie o 10.0% na sekundę, gdy broń jest trzymana. Każde udane trafienie wręcz ładuje o 33.0%.
+#    - Umiejętność PPM: Przy 100% durability, kliknięcie PPM wystrzeliwuje latające sztylety (bez zabierania mieczy z EQ):
+#        * Poziom 1 & 2: Wystrzeliwuje 2 sztylety rozproszone poziomo.
+#        * Poziom 3: Wystrzeliwuje 3 sztylety (lewy, prosty, prawy).
+#    - Cechy pocisków sztyletów:
+#        * Zadają 150% (Poziom 1) lub 200% (Poziom 2 & 3) obrażeń bazowych.
+#        * Nakładają efekty Slowness II oraz Blindness I na 4 sekundy.
+#        * Oznaczają trafionych wrogów (Glow cząsteczki nad głową) na 5 sekund (Poziom 1 & 2) lub 7 sekund (Poziom 3).
+#    - Bonusy z oznaczenia:
+#        * Gracz zyskuje Speed II na 1.5 sekundy jeśli idzie/patrzy w stronę jednego ze swoich oznaczonych wrogów (dystans < 25 bloków, dot product spojrzenia > 0.6).
+#        * Zabicie oznaczonego wroga natychmiast ulecza gracza o 4.0 HP (2 serca) i daje niewidzialność na 1 sekundę.
+#    - Synergie żywiołów:
+#        * Magia Ognia (Fire): Rzucone sztylety dodatkowo podpalają wroga na cały czas trwania oznaczenia (5 lub 7 sekund).
+#        * Magia Wody (Water - Poziom 2): Rzucone sztylety zadają tylko 100% obrażeń bazowych, ale zabicie oznaczonego wroga leczy wszystkich graczy w lochu o 4.0 HP.
+#        * Poziom 2 DOT: Oznaczeni wrogowie co sekundę otrzymują obrażenia równe 25% obrażeń bazowych (baseDamage * 0.25).
+#
+# =========================================================================
+# CZĘŚĆ VIII: ULEPSZENIA SKRZYŃ I SYSTEM STARTOWEGO EKWIPUNKU (DUNGBUILD)
+# =========================================================================
+# 1. Filtrowanie Skrzyń (blessing_type & slots)
+#    Efekt SPAWN_CHEST obsługuje dodatkowe parametry w skrypcie YAML:
+#    - blessing_type: Chest_General / Chest_Stats / Chest_Abilities / Chest_Blessings
+#        * Chest_Stats: Skrzynia zawiera wyłącznie ulepszenia statystyk lochu (Allowed Stats).
+#        * Chest_Abilities: Skrzynia zawiera wyłącznie ruchy do wyboru (Allowed Skills).
+#        * Chest_Blessings: Skrzynia zawiera wyłącznie błogosławieństwa/bronie legendarne (Allowed Blessings).
+#        * Chest_General: Skrzynia zawiera tradycyjną, losową mieszankę wszystkich typów nagród.
+#    - slots: Określa dokładną liczbę slotów z nagrodami do wyboru (od 1 do 5).
+#        Układy slotów są automatycznie centrowane w GUI:
+#        * 1 slot: [13]
+#        * 2 sloty: [11, 15]
+#        * 3 sloty: [11, 13, 15]
+#        * 4 sloty: [10, 12, 14, 16]
+#        * 5 slotów: [11, 12, 13, 14, 15]
+#
+# 2. System Początkowych Ulepszeń (/dungbuild)
+#    Gracze mogą otworzyć specjalny panel wyboru początkowego ekwipunku komendą `/dungbuild`.
+#    Zasady systemu:
+#    - Dostęp do ulepszeń i maksymalny limit wyborów (MaxChoices) zależy od poziomu Dungeoneering.
+#    - Wybrane ulepszenia są automatycznie przyznawane graczowi w momencie wejścia na jakikolwiek loch.
+#    - Konfiguracja ulepszeń, poziomów i slotów znajduje się w pliku `dung_build.yml`.
+#
