@@ -168,3 +168,36 @@ blessings:
       - "&7Automatyczne trzymanie sztyletu w offhandzie."
       - "&7Atak w nowy cel zawsze zadaje krytyk fizyczny."
       - "&eUlepszanie odblokowuje nowe poziomy i synergie."
+  EARTH_MACE:
+    display-name: "&d&lObuch Ziemi"
+    material: "STONE_AXE"
+    custom-model-id: 10014
+    base-damage: 3.0
+    lore:
+      - "&6Legendarny Obuch Ziemi"
+      - "&7Zaczyna z 5% durability. Podwaja Twój DEF."
+      - "&7Otrzymanie obrażeń ładuje durability (2.0 HP = 25%)."
+      - "&7Przy 100% następny cios zadaje potężne obrażenia."
+      - "&eUlepszanie odblokowuje nowe poziomy i synergie."
+  WIND_SICKLE:
+    display-name: "&d&lSierp Wiatru"
+    material: "IRON_SWORD"
+    custom-model-id: 10015
+    base-damage: 1.0
+    lore:
+      - "&6Legendarny Sierp Wiatru"
+      - "&7Automatyczne trzymanie drugiego sierpa w offhandzie."
+      - "&7Ruch ładuje durability broni."
+      - "&7Durability skaluje Twoje obrażenia fizyczne oraz prędkość."
+      - "&eUlepszanie odblokowuje nowe poziomy i synergie."
+  WATER_STAFF:
+    display-name: "&d&lKostur Magów Wody"
+    material: "STICK"
+    custom-model-id: 10016
+    base-damage: 1.0
+    lore:
+      - "&6Legendarny Kostur Magów Wody"
+      - "&7Pasywnie zwiększa Twoje HP i Magic Crit Rate."
+      - "&7Ładuje się gdy nie jest trzymany w ręce."
+      - "&7Trzymanie i kucanie wyzwala aurę leczenia i spowolnienia."
+      - "&eUlepszanie odblokowuje nowe poziomy i synergie."

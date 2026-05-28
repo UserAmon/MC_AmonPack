@@ -164,8 +164,14 @@ public class DungeonCondition {
 
             case LOOKING_AT:
                 for (Player player : instance.getOnlinePlayers()) {
-                    if (!instance.isPlayerSpectator(player) && instance.isLookingAt(player, x, y, z)) {
-                        return true;
+                    if (!instance.isPlayerSpectator(player)) {
+                        double distSq = player.getLocation().distanceSquared(new Location(instance.getWorld(), x, y, z));
+                        if (radius > 0.0 && distSq > radius * radius) {
+                            continue;
+                        }
+                        if (instance.isLookingAt(player, x, y, z)) {
+                            return true;
+                        }
                     }
                 }
                 return false;

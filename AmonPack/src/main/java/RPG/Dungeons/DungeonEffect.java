@@ -140,6 +140,18 @@ public class DungeonEffect {
             case SPAWN_MOB:
                 Random rand = new Random();
                 for (int i = 0; i < amount; i++) {
+                    Encounter activeEnc = instance.getActiveEncounter();
+                    if (activeEnc != null && activeEnc.getMaxMobs() > 0) {
+                        int currentMobs = 0;
+                        for (org.bukkit.entity.Entity ent : instance.getWorld().getEntities()) {
+                            if (ent instanceof org.bukkit.entity.LivingEntity && !(ent instanceof Player)) {
+                                currentMobs++;
+                            }
+                        }
+                        if (currentMobs >= activeEnc.getMaxMobs()) {
+                            break;
+                        }
+                    }
                     double rx = x + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
                     double rz = z + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
                     
@@ -200,9 +212,21 @@ public class DungeonEffect {
                             cancel();
                             return;
                         }
+                        Encounter enc = instance.getActiveEncounter();
                         ConsoleCommandSender cmdConsole = Bukkit.getServer().getConsoleSender();
                         Random spawnRand = new Random();
                         for (int i = 0; i < amount; i++) {
+                            if (enc != null && enc.getMaxMobs() > 0) {
+                                int currentMobs = 0;
+                                for (org.bukkit.entity.Entity ent : instance.getWorld().getEntities()) {
+                                    if (ent instanceof org.bukkit.entity.LivingEntity && !(ent instanceof Player)) {
+                                        currentMobs++;
+                                    }
+                                }
+                                if (currentMobs >= enc.getMaxMobs()) {
+                                    break;
+                                }
+                            }
                             double rx = x + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
                             double rz = z + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
                             String command = "mm mobs spawn -s " + mobName + ":" + level + " 1 " +

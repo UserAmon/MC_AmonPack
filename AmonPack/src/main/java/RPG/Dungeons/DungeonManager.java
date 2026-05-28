@@ -335,6 +335,8 @@ public class DungeonManager implements Listener {
                         String encAfterClears = config.getString(path + ".enc_after_clears", "");
                         String etitle = config.getString(path + ".title", "");
                         List<String> epool = config.getStringList(path + ".pool");
+                        int maxMobs = config.getInt(path + ".max_mobs", 0);
+                        boolean leaveMobs = config.getBoolean(path + ".leave_mobs", false) || config.getBoolean(path + ".leaveMobs", false);
 
                         List<List<String>> epoolLists = new ArrayList<>();
                         List<?> rawPoolLists = config.getList(path + ".pool_lists");
@@ -386,7 +388,7 @@ public class DungeonManager implements Listener {
                             }
                         }
 
-                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next, exclude, reqClears, encAfterClears, etitle, epool, epoolLists, platforms));
+                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next, exclude, reqClears, encAfterClears, etitle, epool, epoolLists, platforms, maxMobs, leaveMobs));
                     }
                 }
 
@@ -576,6 +578,31 @@ public class DungeonManager implements Listener {
         if (killer != null) {
             DungeonPlayerStats stats = run.getPlayerStats(killer);
             DungeonBlessingManager.handleVampirism(killer, victim, stats);
+            if (stats != null && stats.getBlessingLevel("WATER_STAFF") >= 3 && stats.hasWeaponInInventory(killer, "WATER_STAFF")) {
+                com.projectkorra.projectkorra.BendingPlayer bKiller = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(killer);
+                if (bKiller != null && bKiller.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"))) {
+                    double currentDur = stats.getWeaponDurability("WATER_STAFF");
+                    stats.setWeaponDurability("WATER_STAFF", currentDur + 10.0);
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.LOWEST)
+    public void onShieldedEnemyDamageLowest(EntityDamageEvent event) {
+        DungeonInstance run = activeInstances.get(event.getEntity().getWorld());
+        if (run != null && run.isShieldedEnemy(event.getEntity().getUniqueId())) {
+            event.setCancelled(true);
+            event.setDamage(0.0);
+        }
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST)
+    public void onShieldedEnemyDamageHighest(EntityDamageEvent event) {
+        DungeonInstance run = activeInstances.get(event.getEntity().getWorld());
+        if (run != null && run.isShieldedEnemy(event.getEntity().getUniqueId())) {
+            event.setCancelled(true);
+            event.setDamage(0.0);
         }
     }
 
@@ -643,6 +670,9 @@ public class DungeonManager implements Listener {
                 boolean isBow = false;
                 boolean isGlove = false;
                 boolean isDaggers = false;
+                boolean isEarthMace = false;
+                boolean isWindSickle = false;
+                boolean isWaterStaff = false;
 
                 if (isProjectile && arrowEntity != null && arrowEntity.hasMetadata("drawing_factor")) {
                     isBow = true;
@@ -657,6 +687,12 @@ public class DungeonManager implements Listener {
                             isGlove = true;
                         } else if ("MAI_DAGGERS".equals(tag)) {
                             isDaggers = true;
+                        } else if ("EARTH_MACE".equals(tag)) {
+                            isEarthMace = true;
+                        } else if ("WIND_SICKLE".equals(tag)) {
+                            isWindSickle = true;
+                        } else if ("WATER_STAFF".equals(tag)) {
+                            isWaterStaff = true;
                         }
                     }
                 }
@@ -820,6 +856,117 @@ public class DungeonManager implements Listener {
                             }
                         }
                     }
+                } else if (isEarthMace) {
+                    double earthBase = 3.0;
+                    if (cfg != null) earthBase = cfg.getDouble("blessings.EARTH_MACE.base-damage", 3.0);
+
+                    damage = earthBase;
+
+                    if (event.getEntity() instanceof LivingEntity) {
+                        LivingEntity vic = (LivingEntity) event.getEntity();
+                        int maceLvl = stats.getBlessingLevel("EARTH_MACE");
+                        double dur = stats.getWeaponDurability("EARTH_MACE");
+
+                        if (dur >= 100.0) {
+                            stats.setWeaponDurability("EARTH_MACE", 5.0);
+                            double scale = (maceLvl >= 2) ? 2.5 : 2.0;
+                            damage = earthBase * scale;
+
+                            vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 30, 0.3, 0.3, 0.3, 0.2);
+                            try {
+                                vic.getWorld().spawnParticle(Particle.BLOCK, vic.getLocation(), 40, 0.5, 0.5, 0.5, 0.1, Material.COARSE_DIRT.createBlockData());
+                            } catch (Exception ignored) {}
+                            vic.getWorld().playSound(vic.getLocation(), Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 1.0f, 0.8f);
+
+                            if (maceLvl >= 3) {
+                                com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
+                                if (bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Air"))) {
+                                    attacker.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 60, 1));
+                                    attacker.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS, 60, 0));
+                                    Abilities.Bending.SoundAbility.HandleDamage(attacker, vic, 10.0);
+                                }
+                            }
+                        }
+                    }
+                } else if (isWindSickle) {
+                    double sickleBase = 1.0;
+                    if (cfg != null) sickleBase = cfg.getDouble("blessings.WIND_SICKLE.base-damage", 1.0);
+
+                    int sickleLvl = stats.getBlessingLevel("WIND_SICKLE");
+                    double dur = stats.getWeaponDurability("WIND_SICKLE");
+                    double scaling = 1.0;
+
+                    if (sickleLvl >= 3) {
+                        if (dur >= 100.0) {
+                            com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
+                            boolean isFire = bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"));
+                            if (isFire && event.getEntity() instanceof LivingEntity && ((LivingEntity) event.getEntity()).getFireTicks() > 0) {
+                                scaling = 3.0;
+                            } else {
+                                scaling = 2.5;
+                            }
+                        }
+                        else if (dur >= 75.0) scaling = 2.125;
+                        else if (dur >= 50.0) scaling = 1.75;
+                        else if (dur >= 25.0) scaling = 1.375;
+                    } else {
+                        if (dur >= 100.0) scaling = 2.0;
+                        else if (dur >= 75.0) scaling = 1.75;
+                        else if (dur >= 50.0) scaling = 1.5;
+                        else if (dur >= 25.0) scaling = 1.25;
+                    }
+                    damage = sickleBase * scaling;
+                } else if (isWaterStaff) {
+                    double waterBase = 1.0;
+                    if (cfg != null) waterBase = cfg.getDouble("blessings.WATER_STAFF.base-damage", 1.0);
+
+                    int waterLvl = stats.getBlessingLevel("WATER_STAFF");
+                    if (waterLvl >= 2) {
+                        com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
+                        if (bAttacker != null) {
+                            int count = 0;
+                            for (int i = 1; i <= 9; i++) {
+                                String abilityName = bAttacker.getAbilities().get(i);
+                                if (abilityName != null) {
+                                    com.projectkorra.projectkorra.ability.CoreAbility ability = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(abilityName);
+                                    if (ability != null) {
+                                        if (ability instanceof com.projectkorra.projectkorra.ability.HealingAbility 
+                                            || ability instanceof com.projectkorra.projectkorra.ability.BloodAbility
+                                            || (ability.getElement() != null && (ability.getElement().getName().equalsIgnoreCase("Healing") || ability.getElement().getName().equalsIgnoreCase("Blood")))) {
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+                            double multiplier = 1.0 + (0.50 * count);
+                            if (multiplier > 3.0) {
+                                multiplier = 3.0;
+                            }
+                            damage = waterBase * multiplier;
+                        } else {
+                            damage = waterBase;
+                        }
+
+                        if (event.getEntity() instanceof LivingEntity) {
+                            LivingEntity vic = (LivingEntity) event.getEntity();
+                            for (org.bukkit.entity.Entity ent : vic.getNearbyEntities(4.0, 4.0, 4.0)) {
+                                if (ent instanceof LivingEntity && !ent.getUniqueId().equals(attacker.getUniqueId()) && !ent.getUniqueId().equals(vic.getUniqueId())) {
+                                    LivingEntity le = (LivingEntity) ent;
+                                    org.bukkit.util.Vector pushDir = le.getLocation().toVector().subtract(attacker.getLocation().toVector());
+                                    if (pushDir.lengthSquared() > 0.01) {
+                                        pushDir.normalize();
+                                    } else {
+                                        pushDir = new org.bukkit.util.Vector(0, 0, 1);
+                                    }
+                                    pushDir.setY(0.25);
+                                    le.setVelocity(pushDir.multiply(0.8));
+                                }
+                            }
+                            vic.getWorld().spawnParticle(org.bukkit.Particle.SPLASH, vic.getLocation().add(0, 1.0, 0), 20, 0.4, 0.4, 0.4, 0.1);
+                        }
+                    } else {
+                        damage = waterBase;
+                    }
                 }
 
                 damage = stats.calculateOutgoingDamage(damage);
@@ -857,6 +1004,19 @@ public class DungeonManager implements Listener {
                             LivingEntity vic = (LivingEntity) event.getEntity();
                             vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
                         }
+                    }
+                } else if (isEarthMace || isWindSickle || isWaterStaff) {
+                    if (rnd.nextDouble() < stats.getPCritRate()) {
+                        damage *= stats.getPCritDmg();
+                        attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+                        if (event.getEntity() instanceof LivingEntity) {
+                            LivingEntity vic = (LivingEntity) event.getEntity();
+                            vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
+                        }
+                    }
+                    if (event.getEntity() instanceof LivingEntity) {
+                        LivingEntity vic = (LivingEntity) event.getEntity();
+                        DungeonBlessingManager.handlePoison(attacker, vic, stats);
                     }
                 } else {
                     if (isPhysical) {
@@ -914,7 +1074,18 @@ public class DungeonManager implements Listener {
                         return;
                     }
                 }
-                double newDmg = stats.calculateIncomingDamage(event.getDamage());
+                double baseDamage = event.getDamage();
+                if (stats.getBlessingLevel("EARTH_MACE") > 0 && stats.hasWeaponInInventory(victim, "EARTH_MACE")) {
+                    double curDur = stats.getWeaponDurability("EARTH_MACE");
+                    stats.setWeaponDurability("EARTH_MACE", curDur + baseDamage * 12.5);
+                }
+
+                double def = stats.getDefBoost();
+                if (stats.getBlessingLevel("EARTH_MACE") > 0 && stats.hasWeaponInInventory(victim, "EARTH_MACE")) {
+                    def *= 2.0;
+                }
+                double reduction = def <= 0 ? 0.0 : def / (def + 50.0);
+                double newDmg = baseDamage * (1.0 - reduction);
                 event.setDamage(newDmg);
             }
         }
@@ -932,6 +1103,28 @@ public class DungeonManager implements Listener {
         }
 
         ItemStack item = event.getItem();
+
+        if (item != null && event.getAction().name().startsWith("RIGHT_CLICK")) {
+            DungeonPlayerStats stats = run.getPlayerStats(player);
+            if (stats != null) {
+                int sickleLvl = stats.getBlessingLevel("WIND_SICKLE");
+                if (sickleLvl >= 2) {
+                    org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+                    if (meta != null) {
+                        org.bukkit.persistence.PersistentDataContainer pdc = meta.getPersistentDataContainer();
+                        org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
+                        if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING) && "WIND_SICKLE".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                            double dur = stats.getWeaponDurability("WIND_SICKLE");
+                            if (dur > 90.0) {
+                                event.setCancelled(true);
+                                triggerWindSickleSkill(player, stats, sickleLvl, run);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         if (item != null && item.getType() == Material.BOW && event.getAction().name().startsWith("RIGHT_CLICK")) {
             DungeonPlayerStats stats = run.getPlayerStats(player);
@@ -1027,7 +1220,7 @@ public class DungeonManager implements Listener {
                     new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
                     PersistentDataType.STRING
                 );
-                if ("MAI_DAGGERS_OFFHAND".equals(tag)) {
+                if ("MAI_DAGGERS_OFFHAND".equals(tag) || "WIND_SICKLE_OFFHAND".equals(tag)) {
                     event.setCancelled(true);
                     return;
                 }
@@ -1098,37 +1291,7 @@ public class DungeonManager implements Listener {
                     case STAT:
                         try {
                             double val = Double.parseDouble(option.value);
-                            String statName = option.key.toUpperCase();
-                            if (statName.equals("HP")) {
-                                stats.addHpBoost(val);
-                                stats.applyStatsToPlayer(player);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + val + " Maksymalnego HP!");
-                            } else if (statName.equals("DEF")) {
-                                stats.addDefBoost(val);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.BLUE + "Zwiekszono statystyke: +" + val + " Obrony (DEF)!");
-                            } else if (statName.equals("DMG")) {
-                                stats.addDmgMultiplier(val);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GOLD + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Zadawanych Obrazen!");
-                            } else if (statName.equals("SPEED")) {
-                                stats.addSpeedBoost(val);
-                                stats.applyStatsToPlayer(player);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Zwiekszono statystyke: Predkosc Ruchu!");
-                            } else if (statName.equals("P_CRIT_RATE")) {
-                                stats.addPCritRate(val);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Szansy na Fizyczny Kryt!");
-                            } else if (statName.equals("P_CRIT_DMG")) {
-                                stats.addPCritDmg(val);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Mnoznika Fizycznego Kryta!");
-                            } else if (statName.equals("M_CRIT_RATE")) {
-                                stats.addMCritRate(val);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Szansy na Magiczny Kryt!");
-                            } else if (statName.equals("M_CRIT_DMG")) {
-                                stats.addMCritDmg(val);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Mnoznika Magicznego Kryta!");
-                            } else if (statName.equals("REGEN")) {
-                                stats.addRegenLevel((int) val);
-                                player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GREEN + "Zwiekszono statystyke: +" + (int) val + " poziomu Regeneracji!");
-                            }
+                            applyUniversalStat(stats, option.key, val, player);
                         } catch (NumberFormatException e) {
                         }
                         break;
@@ -1142,7 +1305,37 @@ public class DungeonManager implements Listener {
                             stats.upgradeBlessing(option.key);
                             player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Ulepszyles Blogoslawienstwo: " + option.key + " do poziomu " + stats.getBlessingLevel(option.key) + "!");
                         }
-                        if (option.key.equals("POUHAI_BOW") || option.key.equals("AMON_GLOVE") || option.key.equals("MAI_DAGGERS")) {
+                        if (option.key.equals("WATER_STAFF")) {
+                            int level = stats.getBlessingLevel("WATER_STAFF");
+                            if (level == 1) {
+                                stats.addHpBoost(4.0);
+                                stats.addMCritRate(0.10);
+                            } else if (level == 2) {
+                                for (Player p : run.getOnlinePlayers()) {
+                                    DungeonPlayerStats ps = run.getPlayerStats(p);
+                                    if (ps != null) {
+                                        ps.addMCritRate(0.10);
+                                    }
+                                }
+                            } else if (level == 3) {
+                                stats.addHpBoost(4.0);
+                                stats.addMCritRate(0.10);
+                                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
+                                if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"))) {
+                                    stats.addHpBoost(-12.0);
+                                }
+                            }
+                            stats.applyStatsToPlayer(player);
+                        } else if (option.key.equals("EARTH_MACE")) {
+                            int level = stats.getBlessingLevel("EARTH_MACE");
+                            if (level == 3) {
+                                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
+                                if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"))) {
+                                    stats.addRegenLevel(1);
+                                }
+                            }
+                        }
+                        if (option.key.equals("POUHAI_BOW") || option.key.equals("AMON_GLOVE") || option.key.equals("MAI_DAGGERS") || option.key.equals("EARTH_MACE") || option.key.equals("WIND_SICKLE") || option.key.equals("WATER_STAFF")) {
                             giveOrUpdateLegendaryWeapon(player, stats, option.key);
                         }
                         break;
@@ -1252,12 +1445,12 @@ public class DungeonManager implements Listener {
     public void throwProjectile(Player player, DungeonCustomItem customItem, DungeonInstance run) {
         World world = player.getWorld();
         Location startLoc = player.getEyeLocation().subtract(0, 0.2, 0);
-        Vector velocity = player.getEyeLocation().getDirection().normalize().multiply(1.2);
+        Vector velocity = player.getEyeLocation().getDirection().normalize().multiply(0.8);
 
         org.bukkit.entity.Item thrownItem = world.dropItem(startLoc, customItem.toItemStack());
         thrownItem.setPickupDelay(32767);
         thrownItem.setGravity(false);
-        thrownItem.setVelocity(new Vector(0, 0, 0));
+        thrownItem.setVelocity(velocity);
 
         world.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1.0f, 1.0f);
 
@@ -1274,9 +1467,10 @@ public class DungeonManager implements Listener {
                 }
 
                 currentLoc.add(velocity);
-                velocity.setY(velocity.getY() - 0.04);
+                velocity.setY(velocity.getY() - 0.025);
                 
                 thrownItem.teleport(currentLoc);
+                thrownItem.setVelocity(velocity);
 
                 world.spawnParticle(Particle.CRIT, currentLoc, 3, 0.05, 0.05, 0.05, 0.01);
                 world.spawnParticle(Particle.DUST, currentLoc, 2, 0.05, 0.05, 0.05, 0.01, new Particle.DustOptions(Color.ORANGE, 0.8f));
@@ -1423,6 +1617,7 @@ public class DungeonManager implements Listener {
 
         ItemStack newHeld = player.getInventory().getItem(event.getNewSlot());
         checkAndSwapMaiDaggers(player, newHeld);
+        checkAndSwapWindSickle(player, newHeld);
     }
 
     @org.bukkit.event.EventHandler
@@ -1584,6 +1779,206 @@ public class DungeonManager implements Listener {
                 current = next;
             } else {
                 break;
+            }
+        }
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onPlayerItemDamage(org.bukkit.event.player.PlayerItemDamageEvent event) {
+        Player player = event.getPlayer();
+        DungeonInstance run = activeInstances.get(player.getWorld());
+        if (run != null) {
+            event.setCancelled(true);
+        }
+    }
+
+    public void checkAndSwapWindSickle(Player player, ItemStack held) {
+        boolean isSickle = false;
+        if (held != null && held.getType() == Material.IRON_SWORD && held.hasItemMeta()) {
+            String tag = held.getItemMeta().getPersistentDataContainer().get(
+                new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                PersistentDataType.STRING
+            );
+            if ("WIND_SICKLE".equals(tag)) {
+                isSickle = true;
+            }
+        }
+
+        if (isSickle) {
+            ItemStack off = player.getInventory().getItemInOffHand();
+            boolean already = false;
+            if (off != null && off.hasItemMeta()) {
+                String tag = off.getItemMeta().getPersistentDataContainer().get(
+                    new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                    PersistentDataType.STRING
+                );
+                if ("WIND_SICKLE_OFFHAND".equals(tag)) {
+                    already = true;
+                }
+            }
+
+            if (!already) {
+                ItemStack oldOff = player.getInventory().getItemInOffHand();
+                if (oldOff != null && oldOff.getType() != Material.AIR) {
+                    player.setMetadata("sickle_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, oldOff));
+                } else {
+                    player.setMetadata("sickle_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, new ItemStack(Material.AIR)));
+                }
+
+                ItemStack duplicate = held.clone();
+                duplicate.setAmount(1);
+                ItemMeta meta = duplicate.getItemMeta();
+                if (meta != null) {
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&a&lLewy Sierp Wiatru"));
+                    meta.getPersistentDataContainer().set(
+                        new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                        PersistentDataType.STRING,
+                        "WIND_SICKLE_OFFHAND"
+                    );
+                    duplicate.setItemMeta(meta);
+                }
+                player.getInventory().setItemInOffHand(duplicate);
+            }
+        } else {
+            if (player.hasMetadata("sickle_offhand_backup")) {
+                ItemStack backup = null;
+                for (org.bukkit.metadata.MetadataValue val : player.getMetadata("sickle_offhand_backup")) {
+                    if (val.getOwningPlugin().equals(AmonPackPlugin.plugin)) {
+                        backup = (ItemStack) val.value();
+                        break;
+                    }
+                }
+                player.removeMetadata("sickle_offhand_backup", AmonPackPlugin.plugin);
+                if (backup != null && backup.getType() != Material.AIR) {
+                    player.getInventory().setItemInOffHand(backup);
+                } else {
+                    player.getInventory().setItemInOffHand(null);
+                }
+            }
+        }
+    }
+
+    private void triggerWindSickleSkill(Player player, DungeonPlayerStats stats, int lvl, DungeonInstance run) {
+        stats.setWeaponDurability("WIND_SICKLE", 5.0);
+
+        com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
+        boolean isWater = bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Water"));
+
+        int speedAmplifier = 0;
+        if (lvl >= 3 && isWater) {
+            speedAmplifier = 1;
+        }
+
+        org.bukkit.potion.PotionEffect speedEffect = new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, 100, speedAmplifier);
+        org.bukkit.potion.PotionEffect jumpEffect = new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.JUMP_BOOST, 100, 0);
+
+        double healAmount = 0.0;
+        if (lvl >= 3) {
+            healAmount = isWater ? 4.0 : 2.0;
+        }
+
+        for (Player p : run.getOnlinePlayers()) {
+            if (!run.isPlayerSpectator(p)) {
+                p.addPotionEffect(speedEffect);
+                p.addPotionEffect(jumpEffect);
+                if (healAmount > 0.0) {
+                    double maxHP = p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                    double curHP = p.getHealth();
+                    p.setHealth(Math.min(maxHP, curHP + healAmount));
+                    p.getWorld().spawnParticle(org.bukkit.Particle.HEART, p.getLocation().add(0, 1.5, 0), 5, 0.2, 0.2, 0.2, 0.0);
+                }
+            }
+        }
+
+        double soundStacks = (lvl >= 3) ? 20.0 : 10.0;
+        for (org.bukkit.entity.Entity ent : player.getNearbyEntities(6.0, 6.0, 6.0)) {
+            if (ent instanceof LivingEntity && !ent.getUniqueId().equals(player.getUniqueId())) {
+                LivingEntity victim = (LivingEntity) ent;
+
+                org.bukkit.util.Vector knockDir = victim.getLocation().toVector().subtract(player.getLocation().toVector());
+                if (knockDir.lengthSquared() > 0) {
+                    knockDir.normalize();
+                } else {
+                    knockDir = new org.bukkit.util.Vector(0, 0, 1);
+                }
+                knockDir.setY(0.35);
+                victim.setVelocity(knockDir.multiply(1.2));
+
+                Abilities.Bending.SoundAbility.HandleDamage(player, victim, soundStacks);
+            }
+        }
+
+        player.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, player.getLocation().add(0, 1.0, 0), 30, 1.5, 0.5, 1.5, 0.1);
+        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.5f);
+        player.sendMessage(org.bukkit.ChatColor.GREEN + "[Sierp Wiatru] Wyzwolono fale powietrza!");
+    }
+
+    private void applyUniversalStat(DungeonPlayerStats stats, String statName, double val, Player player) {
+        String name = statName.toUpperCase();
+        if (name.equals("HP")) {
+            stats.addHpBoost(val);
+            stats.applyStatsToPlayer(player);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + val + " Maksymalnego HP!");
+        } else if (name.equals("DEF")) {
+            stats.addDefBoost(val);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.BLUE + "Zwiekszono statystyke: +" + val + " Obrony (DEF)!");
+        } else if (name.equals("DMG")) {
+            stats.addDmgMultiplier(val);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GOLD + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Zadawanych Obrazen!");
+        } else if (name.equals("SPEED")) {
+            stats.addSpeedBoost(val);
+            stats.applyStatsToPlayer(player);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Zwiekszono statystyke: Predkosc Ruchu!");
+        } else if (name.equals("P_CRIT_RATE")) {
+            stats.addPCritRate(val);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Szansy na Fizyczny Kryt!");
+        } else if (name.equals("P_CRIT_DMG")) {
+            stats.addPCritDmg(val);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Mnoznika Fizycznego Kryta!");
+        } else if (name.equals("M_CRIT_RATE")) {
+            stats.addMCritRate(val);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Szansy na Magiczny Kryt!");
+        } else if (name.equals("M_CRIT_DMG")) {
+            stats.addMCritDmg(val);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.RED + "Zwiekszono statystyke: +" + (int)(val * 100) + "% Mnoznika Magicznego Kryta!");
+        } else if (name.equals("REGEN")) {
+            stats.addRegenLevel((int) val);
+            player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.GREEN + "Zwiekszono statystyke: +" + (int) val + " poziomu Regeneracji!");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        java.io.File backupsFolder = new java.io.File(AmonPackPlugin.plugin.getDataFolder(), "backups");
+        java.io.File file = new java.io.File(backupsFolder, player.getUniqueId().toString() + ".yml");
+        if (file.exists()) {
+            DungeonInventoryBackup.restoreInventory(player, AmonPackPlugin.plugin);
+            player.setGameMode(org.bukkit.GameMode.SURVIVAL);
+            DungeonInstance.clearPlayerTemporaryStatsAndAbilities(player);
+            org.bukkit.attribute.AttributeInstance maxHealthAttr = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH);
+            if (maxHealthAttr != null) {
+                maxHealthAttr.setBaseValue(20.0);
+                if (player.getHealth() > 20.0) {
+                    player.setHealth(20.0);
+                }
+            }
+            org.bukkit.attribute.AttributeInstance speedAttr = player.getAttribute(org.bukkit.attribute.Attribute.MOVEMENT_SPEED);
+            if (speedAttr != null) {
+                speedAttr.setBaseValue(0.2);
+            }
+            player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+            player.sendMessage(org.bukkit.ChatColor.RED + "Twój survivalowy ekwipunek został bezpiecznie przywrócony!");
+        }
+    }
+
+    @EventHandler
+    public void onCreatureSpawn(org.bukkit.event.entity.CreatureSpawnEvent event) {
+        World world = event.getEntity().getWorld();
+        DungeonInstance run = activeInstances.get(world);
+        if (run != null) {
+            if (!(event.getEntity() instanceof Player)) {
+                run.registerSpawnedMob(event.getEntity().getUniqueId());
             }
         }
     }

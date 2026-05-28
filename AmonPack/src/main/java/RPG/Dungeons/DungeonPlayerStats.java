@@ -24,6 +24,9 @@ public class DungeonPlayerStats {
     private double mCritDmg = 1.5;
     private int regenLevel = 0;
     private final java.util.Map<String, Integer> blessingLevels = new java.util.HashMap<>();
+    private double earthMaceDurability = 5.0;
+    private double windSickleDurability = 5.0;
+    private double waterStaffDurability = 99.0;
 
     private final List<String> boundDungeonSkills = new ArrayList<>();
     private final List<String> activeBlessings = new ArrayList<>();
@@ -245,5 +248,47 @@ public class DungeonPlayerStats {
     public void upgradeBlessing(String blessing) {
         String key = blessing.toUpperCase();
         blessingLevels.put(key, getBlessingLevel(key) + 1);
+    }
+
+    public double getWeaponDurability(String key) {
+        String upper = key.toUpperCase();
+        if ("EARTH_MACE".equals(upper)) return earthMaceDurability;
+        if ("WIND_SICKLE".equals(upper)) return windSickleDurability;
+        if ("WATER_STAFF".equals(upper)) return waterStaffDurability;
+        return 0;
+    }
+
+    public void setWeaponDurability(String key, double val) {
+        String upper = key.toUpperCase();
+        double clamped = Math.max(0.0, Math.min(100.0, val));
+        if ("EARTH_MACE".equals(upper)) earthMaceDurability = clamped;
+        if ("WIND_SICKLE".equals(upper)) windSickleDurability = clamped;
+        if ("WATER_STAFF".equals(upper)) waterStaffDurability = clamped;
+    }
+
+    public boolean hasWeaponInInventory(Player player, String key) {
+        if (player == null) return false;
+        for (org.bukkit.inventory.ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.hasItemMeta()) {
+                org.bukkit.persistence.PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+                org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_weapon_type");
+                if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                    if (key.equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        org.bukkit.inventory.ItemStack off = player.getInventory().getItemInOffHand();
+        if (off != null && off.hasItemMeta()) {
+            org.bukkit.persistence.PersistentDataContainer pdc = off.getItemMeta().getPersistentDataContainer();
+            org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_weapon_type");
+            if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                if (key.equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

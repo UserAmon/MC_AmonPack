@@ -16,8 +16,10 @@ public class Encounter {
     private final List<String> pool;
     private final List<List<String>> poolLists;
     private final List<DungeonPlatform> platforms;
+    private final int maxMobs;
+    private final boolean leaveMobs;
 
-    public Encounter(String id, String description, List<DungeonCondition> conditions, List<DungeonEffect> effects, List<String> nextEncounters, List<String> exclude, int reqClears, String encAfterClears, String title, List<String> pool, List<List<String>> poolLists, List<DungeonPlatform> platforms) {
+    public Encounter(String id, String description, List<DungeonCondition> conditions, List<DungeonEffect> effects, List<String> nextEncounters, List<String> exclude, int reqClears, String encAfterClears, String title, List<String> pool, List<List<String>> poolLists, List<DungeonPlatform> platforms, int maxMobs, boolean leaveMobs) {
         this.id = id;
         this.description = description;
         this.conditions = conditions != null ? conditions : new ArrayList<>();
@@ -30,6 +32,8 @@ public class Encounter {
         this.pool = pool != null ? pool : new ArrayList<>();
         this.poolLists = poolLists != null ? poolLists : new ArrayList<>();
         this.platforms = platforms != null ? platforms : new ArrayList<>();
+        this.maxMobs = maxMobs;
+        this.leaveMobs = leaveMobs;
     }
 
     public String getId() {
@@ -79,4 +83,13 @@ public class Encounter {
     public List<DungeonPlatform> getPlatforms() {
         return platforms;
     }
+
+    public int getMaxMobs() {
+        return maxMobs;
+    }
+
+    public boolean isLeaveMobs() {
+        return leaveMobs;
+    }
 }
+

@@ -32,25 +32,31 @@ items:
 loot-chest:
   allowed-stats:
     - HP
-    - DEF
+    # - DEF
     - DMG
     - SPEED
     - P_CRIT_RATE
-    - P_CRIT_DMG
+    # - P_CRIT_DMG
     - M_CRIT_RATE
-    - M_CRIT_DMG
+    # - M_CRIT_DMG
     - REGEN
   allowed-blessings:
-    - VAMPIRISM
-    - DODGE
-    - ADRENALINE
-    - LIFESTEAL
-    - HEAL
-    - KNOCKBACK
-    - COUNTER
-    - FLAMING
-    - POISON
-    - COMBUSTION
+    # - VAMPIRISM
+    # - DODGE
+    # - ADRENALINE
+    # - LIFESTEAL
+    # - HEAL
+    # - KNOCKBACK
+    # - COUNTER
+    # - FLAMING
+    # - POISON
+    # - COMBUSTION
+    - EARTH_MACE
+    - WIND_SICKLE
+    - WATER_STAFF
+    - MAI_DAGGERS
+    - AMON_GLOVE
+    - POUHAI_BOW
 
 rewards:
   dungeon-xp: 250
@@ -76,9 +82,19 @@ encounters:
       - type: "SEND_MESSAGE"
         message: "&a[Dungeon] &fRozpoczalem przygode! Przygotuj sie!"
       - type: "SPAWN_CHEST"
-        x: 4
-        y: 61
-        z: 0
+        x: 2
+        y: 60
+        z: 9
+        chest-type: "ROGUELITE_CHEST"
+      - type: "SPAWN_CHEST"
+        x: 5
+        y: 60
+        z: 9
+        chest-type: "ROGUELITE_CHEST"
+      - type: "SPAWN_CHEST"
+        x: -1
+        y: 60
+        z: 9
         chest-type: "ROGUELITE_CHEST"
     next: "random"
     pool:
@@ -92,6 +108,7 @@ encounters:
   ENC2_1:
     description: "Zadanie 1: Pokonanie Duchów Ziemi"
     title: "&cWyzwanie Ziemi &8- &fPokonano $ActNumber$/$ReqNumber$ Duchów"
+    leave_mobs: false
     conditions:
       - type: "KILL_MOBS"
         mob-name: "Duch Ziemi"
@@ -104,68 +121,74 @@ encounters:
         mob-name: "Spirit_Earth_1"
         amount: 3
         level: 1
-        x: 20
-        y: 61
+        x: 1
+        y: 60
         z: 0
-        range: 3
+        range: 4
 
   ENC2_2:
     description: "Zadanie 2: Przejęcie strefy i przetrwanie"
     title: "&ePrzejęcie Strefy &8- &fPostęp: $ActNumber$/$ReqNumber$ sekund"
+    max_mobs: 5
     conditions:
       - type: "ZONE"
-        x: 10
-        y: 61
-        z: 10
+        x: 0
+        y: 60
+        z: 0
         radius: 3.0
-        time: 15
+        time: 20
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fStrefa została pomyślnie przejęta!"
     effects:
       - type: "SPAWN_UNTIL"
-        mob-name: "ZOMBIE"
-        amount: 1
+        mob-name: "ShadowGhost"
+        amount: 2
         level: 1
-        x: 10
+        x: 15
         y: 61
-        z: 20
+        z: 5
         range: 2
-        interval: 5
+        interval: 7
+
 
   ENC2_3:
     description: "Zadanie 3: Pokonanie potworów i rzut w punkt"
     title: "&5Wyzwanie Zręczności &8- &fRzuty: $ActNumber$/$ReqNumber$"
+    max_mobs: 3
     conditions:
       - type: "DROP_ON_DEATH"
         mob-name: "Duch Cienia"
         item: "cien_kamien"
         chance: 100.0
       - type: "THROW_AT"
-        x: 15
-        y: 63
-        z: 0
-        radius: 1.5
+        x: 16
+        y: 70
+        z: -2
+        radius: 3
         item: "cien_kamien"
-        amount: 3
+        amount: 4
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fPłomienie w kociołku zapłonęły!"
     effects:
-      - type: "SPAWN_MOB"
+      - type: "SPAWN_UNTIL"
         mob-name: "ShadowGhost"
-        amount: 3
+        amount: 2
         level: 1
-        x: 20
-        y: 61
-        z: 0
-        range: 4
+        x: 16
+        y: 60
+        z: -2
+        range: 2
+        interval: 10
       - type: "SEND_MESSAGE"
         message: "&a[Dungeon] &fPokonaj Duchy Cienia, aby zdobyć Ogniste Kamienie i rzuć nimi w punkt (15, 63, 0)!"
+
 
   ENC2_4:
     description: "Zadanie 4: Pokonanie osłoniętego Bossa"
     title: "&dOsłonięty Wróg &8- &fTrafienia: $ActNumber$/$ReqNumber$"
+    max_mobs: 4
     conditions:
       - type: "DROP_ON_DEATH"
         mob-name: "Duch Ziemi"
@@ -175,23 +198,25 @@ encounters:
         mob-name: "ShadowGhost"
         item: "cien_kamien"
         amount: 4
-        x: 22
-        y: 61
-        z: 0
+        x: -2
+        y: 60
+        z: -11
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fTarcza Bossa została zniszczona!"
     effects:
-      - type: "SPAWN_MOB"
+      - type: "SPAWN_UNTIL"
         mob-name: "Spirit_Earth_1"
         amount: 2
         level: 1
-        x: 20
-        y: 61
-        z: 0
+        x: -2
+        y: 60
+        z: -10
         range: 2
+        interval: 10
       - type: "SEND_MESSAGE"
         message: "&a[Dungeon] &fUważaj! Pojawił się chroniony Boss. Pokonaj Duchy Ziemi, zbierz kamienie i zniszcz jego tarczę!"
+
 
   ENC_SEKWENCJA:
     description: "Wybór losowej sekwencji przed Bossem"
@@ -202,6 +227,16 @@ encounters:
       - type: "SEND_MESSAGE"
         message: "&3[Dungeon] &fCzas wybrać twoje ostateczne próby. Kompas gotowości rozstrzygnie ścieżkę!"
       - type: "GIVE_READY_COMPASS"
+      - type: "SPAWN_CHEST"
+        x: 2
+        y: 60
+        z: 9
+        chest-type: "ROGUELITE_CHEST"
+      - type: "SPAWN_CHEST"
+        x: 5
+        y: 60
+        z: 9
+        chest-type: "ROGUELITE_CHEST"
     next: "random"
     pool_lists:
       - ["ENC_SEQ1_1", "ENC_SEQ1_2"]
@@ -220,41 +255,68 @@ encounters:
         mob-name: "SKELETON"
         amount: 3
         level: 1
-        x: 10
-        y: 61
-        z: 5
+        x: 23
+        y: 65
+        z: 3
         range: 3
 
   ENC_SEQ1_2:
     description: "Ścieżka Wojownika: Finałowe starcie"
     title: "&cPróba Wojownika II &8- &fPokonaj $ActNumber$/$ReqNumber$ Zombie"
+    max_mobs: 3
     conditions:
-      - type: "KILL_MOBS"
-        mob-name: "ZOMBIE"
-        amount: 5
+      - type: "DROP_ON_DEATH"
+        mob-name: "Duch Ziemi"
+        item: "cien_kamien"
+        chance: 100.0
+      - type: "THROW_AT"
+        x: 16
+        y: 70
+        z: -2
+        radius: 3
+        item: "cien_kamien"
+        amount: 7
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &fPłomienie w kociołku zapłonęły!"
     effects:
-      - type: "SPAWN_MOB"
-        mob-name: "ZOMBIE"
-        amount: 5
-        level: 2
-        x: 10
-        y: 61
-        z: 5
-        range: 3
+      - type: "SPAWN_UNTIL"
+        mob-name: "Spirit_Earth_1"
+        amount: 2
+        level: 1
+        x: 22
+        y: 6
+        z: 4
+        range: 2
+        interval: 10
+      - type: "SEND_MESSAGE"
+        message: "&a[Dungeon] &fPokonaj Duchy Ziemi, aby zdobyć Ogniste Kamienie i rzuć nimi w medalion biblioteki!"
+
 
   ENC_SEQ2_1:
     description: "Ścieżka Łowcy: Szybkie przejęcie strefy"
     title: "&ePróba Łowcy I &8- &fUtrzymaj strefę: $ActNumber$/$ReqNumber$s"
+    max_mobs: 5
     conditions:
       - type: "ZONE"
-        x: 0
-        y: 61
-        z: 5
-        radius: 2.0
-        time: 10
+        x: 13
+        y: 57
+        z: -11
+        radius: 3.0
+        time: 25
     effects:
       - type: "SEND_MESSAGE"
         message: "&e[Dungeon] &fUtrzymaj tę małą strefę pod presją czasu!"
+      - type: "SPAWN_UNTIL"
+        mob-name: "ZOMBIE"
+        amount: 3
+        level: 1
+        x: 13
+        y: 57
+        z: -11
+        range: 2
+        interval: 10
+
 
   ENC_SEQ2_2:
     description: "Ścieżka Łowcy: Polowanie na pająki"
@@ -268,14 +330,16 @@ encounters:
         mob-name: "SPIDER"
         amount: 4
         level: 1
-        x: 5
-        y: 61
-        z: 5
-        range: 2
+        x: 23
+        y: 57
+        z: -11
+        range: 1
+
 
   ENC_FINAL_CHALLENGE:
     description: "Komnata Strażnika Prawdy - Wyzwanie środowiskowe i boss"
     title: "&5Strażnik Prawdy &8- &fKary za: %time%s"
+    max_mobs: 6
     conditions:
       - type: "PERIODIC_CHECK"
         interval: 15
@@ -286,17 +350,18 @@ encounters:
           - type: "DAMAGE"
             amount: 2
           - type: "KNOCKBACK"
-            x: 0.0
-            y: 0.5
-            z: 0.0
+            x: 0.2
+            y: 0.65
+            z: 0.2
         success-effects:
           - type: "SEND_MESSAGE"
-            message: "&aPrzetrwałeś kolejny wzrok Strażnika!"
+            message: "&aUniknąłeś wzroku Strażnika!"
       - type: "LOOKING_AT"
-        x: 0.0
-        y: 65.0
-        z: 5.0
-        interval: 5
+        x: 16
+        y: 70
+        z: -2
+        interval: 15
+        radius: 5
         fail-effects:
           - type: "SPAWN_MOB"
             mob-name: "SKELETON"
@@ -304,48 +369,49 @@ encounters:
             level: 1
             x: 0
             y: 61
-            z: 5
+            z: 0
             range: 2
         success-effects:
           - type: "SEND_MESSAGE"
             message: "&dTwoje spojrzenie powstrzymało przyzwanie wrogów... Na razie!"
       - type: "KILL_MOBS"
-        mob-name: "Straznik Prawdy"
+        mob-name: "Starszy Straznik"
         amount: 1
     platforms:
-      - x1: -2
-        y1: 60
-        z1: 3
-        x2: 2
+      - x1: 17
+        y1: 64
+        z1: 4
+        x2: 17
         y2: 60
-        z2: 7
-        material: "GLASS"
-        inverted: false
-        test-mode: "GLOBAL"
-        requirement: "MOB_NEAR:Straznik Prawdy"
-      - x1: -1
-        y1: 61
-        z1: 8
-        x2: 1
-        y2: 63
-        z2: 8
-        material: "GOLD_BLOCK"
+        z2: -8
+        material: "PURPLE_STAINED_GLASS"
         inverted: true
+        test-mode: "GLOBAL"
+        requirement: "SNEAKING"
+      - x1: 4
+        y1: 64
+        z1: -9
+        x2: 18
+        y2: 60
+        z2: -9
+        material: "POLISHED_BLACKSTONE_BRICKS"
+        inverted: false
         test-mode: "NEAR"
-        requirement: "ITEM:cien_klucz"
+        requirement: "MOB_NEAR:Starszy Straznik"
         delay: 3
         check-interval: 5
     effects:
       - type: "SEND_MESSAGE"
-        message: "&d[Dungeon] &fWszedłeś do Serca Cieni. Kucaj co 15 sekund, obserwuj kryształ (0, 65, 5) wzrokiem i pokonaj bossa!"
+        message: "&d[Dungeon] &fWszedłeś do Serca Cieni. Kucaj co 15 sekund, obserwuj kryształ wzrokiem i pokonaj bossa!"
       - type: "SPAWN_MOB"
-        mob-name: "Straznik Prawdy"
+        mob-name: "Skeleton_Guardian"
         amount: 1
         level: 3
-        x: 0
-        y: 61
-        z: 5
+        x: 15
+        y: 65
+        z: 6
         range: 0
+
     next: "ENC3"
 
   ENC3:

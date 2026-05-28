@@ -269,12 +269,16 @@ rewards:
 #     Sensor kierunku spojrzenia. Sprawdza, czy chociaż jeden z graczy patrzy bezpośrednio na cel XYZ.
 #     Zmiana stanu z patrzenia na nie-patrzenie wyzwala odpowiednie pakiety efektów.
 #     Dodatkowo, jeśli nikt się nie patrzy, co 'interval' sekund wyzwalają się fail-effects.
-#     Parametry: x, y, z (Double - punkt obserwacji), interval (Sekundy powtórzeń kar, Integer)
+#     Parametry: 
+#       - x, y, z (Double - punkt obserwacji)
+#       - radius (Double - opcjonalny dystans od bloku, w którym gracz musi się znajdować, aby spojrzenie zostało zaliczone)
+#       - interval (Sekundy powtórzeń kar, Integer)
 #     Przykład:
 #       - type: "LOOKING_AT"
 #         x: 0.0
 #         y: 65.0
 #         z: 5.0
+#         radius: 10.0
 #         interval: 5
 #         fail-effects:
 #           - type: "SPAWN_MOB"
@@ -516,6 +520,36 @@ rewards:
 #       - ["ENC_WOJ_1", "ENC_WOJ_2"]
 #       - ["ENC_LOW_1", "ENC_LOW_2"]
 #     enc_after_clears: "ENC_BOSS"
+#
+# 3. Ograniczenie liczby potworów w etapie (max_mobs):
+#    Opcjonalny parametr 'max_mobs' (Integer) zadeklarowany na poziomie etapu (Encounter).
+#    Jeśli w dungeonie znajduje się więcej lub tyle samo żywych potworów, efekty typu SPAWN_MOB
+#    oraz SPAWN_UNTIL nie zrodzą dodatkowych wrogów, chroniąc serwer przed lagami.
+#    Przykład:
+#      ENC_ARENA:
+#        description: "Arena Walki"
+#        max_mobs: 15
+#        conditions:
+#          - type: "KILL_MOBS"
+#            mob-name: "ZOMBIE"
+#            amount: 10
+#        effects:
+#          - type: "SPAWN_UNTIL"
+#            mob-name: "ZOMBIE"
+#            amount: 2
+#            interval: 3
+#
+# 4. Automatyczne czyszczenie potworów po zakończeniu etapu (leave_mobs):
+#    Domyślnie każdy etap (Encounter), po pomyślnym ukończeniu wszystkich warunków, 
+#    automatycznie ZABIJA wszystkie potwory, które sam przyzwał (SPAWN_MOB, SPAWN_UNTIL, boss itp.), 
+#    ZANIM aktywuje się kolejny etap. Gwarantuje to porządek i brak zapychania instancji.
+#    Opcjonalny parametr 'leave_mobs' (Boolean - true/false, domyślnie false) pozwala wyłączyć
+#    to zachowanie, jeśli chcesz, aby moby z danego pokoju pozostały żywe w kolejnym etapie.
+#    Przykład:
+#      ENC_TRANSITION:
+#        description: "Przejściowy korytarz"
+#        leave_mobs: true
+#
 # ENC1:
 #   description: "Start lochu - Przygotowanie"
 #   conditions:
@@ -577,4 +611,58 @@ rewards:
 #    - Poziom 2: Brak ataku przez 5 sekund (stan bezczynności) zwiększa obrażenia następnego ciosu krytycznego o +50% (+0.50 do crit damage).
 #    - Poziom 3: Trafienie krytyczne ma 33% szansy na uleczenie gracza o 2.0 HP.
 #                Jeśli gracz posiada żywioł ognia (Fire), ciosy krytyczne podpalają cel na 3 sekundy, a trzymanie broni pasywnie daje +25% szansy na fizyczny kryt.
+#
+# 4. OBUCH ZIEMI (EARTH_MACE)
+#    - Materiał bazowy: STONE_AXE (Kamienny Topór)
+#    - Obrażenia bazowe: 3.0 HP (konfigurowalne)
+#    - Zaczyna z 5% durability (ataki nie niszczą narzędzia).
+#    - Poziom 1: Posiadanie broni w ekwipunku (EQ) podwaja statystykę obrony gracza (DEF * 2.0).
+#                Otrzymywanie obrażeń (przed redukcją z DEFa) ładuje durability: każde otrzymane serce obrażeń (2.0 HP) ładuje o 25% (1.0 HP = 12.5%).
+#                Przy 100% durability, następny fizyczny atak zadaje 200% obrażeń bazowych i zeruje naładowanie do 5%.
+#    - Poziom 2: Wzmocniony atak przy 100% naładowania zadaje 250% obrażeń bazowych.
+#                Bycie leczonym również ładuje durability: każde otrzymane serce leczenia (2.0 HP regain) ładuje o 25% (1.0 HP = 12.5%).
+#    - Poziom 3: Co sekundę nie będąc w powietrzu (player.isOnGround()), durability rośnie biernie o 10%.
+#                Jeśli gracz ma magię Ziemi (Earth): mając broń w EQ, zyskuje +1 poziom regeneracji zdrowia w lochach (regenLevel).
+#                Jeśli gracz ma magię Powietrza (Air): użycie naładowanego ciosu (przy 100% durability) nakłada na atakującego gracza efekty Slowness II i Blindness I na 3 sekundy, a naładowany atak nakłada na cel 10 stacków dźwięku (Soundability).
+#
+# 5. SIERP WIATRU (WIND_SICKLE)
+#    - Materiał bazowy: IRON_SWORD (Żelazny Miecz)
+#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
+#    - Zaczyna z 5% durability.
+#    - Mechanika Dual-wielding: Trzymanie sierpa w głównej ręce automatycznie tworzy lewy sierp (WIND_SICKLE_OFFHAND) w offhandzie, backupując poprzedni przedmiot.
+#    - Poziom 1: Poruszanie się (mając broń w EQ) co sekundę ładuje durability o 3%.
+#                Co 25% durability, broń zadaje dodatkowe obrażenia fizyczne (od 100% do 200% obrażeń bazowych).
+#                Co kolejne 33% durability, szybkość gracza wzrasta o jeden poziom (+0.02 speedBoost, do maks. +0.06 przy 100%).
+#    - Poziom 2: Bierne ładowanie z ruchu rośnie do 4.5% co sekundę.
+#                Przy durability powyżej 90%, kliknięcie PPM trzymając sierp w ręce odpala umiejętność:
+#                * Odrzuca pobliskich wrogów w promieniu 6 bloków.
+#                * Nakłada 10 stacków dźwięku (Soundability) na cele.
+#                * Daje wszystkim graczom w lochu efekty Speed I i Jump Boost I na 5 sekund.
+#                * Zużywa naładowanie i przywraca durability do początkowych 5%.
+#    - Poziom 3: Maksymalny limit obrażeń fizycznych z naładowania rośnie do 250% obrażeń bazowych.
+#                Umiejętność PPM:
+#                * Nakłada 20 stacków dźwięku zamiast 10.
+#                * Leczy wszystkich graczy w lochu o 1 serce (2.0 HP).
+#                * Jeśli mag Wody: leczenie rośnie do 2 serc (4.0 HP), a sojusznicy otrzymują Speed II zamiast Speed I.
+#                * Jeśli mag Powietrza: zyskiwane durability z ruchu rośnie do 6% co sekundę, a trzymanie sierpa daje pasywny +1 poziom uniku (DODGE).
+#                * Jeśli mag Ognia: ataki na podpalone cele przy 100% naładowania zadają 300% obrażeń bazowych.
+#
+# 6. KOSTUR MAGÓW WODY (WATER_STAFF)
+#    - Materiał bazowy: STICK (Patyk)
+#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
+#    - Zaczyna z 99% durability.
+#    - Poziom 1: Posiadanie w EQ/Blessingu zwiększa statystyki HP o +1 poziom (+4.0 HP boost) oraz M_CritRate o +1 poziom (+10%).
+#                Co sekundę, gdy gracz nie trzyma kostura w głównej ręce, ładuje durability o 2%.
+#                Kucnięcie (Sneak) trzymając kostur w ręce zużywa 24% durability na sekundę, wyzwalając obszarową aurę (promień 6 bloków):
+#                * Wrogowie otrzymują Slowness II na 3 sekundy.
+#                * Wrogowie i sojusznicy zostawiają pod nogami śnieg (SNOW).
+#                * Sojusznicy są leczeni o 0.5 serca (1.0 HP) na sekundę.
+#                * Nie można używać leczenia przy durability < 24%.
+#    - Poziom 2: Za każdą przypisaną umiejętność leczenia lub magii krwi w slocie ProjectKorra (subelement Healing lub Blood), kostur zadaje +50% obrażeń bazowych (maks. 300%).
+#                Ataki kosturem odpychają grupy wrogów w promieniu 4 bloków od celu.
+#                Wybranie tego błogosławieństwa zwiększa Magic Crit Rate wszystkich graczy w lochu o jeden poziom (+10%).
+#    - Poziom 3: Posiadanie w EQ/Blessingu zwiększa HP oraz M_CritRate o kolejny, drugi poziom (+8.0 HP, +20% magic crit rate).
+#                Jeśli mag Powietrza: zwiększa bierne ładowanie kostura w EQ o 1% (do 3% na sekundę).
+#                Jeśli mag Ognia: każde zabójstwo potwora ładuje kostur o 10%.
+#                Jeśli mag Ziemi: nakłada klątwę -3 poziomy HP (-12.0 HP boost), a koszt aury leczenia rośnie do 33% durability na sekundę.
 

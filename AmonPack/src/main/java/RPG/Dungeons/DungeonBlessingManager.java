@@ -40,6 +40,20 @@ public class DungeonBlessingManager {
     public static boolean handleDodge(Player player, EntityDamageEvent event, DungeonPlayerStats stats) {
         if (stats == null) return false;
         int lvl = stats.getBlessingLevel("DODGE");
+        int windSickleLvl = stats.getBlessingLevel("WIND_SICKLE");
+        if (windSickleLvl >= 3) {
+            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
+            if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Air"))) {
+                org.bukkit.inventory.ItemStack held = player.getInventory().getItemInMainHand();
+                if (held != null && held.hasItemMeta()) {
+                    org.bukkit.persistence.PersistentDataContainer pdc = held.getItemMeta().getPersistentDataContainer();
+                    org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_weapon_type");
+                    if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING) && "WIND_SICKLE".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                        lvl += 1;
+                    }
+                }
+            }
+        }
         if (lvl <= 0) return false;
 
         if (random.nextInt(100) < (5 * lvl)) {

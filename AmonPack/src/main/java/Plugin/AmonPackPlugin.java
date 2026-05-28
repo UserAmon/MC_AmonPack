@@ -128,6 +128,11 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 		setDungeonConfig(YamlConfiguration.loadConfiguration(DungeonConfigFile));
 
+		File craftingItemsFile = new File(getDataFolder(), "Crafting_Items.yml");
+		if (!craftingItemsFile.exists()) {
+			saveResource("Crafting_Items.yml", false);
+		}
+
 		configpath = getDataFolder();
 		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
 		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
