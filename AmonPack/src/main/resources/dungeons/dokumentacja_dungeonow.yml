@@ -530,3 +530,51 @@ rewards:
 #   - "ENC2_4"
 # req_clears: 2
 # enc_after_clears: "ENC_BOSS"
+
+# =========================================================================
+# CZĘŚĆ IX: SYSTEM LEGENDRANYCH BRONI (Błogosławieństwa Broni)
+# =========================================================================
+# System unikalnych, ulepszalnych broni (błogosławieństw) otrzymywanych 
+# tymczasowo ze skrzyń w dungeonie. Każda broń posiada stałe obrażenia bazowe 
+# zdefiniowane w configu oraz system unikalnych ulepszeń na trzech poziomach (Tier).
+# Wszystkie w dungeonie używane bronie zadają stałe, niezmienne obrażenia zdefiniowane poniżej.
+#
+# 1. ŁUK Z POUHAI (POUHAI_BOW)
+#    - Materiał bazowy: BOW (Łuk)
+#    - Obrażenia bazowe: 3.0 HP (konfigurowalne)
+#    - Naciąganie łuku zwiększa obrażenia o +25% za każdą sekundę (do maks. +100% / 200% obrażeń bazowych).
+#    - Co trzeci strzał gracza automatycznie przebija cele (setPierceLevel(10)) oraz ignoruje obronę wrogów (DEF).
+#    - Poziom 1: Bazowe naciąganie i przebijanie co 3 strzały. Obrażenia bazowe 3.0 HP.
+#    - Poziom 2: Trzeci strzał dodatkowo przyciąga wrogów w promieniu 6 bloków do celu z efektowną chmurą cząsteczek portalowych i chmur (CLOUD, PORTAL).
+#    - Poziom 3: Trzeci strzał zwiększa limit naciągnięcia do +150% (maks. 250% obrażeń bazowych).
+#                Jeśli gracz posiada żywioł ognia (Fire), wszyscy przebici i przyciągnięci wrogowie zostają podpaleni na 4 sekundy (80 ticks).
+#
+# 2. RĘKAWICA ELEKTRYCZNA AMONA (AMON_GLOVE)
+#    - Materiał bazowy: STONE_BUTTON (Kamienny Przycisk)
+#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
+#    - Każdy atak wręcz zadaje lekki knockback i ładuje 1 poziom mocy elektrycznej (wywalono spowolnienie na Poziomie 1).
+#    - Poziom naładowania wyświetla się jako transient BossBar nad ekranem gracza (podobny do Flameweave i Bloodarrow).
+#    - Moc elektryczna zanika o 1 poziom co 4 sekundy bezczynności.
+#    - Liczba ładunków wymagana do pełnego naładowania:
+#        * Poziom 1: 5 ładunków
+#        * Poziom 2: 4 ładunki
+#        * Poziom 3: 3 ładunki
+#    - Przy pełnym naładowaniu, kolejny atak zadaje 150% obrażeń bazowych oraz wystrzeliwuje ionization chain lightning:
+#        * Piorun łańcuchowy skacze po wrogach w promieniu 6 bloków (maks. 2 trafienia na wroga).
+#        * Zadaje 100% obrażeń bazowych i zostawia ślady iskier elektrycznych (ELECTRIC_SPARK).
+#    - Poziom 1: Bazowy piorun i knockback.
+#    - Poziom 2: Jeśli gracz posiada żywioł ziemi (Earth), ataki zadają silniejszy knockback oraz nakładają Slowness II na 3 sekundy.
+#                Zabicie wroga daje 25% szansy na efekt Absorption I na 5 sekund.
+#    - Poziom 3: Trafienia piorunem łańcuchowym ogłuszają wrogów (Slowness X) oraz oślepiają (Blindness I) na 1 sekundę.
+#
+# 3. SZTYLETY MAI (MAI_DAGGERS)
+#    - Materiał bazowy: STONE_SWORD (Kamienny Miecz)
+#    - Obrażenia bazowe: 2.0 HP (konfigurowalne)
+#    - Mechanika Dual-wielding: Trzymanie sztyletu w głównej ręce automatycznie tworzy lewy sztylet (MAI_DAGGERS_OFFHAND) w drugiej dłoni.
+#    - Poprzedni przedmiot z drugiej dłoni zostaje tymczasowo ukryty i bezpiecznie przywrócony po zmianie broni lub wyjściu z lochu.
+#    - Gracz nie może wyrzucić ani manualnie kliknąć lewego sztyletu w ekwipunku.
+#    - Poziom 1: Atak w cel inny niż ostatnio trafiony gwarantuje 100% szansy na Fizyczny Kryt.
+#    - Poziom 2: Brak ataku przez 5 sekund (stan bezczynności) zwiększa obrażenia następnego ciosu krytycznego o +50% (+0.50 do crit damage).
+#    - Poziom 3: Trafienie krytyczne ma 33% szansy na uleczenie gracza o 2.0 HP.
+#                Jeśli gracz posiada żywioł ognia (Fire), ciosy krytyczne podpalają cel na 3 sekundy, a trzymanie broni pasywnie daje +25% szansy na fizyczny kryt.
+

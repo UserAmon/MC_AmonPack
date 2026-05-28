@@ -1,6 +1,7 @@
 MagicEffects:
+  # #####BASIC
   Monster_Hunter:
-    Name: §c⚔ Łowca Potworów
+    Name: §c[⚔] Łowca Potworów
     Lore:
       l1: §7Zadaje dodatkowe obrażenia potworom.
     IsMajor: false
@@ -8,157 +9,9 @@ MagicEffects:
       c1:
         Material: ROTTEN_FLESH
         Amount: 10
-  Slowness_Defense:
-    Name: §8🛡 Slowness Defense
-    Lore:
-      l1: §7Reduces damage taken when slowed.
-    IsMajor: false
-    IsArmorEffect: true
-    Cost:
-      c1:
-        Material: SOUL_SAND
-        Amount: 10
-  Mining_Loot_Boost:
-    Name: §6⛏ Mining Loot Boost
-    Lore:
-      l1: §7Increases chance for extra loot when mining.
-    IsMajor: false
-    IsArmorEffect: true
-    Cost:
-      c1:
-        Material: GOLD_INGOT
-        Amount: 5
-  Exp_Boost:
-    Name: §a✨ Experience Boost
-    Lore:
-      l1: §7Increases experience gained.
-    IsMajor: false
-    IsArmorEffect: true
-    Cost:
-      c1:
-        Material: EXPERIENCE_BOTTLE
-        Amount: 5
-  Earth_Health_Boost:
-    Name: §a❤ Earth Health Boost
-    Lore:
-      l1: §7Gain Absorption when using Earth abilities.
-    IsMajor: true
-    IsArmorEffect: true
-    Conditions:
-      req1:
-        Skill_Type: MINING
-        Skill_Level: 5
-    Cost:
-      c1:
-        Material: EMERALD
-        Amount: 3
-  MoltenShell:
-    Name: §6🔥 Molten Shell
-    Lore:
-      l1: §725% chance to ignite attacker for 3s.
-    IsMajor: false
-    IsArmorEffect: true
-    Cost:
-      c1:
-        Material: MAGMA_CREAM
-        Amount: 5
-  Adrenaline:
-    Name: §b⚡ Adrenaline
-    Lore:
-      l1: §720% chance to gain Speed I for 3s when hit.
-    IsMajor: false
-    IsArmorEffect: true
-    Cost:
-      c1:
-        Material: SUGAR
-        Amount: 10
-  Repulse:
-    Name: §f💨 Repulse
-    Lore:
-      l1: §7Knocks back attacker when hit.
-    IsMajor: false
-    IsArmorEffect: true
-    Cost:
-      c1:
-        Material: SLIME_BALL
-        Amount: 5
-  PhoenixHeart:
-    Name: §c❤ Phoenix Heart
-    Lore:
-      l1: §7Gain Speed I & Regen I while burning.
-    IsMajor: true
-    IsArmorEffect: true
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 5
-    Cost:
-      c1:
-        Material: GHAST_TEAR
-        Amount: 3
-  Earth_Resolve_Dmg_Taking:
-    Name: §a⛰ Determinacja Ziemi
-    Lore:
-      l1: §7Redukuje obrażenia gdy jesteś blisko ziemi.
-    IsMajor: true
-    Conditions:
-      req1:
-        Skill_Type: MINING
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: COBBLESTONE
-        Amount: 64
-  Earth_Damage_Boost_Absorb:
-    Name: §a⛰ Wzmocnienie Absorpcji
-    Lore:
-      l1: §7Zwiększa obrażenia gdy posiadasz efekt absorpcji.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: MINING
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: GOLDEN_APPLE
-        Amount: 1
-  Earth_Damage_Boost_Hight:
-    Name: §a⛰ Przewaga Wysokości
-    Lore:
-      l1: §7Zadajesz więcej obrażeń będąc wyżej od celu.
-    IsMajor: false
-    Cost:
-      c1:
-        Material: DIRT
-        Amount: 32
-  Fire_Damage_Boost:
-    Name: §c🔥 Ogniste Wzmocnienie
-    Lore:
-      l1: §7Zadajesz więcej obrażeń płonącym celom.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: BLAZE_POWDER
-        Amount: 5
-  Fire_Speed_Boost:
-    Name: §c🔥 Ognista Prędkość
-    Lore:
-      l1: §7Otrzymujesz prędkość po uderzeniu płonącego celu.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: SUGAR
-        Amount: 10
+  #
   Knockback:
-    Name: §f💨 Odrzut
+    Name: §f[⚔] Odrzut
     Lore:
       l1: §7Odrzuca wrogów przy uderzeniu.
     IsMajor: false
@@ -166,172 +19,9 @@ MagicEffects:
       c1:
         Material: IRON_INGOT
         Amount: 3
-  Burrow:
-    Name: §a⛰ Zakopanie
-    Lore:
-      l1: §7Szansa na zakopanie wroga w ziemi.
-    IsMajor: true
-    Conditions:
-      req1:
-        Skill_Type: MINING
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: SAND
-        Amount: 32
-  Fire_Aspect:
-    Name: §c🔥 Zaklęty Ogień
-    Lore:
-      l1: §7Podpala wrogów przy uderzeniu.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: FLINT_AND_STEEL
-        Amount: 1
-  Smoke_Aspect:
-    Name: §8💨 Dymna Zasłona
-    Lore:
-      l1: §7Tworzy dym wokół ciebie.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: COAL
-        Amount: 10
-  Minor_Air_Sound_Damage_Buff:
-    Name: §f💨 Dźwiękowe Wzmocnienie
-    Lore:
-      l1: §7Zwiększa obrażenia od umiejętności dźwiękowych.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 3
-    Cost:
-      c1:
-        Material: NOTE_BLOCK
-        Amount: 5
-  Major_Air_Sound_Hit:
-    Name: §f💨 Uderzenie Dźwięku
-    Lore:
-      l1: §7Wywołuje potężną falę dźwiękową przy uderzeniu.
-    IsMajor: true
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 3
-    Cost:
-      c1:
-        Material: JUKEBOX
-        Amount: 1
-  Earth_Hammer_Aspect:
-    Name: §a⛰ Młot Ziemi
-    Lore:
-      l1: §7Twoje ataki wstrząsają ziemią.
-    IsMajor: true
-    Cost:
-      c1:
-        Material: ANVIL
-        Amount: 2
-  Minor_Water_Icy_Slowness_Hit:
-    Name: §b❄ Lodowe Spowolnienie
-    Lore:
-      l1: §7Spowalnia wrogów przy uderzeniu.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: ICE
-        Amount: 10
-  Air_Thrust:
-    Name: §f💨 Powietrzne Pchnięcie
-    Lore:
-      l1: §7Wyrzuca wrogów w powietrze.
-    IsMajor: false
-    Cost:
-      c1:
-        Material: FEATHER
-        Amount: 6
-  Air_Damage_Boost_Downward:
-    Name: §f💨 Powietrzna Dominacja
-    Lore:
-      l1: §7Zadajesz więcej obrażeń spadając na wroga.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: FEATHER
-        Amount: 15
-  Earth_1:
-    Name: §a⛰ Ziemne Odłamki
-    Lore:
-      l1: §7Przyzywa spadające bloki ziemi.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: MINING
-        Skill_Level: 3
-    Cost:
-      c1:
-        Material: STONE
-        Amount: 64
-  Ice_Thorn_Ability_Aspect:
-    Name: §b❄ Lodowy Kolec
-    Lore:
-      l1: §7Wystrzeliwuje lodowe kolce.
-    IsMajor: true
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 3
-    Cost:
-      c1:
-        Material: ICE
-        Amount: 10
-  Ice_Encase:
-    Name: §b❄ Zamrożenie
-    Lore:
-      l1: §7Zamraża wroga w lodzie.
-    IsMajor: true
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 2
-    Cost:
-      c1:
-        Material: SNOW
-        Amount: 16
-  Lightning_Aspect:
-    Name: §e⚡ Piorun
-    Lore:
-      l1: §7Uderza piorunem przy ataku.
-    IsMajor: true
-    Conditions:
-      req1:
-        Skill_Type: COMBAT
-        Skill_Level: 4
-    Cost:
-      c1:
-        Material: LIGHTNING_ROD
-        Amount: 2
-      c2:
-        Material: REDSTONE
-        Amount: 64
+  #
   Looting:
-    Name: §e💰 Grabież
+    Name: §e[⚔] Grabież
     Lore:
       l1: §7Zwiększa szansę na drop przedmiotów.
     IsMajor: false
@@ -339,34 +29,9 @@ MagicEffects:
       c1:
         Material: GOLD_INGOT
         Amount: 5
-  Expierience:
-    Name: §a✨ Doświadczenie
-    Lore:
-      l1: §7Zwiększa zdobywane doświadczenie.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: MINING
-        Skill_Level: 3
-    Cost:
-      c1:
-        Material: EXPERIENCE_BOTTLE
-        Amount: 10
-  Earth_Health_Boost:
-    Name: §a⛰ Witalność Ziemi
-    Lore:
-      l1: §7Otrzymujesz absorpcję po zabiciu wroga.
-    IsMajor: false
-    Conditions:
-      req1:
-        Skill_Type: MINING
-        Skill_Level: 4
-    Cost:
-      c1:
-        Material: APPLE
-        Amount: 5
+  #
   Midas:
-    Name: §6💰 Dotyk Midasa
+    Name: §6[⚔] Dotyk Midasa
     Lore:
       l1: §7Szansa na zdobycie pieniędzy przy zabiciu.
     IsMajor: true
@@ -378,24 +43,25 @@ MagicEffects:
       c1:
         Material: GOLD_INGOT
         Amount: 20
-  fire_burst:
-    Name: §c🔥 Ognisty Wybuch
+  #
+  Experience:
+    Name: §a[⚔] Doświadczenie
     Lore:
-      l1: §cSilne rozgrzanie broni
-      l2: §6Szansa na podpalenie wroga
-    IsMajor: true
+      l1: §7Zwiększa zdobywane doświadczenie.
+    IsMajor: false
     Conditions:
       req1:
         Skill_Type: MINING
-        Skill_Level: 2
+        Skill_Level: 3
     Cost:
       c1:
-        Material: BLAZE_POWDER
-        Amount: 5
-  frost_touch:
-    Name: §b❄ Mroźny Dotyk
+        Material: EXPERIENCE_BOTTLE
+        Amount: 10
+  # ######FIRE
+  Fire_Damage_Boost:
+    Name: §c[🔥] Ogniste Wzmocnienie
     Lore:
-      l1: §bZamraża cel na chwilę
+      l1: §7Zadajesz więcej obrażeń płonącym celom.
     IsMajor: false
     Conditions:
       req1:
@@ -403,62 +69,473 @@ MagicEffects:
         Skill_Level: 2
     Cost:
       c1:
-        Material: SNOWBALL
-        Amount: 8
-  Speed:
-    Name: §f💨 Szybkość
+        Material: BLAZE_POWDER
+        Amount: 5
+  #
+  Fire_Speed_Boost:
+    Name: §c[🔥] Ognista Prędkość
     Lore:
-      l1: §bZwiększa prędkość
+      l1: §7Otrzymujesz prędkość po uderzeniu płonącego celu.
     IsMajor: false
-    IsItemEffect: true
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 2
     Cost:
       c1:
         Material: SUGAR
-        Amount: 3
-  Meteor_Strike:
-    Name: §4☄️ Uderzenie Meteorytu
+        Amount: 10
+  #
+  Fire_Aspect:
+    Name: §c[🔥] Zaklęty Ogień
     Lore:
-      l1: §7Sprowadza zagładę z nieba.
-    IsMajor: true
-    IsItemEffect: true
-    ScrollName: "§4☄️ Zwój Meteorytu"
-    ScrollModelID: 10005
+      l1: §7Podpala wrogów przy uderzeniu.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 2
     Cost:
       c1:
-        Material: MAGMA_CREAM
-        Amount: 5
-  Sand_Tornado:
-    Name: §e🌪 Piaskowe Tornado
+        Material: FLINT_AND_STEEL
+        Amount: 1
+  #
+  Smoke_Aspect:
+    Name: §8[🔥] Dymna Zasłona
     Lore:
-      l1: §7Przyzywa potężne tornado piaskowe.
+      l1: §7Tworzy dym wokół ciebie.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 2
+    Cost:
+      c1:
+        Material: COAL
+        Amount: 10
+  #
+  Lightning_Aspect:
+    Name: §e[⚡] Piorun
+    Lore:
+      l1: §7Uderza piorunem przy ataku.
     IsMajor: true
-    IsItemEffect: true
-    ScrollName: "§e🌪 Zwój Piaskowego Tornada"
-    ScrollModelID: 10006
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 1
+    Cost:
+      c1:
+        Material: LIGHTNING_ROD
+        Amount: 2
+  #
+  # #####EARTH
+  #
+  Earth_Damage_Boost_Absorb:
+    Name: §a[⛰] Wzmocnienie Absorpcji
+    Lore:
+      l1: §7Zwiększa obrażenia gdy posiadasz efekt absorpcji.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: MINING
+        Skill_Level: 2
+    Cost:
+      c1:
+        Material: GOLDEN_APPLE
+        Amount: 1
+  #
+  Earth_Damage_Boost_Hight:
+    Name: §a[⛰] Przewaga Wysokości
+    Lore:
+      l1: §7Zadajesz więcej obrażeń będąc wyżej od celu.
+    IsMajor: false
+    Cost:
+      c1:
+        Material: DIRT
+        Amount: 32
+  #
+  Burrow:
+    Name: §a[⛰] Zakopanie
+    Lore:
+      l1: §7Szansa na zakopanie wroga w ziemi.
+    IsMajor: true
+    Conditions:
+      req1:
+        Skill_Type: MINING
+        Skill_Level: 2
     Cost:
       c1:
         Material: SAND
         Amount: 32
-      c2:
-        Material: BLAZE_POWDER
-        Amount: 5
-  Summon_Undead:
-    Name: §5💀 Przyzwanie Nieumarłych
+  #
+  Earth_Hammer_Aspect:
+    Name: §a[⛰] Młot Ziemi
     Lore:
-      l1: §7Przyzywa armię nieumarłych.
+      l1: §7Twoje ataki wstrząsają ziemią.
     IsMajor: true
-    IsItemEffect: true
-    ScrollName: "§5💀 Zwój Nieumarłych"
-    ScrollModelID: 10007
     Cost:
       c1:
-        Material: BONE
+        Material: ANVIL
+        Amount: 2
+  #
+  Earth_1:
+    Name: §a[⛰] Ziemne Odłamki
+    Lore:
+      l1: §7Przyzywa spadające bloki ziemi.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: MINING
+        Skill_Level: 3
+    Cost:
+      c1:
+        Material: STONE
+        Amount: 64
+  #
+  Earth_Health_Boost_On_Kill:
+    Name: §a[⛰] Witalność Ziemi
+    Lore:
+      l1: §7Otrzymujesz absorpcję po zabiciu wroga.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: MINING
+        Skill_Level: 4
+    Cost:
+      c1:
+        Material: APPLE
+        Amount: 5
+  #
+  # ######AIR
+  Minor_Air_Sound_Damage_Buff:
+    Name: §f[💨] Dźwiękowe Wzmocnienie
+    Lore:
+      l1: §7Zwiększa obrażenia od umiejętności dźwiękowych.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 3
+    Cost:
+      c1:
+        Material: NOTE_BLOCK
+        Amount: 5
+  #
+  Major_Air_Sound_Hit:
+    Name: §f[💨] Uderzenie Dźwięku
+    Lore:
+      l1: §7Wywołuje potężną falę dźwiękową przy uderzeniu.
+    IsMajor: true
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 3
+    Cost:
+      c1:
+        Material: JUKEBOX
+        Amount: 1
+  #
+  Air_Thrust:
+    Name: §f[💨] Powietrzne Pchnięcie
+    Lore:
+      l1: §7Wyrzuca wrogów w powietrze.
+    IsMajor: false
+    Cost:
+      c1:
+        Material: FEATHER
+        Amount: 6
+  #
+  Air_Damage_Boost_Downward:
+    Name: §f[💨] Powietrzna Dominacja
+    Lore:
+      l1: §7Zadajesz więcej obrażeń spadając na wroga.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 2
+    Cost:
+      c1:
+        Material: FEATHER
+        Amount: 15
+  #
+  # ######WATER
+  Minor_Water_Icy_Slowness_Hit:
+    Name: §b[❄] Lodowe Spowolnienie
+    Lore:
+      l1: §7Spowalnia wrogów przy uderzeniu.
+    IsMajor: false
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 2
+    Cost:
+      c1:
+        Material: ICE
         Amount: 10
+  #
+  Ice_Thorn_Ability_Aspect:
+    Name: §b[❄] Lodowy Kolec
+    Lore:
+      l1: §7Wystrzeliwuje lodowe kolce.
+    IsMajor: true
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 3
+    Cost:
+      c1:
+        Material: ICE
+        Amount: 10
+  #
+  Ice_Encase:
+    Name: §b[❄] Zamrożenie
+    Lore:
+      l1: §7Zamraża wroga w lodzie.
+    IsMajor: true
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 2
+    Cost:
+      c1:
+        Material: SNOW
+        Amount: 16
+  #
+  # ###ZWOJE
+  # ##BASIC
+  Summon_Boss_TestBoss:
+    Name: §c👹 Przyzwanie Króla Szkieletów
+    Lore:
+      l1: §7Przyzywa Króla Szkieletów.
+    IsMajor: true
+    IsItemEffect: true
+    ScrollName: §c👹 Zwój Króla Szkieletów
+    ScrollModelID: 10032
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 2
+    Cost:
+      c1:
+        Material: BONE_BLOCK
+        Amount: 10
+  # ##
+  Summon_Undead:
+    Name: §8[💀] Przyzwanie Nieumarłych
+    Lore:
+      l1: §4Przywołuje nieumarłe istoty do walki u twego boku
+    IsItemEffect: true
+    ScrollName: §eZwój Przyzwania Nieumarłych
+    ScrollModelID: 10032
+    Cost:
+      c1:
+        Material: STRING
+        Amount: 3
+  # ###
+  # ###WATER
+  Ice_Wall:
+    Name: §b[❄] Lodowiec
+    Lore:
+      l1: §bTworzy ścianę z lodu
+    IsItemEffect: true
+    ChargeTime: 3500
+    ScrollName: §eZwój Lodowego Szpikulca
+    ScrollModelID: 10032
+    Cost:
+      c1:
+        Material: ICE
+        Amount: 3
+  #
+  # ###EARTH
+  Sand_Tornado:
+    Name: §e[🌪] Piaskowe Tornado
+    Lore:
+      l1: §7Przyzywa potężne tornado piaskowe.
+    IsItemEffect: true
+    ScrollName: §eZwój Piaskowego Tornada
+    ScrollModelID: 10032
+    ChargeTime: 3500
+    Cost:
+      c1:
+        Material: SAND
+        Amount: 3
       c2:
-        Material: ROTTEN_FLESH
-        Amount: 10
+        Material: BLAZE_POWDER
+        Amount: 2
+  #
+  # ####FIRE
+  Meteor_Strike:
+    Name: §4[🔥] Uderzenie Meteorytu
+    Lore:
+      l1: §7Sprowadza zagładę z nieba.
+    IsItemEffect: true
+    ScrollName: §4Zwój Uderzenia Meteorytu
+    ScrollModelID: 10032
+    Cost:
+      c1:
+        Material: MAGMA_CREAM
+        Amount: 5
+  # ###
+  # ##ARMOR
+  # ##BASIC
+  Mining_Loot_Boost:
+    Name: §6[⛏] Mining Loot Boost
+    Lore:
+      l1: §7Increases chance for extra loot when mining.
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: GOLD_INGOT
+        Amount: 2
+  # #
+  Exp_Boost:
+    Name: §6[⛏] Experience Boost
+    Lore:
+      l1: §7Increases experience gained.
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: EXPERIENCE_BOTTLE
+        Amount: 5
+  # ######Fire
+  # ####
+  MoltenShell:
+    Name: §c[🔥] Wewnętrzne ciepło
+    Lore:
+      l1: §725% chance to ignite attacker for 3s.
+    IsMajor: true
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: MAGMA_CREAM
+        Amount: 2
+  # #
+  Adrenaline:
+    Name: §e[⚡] Adrenalina
+    Lore:
+      l1: §720% chance to gain Speed I for 3s when hit.
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: SUGAR
+        Amount: 2
+  # #
+  PhoenixHeart:
+    Name: §c[🔥] Serce Feniksa
+    Lore:
+      l1: §7Gain Speed I & Strength I while burning.
+    IsMajor: true
+    IsArmorEffect: true
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 1
+    Cost:
+      c1:
+        Material: GHAST_TEAR
+        Amount: 3
+  # ###POWIETRZE
+  # ####
+  Repulse:
+    Name: §f[💨] Ulotna bliskość
+    Lore:
+      l1: §7Knocks back attacker when hit.
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: SLIME_BALL
+        Amount: 2
+  # #ZIEMIA
+  # ##
+  Slowness_Defense:
+    Name: §a[⛰] Postawa Kreta
+    Lore:
+      l1: §7Reduces damage taken when slowed.
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: SOUL_SAND
+        Amount: 4
+  # ##
+  Earth_Health_Boost_On_Abilities:
+    Name: §a[⛰] Kamienny spokój
+    Lore:
+      l1: §7Gain Absorption when using Earth abilities.
+    IsMajor: true
+    IsArmorEffect: true
+    Conditions:
+      req1:
+        Skill_Type: MINING
+        Skill_Level: 1
+    Cost:
+      c1:
+        Material: EMERALD
+        Amount: 2
+  # ##
+  Earth_Resolve_Dmg_Taking:
+    Name: §a[⛰] Determinacja Ziemi
+    Lore:
+      l1: §7Redukuje obrażenia gdy jesteś blisko ziemi.
+    IsMajor: true
+    IsArmorEffect: true
+    Conditions:
+      req1:
+        Skill_Type: MINING
+        Skill_Level: 2
+    Cost:
+      c1:
+        Material: COBBLESTONE
+        Amount: 64
+  #
+  # ####TOOLS
+  Vein_Miner:
+    Name: §6⛏ Vein Miner
+    Lore:
+      l1: §7Mines entire veins of ores.
+    IsMajor: true
+    Power: 12
+    Cost:
+      c1:
+        Material: DIAMOND
+        Amount: 2
+  Area_Miner:
+    Name: §c💥 Area Miner
+    Lore:
+      l1: §7Right-click to mine 3x3 area.
+    IsMajor: true
+    Cost:
+      c1:
+        Material: TNT
+        Amount: 2
+  Tree_Feller:
+    Name: §2🪓 Tree Feller
+    Lore:
+      l1: §7Chops down entire trees.
+    IsMajor: true
+    Power: 20
+    Cost:
+      c1:
+        Material: GOLDEN_AXE
+        Amount: 1
+  Axe_Throw:
+    Name: §b🪓 Axe Throw
+    Lore:
+      l1: §7Right-click air to throw axe.
+    IsMajor: false
+    Cost:
+      c1:
+        Material: IRON_INGOT
+        Amount: 5
 
+# ####Bronie
 Craftable_Weapons:
+  # ##BASIC
   bamboo_staff:
     Material: WOODEN_SWORD
     Name: §6Laska Bambusowa
@@ -469,9 +546,7 @@ Craftable_Weapons:
         m1:
           Material: BAMBOO
           Amount: 4
-      AllowedMagicEffects:
-      - fire_burst
-      - frost_touch
+      AllowedMagicEffects: []
     Item:
       Lore:
         l1: §7Kute w starożytnej kuźni.
@@ -480,6 +555,8 @@ Craftable_Weapons:
         c1:
           Material: STICK
           Amount: 1
+  #
+  # ####EARTH
   earth_fan:
     Material: WOODEN_SWORD
     Name: §a§lWachlarz Wojowniczek Kyoshi
@@ -494,7 +571,6 @@ Craftable_Weapons:
           Material: STICK
           Amount: 2
       AllowedMagicEffects:
-      - Earth_Resolve_Dmg_Taking
       - Earth_Damage_Boost_Hight
       - Earth_1
       - Burrow
@@ -509,6 +585,7 @@ Craftable_Weapons:
         c1:
           Material: STICK
           Amount: 2
+  #
   earth_hammer:
     Material: WOODEN_SWORD
     Name: §a§lMłot Ziemi
@@ -523,11 +600,10 @@ Craftable_Weapons:
           Material: STICK
           Amount: 2
       AllowedMagicEffects:
-      - Earth_Resolve_Dmg_Taking
       - Earth_Damage_Boost_Absorb
       - Earth_Hammer_Aspect
       - Earth_Damage_Boost_Hight
-      - Earth_Health_Boost
+      - Earth_Health_Boost_On_Kill
       - Earth_1
       - Burrow
       - Knockback
@@ -541,6 +617,8 @@ Craftable_Weapons:
         c1:
           Material: STICK
           Amount: 2
+  #
+  # #####WATER
   w_boomerang:
     Material: WOODEN_SWORD
     Name: §b§lBoomerang
@@ -570,55 +648,133 @@ Craftable_Weapons:
         c1:
           Material: STICK
           Amount: 2
-
-  Vein_Miner:
-    Name: §6⛏ Vein Miner
-    Lore:
-      l1: §7Mines entire veins of ores.
-    IsMajor: true
-    Power: 128
-    Cost:
-      c1:
-        Material: DIAMOND
-        Amount: 3
-  Area_Miner:
-    Name: §c💥 Area Miner
-    Lore:
-      l1: §7Right-click to mine 3x3 area.
-    IsMajor: true
-    Cost:
-      c1:
-        Material: TNT
-        Amount: 5
-  Tree_Feller:
-    Name: §2🪓 Tree Feller
-    Lore:
-      l1: §7Chops down entire trees.
-    IsMajor: true
-    Power: 500
-    Cost:
-      c1:
-        Material: GOLDEN_AXE
-        Amount: 1
-  Axe_Throw:
-    Name: §b🪓 Axe Throw
-    Lore:
-      l1: §7Right-click air to throw axe.
-    IsMajor: false
-    Cost:
-      c1:
-        Material: IRON_INGOT
-        Amount: 5
-  Tool_Exp_Boost:
-    Name: §a✨ Tool Experience Boost
-    Lore:
-      l1: §7Increases experience gained from tools.
-    IsMajor: false
-    Cost:
-      c1:
-        Material: EXPERIENCE_BOTTLE
-        Amount: 5
-
+  #
+  # ###CHI
+  chi_knife:
+    Material: WOODEN_SWORD
+    Name: §6§lSztylet
+    Custom_Model_ID: 10007
+    Base_Damage: 2
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: IRON_INGOT
+          Amount: 2
+        m2:
+          Material: STICK
+          Amount: 1
+      AllowedMagicEffects:
+      - Knockback
+      - Monster_Hunter
+      - Looting
+      - Experience
+      - Midas
+    Item:
+      Lore:
+        l1: §eOstrze z zamarźniętą krwią...
+      Items_To_Craft:
+        c1:
+          Material: STICK
+          Amount: 2
+  #
+  # #####FIRE
+  f_spear:
+    Material: WOODEN_SWORD
+    Name: §4§lWłócznia Ognia
+    Custom_Model_ID: 10006
+    Base_Damage: 2
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: IRON_INGOT
+          Amount: 2
+        m2:
+          Material: STICK
+          Amount: 1
+      AllowedMagicEffects:
+      - Fire_Damage_Boost
+      - Fire_Speed_Boost
+      - Fire_Aspect
+      - Smoke_Aspect
+      - Lightning_Aspect
+      - fire_burst
+      - Knockback
+      - Monster_Hunter
+      - Looting
+      - Experience
+      - Midas
+    Item:
+      Lore:
+        l1: §eOstrze z zamarźniętą krwią...
+      Items_To_Craft:
+        c1:
+          Material: STICK
+          Amount: 2
+  #
+  meteor_sword:
+    Material: WOODEN_SWORD
+    Name: §4§lMiecz z Meteorytu
+    Custom_Model_ID: 10005
+    Base_Damage: 3
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ia:amonpack:meteor_shard
+          Amount: 3
+        m2:
+          Material: STICK
+          Amount: 1
+      AllowedMagicEffects:
+      - Fire_Damage_Boost
+      - Fire_Speed_Boost
+      - Fire_Aspect
+      - Smoke_Aspect
+      - Lightning_Aspect
+      - fire_burst
+      - Knockback
+      - Monster_Hunter
+      - Looting
+      - Experience
+      - Midas
+    Item:
+      Lore:
+        l1: §cOstrze wykłute z Meteorytu
+      Items_To_Craft:
+        c1:
+          Material: STICK
+          Amount: 2
+  # ###AIR
+  aang_staff:
+    Material: WOODEN_SWORD
+    Name: §7§lLaska Nomadów Powietrza
+    Custom_Model_ID: 10002
+    Base_Damage: 1
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: FEATHER
+          Amount: 6
+        m2:
+          Material: STICK
+          Amount: 6
+      AllowedMagicEffects:
+      - Minor_Air_Sound_Damage_Buff
+      - Major_Air_Sound_Hit
+      - Air_Thrust
+      - Air_Damage_Boost_Downward
+      - Knockback
+      - Monster_Hunter
+      - Looting
+      - Experience
+      - Midas
+    Item:
+      Lore:
+        l1: §fTradycjonalna broń Avatara Aanga.
+      Items_To_Craft:
+        c1:
+          Material: STICK
+          Amount: 2
+# ###Tools
 Craftable_Tools:
   meteorite_pickaxe:
     Material: NETHERITE_PICKAXE
@@ -633,10 +789,10 @@ Craftable_Tools:
           Material: STICK
           Amount: 2
       AllowedMagicEffects:
-        - Vein_Miner
-        - Area_Miner
-        - Mining_Loot_Boost
-        - Tool_Exp_Boost
+      - Vein_Miner
+      - Area_Miner
+      - Mining_Loot_Boost
+      - Experience
     Item:
       Lore:
         l1: §7Wykuty z kosmicznego metalu.
@@ -657,10 +813,10 @@ Craftable_Tools:
           Material: STICK
           Amount: 2
       AllowedMagicEffects:
-        - Tree_Feller
-        - Axe_Throw
-        - Mining_Loot_Boost
-        - Tool_Exp_Boost
+      - Tree_Feller
+      - Axe_Throw
+      - Mining_Loot_Boost
+      - Experience
     Item:
       Lore:
         l1: §7Ostrze z gwiezdnego pyłu.
@@ -668,13 +824,13 @@ Craftable_Tools:
         c1:
           Material: STICK
           Amount: 2
-
+# ##armor
 Craftable_Armor:
   crystal_helmet:
     Material: IRON_HELMET
     Name: §2Kryształowy Hełm z Omashu
     Custom_Model_ID: 0
-    Dmg_Reduction: 1.5
+    Dmg_Reduction: 0.5
     Mold:
       Items_To_Craft:
         m1:
@@ -692,7 +848,7 @@ Craftable_Armor:
     Material: DIAMOND_CHESTPLATE
     Name: §aZbroja Strażnika Ziemi
     Custom_Model_ID: 0
-    Dmg_Reduction: 2.0
+    Dmg_Reduction: 1.5
     Mold:
       Items_To_Craft:
         m1:
@@ -707,24 +863,46 @@ Craftable_Armor:
           Material: OBSIDIAN
           Amount: 3
 
+# ##Itemy
 Craftable_Items:
-  magic_scroll:
+  Scroll:
     Material: PAPER
-    Name: §dMagiczny Zwój
+    Name: §5Zwój Przyzwania Nieumarłych
     Custom_Model_ID: 10002
     Mold:
       Items_To_Craft:
         m1:
+          Material: ROTTEN_FLESH
+          Amount: 1
+        m2:
+          Material: BONE
+          Amount: 1
+      AllowedMagicEffects:
+      - Summon_Undead
+      - Meteor_Strike
+      - Ice_Wall
+      - Sand_Tornado
+    Item:
+      Lore:
+        l1: §7Zawiera starożytną wiedzę.
+      Items_To_Craft:
+        c1:
+          Material: PAPER
+          Amount: 1
+  Scroll_Of_TestBoss:
+    Material: PAPER
+    Name: §c[👹] Zwój Przyzwania Króla Szkieletów
+    Custom_Model_ID: 10002
+    Mold:
+      Items_To_Craft:
+        m2:
+          Material: DIAMOND
+          Amount: 1
+        m3:
           Material: PAPER
           Amount: 1
       AllowedMagicEffects:
-      - Meteor_Strike
-      - Sand_Tornado
-      - Summon_Undead
+      - Summon_Boss_TestBoss
     Item:
       Lore:
-        l1: §7Pusty zwój gotowy na zaklęcie.
-      Items_To_Craft:
-        c1:
-          Material: STRING
-          Amount: 1
+        l1: §7Zwój przyzywający potężnego bossa.

@@ -110,8 +110,17 @@ public class ConfigsMenager {
             combat_File = new File(rpgFolder, "Combat.yml");
             // perks_File = new File(rpgFolder, "Perks.yml");
 
-            if (!crafting_File.exists())
-                crafting_File.createNewFile();
+            if (!crafting_File.exists()) {
+                try (java.io.InputStream in = AmonPackPlugin.plugin.getResource("Crafting_Items.yml")) {
+                    if (in != null) {
+                        java.nio.file.Files.copy(in, crafting_File.toPath());
+                    } else {
+                        crafting_File.createNewFile();
+                    }
+                } catch (Exception e) {
+                    crafting_File.createNewFile();
+                }
+            }
             if (!mining_File.exists())
                 mining_File.createNewFile();
             if (!forest_File.exists())

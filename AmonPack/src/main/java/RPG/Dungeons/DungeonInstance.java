@@ -130,6 +130,41 @@ public class DungeonInstance {
         if (isFinished)
             return;
 
+        for (Player p : getOnlinePlayers()) {
+            DungeonPlayerStats stats = getPlayerStats(p);
+            if (stats != null) {
+                int charge = stats.getAmonGloveCharge();
+                if (charge > 0) {
+                    long lastChange = stats.getAmonGloveLastChangeTime();
+                    long now = System.currentTimeMillis();
+                    if (now - lastChange >= 4000) {
+                        int newCharge = charge - 1;
+                        stats.setAmonGloveCharge(newCharge);
+                        stats.setAmonGloveLastChangeTime(now);
+                    }
+                }
+                org.bukkit.boss.BossBar bar = stats.getAmonGloveBar();
+                if (bar != null) {
+                    org.bukkit.inventory.ItemStack held = p.getInventory().getItemInMainHand();
+                    boolean holdingGlove = false;
+                    if (held != null && held.getType() == Material.STONE_BUTTON && held.hasItemMeta()) {
+                        org.bukkit.persistence.PersistentDataContainer pdc = held.getItemMeta().getPersistentDataContainer();
+                        org.bukkit.NamespacedKey nkey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
+                        if (pdc.has(nkey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                            if ("AMON_GLOVE".equals(pdc.get(nkey, org.bukkit.persistence.PersistentDataType.STRING))) {
+                                holdingGlove = true;
+                            }
+                        }
+                    }
+                    if (holdingGlove && stats.getAmonGloveCharge() > 0) {
+                        updateGloveBossBar(p, stats);
+                    } else {
+                        bar.setVisible(false);
+                    }
+                }
+            }
+        }
+
         regenTickTimer++;
         if (regenTickTimer >= 10) {
             regenTickTimer = 0;
@@ -1365,5 +1400,37 @@ public class DungeonInstance {
                 }
             }
         }
+    }
+
+    public void updateGloveBossBar(Player p, DungeonPlayerStats stats) {
+        if (p == null || !p.isOnline()) return;
+        int charge = stats.getAmonGloveCharge();
+        int max = 5;
+        int blessingLevel = stats.getBlessingLevel("AMON_GLOVE");
+        if (blessingLevel == 2) max = 4;
+        else if (blessingLevel >= 3) max = 3;
+
+        if (charge <= 0) {
+            stats.cleanupGloveBar(p);
+            return;
+        }
+
+        org.bukkit.boss.BossBar bar = stats.getAmonGloveBar();
+        if (bar == null) {
+            bar = Bukkit.createBossBar("", org.bukkit.boss.BarColor.BLUE, org.bukkit.boss.BarStyle.SEGMENTED_6);
+            stats.setAmonGloveBar(bar);
+            bar.addPlayer(p);
+        }
+
+        if (charge >= max) {
+            bar.setColor(org.bukkit.boss.BarColor.YELLOW);
+            bar.setTitle(ChatColor.translateAlternateColorCodes('&', "&e&lREKAWICA AMONA: &b&l⚡ NAŁADOWANO! ⚡"));
+        } else {
+            bar.setColor(org.bukkit.boss.BarColor.BLUE);
+            String title = "&eMoc Rękawicy Amona: " + "&b" + "⚡".repeat(charge) + "&8" + "⚡".repeat(max - charge);
+            bar.setTitle(ChatColor.translateAlternateColorCodes('&', title));
+        }
+        bar.setProgress(Math.max(0.0, Math.min(1.0, (double) charge / max)));
+        bar.setVisible(true);
     }
 }

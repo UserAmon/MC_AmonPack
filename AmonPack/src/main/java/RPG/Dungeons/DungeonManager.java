@@ -30,6 +30,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 import java.io.IOException;
@@ -541,9 +543,12 @@ public class DungeonManager implements Listener {
     public void onMobKill(EntityDeathEvent event) {
         LivingEntity victim = event.getEntity();
         World world = victim.getWorld();
-        
+
         DungeonInstance run = activeInstances.get(world);
         if (run == null) return;
+
+        event.getDrops().clear();
+        event.setDroppedExp(0);
 
         String name = victim.getName();
         String cleanName = ChatColor.stripColor(name);
@@ -612,18 +617,230 @@ public class DungeonManager implements Listener {
             }
         }
 
+        Player attacker = null;
+        boolean isProjectile = false;
+        org.bukkit.entity.Entity arrowEntity = null;
         if (event.getDamager() instanceof Player) {
-            Player attacker = (Player) event.getDamager();
+            attacker = (Player) event.getDamager();
+        } else if (event.getDamager() instanceof org.bukkit.entity.Projectile) {
+            org.bukkit.entity.Projectile proj = (org.bukkit.entity.Projectile) event.getDamager();
+            if (proj.getShooter() instanceof Player) {
+                attacker = (Player) proj.getShooter();
+                isProjectile = true;
+                arrowEntity = proj;
+            }
+        }
+
+        if (attacker != null) {
             DungeonPlayerStats stats = run.getPlayerStats(attacker);
             if (stats != null) {
                 double damage = event.getDamage();
-                damage = stats.calculateOutgoingDamage(damage);
-                
                 boolean isPhysical = event.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK 
                     || event.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK;
+
+                org.bukkit.configuration.file.FileConfiguration cfg = AmonPackPlugin.getDungeonConfig();
                 
+                boolean isBow = false;
+                boolean isGlove = false;
+                boolean isDaggers = false;
+
+                if (isProjectile && arrowEntity != null && arrowEntity.hasMetadata("drawing_factor")) {
+                    isBow = true;
+                } else if (!isProjectile && isPhysical) {
+                    ItemStack held = attacker.getInventory().getItemInMainHand();
+                    if (held != null && held.hasItemMeta()) {
+                        String tag = held.getItemMeta().getPersistentDataContainer().get(
+                            new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                            org.bukkit.persistence.PersistentDataType.STRING
+                        );
+                        if ("AMON_GLOVE".equals(tag)) {
+                            isGlove = true;
+                        } else if ("MAI_DAGGERS".equals(tag)) {
+                            isDaggers = true;
+                        }
+                    }
+                }
+
                 java.util.Random rnd = new java.util.Random();
-                if (isPhysical) {
+                boolean landsCrit = false;
+                double critMultiplier = stats.getPCritDmg();
+
+                if (isBow) {
+                    double baseBowDmg = 3.0;
+                    if (cfg != null) baseBowDmg = cfg.getDouble("blessings.POUHAI_BOW.base-damage", 3.0);
+
+                    double drawingFactor = arrowEntity.getMetadata("drawing_factor").get(0).asDouble();
+                    boolean isThird = arrowEntity.hasMetadata("third_shot");
+
+                    damage = baseBowDmg * drawingFactor;
+
+                    if (isThird) {
+                        int bowLvl = stats.getBlessingLevel("POUHAI_BOW");
+                        if (event.getEntity() instanceof LivingEntity) {
+                            LivingEntity vic = (LivingEntity) event.getEntity();
+                            
+                            if (bowLvl >= 2) {
+                                for (org.bukkit.entity.Entity ent : vic.getNearbyEntities(6.0, 6.0, 6.0)) {
+                                    if (ent instanceof LivingEntity && !ent.getUniqueId().equals(attacker.getUniqueId()) && !ent.getUniqueId().equals(vic.getUniqueId())) {
+                                        LivingEntity le = (LivingEntity) ent;
+                                        org.bukkit.util.Vector pullDir = vic.getLocation().toVector().subtract(le.getLocation().toVector());
+                                        if (pullDir.lengthSquared() > 0.01) {
+                                            pullDir.normalize();
+                                            pullDir.setY(0.25);
+                                            le.setVelocity(pullDir.multiply(1.1));
+                                        }
+
+                                        Location start = le.getLocation().add(0, 1.0, 0);
+                                        Location end = vic.getLocation().add(0, 1.0, 0);
+                                        double distance = start.distance(end);
+                                        Vector delta = end.toVector().subtract(start.toVector()).normalize();
+                                        for (double d = 0; d < distance; d += 0.5) {
+                                            Location point = start.clone().add(delta.clone().multiply(d));
+                                            point.getWorld().spawnParticle(Particle.PORTAL, point, 1, 0, 0, 0, 0);
+                                            point.getWorld().spawnParticle(Particle.CLOUD, point, 1, 0.05, 0.05, 0.05, 0);
+                                        }
+                                    }
+                                }
+                                vic.getWorld().playSound(vic.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 0.8f, 1.5f);
+                            }
+
+                            if (bowLvl >= 3) {
+                                com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
+                                if (bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"))) {
+                                    vic.setFireTicks(80);
+                                    for (org.bukkit.entity.Entity ent : vic.getNearbyEntities(6.0, 6.0, 6.0)) {
+                                        if (ent instanceof LivingEntity && !ent.getUniqueId().equals(attacker.getUniqueId())) {
+                                            ent.setFireTicks(80);
+                                        }
+                                    }
+                                    vic.getWorld().spawnParticle(Particle.FLAME, vic.getLocation().add(0, 1.0, 0), 20, 0.5, 0.5, 0.5, 0.1);
+                                    vic.getWorld().playSound(vic.getLocation(), Sound.ITEM_FIRECHARGE_USE, 1.0f, 1.0f);
+                                }
+                            }
+                        }
+                    }
+                } else if (isGlove) {
+                    double baseGloveDmg = 1.0;
+                    if (cfg != null) baseGloveDmg = cfg.getDouble("blessings.AMON_GLOVE.base-damage", 1.0);
+
+                    damage = baseGloveDmg;
+
+                    if (event.getEntity() instanceof LivingEntity) {
+                        LivingEntity vic = (LivingEntity) event.getEntity();
+                        int amonLvl = stats.getBlessingLevel("AMON_GLOVE");
+                        
+                        com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
+                        boolean isEarth = bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"));
+
+                        org.bukkit.util.Vector knockDir = vic.getLocation().toVector().subtract(attacker.getLocation().toVector());
+                        knockDir.setY(0.25);
+                        double strength = (amonLvl >= 2 && isEarth) ? 1.4 : 0.8;
+                        if (knockDir.lengthSquared() > 0.01) {
+                            vic.setVelocity(knockDir.normalize().multiply(strength));
+                        }
+
+                        if (amonLvl >= 2 && isEarth) {
+                            vic.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 60, 1));
+                        }
+
+                        int maxCharge = 5;
+                        if (amonLvl == 2) maxCharge = 4;
+                        else if (amonLvl >= 3) maxCharge = 3;
+
+                        int curCharge = stats.getAmonGloveCharge();
+                        if (curCharge < maxCharge) {
+                            curCharge++;
+                            stats.setAmonGloveCharge(curCharge);
+                            stats.setAmonGloveLastChangeTime(System.currentTimeMillis());
+                            run.updateGloveBossBar(attacker, stats);
+                            attacker.playSound(attacker.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6f, 0.7f + curCharge * 0.2f);
+                        }
+
+                        if (curCharge >= maxCharge) {
+                            stats.setAmonGloveCharge(0);
+                            run.updateGloveBossBar(attacker, stats);
+                            damage = baseGloveDmg * 1.5;
+                            attacker.playSound(attacker.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 0.8f, 1.8f);
+                            attacker.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, vic.getLocation().add(0, 1.0, 0), 20, 0.3, 0.3, 0.3, 0.1);
+
+                            triggerAmonChainLightning(attacker, vic, baseGloveDmg * 1.0, amonLvl >= 3);
+                        }
+                    }
+                } else if (isDaggers) {
+                    double baseDaggerDmg = 2.0;
+                    if (cfg != null) baseDaggerDmg = cfg.getDouble("blessings.MAI_DAGGERS.base-damage", 2.0);
+
+                    damage = baseDaggerDmg;
+
+                    if (event.getEntity() instanceof LivingEntity) {
+                        LivingEntity vic = (LivingEntity) event.getEntity();
+                        int maiLvl = stats.getBlessingLevel("MAI_DAGGERS");
+
+                        UUID lastTarget = stats.getLastMaiHitTarget();
+                        UUID curTarget = vic.getUniqueId();
+                        boolean forceCrit = false;
+                        if (lastTarget == null || !lastTarget.equals(curTarget)) {
+                            forceCrit = true;
+                        }
+                        stats.setLastMaiHitTarget(curTarget);
+
+                        long lastHitTime = stats.getLastMaiHitTime();
+                        boolean idleCritDamageBoost = false;
+                        if (maiLvl >= 2 && System.currentTimeMillis() - lastHitTime >= 5000) {
+                            idleCritDamageBoost = true;
+                        }
+                        stats.setLastMaiHitTime(System.currentTimeMillis());
+
+                        double critRate = stats.getPCritRate();
+                        com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
+                        boolean isFire = bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"));
+                        if (maiLvl >= 3 && isFire) {
+                            critRate += 0.25;
+                        }
+
+                        if (forceCrit || rnd.nextDouble() < critRate) {
+                            landsCrit = true;
+                            if (idleCritDamageBoost) {
+                                critMultiplier += 0.50;
+                            }
+                        }
+
+                        if (landsCrit) {
+                            if (maiLvl >= 3) {
+                                if (rnd.nextDouble() < 0.33) {
+                                    double maxHP = attacker.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                                    double curHP = attacker.getHealth();
+                                    attacker.setHealth(Math.min(maxHP, curHP + 2.0));
+                                    attacker.getWorld().spawnParticle(Particle.HEART, attacker.getLocation().add(0, 1.5, 0), 3, 0.2, 0.2, 0.2, 0.0);
+                                    attacker.playSound(attacker.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.2f);
+                                }
+                                if (isFire) {
+                                    vic.setFireTicks(60);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                damage = stats.calculateOutgoingDamage(damage);
+
+                if (isBow) {
+                    boolean isThird = arrowEntity.hasMetadata("third_shot");
+                    if (isThird) {
+                        try {
+                            event.setDamage(org.bukkit.event.entity.EntityDamageEvent.DamageModifier.ARMOR, 0.0);
+                        } catch (Exception ignored) {}
+                    } else {
+                        if (rnd.nextDouble() < stats.getPCritRate()) {
+                            damage *= stats.getPCritDmg();
+                            attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+                            if (event.getEntity() instanceof LivingEntity) {
+                                LivingEntity vic = (LivingEntity) event.getEntity();
+                                vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
+                            }
+                        }
+                    }
+                } else if (isGlove) {
                     if (rnd.nextDouble() < stats.getPCritRate()) {
                         damage *= stats.getPCritDmg();
                         attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
@@ -632,31 +849,51 @@ public class DungeonManager implements Listener {
                             vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
                         }
                     }
-                    if (event.getEntity() instanceof LivingEntity) {
-                        LivingEntity vic = (LivingEntity) event.getEntity();
-                        DungeonBlessingManager.handlePoison(attacker, vic, stats);
-                    }
-                } else {
-                    if (rnd.nextDouble() < stats.getMCritRate()) {
-                        damage *= stats.getMCritDmg();
-                        attacker.playSound(attacker.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.8f);
+                } else if (isDaggers) {
+                    if (landsCrit) {
+                        damage *= critMultiplier;
+                        attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
                         if (event.getEntity() instanceof LivingEntity) {
                             LivingEntity vic = (LivingEntity) event.getEntity();
-                            vic.getWorld().spawnParticle(Particle.FLASH, vic.getLocation().add(0, 1.0, 0), 1, 0.0, 0.0, 0.0, 0.0);
-                            vic.getWorld().spawnParticle(Particle.ENCHANTED_HIT, vic.getLocation().add(0, 1.0, 0), 8, 0.2, 0.2, 0.2, 0.15);
+                            vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
+                        }
+                    }
+                } else {
+                    if (isPhysical) {
+                        if (rnd.nextDouble() < stats.getPCritRate()) {
+                            damage *= stats.getPCritDmg();
+                            attacker.playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+                            if (event.getEntity() instanceof LivingEntity) {
+                                LivingEntity vic = (LivingEntity) event.getEntity();
+                                vic.getWorld().spawnParticle(Particle.CRIT, vic.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.15);
+                            }
+                        }
+                        if (event.getEntity() instanceof LivingEntity) {
+                            LivingEntity vic = (LivingEntity) event.getEntity();
+                            DungeonBlessingManager.handlePoison(attacker, vic, stats);
+                        }
+                    } else {
+                        if (rnd.nextDouble() < stats.getMCritRate()) {
+                            damage *= stats.getMCritDmg();
+                            attacker.playSound(attacker.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.8f);
+                            if (event.getEntity() instanceof LivingEntity) {
+                                LivingEntity vic = (LivingEntity) event.getEntity();
+                                vic.getWorld().spawnParticle(Particle.FLASH, vic.getLocation().add(0, 1.0, 0), 1, 0.0, 0.0, 0.0, 0.0);
+                                vic.getWorld().spawnParticle(Particle.ENCHANTED_HIT, vic.getLocation().add(0, 1.0, 0), 8, 0.2, 0.2, 0.2, 0.15);
+                            }
                         }
                     }
                 }
-                
+
                 event.setDamage(damage);
-                
+
                 if (event.getEntity() instanceof LivingEntity) {
                     LivingEntity vic = (LivingEntity) event.getEntity();
                     DungeonBlessingManager.handleCombustion(attacker, vic, stats, event);
                 }
-                
+
                 DungeonBlessingManager.handleAdrenaline(attacker, event, stats);
-                
+
                 if (event.getEntity() instanceof LivingEntity) {
                     LivingEntity vic = (LivingEntity) event.getEntity();
                     DungeonBlessingManager.handleFlaming(attacker, vic, stats);
@@ -671,8 +908,8 @@ public class DungeonManager implements Listener {
             DungeonPlayerStats stats = run.getPlayerStats(victim);
             if (stats != null) {
                 if (event.getDamager() instanceof LivingEntity) {
-                    LivingEntity attacker = (LivingEntity) event.getDamager();
-                    boolean countered = DungeonBlessingManager.handleCounter(victim, attacker, event.getDamage(), stats, event);
+                    LivingEntity livingDamager = (LivingEntity) event.getDamager();
+                    boolean countered = DungeonBlessingManager.handleCounter(victim, livingDamager, event.getDamage(), stats, event);
                     if (countered) {
                         return;
                     }
@@ -695,6 +932,13 @@ public class DungeonManager implements Listener {
         }
 
         ItemStack item = event.getItem();
+
+        if (item != null && item.getType() == Material.BOW && event.getAction().name().startsWith("RIGHT_CLICK")) {
+            DungeonPlayerStats stats = run.getPlayerStats(player);
+            if (stats != null && stats.getBlessingLevel("POUHAI_BOW") > 0) {
+                stats.setPouhaiBowPullStartTime(System.currentTimeMillis());
+            }
+        }
 
         if (item != null && event.getAction().name().startsWith("RIGHT_CLICK")) {
             org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
@@ -772,9 +1016,27 @@ public class DungeonManager implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
         Player player = (Player) event.getWhoClicked();
-        
+
         DungeonInstance run = activeInstances.get(player.getWorld());
         if (run == null) return;
+
+        if (event.getSlot() == 40 || event.getRawSlot() == 45) {
+            ItemStack off = player.getInventory().getItemInOffHand();
+            if (off != null && off.hasItemMeta()) {
+                String tag = off.getItemMeta().getPersistentDataContainer().get(
+                    new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                    PersistentDataType.STRING
+                );
+                if ("MAI_DAGGERS_OFFHAND".equals(tag)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
+        org.bukkit.Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+            checkAndSwapMaiDaggers(player, player.getInventory().getItemInMainHand());
+        });
 
         if (event.getInventory().getHolder() instanceof DungeonLootChest) {
             event.setCancelled(true);
@@ -880,6 +1142,9 @@ public class DungeonManager implements Listener {
                             stats.upgradeBlessing(option.key);
                             player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Ulepszyles Blogoslawienstwo: " + option.key + " do poziomu " + stats.getBlessingLevel(option.key) + "!");
                         }
+                        if (option.key.equals("POUHAI_BOW") || option.key.equals("AMON_GLOVE") || option.key.equals("MAI_DAGGERS")) {
+                            giveOrUpdateLegendaryWeapon(player, stats, option.key);
+                        }
                         break;
                 }
                 
@@ -950,10 +1215,7 @@ public class DungeonManager implements Listener {
         Player player = event.getPlayer();
         DungeonInstance run = activeInstances.get(player.getWorld());
         if (run == null) return;
-
-        if (run.isPlayerSpectator(player)) {
-            event.setCancelled(true);
-        }
+        event.setCancelled(true);
     }
 
     @EventHandler
@@ -965,6 +1227,25 @@ public class DungeonManager implements Listener {
 
         if (run.isPlayerSpectator(player)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(org.bukkit.event.entity.FoodLevelChangeEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (activeInstances.containsKey(player.getWorld())) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        if (activeInstances.containsKey(player.getWorld())) {
+            event.getDrops().clear();
+            event.setDroppedExp(0);
         }
     }
 
@@ -1058,6 +1339,251 @@ public class DungeonManager implements Listener {
                 if (event.getCombuster() != null && !(event.getCombuster() instanceof Player)) {
                     event.setCancelled(true);
                 }
+            }
+        }
+    }
+
+    private void giveItemSafely(Player player, ItemStack item) {
+        if (player.getInventory().getItemInMainHand() == null || player.getInventory().getItemInMainHand().getType() == Material.AIR) {
+            player.getInventory().setItemInMainHand(item);
+        } else {
+            java.util.HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(item);
+            if (!leftover.isEmpty()) {
+                for (ItemStack left : leftover.values()) {
+                    player.getWorld().dropItemNaturally(player.getLocation(), left);
+                }
+            }
+        }
+    }
+
+    private void giveOrUpdateLegendaryWeapon(Player player, DungeonPlayerStats stats, String key) {
+        org.bukkit.configuration.file.FileConfiguration cfg = AmonPackPlugin.getDungeonConfig();
+        org.bukkit.configuration.ConfigurationSection sec = cfg != null ? cfg.getConfigurationSection("blessings." + key) : null;
+        if (sec != null) {
+            Material mat = Material.getMaterial(sec.getString("material", "WOODEN_SWORD"));
+            int modelId = sec.getInt("custom-model-id", 0);
+            String dispName = sec.getString("display-name", key);
+            List<String> loreLines = sec.getStringList("lore");
+            int level = stats.getBlessingLevel(key);
+
+            ItemStack item = new ItemStack(mat == null ? Material.WOODEN_SWORD : mat);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', dispName + " &e(Poziom " + level + ")"));
+                List<String> coloredLore = new ArrayList<>();
+                for (String line : loreLines) {
+                    coloredLore.add(ChatColor.translateAlternateColorCodes('&', line));
+                }
+                coloredLore.add(ChatColor.translateAlternateColorCodes('&', "&7Poziom: &a" + level));
+                meta.setLore(coloredLore);
+                if (modelId > 0) {
+                    meta.setCustomModelData(modelId);
+                }
+                meta.getPersistentDataContainer().set(
+                    new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                    PersistentDataType.STRING,
+                    key
+                );
+                item.setItemMeta(meta);
+            }
+
+            ItemStack existing = null;
+            for (ItemStack invItem : player.getInventory().getContents()) {
+                if (invItem != null && invItem.hasItemMeta()) {
+                    String tag = invItem.getItemMeta().getPersistentDataContainer().get(
+                        new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                        PersistentDataType.STRING
+                    );
+                    if (key.equals(tag)) {
+                        existing = invItem;
+                        break;
+                    }
+                }
+            }
+
+            if (existing != null) {
+                existing.setType(item.getType());
+                existing.setItemMeta(item.getItemMeta());
+                player.sendMessage(ChatColor.GREEN + "[Dungeons] Zaktualizowano " + dispName + " do Poziomu " + level + " w Twoim ekwipunku!");
+            } else {
+                giveItemSafely(player, item);
+                player.sendMessage(ChatColor.GREEN + "[Dungeons] Otrzymales " + dispName + " (Poziom " + level + ")!");
+            }
+        }
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onPlayerItemHeld(org.bukkit.event.player.PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        DungeonInstance run = activeInstances.get(player.getWorld());
+        if (run == null) return;
+
+        DungeonPlayerStats stats = run.getPlayerStats(player);
+        if (stats == null) return;
+
+        ItemStack newHeld = player.getInventory().getItem(event.getNewSlot());
+        checkAndSwapMaiDaggers(player, newHeld);
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onBowShoot(org.bukkit.event.entity.EntityShootBowEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+        Player player = (Player) event.getEntity();
+        DungeonInstance run = activeInstances.get(player.getWorld());
+        if (run == null) return;
+
+        DungeonPlayerStats stats = run.getPlayerStats(player);
+        if (stats == null) return;
+
+        int lvl = stats.getBlessingLevel("POUHAI_BOW");
+        if (lvl <= 0) return;
+
+        org.bukkit.inventory.ItemStack bow = event.getBow();
+        if (bow == null || bow.getType() != Material.BOW) return;
+
+        org.bukkit.inventory.meta.ItemMeta meta = bow.getItemMeta();
+        if (meta == null) return;
+
+        org.bukkit.persistence.PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type");
+        if (!pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING) 
+            || !"POUHAI_BOW".equals(pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING))) {
+            return;
+        }
+
+        long start = stats.getPouhaiBowPullStartTime();
+        double sec = (System.currentTimeMillis() - start) / 1000.0;
+        if (sec < 0.1 || sec > 30.0) {
+            sec = 0.5;
+        }
+
+        stats.setPouhaiBowShotCount(stats.getPouhaiBowShotCount() + 1);
+        boolean isThird = stats.getPouhaiBowShotCount() % 3 == 0;
+        double maxSec = (isThird && lvl >= 3) ? 6.0 : 4.0;
+        double factor = 1.0 + Math.min(sec, maxSec) * 0.25;
+
+        org.bukkit.entity.Entity arrow = event.getProjectile();
+        arrow.setMetadata("drawing_factor", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, factor));
+        arrow.setMetadata("bow_owner_uuid", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, player.getUniqueId().toString()));
+        if (isThird) {
+            arrow.setMetadata("third_shot", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, true));
+            if (arrow instanceof org.bukkit.entity.AbstractArrow) {
+                ((org.bukkit.entity.AbstractArrow) arrow).setPierceLevel(10);
+            }
+        }
+    }
+
+    public void checkAndSwapMaiDaggers(Player player, ItemStack held) {
+        boolean isMai = false;
+        if (held != null && held.getType() == Material.STONE_SWORD && held.hasItemMeta()) {
+            String tag = held.getItemMeta().getPersistentDataContainer().get(
+                new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                PersistentDataType.STRING
+            );
+            if ("MAI_DAGGERS".equals(tag)) {
+                isMai = true;
+            }
+        }
+
+        if (isMai) {
+            ItemStack off = player.getInventory().getItemInOffHand();
+            boolean already = false;
+            if (off != null && off.hasItemMeta()) {
+                String tag = off.getItemMeta().getPersistentDataContainer().get(
+                    new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                    PersistentDataType.STRING
+                );
+                if ("MAI_DAGGERS_OFFHAND".equals(tag)) {
+                    already = true;
+                }
+            }
+
+            if (!already) {
+                ItemStack oldOff = player.getInventory().getItemInOffHand();
+                if (oldOff != null && oldOff.getType() != Material.AIR) {
+                    player.setMetadata("daggers_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, oldOff));
+                } else {
+                    player.setMetadata("daggers_offhand_backup", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, new ItemStack(Material.AIR)));
+                }
+
+                ItemStack duplicate = held.clone();
+                duplicate.setAmount(1);
+                ItemMeta meta = duplicate.getItemMeta();
+                if (meta != null) {
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&d&lLewy Sztylet Mai"));
+                    meta.getPersistentDataContainer().set(
+                        new NamespacedKey(AmonPackPlugin.plugin, "dungeon_weapon_type"),
+                        PersistentDataType.STRING,
+                        "MAI_DAGGERS_OFFHAND"
+                    );
+                    duplicate.setItemMeta(meta);
+                }
+                player.getInventory().setItemInOffHand(duplicate);
+            }
+        } else {
+            if (player.hasMetadata("daggers_offhand_backup")) {
+                ItemStack backup = null;
+                for (org.bukkit.metadata.MetadataValue val : player.getMetadata("daggers_offhand_backup")) {
+                    if (val.getOwningPlugin().equals(AmonPackPlugin.plugin)) {
+                        backup = (ItemStack) val.value();
+                        break;
+                    }
+                }
+                player.removeMetadata("daggers_offhand_backup", AmonPackPlugin.plugin);
+                if (backup != null && backup.getType() != Material.AIR) {
+                    player.getInventory().setItemInOffHand(backup);
+                } else {
+                    player.getInventory().setItemInOffHand(null);
+                }
+            }
+        }
+    }
+
+    private void triggerAmonChainLightning(Player attacker, LivingEntity source, double lightningDamage, boolean applyStun) {
+        List<LivingEntity> hitList = new ArrayList<>();
+        hitList.add(source);
+
+        LivingEntity current = source;
+        for (int i = 0; i < 5; i++) {
+            LivingEntity next = null;
+            double bestDist = 36.0;
+            for (org.bukkit.entity.Entity ent : current.getNearbyEntities(6.0, 6.0, 6.0)) {
+                if (ent instanceof LivingEntity && !ent.getUniqueId().equals(attacker.getUniqueId())) {
+                    LivingEntity target = (LivingEntity) ent;
+                    int hits = java.util.Collections.frequency(hitList, target);
+                    if (hits < 2) {
+                        double dist = current.getLocation().distanceSquared(target.getLocation());
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            next = target;
+                        }
+                    }
+                }
+            }
+
+            if (next != null) {
+                hitList.add(next);
+                next.damage(lightningDamage, attacker);
+
+                Location start = current.getLocation().add(0, 1.0, 0);
+                Location end = next.getLocation().add(0, 1.0, 0);
+                double distance = start.distance(end);
+                Vector delta = end.toVector().subtract(start.toVector()).normalize();
+                for (double d = 0; d < distance; d += 0.4) {
+                    Location point = start.clone().add(delta.clone().multiply(d));
+                    point.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, point, 1, 0, 0, 0, 0);
+                }
+
+                next.getWorld().playSound(next.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.4f, 1.8f);
+
+                if (applyStun) {
+                    next.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 20, 9));
+                    next.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS, 20, 0));
+                    next.getWorld().spawnParticle(Particle.FLASH, next.getLocation().add(0, 1.0, 0), 1, 0, 0, 0, 0);
+                }
+                current = next;
+            } else {
+                break;
             }
         }
     }

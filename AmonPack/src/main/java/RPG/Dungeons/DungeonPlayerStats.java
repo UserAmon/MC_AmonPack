@@ -25,13 +25,46 @@ public class DungeonPlayerStats {
     private int regenLevel = 0;
     private final java.util.Map<String, Integer> blessingLevels = new java.util.HashMap<>();
 
-    // Unlocked and bound dungeon abilities for this run
     private final List<String> boundDungeonSkills = new ArrayList<>();
     private final List<String> activeBlessings = new ArrayList<>();
+
+    private UUID lastMaiHitTarget = null;
+    private long lastMaiHitTime = 0;
+    private int amonGloveCharge = 0;
+    private transient org.bukkit.boss.BossBar amonGloveBar = null;
+    private long amonGloveLastChangeTime = 0;
+    private long pouhaiBowPullStartTime = 0;
+    private int pouhaiBowShotCount = 0;
 
     public DungeonPlayerStats(UUID playerUUID, String playerName) {
         this.playerUUID = playerUUID;
         this.playerName = playerName;
+    }
+
+    public UUID getLastMaiHitTarget() { return lastMaiHitTarget; }
+    public void setLastMaiHitTarget(UUID target) { this.lastMaiHitTarget = target; }
+    public long getLastMaiHitTime() { return lastMaiHitTime; }
+    public void setLastMaiHitTime(long time) { this.lastMaiHitTime = time; }
+    public int getAmonGloveCharge() { return amonGloveCharge; }
+    public void setAmonGloveCharge(int charge) { this.amonGloveCharge = charge; }
+    public org.bukkit.boss.BossBar getAmonGloveBar() { return amonGloveBar; }
+    public void setAmonGloveBar(org.bukkit.boss.BossBar bar) { this.amonGloveBar = bar; }
+    public long getAmonGloveLastChangeTime() { return amonGloveLastChangeTime; }
+    public void setAmonGloveLastChangeTime(long time) { this.amonGloveLastChangeTime = time; }
+    public long getPouhaiBowPullStartTime() { return pouhaiBowPullStartTime; }
+    public void setPouhaiBowPullStartTime(long time) { this.pouhaiBowPullStartTime = time; }
+    public int getPouhaiBowShotCount() { return pouhaiBowShotCount; }
+    public void setPouhaiBowShotCount(int count) { this.pouhaiBowShotCount = count; }
+
+    public void cleanupGloveBar(Player player) {
+        if (amonGloveBar != null) {
+            if (player != null) {
+                amonGloveBar.removePlayer(player);
+            }
+            amonGloveBar.removeAll();
+            amonGloveBar.setVisible(false);
+            amonGloveBar = null;
+        }
     }
 
     /**
@@ -66,7 +99,8 @@ public class DungeonPlayerStats {
     public void resetAttributes(Player player) {
         if (player == null || !player.isOnline()) return;
 
-        // Reset Max Health
+        cleanupGloveBar(player);
+
         AttributeInstance maxHealthAttr = player.getAttribute(Attribute.MAX_HEALTH);
         if (maxHealthAttr != null) {
             maxHealthAttr.setBaseValue(20.0);
@@ -75,7 +109,6 @@ public class DungeonPlayerStats {
             }
         }
 
-        // Reset Speed
         AttributeInstance speedAttr = player.getAttribute(Attribute.MOVEMENT_SPEED);
         if (speedAttr != null) {
             speedAttr.setBaseValue(0.2);

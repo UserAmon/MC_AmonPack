@@ -137,3 +137,34 @@ blessings:
       - "&7Efekt: &aSzansa: 5% * Lvl na +25% do Plomieni"
       - "&7Ataki w podpalonych wrogow maja szanse"
       - "&7zadac zwiekszone o 25% obrazenia."
+  POUHAI_BOW:
+    display-name: "&d&lLuk z Pouhai"
+    material: "BOW"
+    custom-model-id: 10011
+    base-damage: 3.0
+    lore:
+      - "&6Legendarna Bron Pouhai"
+      - "&7Naciaganie luku zwieksza obrazenia do +100%."
+      - "&7Co 3 strzal przebija wrogow i ignoruje DEF."
+      - "&eUlepszanie odblokowuje nowe poziomy i synergie."
+  AMON_GLOVE:
+    display-name: "&d&lRekawica elektryczna Amona"
+    material: "STONE_BUTTON"
+    custom-model-id: 10012
+    base-damage: 1.0
+    lore:
+      - "&6Legendarna Rekawica Amona"
+      - "&7Ataki wręcz odpychaja wroga."
+      - "&7Laduje moc elektryczna. Przy pelnym naciagu"
+      - "&7wystrzeliwuje ionization chain lightning!"
+      - "&eUlepszanie odblokowuje nowe poziomy i synergie."
+  MAI_DAGGERS:
+    display-name: "&d&lSztylety Mai"
+    material: "STONE_SWORD"
+    custom-model-id: 10013
+    base-damage: 2.0
+    lore:
+      - "&6Legendarne Sztylety Mai"
+      - "&7Automatyczne trzymanie sztyletu w offhandzie."
+      - "&7Atak w nowy cel zawsze zadaje krytyk fizyczny."
+      - "&eUlepszanie odblokowuje nowe poziomy i synergie."
