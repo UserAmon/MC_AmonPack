@@ -36,7 +36,8 @@ public class DungeonEffect {
         PULL,
         DAMAGE,
         FORCE_FAIL,
-        GIVE_ITEM
+        GIVE_ITEM,
+        SHIELD_REMOVE
     }
 
     private final EffectType type;
@@ -44,6 +45,9 @@ public class DungeonEffect {
     private String message;
 
     private double x, y, z;
+    private List<Double> xList = new ArrayList<>();
+    private List<Double> yList = new ArrayList<>();
+    private List<Double> zList = new ArrayList<>();
 
     private double x1, y1, z1, x2, y2, z2;
     private Material material;
@@ -133,7 +137,7 @@ public class DungeonEffect {
                 break;
 
             case TELEPORT_PLAYERS:
-                Location tpLoc = new Location(instance.getWorld(), x, y, z);
+                Location tpLoc = getResolvedLocation(instance);
                 for (Player player : instance.getOnlinePlayers()) {
                     player.teleport(tpLoc);
                 }
@@ -141,6 +145,7 @@ public class DungeonEffect {
 
             case SPAWN_MOB:
                 Random rand = new Random();
+                Location mobLoc = getResolvedLocation(instance);
                 for (int i = 0; i < amount; i++) {
                     Encounter activeEnc = instance.getActiveEncounter();
                     if (activeEnc != null && activeEnc.getMaxMobs() > 0) {
@@ -154,11 +159,11 @@ public class DungeonEffect {
                             break;
                         }
                     }
-                    double rx = x + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
-                    double rz = z + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
+                    double rx = mobLoc.getX() + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
+                    double rz = mobLoc.getZ() + (range > 0 ? (rand.nextDouble() * range * 2 - range) : 0);
                     
                     String command = "mm mobs spawn -s " + mobName + ":" + level + " 1 " +
-                                     instance.getWorld().getName() + "," + rx + "," + y + "," + rz;
+                                     instance.getWorld().getName() + "," + rx + "," + mobLoc.getY() + "," + rz;
                     
                     Bukkit.dispatchCommand(console, command);
                 }
@@ -193,7 +198,7 @@ public class DungeonEffect {
                 break;
 
             case SPAWN_CHEST:
-                Location chestLoc = new Location(instance.getWorld(), x, y, z);
+                Location chestLoc = getResolvedLocation(instance);
                 Block block = chestLoc.getBlock();
                 block.setType(Material.CHEST);
                 
@@ -217,6 +222,7 @@ public class DungeonEffect {
                         Encounter enc = instance.getActiveEncounter();
                         ConsoleCommandSender cmdConsole = Bukkit.getServer().getConsoleSender();
                         Random spawnRand = new Random();
+                        Location spawnLoc = getResolvedLocation(instance);
                         for (int i = 0; i < amount; i++) {
                             if (enc != null && enc.getMaxMobs() > 0) {
                                 int currentMobs = 0;
@@ -229,10 +235,10 @@ public class DungeonEffect {
                                     break;
                                 }
                             }
-                            double rx = x + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
-                            double rz = z + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
+                            double rx = spawnLoc.getX() + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
+                            double rz = spawnLoc.getZ() + (range > 0 ? (spawnRand.nextDouble() * range * 2 - range) : 0);
                             String command = "mm mobs spawn -s " + mobName + ":" + level + " 1 " +
-                                             instance.getWorld().getName() + "," + rx + "," + y + "," + rz;
+                                             instance.getWorld().getName() + "," + rx + "," + spawnLoc.getY() + "," + rz;
                             Bukkit.dispatchCommand(cmdConsole, command);
                         }
                     }
@@ -250,7 +256,7 @@ public class DungeonEffect {
                 break;
 
             case PULL:
-                Location pullLoc = new Location(instance.getWorld(), x, y, z);
+                Location pullLoc = getResolvedLocation(instance);
                 double force = amount > 0 ? amount : 1.0;
                 for (Player player : instance.getOnlinePlayers()) {
                     if (!instance.isPlayerSpectator(player)) {
@@ -346,6 +352,12 @@ public class DungeonEffect {
                     }
                 }
                 break;
+
+            case SHIELD_REMOVE:
+                Location removeLoc = getResolvedLocation(instance);
+                double rad = range > 0.0 ? range : 5.0;
+                instance.removeShieldsInArea(removeLoc, rad);
+                break;
         }
     }
 
@@ -430,6 +442,10 @@ public class DungeonEffect {
         return range;
     }
 
+    public void setRange(double range) {
+        this.range = range;
+    }
+
     public String getChestType() {
         return chestType;
     }
@@ -456,5 +472,42 @@ public class DungeonEffect {
 
     public void setSlotsCount(int slotsCount) {
         this.slotsCount = slotsCount;
+    }
+
+    public List<Double> getXList() {
+        return xList;
+    }
+
+    public void setXList(List<Double> xList) {
+        this.xList = xList;
+        if (!xList.isEmpty()) {
+            this.x = xList.get(0);
+        }
+    }
+
+    public List<Double> getYList() {
+        return yList;
+    }
+
+    public void setYList(List<Double> yList) {
+        this.yList = yList;
+        if (!yList.isEmpty()) {
+            this.y = yList.get(0);
+        }
+    }
+
+    public List<Double> getZList() {
+        return zList;
+    }
+
+    public void setZList(List<Double> zList) {
+        this.zList = zList;
+        if (!zList.isEmpty()) {
+            this.z = zList.get(0);
+        }
+    }
+
+    public Location getResolvedLocation(DungeonInstance instance) {
+        return instance.getResolvedLocation(this);
     }
 }

@@ -251,6 +251,9 @@ public class DungeonManager implements Listener {
                                             cond = new DungeonCondition(
                                                 (String) map.get("mob-name"), asInt(map.get("amount"))
                                             );
+                                            if (map.containsKey("mob-display-name")) {
+                                                cond.setMobDisplayName((String) map.get("mob-display-name"));
+                                            }
                                             break;
                                         case INTERACT_BLOCK_WITH_ITEM:
                                             Material bMat = Material.getMaterial((String) map.getOrDefault("block-material", ""));
@@ -278,17 +281,24 @@ public class DungeonManager implements Listener {
                                                 asDouble(map.get("radius")), (String) map.get("item"), asInt(map.get("amount"))
                                             );
                                             break;
-                                        case THROW_AT_ENEMY:
+                                        case SHIELDED:
                                             cond = new DungeonCondition(
-                                                DungeonCondition.ConditionType.THROW_AT_ENEMY,
+                                                DungeonCondition.ConditionType.SHIELDED,
                                                 (String) map.get("mob-name"), (String) map.get("item"), asInt(map.get("amount")),
                                                 asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z"))
                                             );
+                                            cond.setShieldType((String) map.getOrDefault("shield-type", "throw"));
+                                            if (map.containsKey("mob-display-name")) {
+                                                cond.setMobDisplayName((String) map.get("mob-display-name"));
+                                            }
                                             break;
                                         case DROP_ON_DEATH:
                                             cond = new DungeonCondition(
                                                 (String) map.get("mob-name"), (String) map.get("item"), asDouble(map.get("chance"))
                                             );
+                                            if (map.containsKey("mob-display-name")) {
+                                                cond.setMobDisplayName((String) map.get("mob-display-name"));
+                                            }
                                             break;
                                         case PERIODIC_CHECK:
                                             cond = new DungeonCondition(DungeonCondition.ConditionType.PERIODIC_CHECK);
@@ -301,6 +311,7 @@ public class DungeonManager implements Listener {
                                             cond.setX(asDouble(map.get("x")));
                                             cond.setY(asDouble(map.get("y")));
                                             cond.setZ(asDouble(map.get("z")));
+                                            cond.setRadius(asDouble(map.getOrDefault("radius", 0.0)));
                                             cond.setInterval(asInt(map.getOrDefault("interval", 5)));
                                             break;
                                         case ALIVE:
@@ -311,6 +322,9 @@ public class DungeonManager implements Listener {
                                             cond.setRadius(asDouble(map.getOrDefault("radius", 20.0)));
                                             cond.setMobName((String) map.get("mob-name"));
                                             cond.setAmount(asInt(map.getOrDefault("amount", 1)));
+                                            if (map.containsKey("mob-display-name")) {
+                                                cond.setMobDisplayName((String) map.get("mob-display-name"));
+                                            }
                                             break;
                                         case COLLECT_POINTS:
                                             cond = new DungeonCondition(DungeonCondition.ConditionType.COLLECT_POINTS);
@@ -335,6 +349,9 @@ public class DungeonManager implements Listener {
                                             break;
                                     }
                                     if (cond != null) {
+                                        if (map.containsKey("x")) cond.setXList(asDoubleList(map.get("x")));
+                                        if (map.containsKey("y")) cond.setYList(asDoubleList(map.get("y")));
+                                        if (map.containsKey("z")) cond.setZList(asDoubleList(map.get("z")));
                                         List<DungeonEffect> onComp = new ArrayList<>();
                                         List<?> rawOnComp = (List<?>) map.get("oncomplete");
                                         if (rawOnComp != null) {
@@ -484,68 +501,90 @@ public class DungeonManager implements Listener {
         }
         if (eType == null) return null;
 
+        DungeonEffect eff = null;
         switch (eType) {
             case SEND_MESSAGE:
-                return new DungeonEffect((String) map.get("message"));
+                eff = new DungeonEffect((String) map.get("message"));
+                break;
             case TELEPORT_PLAYERS:
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z"))
                 );
+                break;
             case SPAWN_MOB:
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     (String) map.get("mob-name"), asInt(map.get("amount")), asInt(map.get("level")),
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), asDouble(map.get("range"))
                 );
+                break;
             case OPEN_DOOR:
             case CLOSE_DOOR:
                 Material doorMat = Material.getMaterial((String) map.getOrDefault("material", "STONE"));
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     eType, asDouble(map.get("x1")), asDouble(map.get("y1")), asDouble(map.get("z1")),
                     asDouble(map.get("x2")), asDouble(map.get("y2")), asDouble(map.get("z2")), doorMat
                 );
+                break;
             case GIVE_READY_COMPASS:
-                return new DungeonEffect(DungeonEffect.EffectType.GIVE_READY_COMPASS);
+                eff = new DungeonEffect(DungeonEffect.EffectType.GIVE_READY_COMPASS);
+                break;
             case SPAWN_CHEST:
-                DungeonEffect eff = new DungeonEffect(
+                eff = new DungeonEffect(
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), (String) map.getOrDefault("chest-type", "ROGUELITE_CHEST")
                 );
                 eff.setBlessingType((String) map.getOrDefault("blessing_type", "Chest_General"));
                 eff.setSlotsCount(asInt(map.getOrDefault("slots", 3)));
-                return eff;
+                break;
             case COMPLETE_DUNGEON:
-                return new DungeonEffect(DungeonEffect.EffectType.COMPLETE_DUNGEON);
+                eff = new DungeonEffect(DungeonEffect.EffectType.COMPLETE_DUNGEON);
+                break;
             case SPAWN_UNTIL:
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     DungeonEffect.EffectType.SPAWN_UNTIL,
                     (String) map.get("mob-name"), asInt(map.get("amount")), asInt(map.get("level")),
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), asDouble(map.get("range")),
                     asInt(map.get("interval"))
                 );
+                break;
             case KNOCKBACK:
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     DungeonEffect.EffectType.KNOCKBACK, "", 0, 0,
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), 0.0, 0
                 );
+                break;
             case PULL:
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     DungeonEffect.EffectType.PULL, "", asInt(map.get("amount")), 0,
                     asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")), 0.0, 0
                 );
+                break;
             case DAMAGE:
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     DungeonEffect.EffectType.DAMAGE, "", asInt(map.get("amount")), 0,
                     0.0, 0.0, 0.0, 0.0, 0
                 );
+                break;
             case FORCE_FAIL:
-                return new DungeonEffect(DungeonEffect.EffectType.FORCE_FAIL);
+                eff = new DungeonEffect(DungeonEffect.EffectType.FORCE_FAIL);
+                break;
             case GIVE_ITEM:
-                return new DungeonEffect(
+                eff = new DungeonEffect(
                     DungeonEffect.EffectType.GIVE_ITEM,
                     (String) map.get("item"),
                     asInt(map.getOrDefault("amount", 1))
                 );
+                break;
+            case SHIELD_REMOVE:
+                eff = new DungeonEffect(DungeonEffect.EffectType.SHIELD_REMOVE);
+                eff.setRange(asDouble(map.getOrDefault("radius", 5.0)));
+                break;
         }
-        return null;
+        if (eff != null) {
+            if (map.containsKey("x")) eff.setXList(asDoubleList(map.get("x")));
+            if (map.containsKey("y")) eff.setYList(asDoubleList(map.get("y")));
+            if (map.containsKey("z")) eff.setZList(asDoubleList(map.get("z")));
+        }
+        return eff;
     }
 
     public boolean startDungeon(String dungeonId, List<Player> party) {
@@ -598,6 +637,8 @@ public class DungeonManager implements Listener {
         DungeonInstance run = activeInstances.get(world);
         if (run == null) return;
 
+        run.registerBossDeath(victim.getUniqueId());
+
         if (run.isEnemyMarked(victim.getUniqueId())) {
             Player marker = run.getMarkerPlayer(victim.getUniqueId());
             if (marker != null && marker.isOnline()) {
@@ -634,7 +675,9 @@ public class DungeonManager implements Listener {
         if (encounter != null) {
             for (DungeonCondition condition : encounter.getConditions()) {
                 if (condition.getType() == DungeonCondition.ConditionType.DROP_ON_DEATH) {
-                    if (cleanName.equalsIgnoreCase(condition.getMobName()) || victim.getType().name().equalsIgnoreCase(condition.getMobName())) {
+                    String targetName = (condition.getMobDisplayName() != null && !condition.getMobDisplayName().isEmpty()) ? condition.getMobDisplayName() : condition.getMobName();
+                    String cleanTarget = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', targetName));
+                    if (cleanName.equalsIgnoreCase(cleanTarget) || victim.getType().name().equalsIgnoreCase(cleanTarget)) {
                         double chance = condition.getChance();
                         if (new Random().nextDouble() * 100 <= chance) {
                             DungeonCustomItem customItem = run.getTemplate().getCustomItems().get(condition.getCustomItemId());
@@ -1122,7 +1165,7 @@ public class DungeonManager implements Listener {
                             attacker.playSound(attacker.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1.0f, 1.8f);
                             if (event.getEntity() instanceof LivingEntity) {
                                 LivingEntity vic = (LivingEntity) event.getEntity();
-                                vic.getWorld().spawnParticle(Particle.FLASH, vic.getLocation().add(0, 1.0, 0), 1, 0.0, 0.0, 0.0, 0.0);
+                                vic.getWorld().spawnParticle(Particle.GLOW, vic.getLocation().add(0, 1.0, 0), 1, 0.0, 0.0, 0.0, 0.0);
                                 vic.getWorld().spawnParticle(Particle.ENCHANTED_HIT, vic.getLocation().add(0, 1.0, 0), 8, 0.2, 0.2, 0.2, 0.15);
                             }
                         }
@@ -1177,6 +1220,7 @@ public class DungeonManager implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getHand() == org.bukkit.inventory.EquipmentSlot.OFF_HAND) return;
         Player player = event.getPlayer();
         DungeonInstance run = activeInstances.get(player.getWorld());
         if (run == null) return;
@@ -1311,7 +1355,7 @@ public class DungeonManager implements Listener {
             if (encounter != null) {
                 for (DungeonCondition condition : encounter.getConditions()) {
                     if (condition.getType() == DungeonCondition.ConditionType.INTERACT_BLOCK_WITH_ITEM) {
-                        if (condition.isMetInteract(block.getLocation(), block.getType(), item)) {
+                        if (condition.isMetInteract(block.getLocation(), block.getType(), item, run)) {
                             if (item != null && item.getAmount() > 0) {
                                 int newAmt = item.getAmount() - 1;
                                 if (newAmt > 0) {
@@ -1520,6 +1564,20 @@ public class DungeonManager implements Listener {
             return ((Number) o).intValue();
         }
         return 0;
+    }
+
+    private List<Double> asDoubleList(Object o) {
+        List<Double> list = new ArrayList<>();
+        if (o instanceof List) {
+            for (Object obj : (List<?>) o) {
+                if (obj instanceof Number) {
+                    list.add(((Number) obj).doubleValue());
+                }
+            }
+        } else if (o instanceof Number) {
+            list.add(((Number) o).doubleValue());
+        }
+        return list;
     }
 
     public DungeonInstance getActiveInstance(Player player) {
@@ -1996,7 +2054,7 @@ public class DungeonManager implements Listener {
                 if (applyStun) {
                     next.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 20, 9));
                     next.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS, 20, 0));
-                    next.getWorld().spawnParticle(Particle.FLASH, next.getLocation().add(0, 1.0, 0), 1, 0, 0, 0, 0);
+                    next.getWorld().spawnParticle(Particle.GLOW, next.getLocation().add(0, 1.0, 0), 1, 0, 0, 0, 0);
                 }
                 current = next;
             } else {
@@ -2340,25 +2398,74 @@ public class DungeonManager implements Listener {
         int duration = customItem.getDuration();
         if (effect == null || effect.isEmpty()) return;
 
+        DungeonPlayerStats stats = run.getPlayerStats(player);
+
         if ("heal".equalsIgnoreCase(effect)) {
             double maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
             player.setHealth(Math.min(maxHealth, player.getHealth() + value));
             player.sendMessage(ChatColor.GREEN + "[Dungeons] Uleczono o " + value + " HP!");
             player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f);
         } else if ("speed".equalsIgnoreCase(effect)) {
-            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, duration * 20, (int) value - 1));
-            player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Speed " + (int) value + " na " + duration + " sekund!");
+            if (stats != null) {
+                stats.addSpeedBoost(value);
+                stats.applyStatsToPlayer(player);
+                player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Speed Boost +" + value + " na " + duration + " sekund!");
+                new org.bukkit.scheduler.BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (run.getOnlinePlayers().contains(player)) {
+                            DungeonPlayerStats s = run.getPlayerStats(player);
+                            if (s != null) {
+                                s.addSpeedBoost(-value);
+                                s.applyStatsToPlayer(player);
+                                player.sendMessage(ChatColor.RED + "[Dungeons] Efekt Speed Boost wygasl!");
+                            }
+                        }
+                    }
+                }.runTaskLater(AmonPackPlugin.plugin, duration * 20L);
+            }
         } else if ("jumpboost".equalsIgnoreCase(effect) || "jump_boost".equalsIgnoreCase(effect)) {
             player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.JUMP_BOOST, duration * 20, (int) value - 1));
             player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Jump Boost " + (int) value + " na " + duration + " sekund!");
         } else if ("damage_boost".equalsIgnoreCase(effect) || "strength".equalsIgnoreCase(effect)) {
-            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.STRENGTH, duration * 20, (int) value - 1));
-            player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Sile " + (int) value + " na " + duration + " sekund!");
+            if (stats != null) {
+                stats.addDmgMultiplier(value);
+                player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano Damage Boost +" + (int)(value * 100) + "% na " + duration + " sekund!");
+                new org.bukkit.scheduler.BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (run.getOnlinePlayers().contains(player)) {
+                            DungeonPlayerStats s = run.getPlayerStats(player);
+                            if (s != null) {
+                                s.addDmgMultiplier(-value);
+                                player.sendMessage(ChatColor.RED + "[Dungeons] Efekt Damage Boost wygasl!");
+                            }
+                        }
+                    }
+                }.runTaskLater(AmonPackPlugin.plugin, duration * 20L);
+            }
         } else if ("hp_boost".equalsIgnoreCase(effect) || "health_boost".equalsIgnoreCase(effect)) {
-            player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.HEALTH_BOOST, duration * 20, (int) value - 1));
-            player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano HP Boost na " + duration + " sekund!");
+            if (stats != null) {
+                stats.addHpBoost(value);
+                stats.applyStatsToPlayer(player);
+                double maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue();
+                player.setHealth(Math.min(maxHealth, player.getHealth() + value));
+                player.sendMessage(ChatColor.GREEN + "[Dungeons] Aktywowano HP Boost +" + value + " na " + duration + " sekund!");
+                new org.bukkit.scheduler.BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (run.getOnlinePlayers().contains(player)) {
+                            DungeonPlayerStats s = run.getPlayerStats(player);
+                            if (s != null) {
+                                s.addHpBoost(-value);
+                                s.applyStatsToPlayer(player);
+                                player.sendMessage(ChatColor.RED + "[Dungeons] Efekt HP Boost wygasl!");
+                            }
+                        }
+                    }
+                }.runTaskLater(AmonPackPlugin.plugin, duration * 20L);
+            }
         } else if ("crit_rate_boost".equalsIgnoreCase(effect)) {
-            DungeonPlayerStats stats = run.getPlayerStats(player);
             if (stats != null) {
                 stats.addPCritRate(value);
                 stats.addMCritRate(value);

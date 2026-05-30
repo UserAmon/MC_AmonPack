@@ -44,6 +44,10 @@ public class DungeonInstance {
     private final Map<DungeonCondition, Integer> zoneCaptureCounters = new HashMap<>();
     private final Map<DungeonCondition, Integer> throwHitsCounter = new HashMap<>();
     private final Set<UUID> activeShieldedEnemyUuids = new HashSet<>();
+    private final Set<UUID> deadBossUuids = new HashSet<>();
+    private final Map<DungeonCondition, UUID> conditionBossUuids = new HashMap<>();
+    private final Map<DungeonCondition, Location> resolvedConditionLocs = new HashMap<>();
+    private final Map<DungeonEffect, Location> resolvedEffectLocs = new HashMap<>();
     private final Set<UUID> spawnedMobUuids = new HashSet<>();
     private boolean transitioning = false;
     private long encounterStartTime = 0;
@@ -435,27 +439,33 @@ public class DungeonInstance {
         if (encounter != null) {
             if (System.currentTimeMillis() - encounterStartTime >= 3000) {
                 for (DungeonCondition condition : encounter.getConditions()) {
-                    if (condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
-                        boolean bossStillAlive = false;
-                        if (!activeShieldedEnemyUuids.isEmpty()) {
-                            for (UUID uuid : activeShieldedEnemyUuids) {
-                                org.bukkit.entity.Entity entity = Bukkit.getEntity(uuid);
-                                if (entity instanceof org.bukkit.entity.LivingEntity && !entity.isDead() && entity.isValid()) {
-                                    bossStillAlive = true;
-                                    break;
-                                }
+                    if (condition.getType() == DungeonCondition.ConditionType.SHIELDED) {
+                        boolean bossStillAlive = true;
+                        UUID bossUuid = conditionBossUuids.get(condition);
+                        if (bossUuid != null) {
+                            if (deadBossUuids.contains(bossUuid)) {
+                                bossStillAlive = false;
                             }
                         } else {
+                            boolean foundInWorld = false;
                             for (org.bukkit.entity.LivingEntity le : world.getLivingEntities()) {
                                 if (!(le instanceof Player)) {
                                     String cleanName = ChatColor.stripColor(le.getName());
-                                    if (cleanName.equalsIgnoreCase(condition.getMobName()) || le.getType().name().equalsIgnoreCase(condition.getMobName())) {
+                                    String targetName = condition.getMobDisplayName() != null ? condition.getMobDisplayName() : condition.getMobName();
+                                    String cleanTargetName = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', targetName));
+                                    if (cleanName.equalsIgnoreCase(cleanTargetName) || le.getType().name().equalsIgnoreCase(cleanTargetName)) {
                                         if (!le.isDead() && le.isValid()) {
-                                            bossStillAlive = true;
+                                            foundInWorld = true;
+                                            conditionBossUuids.put(condition, le.getUniqueId());
+                                            activeShieldedEnemyUuids.add(le.getUniqueId());
+                                            le.setRemoveWhenFarAway(false);
                                             break;
                                         }
                                     }
                                 }
+                            }
+                            if (!foundInWorld) {
+                                bossStillAlive = false;
                             }
                         }
                         if (!bossStillAlive) {
@@ -483,10 +493,11 @@ public class DungeonInstance {
             }
 
             for (DungeonCondition condition : encounter.getConditions()) {
-                if (condition.getType() == DungeonCondition.ConditionType.LOOKING_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
-                    double cx = condition.getX();
-                    double cy = condition.getY();
-                    double cz = condition.getZ();
+                if (condition.getType() == DungeonCondition.ConditionType.LOOKING_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT) {
+                    Location circleLoc = getResolvedLocation(condition);
+                    double cx = circleLoc.getX();
+                    double cy = circleLoc.getY();
+                    double cz = circleLoc.getZ();
                     double r = 0.75;
                     for (double angle = 0; angle < 2 * Math.PI; angle += Math.PI / 8) {
                         double dy = Math.sin(angle) * r;
@@ -496,11 +507,11 @@ public class DungeonInstance {
                     }
                 }
                 if (condition.getType() == DungeonCondition.ConditionType.ZONE) {
-                    double cx = condition.getX();
-                    double cy = condition.getY();
-                    double cz = condition.getZ();
+                    Location zoneLoc = getResolvedLocation(condition);
+                    double cx = zoneLoc.getX();
+                    double cy = zoneLoc.getY();
+                    double cz = zoneLoc.getZ();
                     double radius = condition.getRadius();
-                    Location center = new Location(world, cx, cy, cz);
                     
                     for (double angle = 0; angle < 2 * Math.PI; angle += Math.PI / 16) {
                         double px = cx + radius * Math.cos(angle);
@@ -510,7 +521,7 @@ public class DungeonInstance {
                     
                     boolean playerInZone = false;
                     for (Player player : getOnlinePlayers()) {
-                        if (!isPlayerSpectator(player) && player.getLocation().distanceSquared(center) <= radius * radius) {
+                        if (!isPlayerSpectator(player) && player.getLocation().distanceSquared(zoneLoc) <= radius * radius) {
                             playerInZone = true;
                             break;
                         }
@@ -571,9 +582,60 @@ public class DungeonInstance {
                             act = getZoneProgress(condition);
                             req = condition.getTimeRequired();
                             break;
-                        } else if (condition.getType() == DungeonCondition.ConditionType.THROW_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
+                        } else if (condition.getType() == DungeonCondition.ConditionType.THROW_AT) {
                             act = getThrowHits(condition);
                             req = condition.getAmount();
+                            break;
+                        } else if (condition.getType() == DungeonCondition.ConditionType.SHIELDED) {
+                            UUID bossUuid = conditionBossUuids.get(condition);
+                            boolean isShielded = activeShieldedEnemyUuids.contains(bossUuid);
+                            if (bossUuid == null) {
+                                isShielded = true;
+                            }
+                            
+                            if (isShielded) {
+                                if ("throw".equalsIgnoreCase(condition.getShieldType())) {
+                                    act = getThrowHits(condition);
+                                    req = condition.getAmount();
+                                } else {
+                                    act = 100;
+                                    req = 100;
+                                    titleTemplate = "&5Tarcza Bossa Aktywna! &8- &fUżyj mechanizmów!";
+                                }
+                            } else {
+                                double maxHp = 0.0;
+                                double currentHp = 0.0;
+                                if (bossUuid != null) {
+                                    org.bukkit.entity.Entity entity = Bukkit.getEntity(bossUuid);
+                                    if (entity instanceof org.bukkit.entity.LivingEntity && !entity.isDead()) {
+                                        org.bukkit.entity.LivingEntity le = (org.bukkit.entity.LivingEntity) entity;
+                                        maxHp = le.getMaxHealth();
+                                        currentHp = le.getHealth();
+                                    }
+                                } else {
+                                    for (org.bukkit.entity.LivingEntity le : world.getLivingEntities()) {
+                                        if (!(le instanceof Player)) {
+                                            String cleanName = ChatColor.stripColor(le.getName());
+                                            if (cleanName.equalsIgnoreCase(condition.getMobName()) || le.getType().name().equalsIgnoreCase(condition.getMobName())) {
+                                                if (!le.isDead() && le.isValid()) {
+                                                    maxHp = le.getMaxHealth();
+                                                    currentHp = le.getHealth();
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (maxHp > 0.0) {
+                                    double healthPercent = currentHp / maxHp;
+                                    act = (int) (healthPercent * 100);
+                                    req = 100;
+                                } else {
+                                    act = 0;
+                                    req = 100;
+                                }
+                                titleTemplate = "&c&lZgładź Bossa! &8- &fHP: $ActNumber$%";
+                            }
                             break;
                         }
                     }
@@ -838,6 +900,7 @@ public class DungeonInstance {
         completedEncounters.add(current.getId());
         clearSpawnUntilTasks();
         completedConditionsIndices.clear();
+        deadBossUuids.clear();
 
         String nextId = null;
 
@@ -991,6 +1054,10 @@ public class DungeonInstance {
             lookingTimerMap.clear();
             aliveStateMap.clear();
             activePlatformsState.clear();
+            conditionBossUuids.clear();
+            deadBossUuids.clear();
+            resolvedConditionLocs.clear();
+            resolvedEffectLocs.clear();
 
             for (DungeonCondition condition : encounter.getConditions()) {
                 if (condition.getType() == DungeonCondition.ConditionType.PERIODIC_CHECK) {
@@ -1036,26 +1103,53 @@ public class DungeonInstance {
             }
 
             for (DungeonCondition condition : encounter.getConditions()) {
-                if (condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
-                    String command = "mm mobs spawn -s " + condition.getMobName() + ":1 1 " +
-                                     world.getName() + "," + condition.getX() + "," + condition.getY() + "," + condition.getZ();
-                    Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), command);
-                    
-                    new org.bukkit.scheduler.BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            Location loc = new Location(world, condition.getX(), condition.getY(), condition.getZ());
-                            for (org.bukkit.entity.Entity entity : world.getNearbyEntities(loc, 3.0, 3.0, 3.0)) {
-                                if (entity instanceof org.bukkit.entity.LivingEntity && !(entity instanceof Player)) {
-                                    String name = entity.getName();
-                                    String cleanName = ChatColor.stripColor(name);
-                                    if (cleanName.equalsIgnoreCase(condition.getMobName()) || entity.getType().name().equalsIgnoreCase(condition.getMobName())) {
-                                        activeShieldedEnemyUuids.add(entity.getUniqueId());
+                if (condition.getType() == DungeonCondition.ConditionType.SHIELDED) {
+                    org.bukkit.entity.EntityType vanillaType = null;
+                    try {
+                        vanillaType = org.bukkit.entity.EntityType.valueOf(condition.getMobName().toUpperCase());
+                    } catch (Exception e) {}
+
+                    Location spawnLoc = getResolvedLocation(condition);
+                    if (vanillaType != null) {
+                        org.bukkit.entity.Entity spawned = world.spawnEntity(spawnLoc, vanillaType);
+                        if (spawned instanceof org.bukkit.entity.LivingEntity) {
+                            activeShieldedEnemyUuids.add(spawned.getUniqueId());
+                            conditionBossUuids.put(condition, spawned.getUniqueId());
+                            org.bukkit.entity.LivingEntity living = (org.bukkit.entity.LivingEntity) spawned;
+                            living.setRemoveWhenFarAway(false);
+                            if (condition.getMobDisplayName() != null && !condition.getMobDisplayName().isEmpty()) {
+                                living.setCustomName(ChatColor.translateAlternateColorCodes('&', condition.getMobDisplayName()));
+                                living.setCustomNameVisible(true);
+                            }
+                        }
+                    } else {
+                        String command = "mm mobs spawn -s " + condition.getMobName() + ":1 1 " +
+                                         world.getName() + "," + spawnLoc.getX() + "," + spawnLoc.getY() + "," + spawnLoc.getZ();
+                        Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), command);
+                        
+                        final DungeonCondition condRef = condition;
+                        final Location searchLoc = spawnLoc.clone();
+                        new org.bukkit.scheduler.BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                for (org.bukkit.entity.Entity entity : world.getNearbyEntities(searchLoc, 15.0, 15.0, 15.0)) {
+                                    if (entity instanceof org.bukkit.entity.LivingEntity && !(entity instanceof Player)) {
+                                        String name = entity.getName();
+                                        String cleanName = ChatColor.stripColor(name);
+                                        String targetName = condRef.getMobDisplayName() != null ? condRef.getMobDisplayName() : condRef.getMobName();
+                                        String cleanTargetName = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', targetName));
+                                        if (cleanName.equalsIgnoreCase(cleanTargetName) || entity.getType().name().equalsIgnoreCase(cleanTargetName)) {
+                                            activeShieldedEnemyUuids.add(entity.getUniqueId());
+                                            conditionBossUuids.put(condRef, entity.getUniqueId());
+                                            org.bukkit.entity.LivingEntity living = (org.bukkit.entity.LivingEntity) entity;
+                                            living.setRemoveWhenFarAway(false);
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }.runTaskLater(Plugin.AmonPackPlugin.plugin, 2L);
+                        }.runTaskLater(Plugin.AmonPackPlugin.plugin, 5L);
+                    }
                 }
             }
 
@@ -1799,6 +1893,111 @@ public class DungeonInstance {
         spawnedMobUuids.add(uuid);
     }
 
+    public void registerBossDeath(UUID uuid) {
+        deadBossUuids.add(uuid);
+    }
+
+    public Location getResolvedLocation(DungeonCondition condition) {
+        if (!resolvedConditionLocs.containsKey(condition)) {
+            Location loc;
+            if (condition.getXList() != null && !condition.getXList().isEmpty()) {
+                int size = Math.min(condition.getXList().size(), Math.min(condition.getYList().size(), condition.getZList().size()));
+                if (size > 0) {
+                    int idx = java.util.concurrent.ThreadLocalRandom.current().nextInt(size);
+                    loc = new Location(world, condition.getXList().get(idx), condition.getYList().get(idx), condition.getZList().get(idx));
+                } else {
+                    loc = new Location(world, condition.getX(), condition.getY(), condition.getZ());
+                }
+            } else {
+                loc = new Location(world, condition.getX(), condition.getY(), condition.getZ());
+            }
+            resolvedConditionLocs.put(condition, loc);
+        }
+        return resolvedConditionLocs.get(condition);
+    }
+
+    public Location getResolvedLocation(DungeonEffect effect) {
+        if (!resolvedEffectLocs.containsKey(effect)) {
+            Location loc;
+            if (effect.getXList() != null && !effect.getXList().isEmpty()) {
+                int size = Math.min(effect.getXList().size(), Math.min(effect.getYList().size(), effect.getZList().size()));
+                if (size > 0) {
+                    int idx = java.util.concurrent.ThreadLocalRandom.current().nextInt(size);
+                    loc = new Location(world, effect.getXList().get(idx), effect.getYList().get(idx), effect.getZList().get(idx));
+                } else {
+                    loc = new Location(world, effect.getX(), effect.getY(), effect.getZ());
+                }
+            } else {
+                loc = new Location(world, effect.getX(), effect.getY(), effect.getZ());
+            }
+            resolvedEffectLocs.put(effect, loc);
+        }
+        return resolvedEffectLocs.get(effect);
+    }
+
+    public UUID getBossUuidForCondition(DungeonCondition condition) {
+        return conditionBossUuids.get(condition);
+    }
+
+    public void removeShieldsInArea(Location loc, double radius) {
+        double radiusSq = radius * radius;
+        List<UUID> toRemove = new ArrayList<>();
+        for (UUID uuid : activeShieldedEnemyUuids) {
+            org.bukkit.entity.Entity entity = Bukkit.getEntity(uuid);
+            if (entity instanceof org.bukkit.entity.LivingEntity && !entity.isDead()) {
+                if (entity.getLocation().distanceSquared(loc) <= radiusSq) {
+                    toRemove.add(uuid);
+                }
+            }
+        }
+        for (UUID uuid : toRemove) {
+            activeShieldedEnemyUuids.remove(uuid);
+            org.bukkit.entity.Entity entity = Bukkit.getEntity(uuid);
+            if (entity != null) {
+                world.spawnParticle(Particle.EXPLOSION, entity.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.05);
+                world.playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
+                
+                Encounter encounter = getActiveEncounter();
+                if (encounter != null) {
+                    for (DungeonCondition condition : encounter.getConditions()) {
+                        if (condition.getType() == DungeonCondition.ConditionType.SHIELDED && uuid.equals(conditionBossUuids.get(condition))) {
+                            for (DungeonEffect effect : condition.getSuccessEffects()) {
+                                effect.execute(this);
+                            }
+                            for (DungeonEffect effect : condition.getOnCompleteEffects()) {
+                                effect.execute(this);
+                            }
+                            int condIndex = encounter.getConditions().indexOf(condition);
+                            if (condIndex >= 0 && !completedConditionsIndices.contains(condIndex)) {
+                                completedConditionsIndices.add(condIndex);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public boolean isBossDeadForCondition(DungeonCondition condition) {
+        UUID uuid = conditionBossUuids.get(condition);
+        if (uuid == null) {
+            for (org.bukkit.entity.LivingEntity le : world.getLivingEntities()) {
+                if (!(le instanceof Player)) {
+                    String cleanName = ChatColor.stripColor(le.getName());
+                    String targetName = condition.getMobDisplayName() != null ? condition.getMobDisplayName() : condition.getMobName();
+                    String cleanTargetName = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', targetName));
+                    if (cleanName.equalsIgnoreCase(cleanTargetName) || le.getType().name().equalsIgnoreCase(cleanTargetName)) {
+                        if (!le.isDead() && le.isValid()) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        return deadBossUuids.contains(uuid);
+    }
+
     public boolean isShieldedEnemy(UUID uuid) {
         return activeShieldedEnemyUuids.contains(uuid);
     }
@@ -1807,17 +2006,42 @@ public class DungeonInstance {
         Encounter encounter = getActiveEncounter();
         if (encounter == null) return;
         for (DungeonCondition condition : encounter.getConditions()) {
-            if (condition.getType() == DungeonCondition.ConditionType.THROW_AT_ENEMY) {
+            if (condition.getType() == DungeonCondition.ConditionType.SHIELDED && "throw".equalsIgnoreCase(condition.getShieldType())) {
                 if (activeShieldedEnemyUuids.contains(entity.getUniqueId()) && condition.getCustomItemId().equalsIgnoreCase(customItem.getId())) {
                     incrementThrowHits(condition);
                     world.playSound(entity.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 0.8f);
-                    world.spawnParticle(Particle.FLASH, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.01);
+                    world.spawnParticle(Particle.GLOW, entity.getLocation().add(0, 1, 0), 5, 0.1, 0.1, 0.1, 0.01);
                     
                     if (getThrowHits(condition) >= condition.getAmount()) {
                         activeShieldedEnemyUuids.remove(entity.getUniqueId());
-                        entity.damage(100.0);
+                        UUID bossUuid = conditionBossUuids.get(condition);
+                        if (bossUuid != null) {
+                            activeShieldedEnemyUuids.remove(bossUuid);
+                        }
+                        for (org.bukkit.entity.LivingEntity le : world.getLivingEntities()) {
+                            if (!(le instanceof Player)) {
+                                String cleanName = ChatColor.stripColor(le.getName());
+                                String targetName = condition.getMobDisplayName() != null ? condition.getMobDisplayName() : condition.getMobName();
+                                String cleanTargetName = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', targetName));
+                                if (cleanName.equalsIgnoreCase(cleanTargetName) || le.getType().name().equalsIgnoreCase(cleanTargetName)) {
+                                    activeShieldedEnemyUuids.remove(le.getUniqueId());
+                                }
+                            }
+                        }
                         world.spawnParticle(Particle.EXPLOSION, entity.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.05);
                         world.playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
+                        
+                        for (DungeonEffect effect : condition.getSuccessEffects()) {
+                            effect.execute(this);
+                        }
+                        for (DungeonEffect effect : condition.getOnCompleteEffects()) {
+                            effect.execute(this);
+                        }
+                        
+                        int condIndex = encounter.getConditions().indexOf(condition);
+                        if (condIndex >= 0 && !completedConditionsIndices.contains(condIndex)) {
+                            completedConditionsIndices.add(condIndex);
+                        }
                     }
                     break;
                 }

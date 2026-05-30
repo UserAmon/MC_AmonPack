@@ -17,7 +17,7 @@ public class DungeonCondition {
         INTERACT_BLOCK_WITH_ITEM,
         ZONE,
         THROW_AT,
-        THROW_AT_ENEMY,
+        SHIELDED,
         DROP_ON_DEATH,
         PERIODIC_CHECK,
         LOOKING_AT,
@@ -28,9 +28,14 @@ public class DungeonCondition {
     private final ConditionType type;
     
     private double x, y, z;
+    private List<Double> xList = new ArrayList<>();
+    private List<Double> yList = new ArrayList<>();
+    private List<Double> zList = new ArrayList<>();
+    private String shieldType = "throw";
     private double radius;
 
     private String mobName;
+    private String mobDisplayName;
     private int amount;
 
     private Material blockMaterial;
@@ -128,7 +133,7 @@ public class DungeonCondition {
                 return instance.areAllPlayersReady();
 
             case PLAYER_ENTER_AREA:
-                Location center = new Location(instance.getWorld(), x, y, z);
+                Location center = getResolvedLocation(instance);
                 double radiusSq = radius * radius;
                 List<Player> activePlayers = new ArrayList<>();
                 for (Player p : instance.getOnlinePlayers()) {
@@ -153,9 +158,12 @@ public class DungeonCondition {
                     return false;
                 }
 
-            case KILL_MOBS:
-                int currentKills = instance.getKilledMobsCount(mobName);
+            case KILL_MOBS: {
+                String nameToUse = (mobDisplayName != null && !mobDisplayName.isEmpty()) ? mobDisplayName : mobName;
+                String cleanTarget = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', nameToUse));
+                int currentKills = instance.getKilledMobsCount(cleanTarget);
                 return currentKills >= amount;
+            }
 
             case ZONE:
                 return instance.getZoneProgress(this) >= timeRequired;
@@ -163,8 +171,15 @@ public class DungeonCondition {
             case THROW_AT:
                 return instance.getThrowHits(this) >= amount;
 
-            case THROW_AT_ENEMY:
-                return instance.getThrowHits(this) >= amount;
+            case SHIELDED:
+                boolean broken = false;
+                if ("throw".equalsIgnoreCase(shieldType)) {
+                    broken = instance.getThrowHits(this) >= amount;
+                } else if ("event_removable".equalsIgnoreCase(shieldType)) {
+                    broken = !instance.isShieldedEnemy(instance.getBossUuidForCondition(this));
+                }
+                if (!broken) return false;
+                return instance.isBossDeadForCondition(this);
 
             case DROP_ON_DEATH:
                 return true;
@@ -173,28 +188,31 @@ public class DungeonCondition {
                 return true;
 
             case LOOKING_AT:
+                Location lookingLoc = getResolvedLocation(instance);
                 for (Player player : instance.getOnlinePlayers()) {
                     if (!instance.isPlayerSpectator(player)) {
-                        double distSq = player.getLocation().distanceSquared(new Location(instance.getWorld(), x, y, z));
+                        double distSq = player.getLocation().distanceSquared(lookingLoc);
                         if (radius > 0.0 && distSq > radius * radius) {
                             continue;
                         }
-                        if (instance.isLookingAt(player, x, y, z)) {
+                        if (instance.isLookingAt(player, lookingLoc.getX(), lookingLoc.getY(), lookingLoc.getZ())) {
                             return true;
                         }
                     }
                 }
                 return false;
 
-            case ALIVE:
+            case ALIVE: {
                 int count = 0;
-                Location centerLoc = new Location(instance.getWorld(), x, y, z);
+                Location centerLoc = getResolvedLocation(instance);
                 double rSq = radius * radius;
                 for (org.bukkit.entity.Entity entity : instance.getWorld().getNearbyEntities(centerLoc, radius, radius, radius)) {
                     if (entity instanceof org.bukkit.entity.LivingEntity && !(entity instanceof Player) && !entity.isDead()) {
                         String name = entity.getName();
                         String cleanName = ChatColor.stripColor(name);
-                        if (cleanName.equalsIgnoreCase(mobName) || entity.getType().name().equalsIgnoreCase(mobName)) {
+                        String targetName = (mobDisplayName != null && !mobDisplayName.isEmpty()) ? mobDisplayName : mobName;
+                        String cleanTarget = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', targetName));
+                        if (cleanName.equalsIgnoreCase(cleanTarget) || entity.getType().name().equalsIgnoreCase(cleanTarget)) {
                             if (entity.getLocation().distanceSquared(centerLoc) <= rSq) {
                                 count++;
                             }
@@ -202,6 +220,7 @@ public class DungeonCondition {
                     }
                 }
                 return count >= amount;
+            }
 
             case COLLECT_POINTS:
                 return instance.isCollectPointsMet(this);
@@ -211,10 +230,10 @@ public class DungeonCondition {
         }
     }
 
-    public boolean isMetInteract(Location blockLoc, Material clickedBlock, ItemStack heldItem) {
+    public boolean isMetInteract(Location blockLoc, Material clickedBlock, ItemStack heldItem, DungeonInstance instance) {
         if (type != ConditionType.INTERACT_BLOCK_WITH_ITEM) return false;
 
-        Location targetLoc = new Location(blockLoc.getWorld(), x, y, z);
+        Location targetLoc = getResolvedLocation(instance);
         if (blockLoc.distanceSquared(targetLoc) > 1.5) return false;
 
         if (blockMaterial != null && clickedBlock != blockMaterial) return false;
@@ -270,6 +289,14 @@ public class DungeonCondition {
         return mobName;
     }
 
+    public String getMobDisplayName() {
+        return mobDisplayName;
+    }
+
+    public void setMobDisplayName(String mobDisplayName) {
+        this.mobDisplayName = mobDisplayName;
+    }
+
     public int getAmount() {
         return amount;
     }
@@ -316,14 +343,74 @@ public class DungeonCondition {
 
     public void setX(double x) {
         this.x = x;
+        if (this.xList.isEmpty()) {
+            this.xList.add(x);
+        } else {
+            this.xList.set(0, x);
+        }
     }
 
     public void setY(double y) {
         this.y = y;
+        if (this.yList.isEmpty()) {
+            this.yList.add(y);
+        } else {
+            this.yList.set(0, y);
+        }
     }
 
     public void setZ(double z) {
         this.z = z;
+        if (this.zList.isEmpty()) {
+            this.zList.add(z);
+        } else {
+            this.zList.set(0, z);
+        }
+    }
+
+    public List<Double> getXList() {
+        return xList;
+    }
+
+    public void setXList(List<Double> xList) {
+        this.xList = xList;
+        if (!xList.isEmpty()) {
+            this.x = xList.get(0);
+        }
+    }
+
+    public List<Double> getYList() {
+        return yList;
+    }
+
+    public void setYList(List<Double> yList) {
+        this.yList = yList;
+        if (!yList.isEmpty()) {
+            this.y = yList.get(0);
+        }
+    }
+
+    public List<Double> getZList() {
+        return zList;
+    }
+
+    public void setZList(List<Double> zList) {
+        this.zList = zList;
+        if (!zList.isEmpty()) {
+            this.z = zList.get(0);
+        }
+    }
+
+    public String getShieldType() {
+        return shieldType;
+    }
+
+    public void setShieldType(String shieldType) {
+        this.shieldType = shieldType;
+    }
+
+    public Location getResolvedLocation(DungeonInstance instance) {
+        return instance.getResolvedLocation(this);
     }
 
     public void setRadius(double radius) {

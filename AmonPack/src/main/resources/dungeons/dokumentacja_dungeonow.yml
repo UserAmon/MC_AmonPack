@@ -51,10 +51,10 @@ initial-encounter: "ENC1"                # Pierwszy, startowy etap lochu od któ
 #        * SNEAK / SHIFT: Rytualne ładowanie kucaniem przez 2.5 sekundy.
 #    - effect / efekt:
 #        * heal: Uleczenie o zdefiniowaną wartość HP (np. 4.0 HP = 2 serca).
-#        * speed: Daje potkę Speed o poziomie [wartość] na [czas-trwania] sekund.
+#        * speed: Zwiększa statystykę prędkości lochowej (speedBoost) o [wartość] na [czas-trwania] sekund (bezpiecznie przywraca po czasie bez potion effect).
 #        * jumpboost: Daje potkę Jump Boost o poziomie [wartość] na [czas-trwania] sekund.
-#        * damage_boost: Daje potkę Sile (Strength) o poziomie [wartość] na [czas-trwania] sekund.
-#        * hp_boost: Daje potkę Health Boost o poziomie [wartość] na [czas-trwania] sekund.
+#        * damage_boost: Zwiększa statystykę mnożnika obrażeń (dmgMultiplier) o [wartość] (np. 0.2 = +20%) na [czas-trwania] sekund.
+#        * hp_boost: Zwiększa statystykę maksymalnego zdrowia lochowego (hpBoost) o [wartość] (np. 4.0 = +2 serca) na [czas-trwania] sekund z uleczeniem.
 #        * crit_rate_boost: Zwiększa czasowo szansę na Fizyczny i Magiczny Krytyk o [wartość] (np. 0.15 = 15%) na [czas-trwania] sekund.
 #    - duration / czas-trwania: Czas trwania efektu w sekundach.
 #    - value / wartosc: Wartość liczbowa (moc/poziom) efektu.
@@ -183,6 +183,15 @@ rewards:
 # Mogą zawierać sekcję 'oncomplete' - listę efektów wyzwalanych przy ukończeniu
 # tego konkretnego warunku.
 #
+# SYSTEM LOSOWANIA WSPÓŁRZĘDNYCH (xList, yList, zList):
+# Każdy warunek lub efekt używający współrzędnych XYZ może przyjąć listę koordynatów w formacie YAML,
+# np.:
+#   x: [10.0, 20.0, 30.0]
+#   y: [61.0, 62.0, 63.0]
+#   z: [-5.0, -10.0, -15.0]
+# Wtyczka wylosuje pojedynczy indeks z list współrzędnych dla danego uruchomienia instancji lochu
+# (np. x[1], y[1], z[1]) i zachowa go jako stały na całą sesję instancji, co umożliwia unikalny układ lochu przy każdym wejściu!
+#
 # 1. ALL_PLAYERS_READY
 #    Sprawdza, czy wszyscy gracze kliknęli gotowość przy użyciu Kompasu Gotowości.
 #    Przykład:
@@ -245,18 +254,29 @@ rewards:
 #        item: "cien_kamien"
 #        amount: 3
 #
-# 7. THROW_AT_ENEMY
-#    Mechanika przeciwnika z tarczą (odpornego na zwykły DMG). Trzeba zniszczyć jego tarczę
-#    poprzez trafienie go rzucanym pociskiem X razy.
-#    Parametry: mob-name (String "nazwa moba", np. "ZOMBIE" lub skryptowy name z MythicMobsa NIE DISPLAYNAME TO CO SIĘ KOMENDĄ wklepuje np. "dark_spirit_1"), item (ID pocisku), amount (Integer), x, y, z (Double - kordy spawnu moba)
+# 7. SHIELDED
+#    Mechanika przeciwnika z tarczą (odpornego na zwykły DMG). Aby ukończyć warunek, tarcza
+#    musi zostać zniszczona, a sam boss ostatecznie zabity.
+#    Parametry:
+#      - mob-name (String: kodowa nazwa MythicMobsa / Minecrafta służąca do jego przyzwania)
+#      - mob-display-name (Opcjonalne, String: wyświetlana nazwa displayname bossa w grze. Jeśli podana, wtyczka
+#        będzie wyszukiwać i weryfikować bossa po jego nazwie wyświetlanej, a nie kodowej. Przydatne dla MythicMobs!)
+#      - item (String: ID przedmiotu z rejestru, którym trzeba rzucać w trybie 'throw')
+#      - amount (Integer: wymagana ilość trafień pociskiem aby rozbić tarczę w trybie 'throw')
+#      - shield-type (String: typ tarczy, "throw" lub "event_removable")
+#        * "throw" - tarcza zdejmuje się po X celnych rzutach przedmiotem
+#        * "event_removable" - tarcza zdejmuje się wyłącznie poprzez efekt SHIELD_REMOVE
+#      - x, y, z (Double lub List: współrzędne spawnu bossa)
 #    Przykład:
-#      - type: "THROW_AT_ENEMY"
-#        mob-name: "dark_spirit_1"
-#        item: "cien_kamien"
+#      - type: "SHIELDED"
+#        mob-name: "ShadowGhost"
+#        mob-display-name: "Cień Bossa"
+#        item: "ksiega"
 #        amount: 4
-#        x: 12.0
-#        y: 61.0
-#        z: 12.0
+#        shield-type: "throw"
+#        x: [-2.0, -4.0]
+#        y: [131.0, 131.0]
+#        z: [-11.0, -13.0]
 #
 # 8. DROP_ON_DEATH
 #    (Pasywny warunek) Szansa na dropnięcie określonego przedmiotu bezpośrednio po śmierci moba o danej nazwie.
@@ -514,6 +534,16 @@ rewards:
 #       - type: "GIVE_ITEM"
 #         item: "cien_klucz"
 #         amount: 1
+#
+# 15. SHIELD_REMOVE
+#     Usuwa tarcze ze wszystkich osłoniętych bossów w określonej lokalizacji i promieniu, wyzwalając efekty sukcesu.
+#     Parametry: x, y, z (Double lub List: współrzędne środka pola działania), radius/range (Promień działania, Double)
+#     Przykład:
+#       - type: "SHIELD_REMOVE"
+#         x: 0.0
+#         y: 61.0
+#         z: 5.0
+#         radius: 5.0
 
 # =========================================================================
 # CZĘŚĆ VII: SYSTEM DYNAMICZNYCH PLATFORM (platforms)

@@ -1,32 +1,26 @@
-name: "Komnata Cieni"
-schematic: "komnata_cieni.schem"
+name: "Biblioteka Wan Shi Tonga"
+schematic: "WanShiTong.schem"
 paste-location:
   x: 0
-  y: 60
+  y: 200
   z: 0
 spawn-location:
   x: 0
-  y: 61
+  y: 200
   z: 0
 exit-location:
   world: "world"
   x: 100
   y: 64
   z: 100
-initial-encounter: "ENC1"
+initial-encounter: "DungeonLibrabryStart"
 
 items:
-  cien_klucz:
-    material: "TRIPWIRE_HOOK"
-    nazwa: "&6Klucz Cieni"
+  ksiega:
+    material: "BOOK"
+    nazwa: "&6Księga Wiedzy"
     opis:
-      - "&7Klucz do otwarcia starożytnych wrót."
-    typ: "key"
-  cien_kamien:
-    material: "FIRE_CHARGE"
-    nazwa: "&cRzucany Kamień Płomieni"
-    opis:
-      - "&7Rzuć tym PPM w punkt lub w shielded bossa!"
+      - "&7Wiedza, która otworzy Ci drogę."
     typ: "throwable"
 
 loot-chest:
@@ -37,7 +31,7 @@ loot-chest:
     - SPEED
     - P_CRIT_RATE
     # - P_CRIT_DMG
-    - M_CRIT_RATE
+    # - M_CRIT_RATE
     # - M_CRIT_DMG
     - REGEN
   allowed-blessings:
@@ -57,6 +51,7 @@ loot-chest:
     - MAI_DAGGERS
     - AMON_GLOVE
     - POUHAI_BOW
+    - BLUE_SPIRIT_SWORDS
 
 rewards:
   dungeon-xp: 250
@@ -70,9 +65,9 @@ rewards:
       display-name: "&6Jablko Zwyciezcy"
       lore:
         - "&7Nagroda za ukonczenie dungeonu."
-
 encounters:
-  ENC1:
+#####
+  DungeonLibrabryStart:
     description: "Start lochu - Przygotowanie"
     title: "&aKomnata Cieni &8- &fOczekiwanie na gotowość"
     conditions:
@@ -82,61 +77,108 @@ encounters:
       - type: "SEND_MESSAGE"
         message: "&a[Dungeon] &fRozpoczalem przygode! Przygotuj sie!"
       - type: "SPAWN_CHEST"
-        x: 2
-        y: 60
-        z: 9
+        x: 11
+        y: 200
+        z: 5
         chest-type: "ROGUELITE_CHEST"
+        blessing_type: Chest_Blessings  
       - type: "SPAWN_CHEST"
-        x: 5
-        y: 60
-        z: 9
+        x: 12
+        y: 200
+        z: 5
         chest-type: "ROGUELITE_CHEST"
+        blessing_type: Chest_Blessings
       - type: "SPAWN_CHEST"
-        x: -1
-        y: 60
-        z: 9
+        x: 19
+        y: 200
+        z: -5
         chest-type: "ROGUELITE_CHEST"
-    next: "random"
-    pool:
-      - "ENC2_1"
-      - "ENC2_2"
-      - "ENC2_3"
-      - "ENC2_4"
-    req_clears: 2
-    enc_after_clears: "ENC_SEKWENCJA"
-
-  ENC2_1:
-    description: "Zadanie 1: Pokonanie Duchów Ziemi"
-    title: "&cWyzwanie Ziemi &8- &fPokonano $ActNumber$/$ReqNumber$ Duchów"
+        blessing_type: Chest_Abilities
+      - type: "SPAWN_CHEST"
+        x: 18
+        y: 200
+        z: -5
+        chest-type: "ROGUELITE_CHEST"
+        blessing_type: Chest_General
+    next: "LosowyEncounter"
+##
+  LosowyEncounter:
+    description: "Przejscie i losowanie Encouteru"
+    title: "&cPrzejdź do wejścia!"
     leave_mobs: false
+    conditions:
+      - type: "PLAYER_ENTER_AREA"
+        x: 27
+        y: 200
+        z: 0
+        radius: 3
+        required_all_players: true
+    effects:
+      - type: "OPEN_DOOR"
+        x1: 26
+        y1: 204
+        z1: -3
+        x2: 26
+        y2: 200
+        z2: 3
+    next:
+      - "ENC_1_1"
+#############
+#ENC_1
+  ENC_1_1:
+    description: "Teleport na ENC1, Clear"
+    title: "&cWejdź do pokoju i oczysć go z Duchów!"
     conditions:
       - type: "KILL_MOBS"
         mob-name: "Duch Ziemi"
-        amount: 3
+        amount: 2
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fDuchy Ziemi zostały pokonane!"
+          - type: "CLOSE_DOOR"
+            x1: 3
+            y1: 130
+            z1: 10
+            x2: -2
+            y2: 133
+            z2: 10
+            material: "IRON_BARS"
     effects:
       - type: "SPAWN_MOB"
         mob-name: "Spirit_Earth_1"
-        amount: 3
+        amount: 2
         level: 1
-        x: 1
-        y: 60
-        z: 0
-        range: 4
+        x: -2
+        y: 130
+        z: -12
+        range: 1
+      - type: "TELEPORT_PLAYERS"
+        x: -0.5
+        y: 136
+        z: 24
+    next: "random"
+    pool:
+      - "ENC1_1_1"
+      - "ENC1_1_2"
+      - "ENC1_1_3"
+      - "ENC1_1_4"
+    req_clears: 2
+    enc_after_clears: "ENC_1_REST"
 
-  ENC2_2:
-    description: "Zadanie 2: Przejęcie strefy i przetrwanie"
+
+
+#####ENC 1 FAZA 1
+  ENC1_1_1:
+    description: "Zadanie 1: Przejęcie strefy i przetrwanie"
     title: "&ePrzejęcie Strefy &8- &fPostęp: $ActNumber$/$ReqNumber$ sekund"
-    max_mobs: 5
+    max_mobs: 3
     conditions:
       - type: "ZONE"
         x: 0
-        y: 60
+        y: 130
         z: 0
-        radius: 3.0
-        time: 20
+        radius: 5
+        time: 15
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fStrefa została pomyślnie przejęta!"
@@ -145,62 +187,75 @@ encounters:
         mob-name: "ShadowGhost"
         amount: 2
         level: 1
-        x: 15
-        y: 61
-        z: 5
-        range: 2
+        x: -2
+        y: 130
+        z: -5
+        range: 4
         interval: 7
-
-
-  ENC2_3:
-    description: "Zadanie 3: Pokonanie potworów i rzut w punkt"
+  ENC1_1_2:
+    description: "Zadanie 2: Pokonanie potworów i rzut w punkt"
     title: "&5Wyzwanie Zręczności &8- &fRzuty: $ActNumber$/$ReqNumber$"
-    max_mobs: 3
+    max_mobs: 4
     conditions:
       - type: "DROP_ON_DEATH"
         mob-name: "Duch Cienia"
-        item: "cien_kamien"
+        item: "ksiega"
         chance: 100.0
       - type: "THROW_AT"
         x: 16
-        y: 70
-        z: -2
-        radius: 3
-        item: "cien_kamien"
+        y: 140
+        z: -3
+        radius: 4
+        item: "ksiega"
         amount: 4
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fPłomienie w kociołku zapłonęły!"
+          - type: "OPEN_DOOR"
+            x1: 16
+            y1: 141
+            z1: -4
+            x2: 16
+            y2: 138
+            z2: -1
     effects:
       - type: "SPAWN_UNTIL"
         mob-name: "ShadowGhost"
         amount: 2
         level: 1
-        x: 16
-        y: 60
-        z: -2
+        x: 23
+        y: 130
+        z: 0
         range: 2
-        interval: 10
+        interval: 8
       - type: "SEND_MESSAGE"
-        message: "&a[Dungeon] &fPokonaj Duchy Cienia, aby zdobyć Ogniste Kamienie i rzuć nimi w punkt (15, 63, 0)!"
-
-
-  ENC2_4:
-    description: "Zadanie 4: Pokonanie osłoniętego Bossa"
+        message: "&a[Dungeon] &fPokonaj Duchy Cienia, aby zdobyć Księgi Wiedzy i rzuć nimi w punkt (16, 141, -4)!"
+      - type: "CLOSE_DOOR"
+        x1: 16
+        y1: 141
+        z1: -4
+        x2: 16
+        y2: 138
+        z2: -1
+        material: "AMETHYST_BLOCK"
+  ENC1_1_3:
+    description: "Zadanie 3: Pokonanie osłoniętego Bossa"
     title: "&dOsłonięty Wróg &8- &fTrafienia: $ActNumber$/$ReqNumber$"
-    max_mobs: 4
+    max_mobs: 3
     conditions:
       - type: "DROP_ON_DEATH"
         mob-name: "Duch Ziemi"
-        item: "cien_kamien"
+        item: "ksiega"
         chance: 100.0
-      - type: "THROW_AT_ENEMY"
+      - type: "SHIELDED"
         mob-name: "ShadowGhost"
-        item: "cien_kamien"
+        mob-display-name: "Duch Cienia"
+        item: "ksiega"
         amount: 4
-        x: -2
-        y: 60
-        z: -11
+        shield-type: "throw"
+        x: [-2.0, -4.0]
+        y: [131.0, 133.0]
+        z: [-11.0, -3.0]
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fTarcza Bossa została zniszczona!"
@@ -210,17 +265,44 @@ encounters:
         amount: 2
         level: 1
         x: -2
-        y: 60
+        y: 131
         z: -10
         range: 2
         interval: 10
       - type: "SEND_MESSAGE"
-        message: "&a[Dungeon] &fUważaj! Pojawił się chroniony Boss. Pokonaj Duchy Ziemi, zbierz kamienie i zniszcz jego tarczę!"
-
-
-  ENC_SEKWENCJA:
-    description: "Wybór losowej sekwencji przed Bossem"
-    title: "&3Losowa Ścieżka &8- &fPrzygotowanie"
+        message: "&a[Dungeon] &fUważaj! Pojawił się chroniony Boss. Pokonaj Duchy Ziemi, zbierz Księgi i zniszcz jego tarczę!"
+  ENC1_1_4:
+    description: "Zadanie 4: Pokonanie Duchów Żywiołów"
+    title: "&cWyzwanie Duchów Żywiołów &8- &fPokonano $ActNumber$/$ReqNumber$ Duchów"
+    leave_mobs: false
+    conditions:
+      - type: "KILL_MOBS"
+        mob-name: "Duch Wody"
+        amount: 1
+      - type: "KILL_MOBS"
+        mob-name: "Duch Ziemi"
+        amount: 1
+    effects:
+      - type: "SPAWN_MOB"
+        mob-name: "Spirit_Earth_1"
+        amount: 1
+        level: 5
+        x: 23
+        y: 130
+        z: -3
+        range: 2
+      - type: "SPAWN_MOB"
+        mob-name: "Spirit_Dark_Water"
+        amount: 1
+        level: 5
+        x: 23
+        y: 130
+        z: -3
+        range: 2
+####ENC 1 REST
+  ENC_1_REST:
+    description: "Odpoczynek przed Bossem"
+    title: "&3Odpoczynek &8- &f Czas naregenerację sił!"
     conditions:
       - type: "ALL_PLAYERS_READY"
     effects:
@@ -228,115 +310,138 @@ encounters:
         message: "&3[Dungeon] &fCzas wybrać twoje ostateczne próby. Kompas gotowości rozstrzygnie ścieżkę!"
       - type: "GIVE_READY_COMPASS"
       - type: "SPAWN_CHEST"
-        x: 2
-        y: 60
-        z: 9
+        x: 0
+        y: 130
+        z: 1
         chest-type: "ROGUELITE_CHEST"
+        blessing_type: Chest_General
       - type: "SPAWN_CHEST"
-        x: 5
-        y: 60
-        z: 9
+        x: 0
+        y: 130
+        z: -1
         chest-type: "ROGUELITE_CHEST"
+        blessing_type: Chest_General
     next: "random"
-    pool_lists:
-      - ["ENC_SEQ1_1", "ENC_SEQ1_2"]
-      - ["ENC_SEQ2_1", "ENC_SEQ2_2"]
-    enc_after_clears: "ENC_FINAL_CHALLENGE"
+    pool:
+      - "ENC1_2_1"
+      - "ENC1_2_2"
+      - "ENC1_2_3"
+      - "ENC1_2_4"
+    req_clears: 2
+    enc_after_clears: "ENC_1_Boss"
+#####ENC 1 Faza 2
 
-  ENC_SEQ1_1:
-    description: "Ścieżka Wojownika: Oczyszczenie komnaty"
-    title: "&cPróba Wojownika I &8- &fPokonaj $ActNumber$/$ReqNumber$ Szkieletów"
+  ENC1_2_1:
+    description: "Oczyszczenie komnaty"
+    title: "&cPróba Ognia &8- &fPokonaj $ActNumber$/$ReqNumber$ Duchów"
     conditions:
       - type: "KILL_MOBS"
-        mob-name: "SKELETON"
+        mob-name: "Duch Ognia"
         amount: 3
     effects:
       - type: "SPAWN_MOB"
-        mob-name: "SKELETON"
+        mob-name: "Spirit_Dark_Fire"
         amount: 3
-        level: 1
-        x: 23
-        y: 65
-        z: 3
+        level: 2
+        x: 21
+        y: 136
+        z: -7
         range: 3
-
-  ENC_SEQ1_2:
-    description: "Ścieżka Wojownika: Finałowe starcie"
-    title: "&cPróba Wojownika II &8- &fPokonaj $ActNumber$/$ReqNumber$ Zombie"
-    max_mobs: 3
-    conditions:
-      - type: "DROP_ON_DEATH"
-        mob-name: "Duch Ziemi"
-        item: "cien_kamien"
-        chance: 100.0
-      - type: "THROW_AT"
-        x: 16
-        y: 70
-        z: -2
-        radius: 3
-        item: "cien_kamien"
-        amount: 7
-        oncomplete:
-          - type: "SEND_MESSAGE"
-            message: "&a[Dungeon] &fPłomienie w kociołku zapłonęły!"
-    effects:
-      - type: "SPAWN_UNTIL"
-        mob-name: "Spirit_Earth_1"
-        amount: 2
-        level: 1
-        x: 22
-        y: 60
-        z: 4
-        range: 2
-        interval: 10
-      - type: "SEND_MESSAGE"
-        message: "&a[Dungeon] &fPokonaj Duchy Ziemi, aby zdobyć Ogniste Kamienie i rzuć nimi w medalion biblioteki!"
-
-
-  ENC_SEQ2_1:
-    description: "Ścieżka Łowcy: Szybkie przejęcie strefy"
-    title: "&ePróba Łowcy I &8- &fUtrzymaj strefę: $ActNumber$/$ReqNumber$s"
+  ENC1_2_2:
+    description: "Strefa"
+    title: "&ePróba Ziemi &8- &fUtrzymaj strefę: $ActNumber$/$ReqNumber$s"
     max_mobs: 5
     conditions:
       - type: "ZONE"
         x: 13
-        y: 57
+        y: 127
         z: -11
-        radius: 3.0
-        time: 25
+        radius: 4
+        time: 20
     effects:
       - type: "SEND_MESSAGE"
-        message: "&e[Dungeon] &fUtrzymaj tę małą strefę pod presją czasu!"
+        message: "&e[Dungeon] &fWykaż się wytrzymałóścią przed wyzwaniem Ziemi!"
       - type: "SPAWN_UNTIL"
         mob-name: "ZOMBIE"
         amount: 3
         level: 1
         x: 13
-        y: 57
+        y: 128
         z: -11
         range: 2
         interval: 10
-
-
-  ENC_SEQ2_2:
-    description: "Ścieżka Łowcy: Polowanie na pająki"
-    title: "&ePróba Łowcy II &8- &fZabij $ActNumber$/$ReqNumber$ Pająków"
+  ENC1_2_3:
+    description: "Encounter 1 Faza 2 Parkour Powietrza"
+    title: "&ePróba Powietrza &8- &fZbierz wszystkie punkty: $ActNumber$/$ReqNumber$s"
+    max_mobs: 3
     conditions:
-      - type: "KILL_MOBS"
-        mob-name: "SPIDER"
-        amount: 4
+      - type: "COLLECT_POINTS"
+        radius: 2.0
+        time: 45
+        points:
+          - "13.0,129.0,-11.0"
+          - "21.0,136.0,-7.0"
+          - "20.0,130.0,-2.0"
+          - "-1.0,130.0,0"
+        fail-effects:
+          - type: "DAMAGE"
+            amount: 2
+          - type: "KNOCKBACK"
+            x: 0.2
+            y: 0.65
+            z: 0.2
+          - type: "SEND_MESSAGE"
+            message: "&cSpóźniliście się! Czas minął, punkty zostały zresetowane!"
+        success-effects:
+          - type: "SEND_MESSAGE"
+            message: "&aDoskonale! Wszystkie punkty cieni zostały zebrane na czas!"
     effects:
-      - type: "SPAWN_MOB"
-        mob-name: "SPIDER"
-        amount: 4
+      - type: "SEND_MESSAGE"
+        message: "&e[Dungeon] &fZaczyna się próba &l&7Duchów Powietrza! Zbieraj punkty w wyznaczonym czasie!"
+      - type: "SPAWN_UNTIL"
+        mob-name: "Spirit_Dark_Water"
+        amount: 2
         level: 1
-        x: 23
-        y: 57
-        z: -11
-        range: 1
-
-
-  ENC_FINAL_CHALLENGE:
+        x: 0
+        y: 131
+        z: 0
+        range: 5
+        interval: 10
+  ENC1_2_4:
+    description: "Osłonięty Wróg"
+    title: "&bPróba Wody &8- &fTrafienia: $ActNumber$/$ReqNumber$"
+    max_mobs: 3
+    conditions:
+      - type: "DROP_ON_DEATH"
+        mob-name: "Duch Ognia"
+        item: "ksiega"
+        chance: 100.0
+      - type: "SHIELDED"
+        mob-name: "Spirit_Dark_Water"
+        mob-display-name: "Duch Wody"
+        item: "ksiega"
+        amount: 4
+        shield-type: "throw"
+        x: [-2.0, -4.0]
+        y: [131.0, 133.0]
+        z: [-11.0, -3.0]
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &fTarcza Bossa została zniszczona!"
+    effects:
+      - type: "SPAWN_UNTIL"
+        mob-name: "Spirit_Dark_Fire"
+        amount: 2
+        level: 1
+        x: -2
+        y: 131
+        z: -10
+        range: 2
+        interval: 10
+      - type: "SEND_MESSAGE"
+        message: "&a[Dungeon] &fUważaj! Pojawił się chroniony Boss Wody. Pokonaj Duchy Ognia, zbierz Księgi i zniszcz jego tarczę!"
+##ENC 1 Boss
+  ENC_1_Boss:
     description: "Komnata Strażnika Prawdy - Wyzwanie środowiskowe i boss"
     title: "&5Strażnik Prawdy &8- &fKary za: %time%s"
     max_mobs: 6
@@ -358,17 +463,17 @@ encounters:
             message: "&aUniknąłeś wzroku Strażnika!"
       - type: "LOOKING_AT"
         x: 16
-        y: 70
+        y: 140
         z: -2
         interval: 15
         radius: 5
         fail-effects:
           - type: "SPAWN_MOB"
-            mob-name: "SKELETON"
+            mob-name: "ZOMBIE"
             amount: 1
             level: 1
             x: 0
-            y: 61
+            y: 130
             z: 0
             range: 2
         success-effects:
@@ -398,8 +503,8 @@ encounters:
         inverted: false
         test-mode: "NEAR"
         requirement: "MOB_NEAR:Starszy Straznik"
-        delay: 3
-        check-interval: 5
+#        delay: 3
+#        check-interval: 5
     effects:
       - type: "SEND_MESSAGE"
         message: "&d[Dungeon] &fWszedłeś do Serca Cieni. Kucaj co 15 sekund, obserwuj kryształ wzrokiem i pokonaj bossa!"
@@ -408,10 +513,9 @@ encounters:
         amount: 1
         level: 3
         x: 15
-        y: 65
-        z: 6
+        y: 130
+        z: 0
         range: 0
-
     next: "ENC3"
 
   ENC3:
@@ -419,16 +523,11 @@ encounters:
     title: "&6Ucieczka &8- &fZnajdź portal wyjściowy"
     conditions:
       - type: "PLAYER_ENTER_AREA"
-        x: 0
-        y: 61
-        z: 9
+        x: -7
+        y: 126
+        z: 22
         radius: 3.0
     effects:
-      - type: "SPAWN_CHEST"
-        x: 0
-        y: 61
-        z: 0
-        chest-type: "ROGUELITE_CHEST"
       - type: "SEND_MESSAGE"
         message: "&a[Dungeon] &fPortal wyjściowy jest gotowy. Stań w nim, aby ukończyć loch!"
       - type: "COMPLETE_DUNGEON"
