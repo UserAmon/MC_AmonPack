@@ -36,10 +36,8 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
-				.GetBranchByPlayerName(player.getName());
-		this.hasEncore = (branch != null && branch.hasUpgrade("Encore"));
-		maxstacks = this.hasEncore ? 25 : 20;
+		this.hasEncore = false;
+		maxstacks = 20;
 
 		LivingEntity target = findInitialTarget();
 		if (target == null) {

@@ -61,9 +61,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 		this.currentSandLoc = sourceLoc.clone();
 		this.lastDrawTime = now;
 		
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasProbender = (branch != null && branch.hasUpgrade("Probender"));
-		this.ammo = hasProbender ? 2 : 1;
+		this.ammo = 1;
 
 		state = 1;
 		start();
@@ -217,11 +215,7 @@ class SandEarthDisc extends EarthDisc {
 					bounces++;
 					spawnRicochetShrapnel();
 
-					RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-					boolean hasTrickshot = (branch != null && branch.hasUpgrade("Trickshot"));
-					if (hasTrickshot) {
-						damage = Math.min(damage + 0.5, baseDamage * 2.0);
-					}
+					// Base version only
 
 					if (bounces >= 4) {
 						explode();

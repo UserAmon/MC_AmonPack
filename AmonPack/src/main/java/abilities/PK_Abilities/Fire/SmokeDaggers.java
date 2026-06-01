@@ -55,47 +55,10 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 	public SmokeDaggers(Player player) {
 		super(player);
 		
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasSteadyHand = (branch != null && branch.hasUpgrade("SteadyHand"));
-
-		if (hasSteadyHand) {
-			int clicks = steadyHandClicks.getOrDefault(player.getUniqueId(), 0);
-			long lastClick = steadyHandLastTime.getOrDefault(player.getUniqueId(), 0L);
-			
-			if (clicks > 0 && System.currentTimeMillis() - lastClick > 8000) {
-				clicks = 0;
-				steadyHandClicks.put(player.getUniqueId(), 0);
-			}
-
-			if (clicks == 0 && bPlayer.isOnCooldown(this)) {
-				System.out.println("Cooldown active, cannot start SmokeDaggers.");
-				return;
-			}
-			
-			if (clicks > 0 && System.currentTimeMillis() - lastClick < 1000) {
-				System.out.println("Too fast, resetting clicks.");
-				return;
-			}
-			
-			clicks++;
-			steadyHandClicks.put(player.getUniqueId(), clicks);
-			steadyHandLastTime.put(player.getUniqueId(), System.currentTimeMillis());
-			
-			if (clicks < 3) {
-				this.leaveSmoke = false;
-				bPlayer.removeCooldown(this);
-			} else {
-				this.leaveSmoke = true;
-				bPlayer.addCooldown(this);
-				System.out.println("SmokeDaggers activated with smoke. Clicks: " + clicks);
-				steadyHandClicks.put(player.getUniqueId(), 0);
-			}
-		} else {
-			if (bPlayer.isOnCooldown(this)) {
-				return;
-			}
-			bPlayer.addCooldown(this);
+		if (bPlayer.isOnCooldown(this)) {
+			return;
 		}
+		bPlayer.addCooldown(this);
 
 		if (!bPlayer.canBend(this)) {
 			return;

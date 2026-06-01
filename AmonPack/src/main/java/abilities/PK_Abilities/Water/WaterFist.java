@@ -149,9 +149,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasUppercut = (branch != null && branch.hasUpgrade("Uppercut"));
-		int maxClicks = hasUppercut ? 4 : 3;
+		int maxClicks = 3;
 
 		clicksUsed++;
 		lastPunchTime = now;
@@ -161,7 +159,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 		// ---- Animacja: extend 3 -> 7/8 blokow, potem retract ----
 		Location anchor   = getHandAnchor();
-		double maxReach = hasUppercut ? 8.0 : 7.0;
+		double maxReach = 7.0;
 		// Celownik na max reach do przodu od głowy gracza
 		Location targetHit = player.getEyeLocation().clone().add(player.getLocation().getDirection().normalize().multiply(maxReach));
 		Vector viewDir = targetHit.toVector().subtract(anchor.toVector()).normalize();
@@ -214,7 +212,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 									target.setVelocity(knock);
 								}
 
-								if (hasUppercut || thisClick == 3) {
+								if (thisClick == 3) {
 									target.getWorld().spawnParticle(org.bukkit.Particle.SNOWFLAKE, target.getLocation(), 40, 0.5, 0.5, 0.5, 0.1);
 									target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
 									Block feet = target.getLocation().getBlock();
@@ -240,9 +238,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasUppercut = (branch != null && branch.hasUpgrade("Uppercut"));
-		return hasUppercut ? 4000 : 8000;
+		return 8000;
 	}
 
 	@Override

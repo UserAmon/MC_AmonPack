@@ -7,31 +7,6 @@ depend: ['ProjectKorra']
 softdepend: [WorldEdit, FastAsyncWorldEdit]
 description: 'Plugin made for Avatarserv'
 commands:
-  Puzzle:
-    usage: /<command>
-  ArenaBuilding:
-    usage: /<command>
-  Menagerie:
-    usage: /<command>
-  dungeons:
-    usage: /<command>
-    description: "Modulowy system lochow rogue-lite"
-  Level:
-    usage: /<command>
-  SelectElement:
-    usage: /<command>
   Reload:
     usage: /<command>
-  Craft:
-    usage: /<command>
-  bounties:
-    usage: /<command>
-  party:
-    usage: /<command>
-    description: "System druzyn Party"
-  p:
-    usage: /<command>
-    description: "Wbudowany czat druzyny"
-  dungbuild:
-    usage: /<command>
-    description: "Poczatkowe ulepszenia lochow"
+    description: "Reloads AmonPack plugin configuration"

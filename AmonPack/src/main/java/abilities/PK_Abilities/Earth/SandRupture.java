@@ -168,18 +168,9 @@ public class SandRupture extends SandAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasEarthShater = (branch != null && branch.hasUpgrade("EarthShater"));
-
 		Material mat = targetBlock.getType();
-		if (hasEarthShater) {
-			if (!com.projectkorra.projectkorra.ability.EarthAbility.isEarthbendable(player, targetBlock)) {
-				return;
-			}
-		} else {
-			if (mat != Material.SAND && mat != Material.RED_SAND) {
-				return;
-			}
+		if (mat != Material.SAND && mat != Material.RED_SAND) {
+			return;
 		}
 
 		explodeSand(targetBlock.getLocation().add(0.5, 0.5, 0.5), mat);

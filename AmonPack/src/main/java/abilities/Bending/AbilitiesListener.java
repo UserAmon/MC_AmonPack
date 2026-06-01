@@ -15,30 +15,9 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.Element;
 import org.bukkit.inventory.ItemStack;
-import RPG.Crafting.CraftingMenager;
 import org.bukkit.potion.PotionEffectType;
 
 public class AbilitiesListener implements Listener {
-
-	private void CheckEarthHealthBoost(Player player, CoreAbility ability) {
-		if (ability.getElement() == Element.EARTH) {
-			boolean hasEffect = false;
-			for (ItemStack item : player.getInventory().getArmorContents()) {
-				if (item != null && CraftingMenager.HaveEffect(item, "Earth_Health_Boost_On_Abilities")) {
-					hasEffect = true;
-					break;
-				}
-			}
-			if (hasEffect) {
-				BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-				if (!bPlayer.isOnCooldown("Earth_Health_Boost_On_Abilities")) {
-					player.addPotionEffect(
-							new org.bukkit.potion.PotionEffect(PotionEffectType.HEALTH_BOOST, 120, 1, false, false));
-					bPlayer.addCooldown("Earth_Health_Boost_On_Abilities", 10000);
-				}
-			}
-		}
-	}
 
 	@EventHandler
 	public void onShift(PlayerToggleSneakEvent event) {
@@ -47,7 +26,6 @@ public class AbilitiesListener implements Listener {
 		if (bPlayer.getBoundAbility() != null) {
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
 				if (!event.isCancelled() || bPlayer != null) {
-					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 					String boundAbility = bPlayer.getBoundAbilityName();
 					if (boundAbility.equalsIgnoreCase("SandBreath")) {
 						new SandBreath(player);
@@ -133,40 +111,7 @@ public class AbilitiesListener implements Listener {
 				EarthDisc.redirectNearby(player, 4.0);
 			}
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
-				CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 
-				// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("MetalFlex")) {
-				// if (player.getInventory().getChestplate().getType() !=
-				// Material.IRON_CHESTPLATE) {
-				// return;}
-				// else if (player.getInventory().getChestplate().getType() == null) {
-				// return;}
-				// new MetalFlex(player);
-				// } else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SteelShackles")) {
-				// if (player.getInventory().getChestplate().getType() !=
-				// Material.IRON_CHESTPLATE) {
-				// return;}
-				// else if (player.getInventory().getChestplate().getType() == null) {
-				// return;}
-				// new SteelShackles(player);
-				// }else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Slash")) {
-				// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
-				// new Slash(player);
-				// }}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Pierce")) {
-				// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
-				// new Pierce(player);
-				// }}else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Stab")) {
-				// if (player.getInventory().getItemInHand().getType() == Material.AIR) {
-				// new Stab(player);
-				// }else
-				// if
-				// (player.getInventory().getItemInMainHand().isSimilar(BladesAbility.Sword1)) {
-				// new Stab(player);
-				// Stab.LpmSkill(player);
-				// player.getInventory().remove(BladesAbility.Sword1);
-				// player.getInventory().setItemInHand(BladesAbility.Sword1);
-				// }
-				// }else
 				if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeSurge")) {
 					new SmokeSurge(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeDaggers")) {
@@ -268,147 +213,6 @@ public class AbilitiesListener implements Listener {
 		}
 
 	}
-
-	// @SuppressWarnings("deprecation")
-	// @EventHandler
-	// public void OnHit(EntityDamageByEntityEvent event) {
-	// Entity attacker = event.getDamager();
-	// Entity victim = event.getEntity();
-	// if (victim instanceof Player) {
-	// Player player = (Player) victim;
-	// BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-	// if (bPlayer != null && bPlayer.getBoundAbilityName() != null &&
-	// bPlayer.getBoundAbilityName().equalsIgnoreCase("Counter")) {
-	// if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
-	// if (player.isSneaking()) {
-	// if
-	// (player.getInventory().getItemInMainHand().isSimilar(BladesAbility.Sword1)) {
-	// event.setCancelled(true);
-	// }else return;
-	// }else return;
-	// }else return;
-	// }else return;}
-	// if (attacker instanceof Player){
-	// Player player = (Player) attacker;
-	// BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-	// if (player.getItemInHand().isSimilar(BladesAbility.Sword1)) {
-	// if
-	// (player.getInventory().getItemInMainHand().isSimilar(BladesAbility.Sword1)) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// player.getInventory().setItemInHand(BladesAbility.Sword1);
-	// if (bPlayer.getBoundAbilityName() == null) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// event.setCancelled(true);}else
-	// if (bPlayer.getBoundAbility() == null) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// event.setCancelled(true);}else
-	// if (bPlayer.getBoundAbility().getElement() !=
-	// AmonPackPlugin.getBladesElement()) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// event.setCancelled(true);}else
-	// if (bPlayer.getBoundAbility().getElement() ==
-	// AmonPackPlugin.getBladesElement()) {
-	// if (!bPlayer.isOnCooldown(bPlayer.getBoundAbilityName())) {
-	// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Counter")) {
-	// event.setCancelled(true);
-	// }}
-	// event.setDamage(0);
-	// if (!bPlayer.isOnCooldown(bPlayer.getBoundAbilityName())) {
-	// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Slash")) {
-	// new Slash(player);
-	// Slash.skill(player, (LivingEntity) event.getEntity());
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// player.getInventory().setItemInHand(BladesAbility.Sword1);
-	// }else
-	// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Pierce")) {
-	// new Pierce(player);
-	// Pierce.skill(player, (LivingEntity) event.getEntity());
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// player.getInventory().setItemInHand(BladesAbility.Sword1);
-	// }
-	// }
-	// if (bPlayer.isOnCooldown(bPlayer.getBoundAbilityName())) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// }}}
-	// }else
-	// if (!player.getItemInHand().isSimilar(BladesAbility.Sword1)) {
-	// if (bPlayer.getBoundAbilityName() != null && bPlayer.getBoundAbility() !=
-	// null) {
-	// if (bPlayer.getBoundAbility().getElement() ==
-	// AmonPackPlugin.getBladesElement()) {
-	// event.setCancelled(true);
-	// }} }}else return;
-	// }
-	//
-	// @EventHandler
-	// public void OnDrop(org.bukkit.event.player.PlayerDropItemEvent event) {
-	// Player player = event.getPlayer();
-	// if (event.getItemDrop().getItemStack().isSimilar(BladesAbility.Sword1)) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// event.setCancelled(true);
-	// }}
-	// @EventHandler
-	// public void OnInv(InventoryClickEvent event) {
-	// HumanEntity player = event.getWhoClicked();
-	// if (event.getCursor().isSimilar(BladesAbility.Sword1)) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// event.setCancelled(true);
-	// event.setResult(Result.DENY);
-	// } else {
-	// return;
-	// }
-	// if (event.getCurrentItem().isSimilar(BladesAbility.Sword1)) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// event.setCancelled(true);
-	// event.setResult(Result.DENY);
-	// } else {
-	// return;
-	// }
-	// }
-	//
-	// @EventHandler
-	// public void OnWorldChange(PlayerChangedWorldEvent event) {
-	// Player player = event.getPlayer();
-	// if (player.getInventory().contains(BladesAbility.Sword1)) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// }}
-	// @EventHandler
-	// public void OnLogin(PlayerLoginEvent event) {
-	// Player player = event.getPlayer();
-	// if (player.getInventory().contains(BladesAbility.Sword1)) {
-	// player.getInventory().remove(BladesAbility.Sword1);
-	// }}
-	// @EventHandler
-	// public void OnLogin(PlayerDeathEvent event) {
-	// if (event.getDrops().contains(BladesAbility.Sword1)) {
-	// event.getDrops().remove(BladesAbility.Sword1);
-	// }}
-	// @EventHandler
-	// public void OnInteract(PlayerInteractEvent event) {
-	// Player player = event.getPlayer();
-	// BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-	// if (bPlayer.getBoundAbilityName() == null) {
-	// return;
-	// }else
-	// if (bPlayer.getBoundAbility() == null) {
-	// return;
-	// }else
-	// if (bPlayer.getBoundAbility().getElement() !=
-	// AmonPackPlugin.getBladesElement()) {
-	// return;
-	// }else
-	// if (bPlayer.getBoundAbility().getElement() ==
-	// AmonPackPlugin.getBladesElement()) {
-	// if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
-	// if
-	// (player.getInventory().getItemInMainHand().isSimilar(BladesAbility.Sword1)) {
-	// if (event.getAction() == Action.RIGHT_CLICK_AIR) {
-	// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Stab")) {
-	// new Stab(player);
-	// Stab.PpmSkill(player);
-	// }}}}}else return;
-	// }
-	//
 
 	private boolean isFerroItem(ItemStack item) {
 		if (item == null || item.getItemMeta() == null) {
@@ -515,4 +319,17 @@ public class AbilitiesListener implements Listener {
 		}
 	}
 
+	@EventHandler
+	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
+		if (event.getEntity() instanceof Player victim) {
+			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(victim,
+					Abilities.PK_Abilities.Air.GustShield.class)) {
+				Abilities.PK_Abilities.Air.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(
+						victim,
+						Abilities.PK_Abilities.Air.GustShield.class);
+				event.setCancelled(true);
+				shield.onHit();
+			}
+		}
+	}
 }
