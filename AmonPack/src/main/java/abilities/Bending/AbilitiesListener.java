@@ -74,6 +74,16 @@ public class AbilitiesListener implements Listener {
 						new Whirlpool(player);
 					} else if (boundAbility.equalsIgnoreCase("CalmTide")) {
 						new CalmTide(player);
+					} else if (boundAbility.equalsIgnoreCase("FerroAbsorb")) {
+						if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FerroAbsorb.class)) {
+							if (event.isSneaking()) {
+								com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FerroAbsorb.class).onShift();
+							}
+						} else {
+							if (event.isSneaking()) {
+								new FerroAbsorb(player);
+							}
+						}
 					} else if (boundAbility.equalsIgnoreCase("EarthDiscs")) {
 						new EarthDiscs(player);
 					} else if (boundAbility.equalsIgnoreCase("DiscHurl")) {
@@ -230,6 +240,28 @@ public class AbilitiesListener implements Listener {
 								WaterFist.class);
 						wf.onLeftClick();
 					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SteelSwing")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SteelSwing.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SteelSwing.class).onClick();
+					} else {
+						new SteelSwing(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SteelGrab")) {
+					if (!com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SteelGrab.class)) {
+						new SteelGrab(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FerroAbsorb")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FerroAbsorb.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FerroAbsorb.class).onLeftClick();
+					} else {
+						new FerroAbsorb(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FerroClips")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FerroClips.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FerroClips.class).onClick();
+					} else {
+						new FerroClips(player);
+					}
 				}
 			}
 
@@ -377,5 +409,110 @@ public class AbilitiesListener implements Listener {
 	// }}}}}else return;
 	// }
 	//
+
+	private boolean isFerroItem(ItemStack item) {
+		if (item == null || item.getItemMeta() == null) {
+			return false;
+		}
+		String name = item.getItemMeta().getDisplayName();
+		if (name == null) {
+			return false;
+		}
+		return name.equals(org.bukkit.ChatColor.GOLD + "Ferro-Absorb Plate") || name.equals(org.bukkit.ChatColor.GOLD + "Ferro-Clip Plate");
+	}
+
+	@EventHandler
+	public void onInventoryClick(org.bukkit.event.inventory.InventoryClickEvent event) {
+		ItemStack item = event.getCurrentItem();
+		if (isFerroItem(item)) {
+			event.setCancelled(true);
+			return;
+		}
+		ItemStack cursor = event.getCursor();
+		if (isFerroItem(cursor)) {
+			event.setCancelled(true);
+			return;
+		}
+		if (event.getClick() == org.bukkit.event.inventory.ClickType.NUMBER_KEY) {
+			ItemStack hotbarItem = event.getWhoClicked().getInventory().getItem(event.getHotbarButton());
+			if (isFerroItem(hotbarItem)) {
+				event.setCancelled(true);
+				return;
+			}
+		}
+	}
+
+	@EventHandler
+	public void onPlayerDropItem(org.bukkit.event.player.PlayerDropItemEvent event) {
+		ItemStack item = event.getItemDrop().getItemStack();
+		if (isFerroItem(item)) {
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler
+	public void onPlayerDeath(org.bukkit.event.entity.PlayerDeathEvent event) {
+		Player player = event.getEntity();
+		if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FerroAbsorb.class)) {
+			FerroAbsorb fa = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FerroAbsorb.class);
+			if (fa != null) {
+				java.util.Iterator<ItemStack> iterator = event.getDrops().iterator();
+				while (iterator.hasNext()) {
+					ItemStack drop = iterator.next();
+					if (drop != null && drop.getType() == org.bukkit.Material.IRON_CHESTPLATE && drop.getItemMeta() != null && drop.getItemMeta().getDisplayName().equals(org.bukkit.ChatColor.GOLD + "Ferro-Absorb Plate")) {
+						iterator.remove();
+					}
+				}
+				ItemStack orig = fa.getOriginalChestplate();
+				if (orig != null && orig.getType() != org.bukkit.Material.AIR) {
+					event.getDrops().add(orig);
+				}
+				fa.setPlateActive(false);
+				fa.remove();
+			}
+		}
+		for (FerroClips fc : new java.util.ArrayList<>(com.projectkorra.projectkorra.ability.CoreAbility.getAbilities(FerroClips.class))) {
+			if (fc.getTargetEnemy() != null && fc.getTargetEnemy().getUniqueId().equals(player.getUniqueId())) {
+				java.util.Iterator<ItemStack> iterator = event.getDrops().iterator();
+				while (iterator.hasNext()) {
+					ItemStack drop = iterator.next();
+					if (isFerroItem(drop)) {
+						iterator.remove();
+					}
+				}
+				if (fc.getHitsSucceeded() >= 1 && fc.getOrigBoots() != null && fc.getOrigBoots().getType() != org.bukkit.Material.AIR) {
+					event.getDrops().add(fc.getOrigBoots());
+				}
+				if (fc.getHitsSucceeded() >= 2 && fc.getOrigLeggings() != null && fc.getOrigLeggings().getType() != org.bukkit.Material.AIR) {
+					event.getDrops().add(fc.getOrigLeggings());
+				}
+				if (fc.getHitsSucceeded() >= 3 && fc.getOrigChestplate() != null && fc.getOrigChestplate().getType() != org.bukkit.Material.AIR) {
+					event.getDrops().add(fc.getOrigChestplate());
+				}
+				if (fc.getHitsSucceeded() >= 4 && fc.getOrigHelmet() != null && fc.getOrigHelmet().getType() != org.bukkit.Material.AIR) {
+					event.getDrops().add(fc.getOrigHelmet());
+				}
+				fc.remove();
+			}
+		}
+	}
+
+	@EventHandler
+	public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+		Player player = event.getPlayer();
+		if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FerroAbsorb.class)) {
+			FerroAbsorb fa = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FerroAbsorb.class);
+			if (fa != null) {
+				fa.cleanup();
+				fa.remove();
+			}
+		}
+		for (FerroClips fc : new java.util.ArrayList<>(com.projectkorra.projectkorra.ability.CoreAbility.getAbilities(FerroClips.class))) {
+			if (fc.getTargetEnemy() != null && fc.getTargetEnemy().getUniqueId().equals(player.getUniqueId())) {
+				fc.restoreTargetArmor();
+				fc.remove();
+			}
+		}
+	}
 
 }

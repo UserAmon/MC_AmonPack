@@ -707,6 +707,14 @@ public class AmonPackPlugin extends JavaPlugin {
 		config.addDefault("AmonPack.Earth.Metal.MetalCompress.Duration", 5);
 		config.addDefault("AmonPack.Earth.Metal.MetalCompress.DurabilityCostMin", 10);
 		config.addDefault("AmonPack.Earth.Metal.MetalCompress.DurabilityCostMax", 30);
+		config.addDefault("AmonPack.Earth.Metal.SteelSwing.Cooldown", 5000);
+		config.addDefault("AmonPack.Earth.Metal.SteelSwing.Range", 25.0);
+		config.addDefault("AmonPack.Earth.Metal.SteelSwing.Speed", 2.2);
+		config.addDefault("AmonPack.Earth.Metal.SteelGrab.Cooldown", 6000);
+		config.addDefault("AmonPack.Earth.Metal.SteelGrab.Range", 28.0);
+		config.addDefault("AmonPack.Earth.Metal.SteelGrab.Speed", 2.2);
+		config.addDefault("AmonPack.Earth.Metal.FerroAbsorb.Cooldown", 8000);
+		config.addDefault("AmonPack.Earth.Metal.FerroClips.Cooldown", 8000);
 
 		config.addDefault("AmonPack.Earth.EarthHammer.Cooldown", 7000);
 		config.addDefault("AmonPack.Earth.EarthHammer.Damage", 1);
