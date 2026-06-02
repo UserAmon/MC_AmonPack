@@ -28,11 +28,20 @@ public class Resonance extends SoundAbility implements AddonAbility {
 	private int initialSlot;
 	private int chargeTicks = 0;
 	private int detonateTicks = 0;
-	private int damage = 1;
+	private double damage = 1.0;
 	private boolean detonating = false;
 	private Set<Entity> hitEntities = new HashSet<>();
 	private List<SoundRing> activeRings = new ArrayList<>();
 	private boolean hasDysonance = false;
+
+	private long cooldown;
+	private int chargeTicksConfig;
+	private int chargeTicksDysonance;
+	private double maxRadius;
+	private double speed;
+	private double stacksWithoutSound;
+	private double stacksWithSound;
+	private double secondaryMaxRadius;
 
 	private static java.util.HashMap<java.util.UUID, Integer> resonanceCharges = new java.util.HashMap<>();
 	private static java.util.HashMap<java.util.UUID, Long> lastResonanceTime = new java.util.HashMap<>();
@@ -65,6 +74,16 @@ public class Resonance extends SoundAbility implements AddonAbility {
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
 				.GetBranchByPlayerName(player.getName());
 		this.hasDysonance = (branch != null && branch.hasUpgrade("Dysonance"));
+
+		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.Resonance.Cooldown", 3000);
+		this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.Damage", 1.0);
+		this.chargeTicksConfig = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Resonance.ChargeTicks", 40);
+		this.chargeTicksDysonance = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Resonance.ChargeTicksDysonance", 20);
+		this.maxRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.MaxRadius", 7.0);
+		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.Speed", 0.21);
+		this.stacksWithoutSound = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.StacksWithoutSound", 5.0);
+		this.stacksWithSound = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.StacksWithSound", 8.0);
+		this.secondaryMaxRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.SecondaryMaxRadius", 6.0);
 
 		if (bPlayer.isOnCooldown(this)) {
 			return;
@@ -108,19 +127,19 @@ public class Resonance extends SoundAbility implements AddonAbility {
 			drawTether(start, targetBlockLoc);
 
 			chargeTicks++;
-			int requiredTicks = this.hasDysonance ? 20 : 40;
+			int requiredTicks = this.hasDysonance ? chargeTicksDysonance : chargeTicksConfig;
 			if (chargeTicks >= requiredTicks) {
 				detonating = true;
-				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false, true));
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), maxRadius, speed, 0, false, true));
 				targetBlockLoc.getWorld().spawnParticle(Particle.SONIC_BOOM, targetBlockLoc.clone().add(0, 0.25, 0), 1,
 						0, 0, 0, 0);
 			}
 		} else {
 			detonateTicks++;
 			if (detonateTicks == 15) {
-				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false, false));
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), maxRadius, speed, 0, false, false));
 			} else if (detonateTicks == 20) {
-				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), 7.0, 0.21, 0, false, false));
+				activeRings.add(new SoundRing(targetBlockLoc.clone().add(0, 0.25, 0), maxRadius, speed, 0, false, false));
 			}
 
 			List<SoundRing> toRemove = new ArrayList<>();
@@ -160,16 +179,16 @@ public class Resonance extends SoundAbility implements AddonAbility {
 									}
 
 									if (S <= 0.0) {
-										HandleDamage(player, target, 5.0);
+										HandleDamage(player, target, stacksWithoutSound);
 										target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 2));
 										target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 30, 2));
 									} else {
 										DamageHandler.damageEntity(entity, damage, Resonance.this);
-										HandleDamage(player, target, 8.0);
+										HandleDamage(player, target, stacksWithSound);
 										target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 2));
 										target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 30, 2));
-										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 10, true, false));
-										toAdd.add(new SoundRing(target.getLocation(), 6.0, 0.21, 20, true, false));
+										toAdd.add(new SoundRing(target.getLocation(), secondaryMaxRadius, speed, 10, true, false));
+										toAdd.add(new SoundRing(target.getLocation(), secondaryMaxRadius, speed, 20, true, false));
 
 										target.getWorld().spawnParticle(Particle.SONIC_BOOM,
 												target.getLocation().clone().add(0, 0.5, 0), 1, 0, 0, 0, 0);
@@ -244,7 +263,7 @@ public class Resonance extends SoundAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 3000;
+		return cooldown;
 	}
 
 	@Override

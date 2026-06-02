@@ -15,6 +15,7 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import Plugin.Methods;
+import Plugin.AmonPackPlugin;
 
 public class Whirlpool extends WaterAbility implements AddonAbility {
 
@@ -25,11 +26,11 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
     private State state;
     private long startTime;
 
-    private long gatheringDuration = 4000;
-    private double damage = 4.0;
-    private double speed = 1.5;
-    private double range = 30;
-    private long cooldown = 6000;
+    private long gatheringDuration;
+    private double damage;
+    private double speed;
+    private double range;
+    private long cooldown;
 
     private Location projectileLoc;
     private Vector projectileDir;
@@ -37,6 +38,12 @@ public class Whirlpool extends WaterAbility implements AddonAbility {
 
     public Whirlpool(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.Whirlpool.Cooldown", 6000);
+        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.Whirlpool.Damage", 4.0);
+        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.Whirlpool.Speed", 1.5);
+        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.Whirlpool.Range", 30.0);
+        this.gatheringDuration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.Whirlpool.GatheringDuration", 4000);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }

@@ -30,20 +30,26 @@ public class EarthShift extends EarthAbility implements AddonAbility {
 
     private State state;
     private long startTime;
-    private long chargeTime = 1500;
-    private long cooldown = 6000;
-    private double range = 15;
-    private double radius = 3;
+    private long chargeTime;
+    private long cooldown;
+    private double range;
+    private double radius;
     private Location targetLoc;
 
     private Location waveLoc;
     private Vector waveDir;
-    private double waveSpeed = 0.8;
+    private double waveSpeed;
     private double distanceTraveled = 0;
     private double totalDistance;
 
     public EarthShift(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthShift.Cooldown", 6000);
+        this.chargeTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthShift.ChargeTime", 1500);
+        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthShift.Range", 15.0);
+        this.radius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthShift.Radius", 3.0);
+        this.waveSpeed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthShift.WaveSpeed", 0.8);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }

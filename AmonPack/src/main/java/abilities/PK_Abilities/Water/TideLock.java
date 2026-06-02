@@ -24,6 +24,7 @@ import com.projectkorra.projectkorra.util.TempBlock;
 
 import Abilities.Util_Objects.BetterParticles;
 import Plugin.Methods;
+import Plugin.AmonPackPlugin;
 
 public class TideLock extends WaterAbility implements AddonAbility {
 
@@ -33,14 +34,14 @@ public class TideLock extends WaterAbility implements AddonAbility {
 
     private State state;
     private long startTime;
-    private long chargeTime = 2000;
+    private long chargeTime;
     private long markDuration = 5000;
     private long lockDuration = 3000;
-    private long cooldown = 6000;
-    private double damage = 2.0;
+    private long cooldown;
+    private double damage;
     private double burstDamage = 3.0;
-    private double range = 25;
-    private double speed = 1;
+    private double range;
+    private double speed;
 
     private List<Location> waterRing;
     private LivingEntity markedTarget;
@@ -54,6 +55,12 @@ public class TideLock extends WaterAbility implements AddonAbility {
 
     public TideLock(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.TideLock.Cooldown", 6000);
+        this.chargeTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.TideLock.ChargeTime", 2000);
+        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.TideLock.Damage", 2.0);
+        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.TideLock.Range", 25.0);
+        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.TideLock.Speed", 1.0);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }

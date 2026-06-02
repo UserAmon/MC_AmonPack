@@ -27,6 +27,20 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 	private boolean hasEncore = false;
 	private int maxstacks = 20;
 
+	private long cooldown;
+	private int maxDuration;
+	private int maxStacks;
+	private double dmgInitial;
+	private double dmgContinuous;
+	private double dmgStackMax;
+	private double dmgChain;
+	private double tetherDistance;
+	private double tetherDistanceEncore;
+	private double searchRadius;
+	private double searchRadiusEncore;
+	private double chainRadius;
+	private double chainRadiusEncore;
+
 	public Acoustics(Player player) {
 		super(player);
 		if (bPlayer.isOnCooldown(this)) {
@@ -39,7 +53,22 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
 				.GetBranchByPlayerName(player.getName());
 		this.hasEncore = (branch != null && branch.hasUpgrade("Encore"));
-		maxstacks = this.hasEncore ? 25 : 20;
+
+		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.Acoustics.Cooldown", 6000);
+		this.maxDuration = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Acoustics.MaxDuration", 100);
+		this.maxStacks = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Acoustics.MaxStacks", 20);
+		this.dmgInitial = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageInitial", 5.0);
+		this.dmgContinuous = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageContinuous", 4.0);
+		this.dmgStackMax = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageStackMax", 1.0);
+		this.dmgChain = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageChain", 3.0);
+		this.tetherDistance = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.TetherDistance", 10.0);
+		this.tetherDistanceEncore = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.TetherDistanceEncore", 16.0);
+		this.searchRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.SearchRadius", 12.0);
+		this.searchRadiusEncore = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.SearchRadiusEncore", 18.0);
+		this.chainRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.ChainRadius", 8.0);
+		this.chainRadiusEncore = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.ChainRadiusEncore", 12.0);
+
+		maxstacks = this.hasEncore ? maxStacks + 5 : maxStacks;
 
 		LivingEntity target = findInitialTarget();
 		if (target == null) {
@@ -48,7 +77,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 
 		chain.add(target);
 		allTargets.add(target);
-		HandleDamage(player, target, 5.0);
+		HandleDamage(player, target, dmgInitial);
 		bPlayer.addCooldown(this);
 		start();
 	}
@@ -66,14 +95,14 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 		}
 
 		LivingEntity mainTarget = chain.get(0);
-		double maxDistance = this.hasEncore ? 16 : 10;
+		double maxDistance = this.hasEncore ? tetherDistanceEncore : tetherDistance;
 		if (mainTarget.isDead() || player.getLocation().distance(mainTarget.getLocation()) > maxDistance) {
 			remove();
 			return;
 		}
 
 		ticksElapsed++;
-		if (ticksElapsed >= 100) {
+		if (ticksElapsed >= maxDuration) {
 			for (LivingEntity target : chain) {
 				com.projectkorra.projectkorra.util.DamageHandler.damageEntity(target, 2.0, this);
 				target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 1));
@@ -112,12 +141,12 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 
 				double currentStack = AfffectedEntities.get(target);
 				if (currentStack >= maxstacks) {
-					HandleDamage(player, target, 1.0);
+					HandleDamage(player, target, dmgStackMax);
 					deadOrShocked.add(target);
 					continue;
 				}
 
-				HandleDamage(player, target, 4.0);
+				HandleDamage(player, target, dmgContinuous);
 				target.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, target.getLocation(), 1, 0, 0, 0, 0);
 
 				double newStack = currentStack + 3.0;
@@ -137,7 +166,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				if (nextTarget != null) {
 					chain.add(nextTarget);
 					allTargets.add(nextTarget);
-					HandleDamage(player, nextTarget, 3.0);
+					HandleDamage(player, nextTarget, dmgChain);
 					nextTarget.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, nextTarget.getLocation(), 1, 0,
 							0, 0, 0);
 				}
@@ -146,7 +175,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 	}
 
 	private LivingEntity findNextTarget(LivingEntity source) {
-		double chainRadius = this.hasEncore ? 12.0 : 8.0;
+		double chainRadius = this.hasEncore ? chainRadiusEncore : this.chainRadius;
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(source.getLocation(), chainRadius)) {
 			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
 				LivingEntity le = (LivingEntity) entity;
@@ -178,7 +207,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 		LivingEntity bestTarget = null;
 		double bestDot = -1.0;
 		Vector direction = player.getEyeLocation().getDirection().normalize();
-		double searchRadius = this.hasEncore ? 18.0 : 12.0;
+		double searchRadius = this.hasEncore ? searchRadiusEncore : this.searchRadius;
 
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), searchRadius)) {
 			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
@@ -203,7 +232,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 6000;
+		return cooldown;
 	}
 
 	@Override

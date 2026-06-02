@@ -23,13 +23,30 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 	private Location origin;
 	private Location currentLoc;
 	private Vector direction;
-	private double speed = 1.0;
-	private double range = 20.0;
+	private double speed;
+	private double range;
 	private double distanceTraveled = 0;
 	private List<Entity> hited = new ArrayList<>();
 
+	private long cooldown;
+	private double stacksWithoutSound;
+	private double damageMultiplier;
+	private double pushWithoutStacks;
+	private double pushWithStacks;
+
+	private void loadConfig() {
+		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.SoundCrash.Cooldown", 3000);
+		this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.Range", 20.0);
+		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.Speed", 1.0);
+		this.stacksWithoutSound = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.StacksWithoutSound", 10.0);
+		this.damageMultiplier = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.DamageMultiplier", 0.3);
+		this.pushWithoutStacks = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.PushWithoutStacks", 0.8);
+		this.pushWithStacks = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.PushWithStacks", 1.2);
+	}
+
 	public SoundCrash(Player player) {
 		super(player);
+		loadConfig();
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -121,14 +138,14 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 		}
 
 		if (S <= 0.0) {
-			HandleDamage(player, target, 10.0);
+			HandleDamage(player, target, stacksWithoutSound);
 			Vector push = target.getLocation().toVector().subtract(player.getLocation().toVector());
 			if (push.lengthSquared() > 0) {
-				push.normalize().multiply(0.8).setY(0.2);
+				push.normalize().multiply(pushWithoutStacks).setY(0.2);
 				target.setVelocity(push);
 			}
 		} else {
-			double dmg = 1.0 + (S * 0.3);
+			double dmg = 1.0 + (S * damageMultiplier);
 			DamageHandler.damageEntity(target, dmg, this);
 
 			target.addPotionEffect(
@@ -140,7 +157,7 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 
 			Vector push = target.getLocation().toVector().subtract(player.getLocation().toVector());
 			if (push.lengthSquared() > 0) {
-				push.normalize().multiply(1.2).setY(0.35);
+				push.normalize().multiply(pushWithStacks).setY(0.35);
 				target.setVelocity(push);
 			}
 		}
@@ -148,7 +165,7 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 3000;
+		return cooldown;
 	}
 
 	@Override
@@ -192,13 +209,14 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 
 	public SoundCrash(Player player, Entity victim, int use) {
 		super(player);
+		loadConfig();
 		switch (use) {
 			case 0:
 				if (!bPlayer.isOnCooldown("Major_Sound_OnHit")) {
 					if (victim instanceof LivingEntity) {
 						applySoundCrashEffect((LivingEntity) victim);
 					} else {
-						HandleDamage(player, victim, 10);
+						HandleDamage(player, victim, stacksWithoutSound);
 					}
 					bPlayer.addCooldown("Major_Sound_OnHit", 5000);
 					break;

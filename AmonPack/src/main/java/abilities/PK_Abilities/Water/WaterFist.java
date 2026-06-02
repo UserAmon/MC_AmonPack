@@ -28,7 +28,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 	private long chargeStartTime;
 	private long lastPunchTime = 0;
 	private int clicksUsed = 0;
-	private double speed = 0.8;
+	private double speed;
 
 	// Reka: startuje 1 blok z boku (right), 1 blok do przodu, na wys. ramienia
 	// Segmenty: od 1.0 do 4.0 (4 bloki dlugosci)
@@ -39,6 +39,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 	public WaterFist(Player player) {
 		super(player);
+		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.WaterFist.Speed", 0.8);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}

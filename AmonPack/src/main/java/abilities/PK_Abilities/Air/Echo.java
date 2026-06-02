@@ -13,9 +13,15 @@ import java.util.List;
 
 public class Echo extends SoundAbility implements AddonAbility {
 	private List<Entity> hited = new ArrayList<>();
+	private long cooldown;
 
 	public Echo(Player player) {
 		super(player);
+		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.Echo.Cooldown", 3000);
+		double stacksToApply = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.StacksToApply", 8.0);
+		double damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.Damage", 0.0);
+		int baseProjectileCount = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Echo.ProjectileCount", 4);
+
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -27,7 +33,7 @@ public class Echo extends SoundAbility implements AddonAbility {
 
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
 		boolean hasDysonance = (branch != null && branch.hasUpgrade("Dysonance"));
-		int projectileCount = hasDysonance ? 5 : 4;
+		int projectileCount = hasDysonance ? baseProjectileCount + 1 : baseProjectileCount;
 
 		int offset = 0;
 		for (int i = 1; i <= projectileCount; i++) {
@@ -41,11 +47,11 @@ public class Echo extends SoundAbility implements AddonAbility {
 			multiL.setPitch(multiL.getPitch() + (float)(Math.random() * 20 - 10));
 			multiR.setPitch(multiR.getPitch() + (float)(Math.random() * 20 - 10));
 			
-			new EchoProjectile(player, multiL, multiL.getDirection(), 8.0, 0, hited);
-			new EchoProjectile(player, multiR, multiR.getDirection(), 8.0, 0, hited);
+			new EchoProjectile(player, multiL, multiL.getDirection(), stacksToApply, damage, hited);
+			new EchoProjectile(player, multiR, multiR.getDirection(), stacksToApply, damage, hited);
 		}
 		// Dodatkowy srodkowy
-		new EchoProjectile(player, origin, origin.getDirection(), 8.0, 0, hited);
+		new EchoProjectile(player, origin, origin.getDirection(), stacksToApply, damage, hited);
 
 		bPlayer.addCooldown(this);
 	}
@@ -57,7 +63,7 @@ public class Echo extends SoundAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 3000;
+		return cooldown;
 	}
 
 	@Override

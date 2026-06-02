@@ -5,6 +5,7 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.AirAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
+import Plugin.AmonPackPlugin;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,16 +33,24 @@ public class AerialPush extends AirAbility implements AddonAbility {
     private LivingEntity target;
     private long monitorStartTime;
 
-    private double damage = 2.0;
-    private double wallDamage = 4.0;
-    private double knockback = 2.5;
-    private double speed = 1.5;
-    private double range = 20;
-    private long cooldown = 3000;
-    private long monitorDuration = 1000;
+    private double damage;
+    private double wallDamage;
+    private double knockback;
+    private double speed;
+    private double range;
+    private long cooldown;
+    private long monitorDuration;
 
     public AerialPush(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.AerialPush.Cooldown", 3000);
+        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Damage", 2.0);
+        this.wallDamage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.WallDamage", 4.0);
+        this.knockback = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Knockback", 2.5);
+        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Speed", 1.5);
+        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Range", 20.0);
+        this.monitorDuration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.AerialPush.MonitorDuration", 1000);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }

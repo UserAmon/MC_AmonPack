@@ -28,17 +28,21 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
 
     private State state;
     private long startTime;
-    private long chargeTime = 2000;
+    private long chargeTime;
     private long armedDuration = 10000;
-    private long cooldown = 6000;
+    private long cooldown;
     private int ammo = 2;
     private int maxAmmo = 2;
     private long interval;
-    private double radius = 1.75;
+    private double radius;
     private List<Location> NearBlocks;
 
     public EarthDiscs(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthDiscs.Cooldown", 6000);
+        this.chargeTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthDiscs.ChargeTime", 2000);
+        this.radius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthDiscs.Radius", 1.75);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }

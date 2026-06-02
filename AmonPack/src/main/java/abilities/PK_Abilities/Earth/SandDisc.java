@@ -34,11 +34,12 @@ public class SandDisc extends SandAbility implements AddonAbility {
 	private Location currentSandLoc;
 	private int slot;
 	private long lastDrawTime = 0;
-	private double radius = 0.5;
+	double radius = 0.5;
 	private int ammo = 1;
 
 	public SandDisc(Player player) {
 		super(player);
+		this.radius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.SandDisc.Radius", 0.5);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -193,6 +194,7 @@ class SandEarthDisc extends EarthDisc {
 	public SandEarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit, SandDisc sourceAbility) {
 		super(player, location, direction, damage, speed, destroyOnEntityHit);
 		this.sourceAbility = sourceAbility;
+		this.radius = sourceAbility.radius;
 	}
 
 	@Override

@@ -34,15 +34,21 @@ public class Ionization extends LightningAbility implements AddonAbility {
 
     private State state;
     private long startTime;
-    private long chargeTime = 3500;
-    private long chargedWindow = 2000;
-    private long cooldown = 6000;
-    private long failCooldown = 3000;
-    private double selfDamage = 2.0;
+    private long chargeTime;
+    private long chargedWindow;
+    private long cooldown;
+    private long failCooldown;
+    private double selfDamage;
     private int slot;
 
     public Ionization(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Fire.Ionization.Cooldown", 6000);
+        this.chargeTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Fire.Ionization.ChargeTime", 3500);
+        this.chargedWindow = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Fire.Ionization.ChargedWindow", 2000);
+        this.failCooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Fire.Ionization.FailCooldown", 3000);
+        this.selfDamage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Fire.Ionization.SelfDamage", 2.0);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }

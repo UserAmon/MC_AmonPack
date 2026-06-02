@@ -19,6 +19,7 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.FireAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.TempBlock;
+import Plugin.AmonPackPlugin;
 
 public class FlameWeave extends FireAbility implements AddonAbility {
 
@@ -30,13 +31,17 @@ public class FlameWeave extends FireAbility implements AddonAbility {
     private long startTime;
     private long chargeTimePerLevel = 1000;
     private int maxChargeLevel = 3;
-    private long cooldown = 4000;
+    private long cooldown;
+    double speed;
     private List<FlameBolt> bolts = new ArrayList<>();
     private Random random = new Random();
     private int lastReportedLevel = -1;
 
     public FlameWeave(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Fire.FlameWeave.Cooldown", 4000);
+        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Fire.FlameWeave.Speed", 0.8);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
@@ -197,7 +202,7 @@ public class FlameWeave extends FireAbility implements AddonAbility {
         private double distanceTraveled;
         private boolean dead;
         private boolean hasSplit;
-        private double speed = 0.8;
+        private double speed = FlameWeave.this.speed;
         private Random random = new Random();
 
         public FlameBolt(Player player, FireAbility ability, Location loc, Vector dir, double damage,

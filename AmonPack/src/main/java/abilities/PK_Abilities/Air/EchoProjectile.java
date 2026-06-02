@@ -3,6 +3,7 @@ package Abilities.PK_Abilities.Air;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import Abilities.Bending.SoundAbility;
+import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
@@ -18,14 +19,20 @@ public class EchoProjectile extends SoundAbility {
 	private Location origin;
 	private Location location;
 	private Vector direction;
-	private double speed = 1.0;
+	private double speed;
 	private boolean bounced = false;
 	private double stacksToApply;
 	private double dmg;
 	private List<Entity> sharedHitList;
+	private double range;
+	private double rehitStacks;
 
 	public EchoProjectile(Player player, Location origin, Vector direction, double stacksToApply, double dmg, List<Entity> sharedHitList) {
 		super(player);
+		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.Speed", 1.0);
+		this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.Range", 15.0);
+		this.rehitStacks = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.RehitStacks", 2.0);
+
 		this.origin = origin.clone();
 		this.location = origin.clone();
 		this.direction = direction.normalize();
@@ -77,7 +84,7 @@ public class EchoProjectile extends SoundAbility {
 						HandleDamage(player, entity, stacksToApply);
 						sharedHitList.add(entity);
 					} else {
-						HandleDamage(player, entity, 2.0);
+						HandleDamage(player, entity, rehitStacks);
 					}
 				} else {
 					HandleDamage(player, entity, stacksToApply);
@@ -93,7 +100,7 @@ public class EchoProjectile extends SoundAbility {
 			}
 		}
 
-		if (location.distance(origin) > 15) {
+		if (location.distance(origin) > range) {
 			remove();
 		}
 	}
