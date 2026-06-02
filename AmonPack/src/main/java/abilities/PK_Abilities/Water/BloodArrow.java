@@ -2,6 +2,7 @@ package Abilities.PK_Abilities.Water;
 
 import java.util.ArrayList;
 import java.util.List;
+import Plugin.AmonPackPlugin;
 
 import org.bukkit.Color;
 import org.bukkit.FluidCollisionMode;
@@ -29,13 +30,22 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
 
     private State state;
     private long startTime;
-    private long chargeTimePerLevel = 1000;
-    private int maxChargeLevel = 3;
+    private long chargeTimePerLevel;
+    private int maxChargeLevel;
     private int lastReportedLevel = -1;
     private List<BloodArrowProjectile> arrows = new ArrayList<>();
+    private double selfDamage;
+    private double speed;
+    private long cooldown;
 
     public BloodArrow(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.BloodArrow.Cooldown", 7000);
+        this.chargeTimePerLevel = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.BloodArrow.ChargeTimePerLevel", 1000);
+        this.maxChargeLevel = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.BloodArrow.MaxChargeLevel", 3);
+        this.selfDamage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.BloodArrow.SelfDamage", 1.0);
+        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.BloodArrow.Speed", 1.2);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
@@ -64,7 +74,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
             if (level != lastReportedLevel) {
                 lastReportedLevel = level;
                 if (level > 0) {
-                    DamageHandler.damageEntity(player, 1.0, this);
+                    DamageHandler.damageEntity(player, selfDamage, this);
                     float pitch = 0.7f + (level * 0.2f);
                     player.playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 0.8f, pitch);
                     player.playSound(player.getLocation(), Sound.BLOCK_BONE_BLOCK_BREAK, 0.4f, pitch);
@@ -208,7 +218,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
         private int chainsRemaining;
         private final double homingRadius;
         private final List<LivingEntity> hitEntities = new ArrayList<>();
-        private final double speed = 1.2;
+        private final double speed = BloodArrow.this.speed;
 
         public BloodArrowProjectile(Player player, BloodArrow ability, Location origin, Vector direction,
                 double damage, double maxDistance, int chainsRemaining, double homingRadius) {

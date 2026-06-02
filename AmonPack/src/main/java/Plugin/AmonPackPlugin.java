@@ -17,7 +17,52 @@ public class AmonPackPlugin extends JavaPlugin {
 	private static Element SmokeElement;
 	private static Element SoundElement;
 	private static Element BladesElement;
-	public FileConfiguration config = getConfig();
+	private java.io.File configFile;
+	private FileConfiguration config;
+
+	@Override
+	public FileConfiguration getConfig() {
+		if (config == null) {
+			reloadConfig();
+		}
+		return config;
+	}
+
+	@Override
+	public void reloadConfig() {
+		if (configFile == null) {
+			configFile = new java.io.File(getDataFolder(), "abilities_config.yml");
+		}
+		config = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(configFile);
+
+		java.io.InputStream defConfigStream = getResource("abilities_config.yml");
+		if (defConfigStream != null) {
+			org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(defConfigStream, java.nio.charset.StandardCharsets.UTF_8));
+			config.setDefaults(defConfig);
+		}
+	}
+
+	@Override
+	public void saveConfig() {
+		if (config == null || configFile == null) {
+			return;
+		}
+		try {
+			getConfig().save(configFile);
+		} catch (java.io.IOException ex) {
+			getLogger().log(java.util.logging.Level.SEVERE, "Could not save config to " + configFile, ex);
+		}
+	}
+
+	@Override
+	public void saveDefaultConfig() {
+		if (configFile == null) {
+			configFile = new java.io.File(getDataFolder(), "abilities_config.yml");
+		}
+		if (!configFile.exists()) {            
+			saveResource("abilities_config.yml", false);
+		}
+	}
 
 	@Override
 	public void onEnable() {
@@ -59,6 +104,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	}
 
 	public void createconf() {
+		getConfig();
 		config.addDefault("AmonPack.Water.Ice.IcySpace.Cooldown", 12000);
 		config.addDefault("AmonPack.Water.Ice.IcySpace.Range", 5);
 		config.addDefault("AmonPack.Water.Ice.IcySpace.Duration", 10000);

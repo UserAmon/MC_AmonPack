@@ -201,12 +201,6 @@ public class AbilitiesListener implements Listener {
 					} else {
 						new FerroAbsorb(player);
 					}
-				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FerroClips")) {
-					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FerroClips.class)) {
-						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FerroClips.class).onClick();
-					} else {
-						new FerroClips(player);
-					}
 				}
 			}
 
@@ -275,30 +269,6 @@ public class AbilitiesListener implements Listener {
 				fa.remove();
 			}
 		}
-		for (FerroClips fc : new java.util.ArrayList<>(com.projectkorra.projectkorra.ability.CoreAbility.getAbilities(FerroClips.class))) {
-			if (fc.getTargetEnemy() != null && fc.getTargetEnemy().getUniqueId().equals(player.getUniqueId())) {
-				java.util.Iterator<ItemStack> iterator = event.getDrops().iterator();
-				while (iterator.hasNext()) {
-					ItemStack drop = iterator.next();
-					if (isFerroItem(drop)) {
-						iterator.remove();
-					}
-				}
-				if (fc.getHitsSucceeded() >= 1 && fc.getOrigBoots() != null && fc.getOrigBoots().getType() != org.bukkit.Material.AIR) {
-					event.getDrops().add(fc.getOrigBoots());
-				}
-				if (fc.getHitsSucceeded() >= 2 && fc.getOrigLeggings() != null && fc.getOrigLeggings().getType() != org.bukkit.Material.AIR) {
-					event.getDrops().add(fc.getOrigLeggings());
-				}
-				if (fc.getHitsSucceeded() >= 3 && fc.getOrigChestplate() != null && fc.getOrigChestplate().getType() != org.bukkit.Material.AIR) {
-					event.getDrops().add(fc.getOrigChestplate());
-				}
-				if (fc.getHitsSucceeded() >= 4 && fc.getOrigHelmet() != null && fc.getOrigHelmet().getType() != org.bukkit.Material.AIR) {
-					event.getDrops().add(fc.getOrigHelmet());
-				}
-				fc.remove();
-			}
-		}
 	}
 
 	@EventHandler
@@ -309,12 +279,6 @@ public class AbilitiesListener implements Listener {
 			if (fa != null) {
 				fa.cleanup();
 				fa.remove();
-			}
-		}
-		for (FerroClips fc : new java.util.ArrayList<>(com.projectkorra.projectkorra.ability.CoreAbility.getAbilities(FerroClips.class))) {
-			if (fc.getTargetEnemy() != null && fc.getTargetEnemy().getUniqueId().equals(player.getUniqueId())) {
-				fc.restoreTargetArmor();
-				fc.remove();
 			}
 		}
 	}

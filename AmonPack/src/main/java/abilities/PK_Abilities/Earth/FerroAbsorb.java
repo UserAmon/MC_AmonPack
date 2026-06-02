@@ -47,6 +47,9 @@ public class FerroAbsorb extends MetalAbility implements AddonAbility {
     private Location whipP1;
     private Location whipP2;
     private List<LivingEntity> whipHitEntities;
+    private Vector chargeDirection;
+    private Vector chargeRight;
+    private Vector chargeUp;
 
     public FerroAbsorb(Player player) {
         super(player);
@@ -91,19 +94,21 @@ public class FerroAbsorb extends MetalAbility implements AddonAbility {
                 return;
             }
 
-            Vector look = player.getEyeLocation().getDirection().normalize();
-            Location center = player.getEyeLocation().add(look.clone().multiply(1.5));
-
-            Vector right = look.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-            if (right.lengthSquared() == 0) {
-                right = new Vector(1, 0, 0);
+            if (chargeDirection == null) {
+                chargeDirection = player.getEyeLocation().getDirection().normalize();
+                chargeRight = chargeDirection.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+                if (chargeRight.lengthSquared() == 0) {
+                    chargeRight = new Vector(1, 0, 0);
+                }
+                chargeUp = chargeRight.clone().crossProduct(chargeDirection).normalize();
             }
-            Vector up = right.clone().crossProduct(look).normalize();
+
+            Location center = player.getEyeLocation().add(chargeDirection.clone().multiply(1.5));
             double radius = 0.6;
 
             for (double a = 90.0; a < 450.0; a += 15.0) {
                 double r = Math.toRadians(a);
-                Vector offset = right.clone().multiply(Math.cos(r) * radius).add(up.clone().multiply(Math.sin(r) * radius));
+                Vector offset = chargeRight.clone().multiply(Math.cos(r) * radius).add(chargeUp.clone().multiply(Math.sin(r) * radius));
                 Location pLoc = center.clone().add(offset);
                 if (a < targetAngle) {
                     player.spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(50, 205, 50), 0.8f));
@@ -113,7 +118,7 @@ public class FerroAbsorb extends MetalAbility implements AddonAbility {
             }
 
             double rad = Math.toRadians(targetAngle);
-            Vector activeOffset = right.clone().multiply(Math.cos(rad) * radius).add(up.clone().multiply(Math.sin(rad) * radius));
+            Vector activeOffset = chargeRight.clone().multiply(Math.cos(rad) * radius).add(chargeUp.clone().multiply(Math.sin(rad) * radius));
             Location activeLoc = center.clone().add(activeOffset);
             player.spawnParticle(Particle.DUST, activeLoc, 4, 0.05, 0.05, 0.05, 0, new Particle.DustOptions(Color.fromRGB(255, 215, 0), 1.6f));
 

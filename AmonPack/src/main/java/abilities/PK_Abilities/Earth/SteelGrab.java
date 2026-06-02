@@ -15,12 +15,14 @@ import org.bukkit.util.Vector;
 
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
-import com.projectkorra.projectkorra.ability.EarthAbility;
+import com.projectkorra.projectkorra.ability.MetalAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 
 import Plugin.AmonPackPlugin;
 
-public class SteelGrab extends EarthAbility implements AddonAbility {
+public class SteelGrab extends MetalAbility implements AddonAbility {
+
+    private double cableLength = -1;
 
     private long cooldown;
     private double range;
@@ -125,44 +127,71 @@ public class SteelGrab extends EarthAbility implements AddonAbility {
             }
 
             Vector vel = player.getVelocity();
-            Vector toBlock = cableAttachedLoc.toVector().subtract(player.getLocation().toVector());
+            Location eye = player.getEyeLocation();
+            Vector toBlock = cableAttachedLoc.toVector().subtract(eye.toVector());
             double dist = toBlock.length();
             Vector toBlockNorm = toBlock.clone().normalize();
 
-            Vector hVel = new Vector(vel.getX(), 0, vel.getZ());
-            Vector hToBlock = new Vector(toBlockNorm.getX(), 0, toBlockNorm.getZ()).normalize();
-
-            if (hVel.length() > 0.08) {
-                double blendFactor = (dist < 5.0) ? 0.15 : 0.045;
-                Vector blendedDir = hVel.clone().normalize().multiply(1.0 - blendFactor).add(hToBlock.multiply(blendFactor)).normalize();
-                double speed = hVel.length();
-                double pullScale = (dist < 5.0) ? 0.22 + (5.0 - dist) * 0.05 : 0.06;
-                speed = speed * 0.985 + pullScale;
-                if (speed > 1.35) {
-                    speed = 1.35;
-                }
-                hVel = blendedDir.multiply(speed);
-            } else {
-                double pullScale = (dist < 5.0) ? 0.22 + (5.0 - dist) * 0.05 : 0.12;
-                hVel.add(hToBlock.multiply(pullScale));
-                if (hVel.length() > 1.2) {
-                    hVel.normalize().multiply(1.2);
-                }
+            // Set initial cable length on first frame of attachment
+            if (cableLength <= 0) {
+                cableLength = dist;
             }
 
-            vel.setX(hVel.getX());
-            vel.setZ(hVel.getZ());
+            // Tangent velocity: project player velocity onto the tangent plane of the swing sphere
+            double dot = vel.dot(toBlockNorm);
+            Vector tangentVel = vel.clone().subtract(toBlockNorm.clone().multiply(dot));
 
-            double pullY = toBlockNorm.getY() * ((dist < 5.0) ? 0.25 : 0.12);
-            vel.setY(vel.getY() * 0.95 + pullY);
-            if (vel.getY() < 0) {
-                vel.setY(vel.getY() * 0.9 + 0.05);
+            // Constraint / Spring tension force: pulls player toward anchor if they exceed cableLength
+            Vector tensionForce = new Vector(0, 0, 0);
+            if (dist > cableLength) {
+                double excess = dist - cableLength;
+                tensionForce = toBlockNorm.clone().multiply(excess * 0.18);
             }
 
-            player.setVelocity(vel);
+            // Steer/Drift force: allow steering in looking direction projected on swing tangent
+            Vector look = eye.getDirection().normalize();
+            double lookDot = look.dot(toBlockNorm);
+            Vector tangentLook = look.clone().subtract(toBlockNorm.clone().multiply(lookDot));
+            Vector steerForce = new Vector(0, 0, 0);
+            if (tangentLook.lengthSquared() > 0.001) {
+                steerForce = tangentLook.normalize().multiply(0.095);
+            }
 
-            if (player.getLocation().distance(cableAttachedLoc) <= 2.0) {
-                Vector boost = toBlockNorm.multiply(0.75).setY(0.35);
+            // Floatiness/Gravity compensation
+            Vector gravity = new Vector(0, -0.045, 0);
+
+            // Drift Feeling: blend current velocity smoothly towards target velocity
+            double blendFactor = 0.09; // gradual direction bending
+            Vector targetVelocity = tangentVel.clone().add(tensionForce).add(steerForce).add(gravity);
+            Vector newVel = vel.clone().multiply(1.0 - blendFactor).add(targetVelocity.multiply(blendFactor));
+
+            // Active reeling-in / pulling on shift (sneaking) like block pulling in SteelSwing!
+            if (player.isSneaking()) {
+                double pullAccel = 0.095; // responsive active acceleration directly towards block
+                newVel.add(toBlockNorm.clone().multiply(pullAccel));
+                
+                // Reel in the cable length so the swing sphere contracts
+                if (cableLength > dist) {
+                    cableLength = dist;
+                }
+                cableLength = Math.max(1.5, cableLength - 0.28);
+            }
+
+            // Dampening/friction
+            newVel.multiply(0.985);
+
+            // Velocity limit to prevent insane acceleration while remaining highly dynamic
+            double maxSwingSpeed = 1.65;
+            if (newVel.length() > maxSwingSpeed) {
+                newVel.normalize().multiply(maxSwingSpeed);
+            }
+
+            // Update player velocity
+            player.setVelocity(newVel);
+
+            // Detach and boost when reaching anchor
+            if (player.getLocation().distance(cableAttachedLoc) <= 2.2) {
+                Vector boost = toBlockNorm.multiply(0.85).setY(0.4);
                 player.setVelocity(player.getVelocity().add(boost));
                 remove();
                 bPlayer.addCooldown(this);

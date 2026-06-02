@@ -1,0 +1,400 @@
+# ==============================================================================
+#                      AmonPack Bending Abilities Configuration
+# ==============================================================================
+# This configuration file controls the parameters for all custom magic moves
+# and elements added by the AmonPack plugin. All values can be reloaded in-game.
+
+AmonPack:
+  # ============================================================================
+  # Water Bending Skills
+  # ============================================================================
+  Water:
+    Ice:
+      # IcySpace - freezingly slows down enemies in an area
+      IcySpace:
+        Cooldown: 12000
+        Range: 5
+        Duration: 10000
+        1stPhaseDelay: 3
+        2ndPhaseDelay: 6
+        NightAugment:
+          Cooldown: 5000
+          Range: 12
+          Duration: 60000
+        FullMoonAugment:
+          Cooldown: 12000
+          Range: 8
+          Duration: 20000
+
+      # IceArch - creates a protective frozen barrier of ice
+      IceArch:
+        Cooldown: 4000
+        Range: 20
+        ChargeTime: 1500
+        Damage: 2
+        Arch-Width: 3
+        Arch-Duration: 5000
+        Arch-Thickness: 2
+        CanFreeze: false
+        FreezeDuration: 2000
+        NightAugment:
+          Cooldown: 4000
+          ChargeTime: 1000
+          Range: 30
+          Damage: 3
+          Arch-Width: 4
+          Arch-Duration: 5000
+          Arch-Thickness: 3
+          CanFreeze: false
+          FreezeDuration: 2000
+        FullMoonAugment:
+          Cooldown: 1000
+          ChargeTime: 500
+          Range: 40
+          Damage: 5
+          Arch-Width: 5
+          Arch-Duration: 5000
+          Arch-Thickness: 4
+          CanFreeze: false
+          FreezeDuration: 2000
+
+      # IceThorn - shoots icy spikes out of the ground
+      IceThorn:
+        Cooldown: 7000
+        Damage: 1
+        ChargeTime: 2000
+        RevertTime: 10000
+        Range: 20
+        Radius: 2
+        FreezeDuration: 3000
+
+    # CalmTide - calming self-healing water bending ritual
+    CalmTide:
+      Cooldown: 8000
+      Range: 15
+      HealingDuration: 120      # Total ticks of healing (6 seconds)
+      HealingInterval: 10       # Restores health every X ticks
+      HealingAmount: 1.0        # Amount of health restored per interval
+      SpeedAmplifier: 1         # Completion speed buff level
+      SpeedDuration: 100        # Speed duration in ticks
+
+    # TideLock - locks a target in place using water pressure
+    TideLock:
+      Cooldown: 6000
+      ChargeTime: 2000
+      Damage: 2.0
+      Range: 25.0
+      Speed: 1.0
+
+    # WaterFist - powerful water fist melee augment
+    WaterFist:
+      Speed: 0.8
+
+    # Whirlpool - gathers water into a swirling vortex shield and fires it
+    Whirlpool:
+      Cooldown: 6000
+      Damage: 4.0
+      Speed: 1.5
+      Range: 30.0
+      GatheringDuration: 4000
+
+    # BloodCall - bloodbending ritual that traps and nauseates targets
+    BloodCall:
+      Cooldown: 3000
+      Range: 25.0
+      Duration: 120             # Max duration in ticks (6 seconds)
+      SelfDamage: 1.0           # Self damage applied during weaving milestones
+      CompletionDamage: 2.5     # Damage dealt upon ritual success
+
+    # BloodArrow - charges your own blood to fire a chaining homing arrow
+    BloodArrow:
+      Cooldown: 7000
+      ChargeTimePerLevel: 1000
+      MaxChargeLevel: 3
+      SelfDamage: 1.0
+      Speed: 1.2
+
+  # ============================================================================
+  # Air Bending Skills
+  # ============================================================================
+  Air:
+    # AirPressure - builds up compressed air to blast or pull enemies
+    AirPressure:
+      Cooldown: 4000
+      Dmg: 2
+      Range-Sphere: 20
+      Range-Pull: 4
+      PushPower: 1.5
+      MinHoldTime: 500
+      MaxHoldTime: 4000
+      CanControlSphere: false
+
+    # Acoustics - establishes a sonic tether that shocks and chains enemies
+    Acoustics:
+      Cooldown: 6000
+      MaxDuration: 100          # Duration in ticks
+      MaxStacks: 20
+      DamageInitial: 5.0
+      DamageContinuous: 4.0
+      DamageStackMax: 1.0
+      DamageChain: 3.0
+      TetherDistance: 10.0
+      TetherDistanceEncore: 16.0
+      SearchRadius: 12.0
+      SearchRadiusEncore: 18.0
+      ChainRadius: 8.0
+      ChainRadiusEncore: 12.0
+
+    # AerialPush - launches air projectles that deal extra wall-impact damage
+    AerialPush:
+      Cooldown: 3000
+      Damage: 2.0
+      WallDamage: 4.0
+      Knockback: 2.5
+      Speed: 1.5
+      Range: 20.0
+      MonitorDuration: 1000
+
+    # AirScythe - throws slicing blades of compressed air
+    AirScythe:
+      Cooldown: 4000
+      ComboWindow: 3000
+      Damage: 2.0
+      Speed: 1.5
+      Range: 20.0
+
+    # Echo - fires echoing sound waves that bounce off walls
+    Echo:
+      Cooldown: 3000
+      ProjectileCount: 4
+      StacksToApply: 8.0
+      Damage: 0.0
+      Speed: 1.0
+      Range: 15.0
+      RehitStacks: 2.0
+
+    # GustShield - shields you in swirling wind and retaliates when hit
+    GustShield:
+      Cooldown: 6000
+      Duration: 2000
+      Speed: 0.7
+      Range: 10.0
+      PushFactor: 1.0
+
+    # SoundCrash - unleashes a sonic boom that detonates high sound stacks
+    SoundCrash:
+      Cooldown: 3000
+      Range: 20.0
+      Speed: 1.0
+      StacksWithoutSound: 10.0
+      DamageMultiplier: 0.3
+      PushWithoutStacks: 0.8
+      PushWithStacks: 1.2
+
+    # Resonance - tethers a block and pulses waves of sound
+    Resonance:
+      Cooldown: 3000
+      Damage: 1.0
+      ChargeTicks: 40
+      ChargeTicksDysonance: 20
+      MaxRadius: 7.0
+      Speed: 0.21
+      StacksWithoutSound: 5.0
+      StacksWithSound: 8.0
+      SecondaryMaxRadius: 6.0
+
+  # ============================================================================
+  # Earth & Metal Bending Skills
+  # ============================================================================
+  Earth:
+    # EarthHammer - slams a massive earth hammer in front of you
+    EarthHammer:
+      Cooldown: 7000
+      Damage: 1
+      ChargeTime: 2000
+      RevertTime: 10000
+      Range: 20
+      Radius: 2
+
+    # DiscHurl - hurls solid earth discs at high speeds
+    DiscHurl:
+      Cooldown: 3000
+      Damage: 3.0
+      Speed: 0.8
+
+    # EarthShift - shifts a block of earth and sweeps enemies on it
+    EarthShift:
+      Cooldown: 6000
+      ChargeTime: 1500
+      Range: 15.0
+      Radius: 3.0
+      WaveSpeed: 0.8
+
+    # EarthDiscs - creates spinning earth discs
+    EarthDiscs:
+      Cooldown: 6000
+      ChargeTime: 2000
+      Radius: 1.75
+
+    # SandDisc - spinning sand discs
+    SandDisc:
+      Radius: 0.5
+
+    # Sand - sand elements
+    Sand:
+      SandWave:
+        Cooldown: 6000
+        Range: 15
+        Duration: 4000
+        Size: 6
+        DeBuffPower: 2
+        DebuffDuration: 50
+        BurrowPower: 1
+      SandBreath:
+        Cooldown: 6000
+        Range: 12
+        Duration: 4000
+        ChargeTime: 2000
+        ChargedBreathBuff: true
+        SpeedOnSand: 6
+        SpeedOnEarth: 2
+        DeBuffPower: 2
+        DebuffDuration: 60
+        Damage: 1
+        DurationToUseBreath: 120
+        CanDebuffEnemy: true
+
+    # Metal - metal elements
+    Metal:
+      SteelShackles:
+        Range: 35
+        Hitbox: 3
+        DamageFirst: 2
+        DamageSecond: 1
+        StunRange: 15
+        StunDuration: 60
+        TimeToEscape: 60
+        DurabilityCost: 20
+        Cooldown: 7000
+      MetalFlex:
+        CooldownNormal: 10000
+        CooldownCrysis: 40000
+        SpeedPower: 3
+        CrysisDuration: 100
+        LowLevel: 5
+      MetalCompress:
+        CooldownMin: 4000
+        CooldownMax: 8000
+        Damage: 2
+        MaxChargeTime: 1700
+        Duration: 5
+        DurabilityCostMin: 10
+        DurabilityCostMax: 30
+      SteelSwing:
+        Cooldown: 5000
+        Range: 25.0
+        Speed: 2.2
+      SteelGrab:
+        Cooldown: 6000
+        Range: 28.0
+        Speed: 2.2
+      FerroAbsorb:
+        Cooldown: 8000
+
+  # ============================================================================
+  # Chi & Blades Skills
+  # ============================================================================
+  Chi:
+    Blades:
+      Slash:
+        Dmg-1: 1
+        Dmg-2: 1
+        Dmg-3: 2
+        Cooldown: 4000
+        SpeedPower: 3
+        SpeedDuration: 20
+        InvDuration: 20
+        EvadePower: 1
+      Pierce:
+        SpeedPower: 3
+        SpeedDuration: 60
+        Dmg-1: 1
+        Dmg-2: 3
+        Cooldown: 4000
+        DashPower: 2
+      Stab:
+        Uses: 4
+        Dmg-Left: 2
+        Dmg-Right: 2
+        Cooldown: 4000
+      Counter:
+        MaxHoldTime: 2500
+        EvadePower: 1
+        Cooldown: 4000
+        DashInAir: true
+
+  # ============================================================================
+  # Fire & Smoke Skills
+  # ============================================================================
+  Fire:
+    # Smoke elements
+    Smoke:
+      SmokeSurge:
+        Cooldown: 4000
+        Range: 30
+        Dmg: 1
+        SlowPower: 2
+        SlowDuration: 40
+        PoisonPower: 1
+        PoisonDuration: 40
+        BlindnessDuration: 40
+        SmokeZoneDuration: 100
+        SmokeZoneRange: 3
+      SmokeDaggers:
+        Cooldown: 4000
+        Range: 30
+        Dmg: 1
+        SlowPower: 2
+        SlowDuration: 40
+        PoisonPower: 1
+        PoisonDuration: 40
+        BlindnessDuration: 40
+        SmokeZoneDuration: 100
+        SmokeZoneRange: 2
+      SmokeBurst:
+        Cooldown: 3000
+      SmokeBlade:
+        Cooldown: 3000
+        Damage: 2
+        Range: 15
+        BladeSize: 3
+      SmokeCamouflage:
+        Cooldown: 6000
+        Duration: 60                  # Duration in ticks
+        DashForce: 1.8
+        EffectsPower: 2
+
+    # SmokeSource configs
+    SmokeSource:
+      SpeedPower: 4
+      SlowPower: 2
+
+    # Flame bending skills
+    FlameWeave:
+      Cooldown: 4000
+      Speed: 0.8
+
+  # ============================================================================
+  # General Elemental Elements (Smoke and Water)
+  # ============================================================================
+  Elemental:
+    Water:
+      DryGrassRevert: 15000
+      DryGrassRange: 3
+    Smoke:
+      BlindnessDuration: 40
+      PoisonDuration: 40
+      PoisonPower: 1
+      SlowPower: 3
+      SlowDuration: 40
+      AffectUser: false

@@ -35,8 +35,24 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 	private int sourcingTicks = 0;
 	private Vector weaveStartDir;
 
+	private long cooldown;
+	private double range;
+	private int maxHealingTicks;
+	private int healingInterval;
+	private double healingAmount;
+	private int speedAmplifier;
+	private int speedDuration;
+
 	public CalmTide(Player player) {
 		super(player);
+		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.CalmTide.Cooldown", 8000);
+		this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.CalmTide.Range", 15.0);
+		this.maxHealingTicks = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.CalmTide.HealingDuration", 120);
+		this.healingInterval = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.CalmTide.HealingInterval", 10);
+		this.healingAmount = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.CalmTide.HealingAmount", 1.0);
+		this.speedAmplifier = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.CalmTide.SpeedAmplifier", 1);
+		this.speedDuration = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.CalmTide.SpeedDuration", 100);
+
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -44,7 +60,7 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 			return;
 		}
 
-		Location source = Methods.findWaterSource(player, 15);
+		Location source = Methods.findWaterSource(player, (int) this.range);
 		if (source == null) {
 			return;
 		}
@@ -148,17 +164,17 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 			}
 
 			healingTicks++;
-			if (healingTicks % 10 == 0) {
+			if (healingTicks % healingInterval == 0) {
 				double maxH = player.getMaxHealth();
 				if (player.getHealth() < maxH) {
-					double newH = Math.min(maxH, player.getHealth() + 1.0);
+					double newH = Math.min(maxH, player.getHealth() + healingAmount);
 					totalHealed += (newH - player.getHealth());
 					player.setHealth(newH);
 					player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.4f, 1.3f);
 				}
 			}
 
-			double progressRatio = (double) healingTicks / 120.0;
+			double progressRatio = (double) healingTicks / maxHealingTicks;
 			double orbitSpeed = 6.0;
 			double currentOrbitAngle = healingTicks * orbitSpeed;
 
@@ -176,8 +192,8 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 				}
 			}
 
-			if (healingTicks >= 120) {
-				player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1));
+			if (healingTicks >= maxHealingTicks) {
+				player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, speedDuration, speedAmplifier));
 				player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.5f);
 				bPlayer.addCooldown(this);
 				remove();
@@ -194,7 +210,7 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 8000;
+		return cooldown;
 	}
 
 	@Override

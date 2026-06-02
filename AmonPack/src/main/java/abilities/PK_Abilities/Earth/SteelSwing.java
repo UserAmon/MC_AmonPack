@@ -292,6 +292,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
                     player.getWorld().playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1.0f, 1.6f);
                     player.getWorld().spawnParticle(Particle.BLOCK, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1,
                             pulledBlockMaterial.createBlockData());
+                    Methods.spawnFallingBlocks(player.getLocation(), pulledBlockMaterial, 12, 2.2, player);
                     for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), 3.5)) {
                         if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                             LivingEntity target = (LivingEntity) entity;
@@ -347,6 +348,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
                     player.getWorld().playSound(pulledBlockLoc, Sound.BLOCK_ANVIL_LAND, 1.0f, 1.6f);
                     player.getWorld().spawnParticle(Particle.BLOCK, pulledBlockLoc, 30, 0.5, 0.5, 0.5, 0.1,
                             pulledBlockMaterial.createBlockData());
+                    Methods.spawnFallingBlocks(pulledBlockLoc, pulledBlockMaterial, 12, 2.2, player);
                     for (Entity entity : GeneralMethods.getEntitiesAroundPoint(pulledBlockLoc, 3.5)) {
                         if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                             LivingEntity target = (LivingEntity) entity;
@@ -365,6 +367,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
                     player.getWorld().playSound(pulledBlockLoc, Sound.BLOCK_ANVIL_LAND, 1.0f, 1.6f);
                     player.getWorld().spawnParticle(Particle.BLOCK, pulledBlockLoc, 30, 0.5, 0.5, 0.5, 0.1,
                             pulledBlockMaterial.createBlockData());
+                    Methods.spawnFallingBlocks(pulledBlockLoc, pulledBlockMaterial, 12, 2.2, player);
                     for (Entity entity : GeneralMethods.getEntitiesAroundPoint(pulledBlockLoc, 3.5)) {
                         if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                             LivingEntity target = (LivingEntity) entity;
