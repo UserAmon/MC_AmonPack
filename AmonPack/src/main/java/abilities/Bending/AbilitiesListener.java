@@ -90,6 +90,12 @@ public class AbilitiesListener implements Listener {
 						new AirPressure(player);
 					} else if (boundAbility.equalsIgnoreCase("EarthHammer")) {
 						new EarthHammer(player);
+					} else if (boundAbility.equalsIgnoreCase("Baricade")) {
+						new Baricade(player);
+					} else if (boundAbility.equalsIgnoreCase("FlameSplit")) {
+						if (!com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSplit.class)) {
+							new FlameSplit(player);
+						}
 					}
 					 else if (boundAbility.equalsIgnoreCase("BloodArrow")) {
 						new BloodArrow(player);
@@ -383,4 +389,18 @@ public class AbilitiesListener implements Listener {
 	// }}}}}else return;
 	// }
 	//
+
+	@EventHandler
+	public void onEntityDamage(org.bukkit.event.entity.EntityDamageEvent event) {
+		if (event.getEntity() instanceof Player) {
+			Player player = (Player) event.getEntity();
+			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSplit.class)) {
+				FlameSplit fs = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FlameSplit.class);
+				if (fs != null && fs.isParrying()) {
+					event.setCancelled(true);
+					fs.onParryDamage();
+				}
+			}
+		}
+	}
 }

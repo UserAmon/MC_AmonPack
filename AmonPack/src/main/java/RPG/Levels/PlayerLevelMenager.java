@@ -21,6 +21,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -375,21 +376,24 @@ public class PlayerLevelMenager {
             skill.setExpPoints(skill.getExpPoints() + points);
             
             try {
-                Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
-                ResultSet rs = stmt.executeQuery("select * from Level" + skill.getType().toString() + " where Player='" + player.getName() + "'");
-                String usedRewardsStr = skill.getUsedRewards().stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(","));
-                if (!rs.next()) {
-                    ExecuteQuery("INSERT INTO Level" + skill.getType().toString()
-                            + " (Player,GeneralLevel,UsedRewards,UpgradePercent)" +
-                            " VALUES ('" + player.getName() + "'," + skill.getExpPoints() + ",'" + usedRewardsStr + "'"
-                            + "," + skill.getUpgradePercent() + ")");
-                } else {
-                    ExecuteQuery("UPDATE Level" + skill.getType().toString() + " SET GeneralLevel = '"
-                            + skill.getExpPoints() + "' WHERE Player = '" + player.getName() + "'");
+                Connection conn = AmonPackPlugin.mysqllite().getConnection();
+                if (conn != null) {
+                    try (Statement stmt = conn.createStatement();
+                         ResultSet rs = stmt.executeQuery("select * from Level" + skill.getType().toString() + " where Player='" + player.getName() + "'")) {
+                        String usedRewardsStr = skill.getUsedRewards().stream()
+                                .map(String::valueOf)
+                                .collect(Collectors.joining(","));
+                        if (!rs.next()) {
+                            ExecuteQuery("INSERT INTO Level" + skill.getType().toString()
+                                    + " (Player,GeneralLevel,UsedRewards,UpgradePercent)" +
+                                    " VALUES ('" + player.getName() + "'," + skill.getExpPoints() + ",'" + usedRewardsStr + "'"
+                                    + "," + skill.getUpgradePercent() + ")");
+                        } else {
+                            ExecuteQuery("UPDATE Level" + skill.getType().toString() + " SET GeneralLevel = '"
+                                    + skill.getExpPoints() + "' WHERE Player = '" + player.getName() + "'");
+                        }
+                    }
                 }
-                stmt.close();
             } catch (SQLException dbEx) {
                 System.out.println("Error saving player level to database: " + dbEx.getMessage());
             }
@@ -547,59 +551,68 @@ public class PlayerLevelMenager {
     }
 
     private void LoadPlayersFromDatabase() throws SQLException {
-        Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
-        ResultSet rs = stmt.executeQuery("select * from LevelGENERAL");
-        while (rs.next()) {
-            List<LevelSkill> Skills = new ArrayList<>();
-            String PlayerName = rs.getString(1);
-            for (LevelSkill.SkillType Skillt : EnabledSkillTypes) {
-                ResultSet Result = stmt
-                        .executeQuery("select * from Level" + Skillt.toString() + " where Player='" + PlayerName + "'");
-                while (Result.next()) {
-                    String[] parts = Result.getString(3).split(",");
-                    List<Integer> intList = new ArrayList<>();
-                    for (String part : parts) {
-                        try {
-                            if (!Objects.equals(part, "")) {
-                                intList.add(Integer.parseInt(part));
+        Connection conn = AmonPackPlugin.mysqllite().getConnection();
+        if (conn == null) {
+            return;
+        }
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("select * from LevelGENERAL")) {
+            while (rs.next()) {
+                List<LevelSkill> Skills = new ArrayList<>();
+                String PlayerName = rs.getString(1);
+                for (LevelSkill.SkillType Skillt : EnabledSkillTypes) {
+                    try (Statement stmtSub = conn.createStatement();
+                         ResultSet Result = stmtSub.executeQuery("select * from Level" + Skillt.toString() + " where Player='" + PlayerName + "'")) {
+                        while (Result.next()) {
+                            String[] parts = Result.getString(3).split(",");
+                            List<Integer> intList = new ArrayList<>();
+                            for (String part : parts) {
+                                try {
+                                    if (!Objects.equals(part, "")) {
+                                        intList.add(Integer.parseInt(part));
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println("Blad przy wgrywaniu poziomow z bazy danych");
+                                }
                             }
-                        } catch (Exception e) {
-                            System.out.println("Blad przy wgrywaniu poziomow z bazy danych");
+                            Skills.add(new LevelSkill(Result.getDouble(2), Skillt, intList, Result.getDouble(4)));
                         }
                     }
-                    Skills.add(new LevelSkill(Result.getDouble(2), Skillt, intList, Result.getDouble(4)));
                 }
+                AllPlayerLevels.add(new PlayerLevel(PlayerName, Skills));
             }
-            AllPlayerLevels.add(new PlayerLevel(PlayerName, Skills));
         }
-        stmt.close();
     }
 
     public void LoadIntoDatabase() throws SQLException {
-        Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
+        Connection conn = AmonPackPlugin.mysqllite().getConnection();
+        if (conn == null) {
+            return;
+        }
         for (PlayerLevel PlayerL : AllPlayerLevels) {
             for (LevelSkill Skill : PlayerL.getPlayerSkills()) {
-                ResultSet rs = stmt.executeQuery("select * from Level" + Skill.getType().toString() + " where Player='"
-                        + PlayerL.getPlayerName() + "'");
-                String result = Skill.getUsedRewards().stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(","));
-                if (!rs.next()) {
-                    ExecuteQuery("INSERT INTO Level" + Skill.getType().toString()
-                            + " (Player,GeneralLevel,UsedRewards,UpgradePercent)" +
-                            " VALUES ('" + PlayerL.getPlayerName() + "'," + Skill.getExpPoints() + ",'" + result + "'"
-                            + "," + Skill.getUpgradePercent() + ")");
-                } else {
-                    ExecuteQuery("UPDATE Level" + Skill.getType().toString() + " SET GeneralLevel = '"
-                            + Skill.getExpPoints() + "' WHERE Player = '" + PlayerL.getPlayerName() + "'");
-                    ExecuteQuery("UPDATE Level" + Skill.getType().toString() + " SET UsedRewards = '" + result
-                            + "' WHERE Player = '" + PlayerL.getPlayerName() + "'");
-                    ExecuteQuery("UPDATE Level" + Skill.getType().toString() + " SET UpgradePercent = '"
-                            + Skill.getUpgradePercent() + "' WHERE Player = '" + PlayerL.getPlayerName() + "'");
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("select * from Level" + Skill.getType().toString() + " where Player='"
+                             + PlayerL.getPlayerName() + "'")) {
+                    String result = Skill.getUsedRewards().stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(","));
+                    if (!rs.next()) {
+                        ExecuteQuery("INSERT INTO Level" + Skill.getType().toString()
+                                + " (Player,GeneralLevel,UsedRewards,UpgradePercent)" +
+                                " VALUES ('" + PlayerL.getPlayerName() + "'," + Skill.getExpPoints() + ",'" + result + "'"
+                                + "," + Skill.getUpgradePercent() + ")");
+                    } else {
+                        ExecuteQuery("UPDATE Level" + Skill.getType().toString() + " SET GeneralLevel = '"
+                                + Skill.getExpPoints() + "' WHERE Player = '" + PlayerL.getPlayerName() + "'");
+                        ExecuteQuery("UPDATE Level" + Skill.getType().toString() + " SET UsedRewards = '" + result
+                                + "' WHERE Player = '" + PlayerL.getPlayerName() + "'");
+                        ExecuteQuery("UPDATE Level" + Skill.getType().toString() + " SET UpgradePercent = '"
+                                + Skill.getUpgradePercent() + "' WHERE Player = '" + PlayerL.getPlayerName() + "'");
+                    }
                 }
             }
         }
-        stmt.close();
     }
 
     private static ItemStack ReturnItem() {

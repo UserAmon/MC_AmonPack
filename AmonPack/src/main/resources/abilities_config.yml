@@ -240,6 +240,18 @@ AmonPack:
     SandDisc:
       Radius: 0.5
 
+    # Baricade - traces a circle of particles to raise a moving earth wall
+    Baricade:
+      Cooldown: 8000
+      CircleDistance: 2.0
+      CircleRadius: 0.45
+      WallWidth: 3
+      WallHeight: 3
+      WallSpeed: 0.4
+      WallDistance: 12.0
+      WallMaterial: STONE
+      CrumbleFallingBlocks: 8
+
     # Sand - sand elements
     Sand:
       SandWave:
@@ -386,6 +398,14 @@ AmonPack:
       ChargedWindow: 2000
       FailCooldown: 3000
       SelfDamage: 2.0
+
+    # FlameSplit - splits fire streams to parry incoming hits and burn enemies
+    FlameSplit:
+      Cooldown: 5000
+      Range: 6.0
+      Damage: 1.0
+      FireTicks: 40
+      Knockback: 0.8
 
   # ============================================================================
   # General Elemental Elements (Smoke and Water)

@@ -2,6 +2,7 @@ package Plugin;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -186,7 +187,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		// "Forest.yml");
 		// ForestConfig = YamlConfiguration.loadConfiguration(ForestConfigFile);
 
-		AbilitiesConfigFile = new File(getDataFolder(), "AbilitiesConfig.yml");
+		AbilitiesConfigFile = new File(getDataFolder(), "abilities_config.yml");
 		AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
 		sqlConnection();
 		setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
@@ -634,8 +635,6 @@ public class AmonPackPlugin extends JavaPlugin {
 	public void sqlConnection() {
 		sqlite = new SQLite(plugin.getLogger(), "AmonPackSQL.db", plugin.getDataFolder().getAbsolutePath());
 		try {
-			sqlite.open();
-
 			if (sqlite.open() != null) {
 				getLogger().info("Baza danych połączona!");
 			}
@@ -658,6 +657,8 @@ public class AmonPackPlugin extends JavaPlugin {
 					"CREATE TABLE IF NOT EXISTS Parties (party_id VARCHAR(36) PRIMARY KEY, leader_uuid VARCHAR(36), friendly_fire INT)");
 			ExecuteQuery(
 					"CREATE TABLE IF NOT EXISTS PartyMembers (player_uuid VARCHAR(36) PRIMARY KEY, party_id VARCHAR(36))");
+			ExecuteQuery("CREATE TABLE IF NOT EXISTS LevelGENERAL"
+					+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100), UpgradePercent DOUBLE)");
 			for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
 				ExecuteQuery("CREATE TABLE IF NOT EXISTS Level" + key
 						+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
@@ -677,6 +678,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			PrintStream var10000 = System.err;
 			String var10001 = var3.getClass().getName();
 			var10000.println(var10001 + ": " + var3.getMessage());
+			var3.printStackTrace();
 		}
 	}
 
@@ -700,9 +702,10 @@ public class AmonPackPlugin extends JavaPlugin {
 
 	public static void reloadAllConfigs() {
 		try {
+			plugin.reloadConfig();
 			LevelConfig = YamlConfiguration.loadConfiguration(new File(configpath, "Levels.yml"));
 
-			AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "AbilitiesConfig.yml"));
+			AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "abilities_config.yml"));
 			// ForestConfig = YamlConfiguration.loadConfiguration(new File(configpath +
 			// File.separator + "RPG", "Forest.yml"));
 			setDungeonsConfig(getMenagerieFilesReload());
