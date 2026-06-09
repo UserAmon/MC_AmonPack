@@ -49,10 +49,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 		if (!bPlayer.canBend(this)) {
 			return;
 		}
-
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
-				.GetBranchByPlayerName(player.getName());
-		this.hasEncore = (branch != null && branch.hasUpgrade("Encore"));
+		this.hasEncore = false;
 
 		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Acoustics.Cooldown", 6000);
 		this.maxDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Acoustics.MaxDuration", 100);

@@ -68,8 +68,7 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
+		boolean hasChunky = false;
 		if (hasChunky) {
 			this.range += 1;
 			this.radius += 1;

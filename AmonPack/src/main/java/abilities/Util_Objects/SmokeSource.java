@@ -72,18 +72,12 @@ public class SmokeSource {
                 
                 double scaledRange = range * (1 - ((double) duration / maxduration));
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, range * scaledRange)) {
-                    // BOOrst upgrade check
+                    // BOOrst upgrade check removed (upgrades deleted)
                     if (entity instanceof Player) {
                         Player p = (Player) entity;
                         com.projectkorra.projectkorra.BendingPlayer bp = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(p);
                         if (bp != null && bp.getAbilities().containsValue("SmokeBurst")) {
-                            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
-                            if (branch != null && branch.hasUpgrade("BOOrst")) {
-                                Abilities.PK_Abilities.Fire.SmokeBurst.explodeSmokeSource(p, location);
-                                SmokeAbility.DeleteSource(ThisSource);
-                                this.cancel();
-                                return;
-                            }
+                            // Upgrades removed
                         }
                     }
                     
@@ -143,12 +137,6 @@ public class SmokeSource {
     public boolean IsNearPlayer(Location playerloc, double speed, Player player) {
         IsPulled = true;
         double dmg = 1.0;
-        if (player != null) {
-            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-            if (branch != null && branch.hasUpgrade("Strategist")) {
-                dmg += 3.0;
-            }
-        }
         for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, range)) {
             if ((entity instanceof LivingEntity)) {
                 if (entity.getUniqueId() != player.getUniqueId()) {

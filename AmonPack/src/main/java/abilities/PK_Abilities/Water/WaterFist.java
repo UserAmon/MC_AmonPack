@@ -150,8 +150,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasUppercut = (branch != null && branch.hasUpgrade("Uppercut"));
+		boolean hasUppercut = false;
 		int maxClicks = hasUppercut ? 4 : 3;
 
 		clicksUsed++;
@@ -241,8 +240,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasUppercut = (branch != null && branch.hasUpgrade("Uppercut"));
+		boolean hasUppercut = false;
 		return hasUppercut ? 4000 : 8000;
 	}
 

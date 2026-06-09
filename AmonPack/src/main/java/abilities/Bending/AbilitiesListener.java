@@ -14,31 +14,9 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.Element;
-import org.bukkit.inventory.ItemStack;
-import RPG.Crafting.CraftingMenager;
 import org.bukkit.potion.PotionEffectType;
 
 public class AbilitiesListener implements Listener {
-
-	private void CheckEarthHealthBoost(Player player, CoreAbility ability) {
-		if (ability.getElement() == Element.EARTH) {
-			boolean hasEffect = false;
-			for (ItemStack item : player.getInventory().getArmorContents()) {
-				if (item != null && CraftingMenager.HaveEffect(item, "Earth_Health_Boost_On_Abilities")) {
-					hasEffect = true;
-					break;
-				}
-			}
-			if (hasEffect) {
-				BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-				if (!bPlayer.isOnCooldown("Earth_Health_Boost_On_Abilities")) {
-					player.addPotionEffect(
-							new org.bukkit.potion.PotionEffect(PotionEffectType.HEALTH_BOOST, 120, 1, false, false));
-					bPlayer.addCooldown("Earth_Health_Boost_On_Abilities", 10000);
-				}
-			}
-		}
-	}
 
 	@EventHandler
 	public void onShift(PlayerToggleSneakEvent event) {
@@ -47,7 +25,6 @@ public class AbilitiesListener implements Listener {
 		if (bPlayer.getBoundAbility() != null) {
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
 				if (!event.isCancelled() || bPlayer != null) {
-					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 					String boundAbility = bPlayer.getBoundAbilityName();
 					if (boundAbility.equalsIgnoreCase("SandBreath")) {
 						new SandBreath(player);
@@ -125,8 +102,6 @@ public class AbilitiesListener implements Listener {
 				EarthDisc.redirectNearby(player, 4.0);
 			}
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
-				CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
-
 				// if (bPlayer.getBoundAbilityName().equalsIgnoreCase("MetalFlex")) {
 				// if (player.getInventory().getChestplate().getType() !=
 				// Material.IRON_CHESTPLATE) {
@@ -395,6 +370,25 @@ public class AbilitiesListener implements Listener {
 					fs.onParryDamage();
 				}
 			}
+		}
+	}
+
+	@EventHandler
+	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
+		if (event.getEntity() instanceof Player p) {
+			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p, Abilities.PK_Abilities.Air.GustShield.class)) {
+				Abilities.PK_Abilities.Air.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(p, Abilities.PK_Abilities.Air.GustShield.class);
+				event.setCancelled(true);
+				shield.onHit();
+			}
+		}
+	}
+
+	@EventHandler
+	public void onAbilityDamage(com.projectkorra.projectkorra.event.AbilityDamageEntityEvent event) {
+		if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")) {
+			event.setCancelled(true);
+			SoundAbility.HandleDamage(event.getAbility().getPlayer(), event.getEntity(), 10.0);
 		}
 	}
 }

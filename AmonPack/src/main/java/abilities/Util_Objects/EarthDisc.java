@@ -97,8 +97,7 @@ public class EarthDisc {
                     // Move slightly off the surface to prevent sticking
                     location.add(result.getHitPosition().subtract(location.toVector()).multiply(0.9));
 
-                    RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-                    boolean hasTrickshot = (branch != null && branch.hasUpgrade("Trickshot"));
+                    boolean hasTrickshot = false;
                     if (hasTrickshot) {
                         damage = Math.min(damage + 0.5, baseDamage * 2.0);
                     }

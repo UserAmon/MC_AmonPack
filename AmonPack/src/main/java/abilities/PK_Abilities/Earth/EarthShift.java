@@ -20,7 +20,7 @@ import com.projectkorra.projectkorra.util.DamageHandler;
 
 import Plugin.Methods;
 import Plugin.AmonPackPlugin;
-import RPG.Levels.BendingTree.PlayerBendingBranch;
+
 
 public class EarthShift extends EarthAbility implements AddonAbility {
 
@@ -54,8 +54,7 @@ public class EarthShift extends EarthAbility implements AddonAbility {
             return;
         }
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-        boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
+        boolean hasChunky = false;
         if (hasChunky) {
             this.range = 16.0;
             this.radius = 4.0;
@@ -128,8 +127,7 @@ public class EarthShift extends EarthAbility implements AddonAbility {
         bPlayer.addCooldown(this);
         player.playSound(player.getLocation(), Sound.ENTITY_EVOKER_CAST_SPELL, 1f, 0.5f);
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-        boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
+        boolean hasChunky = false;
         if (hasChunky) {
             EarthHammer.chunkyHaste.put(player.getUniqueId(), System.currentTimeMillis());
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 0.8f, 1.5f);

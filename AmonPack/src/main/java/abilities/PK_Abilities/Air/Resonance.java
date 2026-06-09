@@ -70,10 +70,7 @@ public class Resonance extends SoundAbility implements AddonAbility {
 
 	public Resonance(Player player) {
 		super(player);
-
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
-				.GetBranchByPlayerName(player.getName());
-		this.hasDysonance = (branch != null && branch.hasUpgrade("Dysonance"));
+		this.hasDysonance = false;
 
 		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Resonance.Cooldown", 3000);
 		this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Resonance.Damage", 1.0);
