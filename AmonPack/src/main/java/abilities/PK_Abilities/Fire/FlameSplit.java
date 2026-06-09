@@ -65,11 +65,11 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void loadConfig() {
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Fire.FlameSplit.Cooldown", 5000);
-        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Fire.FlameSplit.Range", 6.0);
-        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Fire.FlameSplit.Damage", 0.0); // Default to 0.0 per "Damage jest niwelony"
-        this.fireTicks = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.FlameSplit.FireTicks", 40);
-        this.knockback = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Fire.FlameSplit.Knockback", 0.8);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSplit.Cooldown", 5000);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSplit.Range", 6.0);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSplit.Damage", 0.0); // Default to 0.0 per "Damage jest niwelony"
+        this.fireTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSplit.FireTicks", 40);
+        this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSplit.Knockback", 0.8);
     }
 
     public boolean isParrying() {

@@ -55,11 +55,11 @@ public class TideLock extends WaterAbility implements AddonAbility {
 
     public TideLock(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.TideLock.Cooldown", 6000);
-        this.chargeTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Water.TideLock.ChargeTime", 2000);
-        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.TideLock.Damage", 2.0);
-        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.TideLock.Range", 25.0);
-        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.TideLock.Speed", 1.0);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.TideLock.Cooldown", 6000);
+        this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.TideLock.ChargeTime", 2000);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.TideLock.Damage", 2.0);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.TideLock.Range", 25.0);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.TideLock.Speed", 1.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

@@ -39,7 +39,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 
 	public SandDisc(Player player) {
 		super(player);
-		this.radius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.SandDisc.Radius", 0.5);
+		this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.SandDisc.Radius", 0.5);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}

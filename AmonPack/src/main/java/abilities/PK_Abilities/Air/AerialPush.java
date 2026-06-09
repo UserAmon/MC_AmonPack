@@ -43,13 +43,13 @@ public class AerialPush extends AirAbility implements AddonAbility {
 
     public AerialPush(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.AerialPush.Cooldown", 3000);
-        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Damage", 2.0);
-        this.wallDamage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.WallDamage", 4.0);
-        this.knockback = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Knockback", 2.5);
-        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Speed", 1.5);
-        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AerialPush.Range", 20.0);
-        this.monitorDuration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.AerialPush.MonitorDuration", 1000);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AerialPush.Cooldown", 3000);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AerialPush.Damage", 2.0);
+        this.wallDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AerialPush.WallDamage", 4.0);
+        this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AerialPush.Knockback", 2.5);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AerialPush.Speed", 1.5);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AerialPush.Range", 20.0);
+        this.monitorDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AerialPush.MonitorDuration", 1000);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

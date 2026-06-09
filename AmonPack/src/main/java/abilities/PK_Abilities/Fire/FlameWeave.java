@@ -39,8 +39,8 @@ public class FlameWeave extends FireAbility implements AddonAbility {
 
     public FlameWeave(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Fire.FlameWeave.Cooldown", 4000);
-        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Fire.FlameWeave.Speed", 0.8);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameWeave.Cooldown", 4000);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.Speed", 0.8);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

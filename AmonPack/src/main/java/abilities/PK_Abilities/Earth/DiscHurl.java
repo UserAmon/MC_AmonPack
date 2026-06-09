@@ -36,9 +36,9 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
 
     public DiscHurl(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.DiscHurl.Cooldown", 3000);
-        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.DiscHurl.Damage", 3.0);
-        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.DiscHurl.Speed", 0.8);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.DiscHurl.Cooldown", 3000);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.DiscHurl.Damage", 3.0);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.DiscHurl.Speed", 0.8);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

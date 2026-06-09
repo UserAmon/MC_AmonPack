@@ -42,11 +42,11 @@ public class GustShield extends AirAbility implements AddonAbility {
 
     public GustShield(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.GustShield.Cooldown", 6000);
-        this.duration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.GustShield.Duration", 2000);
-        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.GustShield.Speed", 0.7);
-        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.GustShield.Range", 10.0);
-        this.pushFactor = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.GustShield.PushFactor", 1.0);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.GustShield.Cooldown", 6000);
+        this.duration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.GustShield.Duration", 2000);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.GustShield.Speed", 0.7);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.GustShield.Range", 10.0);
+        this.pushFactor = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.GustShield.PushFactor", 1.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

@@ -44,11 +44,11 @@ public class EarthShift extends EarthAbility implements AddonAbility {
 
     public EarthShift(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthShift.Cooldown", 6000);
-        this.chargeTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthShift.ChargeTime", 1500);
-        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthShift.Range", 15.0);
-        this.radius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthShift.Radius", 3.0);
-        this.waveSpeed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthShift.WaveSpeed", 0.8);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthShift.Cooldown", 6000);
+        this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthShift.ChargeTime", 1500);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthShift.Range", 15.0);
+        this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthShift.Radius", 3.0);
+        this.waveSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthShift.WaveSpeed", 0.8);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

@@ -35,13 +35,13 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 	private double pushWithStacks;
 
 	private void loadConfig() {
-		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.SoundCrash.Cooldown", 3000);
-		this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.Range", 20.0);
-		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.Speed", 1.0);
-		this.stacksWithoutSound = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.StacksWithoutSound", 10.0);
-		this.damageMultiplier = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.DamageMultiplier", 0.3);
-		this.pushWithoutStacks = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.PushWithoutStacks", 0.8);
-		this.pushWithStacks = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.SoundCrash.PushWithStacks", 1.2);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.SoundCrash.Cooldown", 3000);
+		this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.SoundCrash.Range", 20.0);
+		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.SoundCrash.Speed", 1.0);
+		this.stacksWithoutSound = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.SoundCrash.StacksWithoutSound", 10.0);
+		this.damageMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.SoundCrash.DamageMultiplier", 0.3);
+		this.pushWithoutStacks = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.SoundCrash.PushWithoutStacks", 0.8);
+		this.pushWithStacks = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.SoundCrash.PushWithStacks", 1.2);
 	}
 
 	public SoundCrash(Player player) {

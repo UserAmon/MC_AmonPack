@@ -29,9 +29,9 @@ public class EchoProjectile extends SoundAbility {
 
 	public EchoProjectile(Player player, Location origin, Vector direction, double stacksToApply, double dmg, List<Entity> sharedHitList) {
 		super(player);
-		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.Speed", 1.0);
-		this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.Range", 15.0);
-		this.rehitStacks = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.RehitStacks", 2.0);
+		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Echo.Speed", 1.0);
+		this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Echo.Range", 15.0);
+		this.rehitStacks = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Echo.RehitStacks", 2.0);
 
 		this.origin = origin.clone();
 		this.location = origin.clone();

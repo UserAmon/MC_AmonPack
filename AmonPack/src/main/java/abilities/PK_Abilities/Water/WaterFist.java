@@ -39,7 +39,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 	public WaterFist(Player player) {
 		super(player);
-		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Water.WaterFist.Speed", 0.8);
+		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.Speed", 0.8);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}

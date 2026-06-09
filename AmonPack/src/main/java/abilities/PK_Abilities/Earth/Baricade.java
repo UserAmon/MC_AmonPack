@@ -104,25 +104,25 @@ public class Baricade extends EarthAbility implements AddonAbility {
     }
 
     private void loadConfig() {
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.Baricade.Cooldown", 8000);
-        this.circleDistance = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.CircleDistance", 2.0);
-        this.circleRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.CircleRadius", 0.45);
-        this.wallWidth = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Baricade.WallWidth", 3);
-        this.wallHeight = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Baricade.WallHeight", 3);
-        this.wallSpeed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.WallSpeed", 0.4);
-        this.wallDistance = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.WallDistance", 12.0);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Baricade.Cooldown", 8000);
+        this.circleDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Baricade.CircleDistance", 2.0);
+        this.circleRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Baricade.CircleRadius", 0.45);
+        this.wallWidth = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Baricade.WallWidth", 3);
+        this.wallHeight = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Baricade.WallHeight", 3);
+        this.wallSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Baricade.WallSpeed", 0.4);
+        this.wallDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Baricade.WallDistance", 12.0);
         
-        String matStr = AmonPackPlugin.plugin.getConfig().getString("AmonPack.Earth.Baricade.WallMaterial", "STONE");
+        String matStr = AmonPackPlugin.getAbilitiesConfig().getString("AmonPack.Earth.Baricade.WallMaterial", "STONE");
         try {
             this.wallMaterial = Material.valueOf(matStr.toUpperCase());
         } catch (Exception e) {
             this.wallMaterial = Material.STONE;
         }
         
-        this.crumbleFallingBlocks = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Baricade.CrumbleFallingBlocks", 8);
-        this.standingDuration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.Baricade.StandingDuration", 5000);
-        this.wallDamage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.WallDamage", 1.0);
-        this.wallPush = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.WallPush", 0.45);
+        this.crumbleFallingBlocks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Baricade.CrumbleFallingBlocks", 8);
+        this.standingDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Baricade.StandingDuration", 5000);
+        this.wallDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Baricade.WallDamage", 1.0);
+        this.wallPush = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Baricade.WallPush", 0.45);
     }
 
     private boolean isNearEarthBlock() {

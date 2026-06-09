@@ -17,10 +17,10 @@ public class Echo extends SoundAbility implements AddonAbility {
 
 	public Echo(Player player) {
 		super(player);
-		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.Echo.Cooldown", 3000);
-		double stacksToApply = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.StacksToApply", 8.0);
-		double damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Echo.Damage", 0.0);
-		int baseProjectileCount = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Echo.ProjectileCount", 4);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Echo.Cooldown", 3000);
+		double stacksToApply = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Echo.StacksToApply", 8.0);
+		double damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Echo.Damage", 0.0);
+		int baseProjectileCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Echo.ProjectileCount", 4);
 
 		if (bPlayer.isOnCooldown(this)) {
 			return;

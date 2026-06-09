@@ -40,9 +40,9 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
 
     public EarthDiscs(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthDiscs.Cooldown", 6000);
-        this.chargeTime = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.EarthDiscs.ChargeTime", 2000);
-        this.radius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.EarthDiscs.Radius", 1.75);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthDiscs.Cooldown", 6000);
+        this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthDiscs.ChargeTime", 2000);
+        this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthDiscs.Radius", 1.75);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

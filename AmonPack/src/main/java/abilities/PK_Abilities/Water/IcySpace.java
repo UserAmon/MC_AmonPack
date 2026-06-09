@@ -18,22 +18,22 @@ import org.bukkit.entity.Player;
 
 public class IcySpace extends IceAbility implements AddonAbility, ComboAbility {
 	private Location origin;
-	private int Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IcySpace.Cooldown");
-	private int Range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IcySpace.Range");
-	private int Duration = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IcySpace.Duration");
-	private int FulCooldown = AmonPackPlugin.plugin.getConfig()
+	private int Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Ice.IcySpace.Cooldown");
+	private int Range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Ice.IcySpace.Range");
+	private int Duration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Ice.IcySpace.Duration");
+	private int FulCooldown = AmonPackPlugin.getAbilitiesConfig()
 			.getInt("AmonPack.Water.Ice.IcySpace.FullMoonAugment.Cooldown");
-	private int FulRange = AmonPackPlugin.plugin.getConfig()
+	private int FulRange = AmonPackPlugin.getAbilitiesConfig()
 			.getInt("AmonPack.Water.Ice.IcySpace.FullMoonAugment.Range");
-	private int FulDuration = AmonPackPlugin.plugin.getConfig()
+	private int FulDuration = AmonPackPlugin.getAbilitiesConfig()
 			.getInt("AmonPack.Water.Ice.IcySpace.FullMoonAugment.Duration");
-	private int NightCooldown = AmonPackPlugin.plugin.getConfig()
+	private int NightCooldown = AmonPackPlugin.getAbilitiesConfig()
 			.getInt("AmonPack.Water.Ice.IcySpace.NightAugment.Cooldown");
-	private int NightRange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IcySpace.NightAugment.Range");
-	private int NightDuration = AmonPackPlugin.plugin.getConfig()
+	private int NightRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Ice.IcySpace.NightAugment.Range");
+	private int NightDuration = AmonPackPlugin.getAbilitiesConfig()
 			.getInt("AmonPack.Water.Ice.IcySpace.NightAugment.Duration");
-	private int Delay1 = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IcySpace.1stPhaseDelay");
-	private int Delay2 = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Water.Ice.IcySpace.2ndPhaseDelay");
+	private int Delay1 = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Ice.IcySpace.1stPhaseDelay");
+	private int Delay2 = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Ice.IcySpace.2ndPhaseDelay");
 
 	@SuppressWarnings("deprecation")
 	public IcySpace(Player player) {

@@ -54,19 +54,19 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				.GetBranchByPlayerName(player.getName());
 		this.hasEncore = (branch != null && branch.hasUpgrade("Encore"));
 
-		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.Acoustics.Cooldown", 6000);
-		this.maxDuration = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Acoustics.MaxDuration", 100);
-		this.maxStacks = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Acoustics.MaxStacks", 20);
-		this.dmgInitial = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageInitial", 5.0);
-		this.dmgContinuous = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageContinuous", 4.0);
-		this.dmgStackMax = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageStackMax", 1.0);
-		this.dmgChain = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.DamageChain", 3.0);
-		this.tetherDistance = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.TetherDistance", 10.0);
-		this.tetherDistanceEncore = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.TetherDistanceEncore", 16.0);
-		this.searchRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.SearchRadius", 12.0);
-		this.searchRadiusEncore = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.SearchRadiusEncore", 18.0);
-		this.chainRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.ChainRadius", 8.0);
-		this.chainRadiusEncore = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Acoustics.ChainRadiusEncore", 12.0);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Acoustics.Cooldown", 6000);
+		this.maxDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Acoustics.MaxDuration", 100);
+		this.maxStacks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Acoustics.MaxStacks", 20);
+		this.dmgInitial = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageInitial", 5.0);
+		this.dmgContinuous = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageContinuous", 4.0);
+		this.dmgStackMax = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageStackMax", 1.0);
+		this.dmgChain = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageChain", 3.0);
+		this.tetherDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.TetherDistance", 10.0);
+		this.tetherDistanceEncore = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.TetherDistanceEncore", 16.0);
+		this.searchRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.SearchRadius", 12.0);
+		this.searchRadiusEncore = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.SearchRadiusEncore", 18.0);
+		this.chainRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.ChainRadius", 8.0);
+		this.chainRadiusEncore = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.ChainRadiusEncore", 12.0);
 
 		maxstacks = this.hasEncore ? maxStacks + 5 : maxStacks;
 

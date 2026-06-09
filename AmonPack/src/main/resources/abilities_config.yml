@@ -278,6 +278,19 @@ AmonPack:
         Damage: 1
         DurationToUseBreath: 120
         CanDebuffEnemy: true
+      SandRupture:
+        Cooldown: 5000
+        WaveSpeed: 0.7
+        WaveRange: 12.0
+        WaveDamage: 4.0
+        WaveSlowDuration: 40
+        WaveSlowPower: 2
+        WaveKnockback: 0.6
+        WaveKnockbackY: 0.35
+        ExplosionRadius: 3.0
+        ExplosionDamage: 3.0
+        ExplosionBlindDuration: 30
+        ExplosionBlindPower: 1
 
     # Metal - metal elements
     Metal:
@@ -390,6 +403,11 @@ AmonPack:
         Duration: 60                  # Duration in ticks
         DashForce: 1.8
         EffectsPower: 2
+      SmokePath:
+        Cooldown: 5000
+        Range: 15.0
+        Damage: 1.0
+        Speed: 1.0
 
     # SmokeSource configs
     SmokeSource:
@@ -416,6 +434,23 @@ AmonPack:
       Damage: 1.0
       FireTicks: 40
       Knockback: 0.8
+
+    # FlameSpins - flaming spin hover and fire disc throws
+    FlameSpins:
+      Cooldown: 6000
+      CooldownFirefly: 3000
+      MaxClicks: 2
+      MaxClicksFirefly: 3
+      HoverTicks: 50
+      HoverTicksFirefly: 70
+      DashMultiplier: 1.35
+      DashYForce: 0.85
+      DashRange: 3.5
+      DashDamage: 3.0
+      ProjectileSpeed: 0.8
+      ProjectileRange: 40
+      ProjectileDamage: 4.0
+      ProjectileFireTicks: 50
 
   # ============================================================================
   # General Elemental Elements (Smoke and Water)

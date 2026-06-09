@@ -75,15 +75,15 @@ public class Resonance extends SoundAbility implements AddonAbility {
 				.GetBranchByPlayerName(player.getName());
 		this.hasDysonance = (branch != null && branch.hasUpgrade("Dysonance"));
 
-		this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.Resonance.Cooldown", 3000);
-		this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.Damage", 1.0);
-		this.chargeTicksConfig = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Resonance.ChargeTicks", 40);
-		this.chargeTicksDysonance = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.Resonance.ChargeTicksDysonance", 20);
-		this.maxRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.MaxRadius", 7.0);
-		this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.Speed", 0.21);
-		this.stacksWithoutSound = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.StacksWithoutSound", 5.0);
-		this.stacksWithSound = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.StacksWithSound", 8.0);
-		this.secondaryMaxRadius = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.Resonance.SecondaryMaxRadius", 6.0);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Resonance.Cooldown", 3000);
+		this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Resonance.Damage", 1.0);
+		this.chargeTicksConfig = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Resonance.ChargeTicks", 40);
+		this.chargeTicksDysonance = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Resonance.ChargeTicksDysonance", 20);
+		this.maxRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Resonance.MaxRadius", 7.0);
+		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Resonance.Speed", 0.21);
+		this.stacksWithoutSound = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Resonance.StacksWithoutSound", 5.0);
+		this.stacksWithSound = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Resonance.StacksWithSound", 8.0);
+		this.secondaryMaxRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Resonance.SecondaryMaxRadius", 6.0);
 
 		if (bPlayer.isOnCooldown(this)) {
 			return;

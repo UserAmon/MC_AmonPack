@@ -35,13 +35,24 @@ public class BloodCall extends BloodAbility implements AddonAbility {
     private long startTime;
     private boolean hurtAt50;
     private boolean hurtAt75;
-    private static final double MAX_RANGE = 25.0;
+    
+    private double maxRange;
+    private int maxDuration;
+    private double selfDamage;
+    private double completionDamage;
+    private long cooldown;
+
     private static final double FOLLOW_THRESHOLD = 0.97;
     private static final double ANGLE_STEP = 6.0;
-    private static final int MAX_DURATION = 120;
 
     public BloodCall(Player player) {
         super(player);
+        this.maxRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.Range", 25.0);
+        this.maxDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodCall.Duration", 120);
+        this.selfDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.SelfDamage", 1.0);
+        this.completionDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.CompletionDamage", 2.5);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodCall.Cooldown", 3000L);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
@@ -78,7 +89,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
             return;
         }
 
-        if (target == null || target.isDead() || target.getLocation().distanceSquared(player.getLocation()) > MAX_RANGE * MAX_RANGE) {
+        if (target == null || target.isDead() || target.getLocation().distanceSquared(player.getLocation()) > this.maxRange * this.maxRange) {
             remove();
             return;
         }
@@ -88,7 +99,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
             return;
         }
 
-        if (System.currentTimeMillis() - startTime > MAX_DURATION * 50) {
+        if (System.currentTimeMillis() - startTime > this.maxDuration * 50) {
             remove();
             return;
         }
@@ -110,13 +121,13 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
         if (!hurtAt50 && progress >= 0.5) {
             hurtAt50 = true;
-            double newHealth = Math.max(2.0, player.getHealth() - 1.0);
+            double newHealth = Math.max(2.0, player.getHealth() - this.selfDamage);
             player.setHealth(newHealth);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.8f, 1.0f);
         }
         if (!hurtAt75 && progress >= 0.75) {
             hurtAt75 = true;
-            double newHealth2 = Math.max(2.0, player.getHealth() - 1.0);
+            double newHealth2 = Math.max(2.0, player.getHealth() - this.selfDamage);
             player.setHealth(newHealth2);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.8f, 1.0f);
         }
@@ -213,7 +224,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         target.getWorld().spawnParticle(Particle.DUST, target.getLocation().clone().add(0, 1.0, 0), 40, 1.2, 1.2, 1.2, 0,
                 new Particle.DustOptions(Color.fromRGB(160, 0, 0), 1.3f));
 
-        double targetNewHealth = Math.max(2.0, target.getHealth() - 2.5);
+        double targetNewHealth = Math.max(2.0, target.getHealth() - this.completionDamage);
         target.setHealth(targetNewHealth);
         target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 10, false, false, false));
         target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1, false, false, false));
@@ -245,7 +256,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
     @Override
     public long getCooldown() {
-        return 3000;
+        return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodCall.Cooldown", 3000L);
     }
 
     @Override

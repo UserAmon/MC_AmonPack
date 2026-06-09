@@ -37,11 +37,11 @@ public class AirScythe extends AirAbility implements AddonAbility {
 
     public AirScythe(Player player) {
         super(player);
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.AirScythe.Cooldown", 4000);
-        this.comboWindow = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Air.AirScythe.ComboWindow", 3000);
-        this.damage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AirScythe.Damage", 2.0);
-        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AirScythe.Speed", 1.5);
-        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Air.AirScythe.Range", 20.0);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirScythe.Cooldown", 4000);
+        this.comboWindow = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirScythe.ComboWindow", 3000);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirScythe.Damage", 2.0);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirScythe.Speed", 1.5);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirScythe.Range", 20.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;

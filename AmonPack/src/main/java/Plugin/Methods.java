@@ -135,12 +135,12 @@ public class Methods {
 	}
 
 	public static void CreateSmokeZoneSub(Player player, Location loc, Ability abi, double range, long duration) {
-		int slowpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Smoke.SlowPower");
-		int slowdur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Smoke.SlowDuration");
-		int poisonpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Smoke.PoisonPower");
-		int poisondur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Smoke.PoisonDuration");
-		int blinddur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Smoke.BlindnessDuration");
-		boolean affect = AmonPackPlugin.plugin.getConfig().getBoolean("AmonPack.Elemental.Smoke.AffectUser");
+		int slowpower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Smoke.SlowPower");
+		int slowdur = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Smoke.SlowDuration");
+		int poisonpower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Smoke.PoisonPower");
+		int poisondur = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Smoke.PoisonDuration");
+		int blinddur = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Smoke.BlindnessDuration");
+		boolean affect = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Elemental.Smoke.AffectUser");
 		HashMap<String, Integer> taskID = new HashMap<String, Integer>();
 		taskID.put("Task", Bukkit.getScheduler().scheduleSyncRepeatingTask(AmonPackPlugin.plugin, new Runnable() {
 			public void run() {
@@ -312,8 +312,8 @@ public class Methods {
 	}
 
 	public static void SmoothBlock(Player player, Location loc, Material mat, boolean WaterAbility) {
-		int DryRevert = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Water.DryGrassRevert");
-		int DryRange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Water.DryGrassRange");
+		int DryRevert = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Water.DryGrassRevert");
+		int DryRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Water.DryGrassRange");
 		HashMap<String, Integer> taskID = new HashMap<String, Integer>();
 		Location temploc = loc.clone().add(0, 1, 0);
 		taskID.put("Tasknr1", Bukkit.getScheduler().scheduleSyncRepeatingTask(ProjectKorra.plugin, new Runnable() {
@@ -349,9 +349,9 @@ public class Methods {
 	public static List<Location> BendableBlocksAnimation(List<Location> NearBlocks, Location playerloc, Material mat,
 			double speed) {
 		// int DryRevert =
-		// AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Water.DryGrassRevert");
+		// AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Water.DryGrassRevert");
 		// int DryRange =
-		// AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Elemental.Water.DryGrassRange");
+		// AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Elemental.Water.DryGrassRange");
 		List<Location> ToAdd = new ArrayList<>();
 		for (Location tloc : NearBlocks) {
 			if (tloc.distance(playerloc) > 2) {

@@ -31,15 +31,20 @@ import static Plugin.Methods.getRandom;
 
 public class SandWave extends SandAbility implements AddonAbility, ComboAbility {
 
-	private int cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandWave.Cooldown");
-	private int range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandWave.Range");
-	private int time = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandWave.Duration");
-	private int size = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandWave.Size");
-	public static int DeBuffsPower = AmonPackPlugin.plugin.getConfig()
-			.getInt("AmonPack.Earth.Sand.SandWave.DeBuffPower");
-	public static int DeBuffsDuration = AmonPackPlugin.plugin.getConfig()
-			.getInt("AmonPack.Earth.Sand.SandWave.DebuffDuration");
-	public static int burrow = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandWave.BurrowPower");
+	private int cooldown;
+	private int range;
+	private int time;
+	private int size;
+	public static int DeBuffsPower;
+	public static int DeBuffsDuration;
+	public static int burrow;
+
+	public static void loadConfig() {
+		DeBuffsPower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.DeBuffPower", 2);
+		DeBuffsDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.DebuffDuration", 50);
+		burrow = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.BurrowPower", 1);
+	}
+
 	private Location proj;
 	private Location oriploc;
 	private Vector direction;
@@ -49,6 +54,11 @@ public class SandWave extends SandAbility implements AddonAbility, ComboAbility 
 
 	public SandWave(Player player) {
 		super(player);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.Cooldown", 6000);
+		this.range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.Range", 15);
+		this.time = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.Duration", 4000);
+		this.size = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.Size", 6);
+
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -192,6 +202,7 @@ public class SandWave extends SandAbility implements AddonAbility, ComboAbility 
 
 	public SandWave(Player player, boolean IsEffect, Entity victim) {
 		super(player);
+		this.time = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandWave.Duration", 4000);
 		if (bPlayer.isOnCooldown("SandBurrow")) {
 			return;
 		}

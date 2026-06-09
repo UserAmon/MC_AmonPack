@@ -24,23 +24,27 @@ import Plugin.Methods;
 
 public class SandBreath extends SandAbility implements AddonAbility {
 
-	private int cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandBreath.Cooldown");
-	private int Range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandBreath.Range");
-	private int time = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandBreath.Duration");
-	private int ChargeTime = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandBreath.ChargeTime");
-	static Boolean buffs = AmonPackPlugin.plugin.getConfig()
-			.getBoolean("AmonPack.Earth.Sand.SandBreath.ChargedBreathBuff");
-	private int speedsand = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandBreath.SpeedOnSand");
-	private int speedearth = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandBreath.SpeedOnEarth");
-	public static int DeBuffsPower = AmonPackPlugin.plugin.getConfig()
-			.getInt("AmonPack.Earth.Sand.SandBreath.DeBuffPower");
-	public static int DeBuffsDuration = AmonPackPlugin.plugin.getConfig()
-			.getInt("AmonPack.Earth.Sand.SandBreath.DebuffDuration");
-	private int Dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Sand.SandBreath.Damage");
-	private int durationtuse = AmonPackPlugin.plugin.getConfig()
-			.getInt("AmonPack.Earth.Sand.SandBreath.DurationToUseBreath");
-	public static Boolean push = AmonPackPlugin.plugin.getConfig()
-			.getBoolean("AmonPack.Earth.Sand.SandBreath.CanDebuffEnemy");
+	private int cooldown;
+	private int Range;
+	private int time;
+	private int ChargeTime;
+	private int speedsand;
+	private int speedearth;
+	private int Dmg;
+	private int durationtuse;
+
+	public static Boolean buffs;
+	public static int DeBuffsPower;
+	public static int DeBuffsDuration;
+	public static Boolean push;
+
+	public static void loadConfig() {
+		buffs = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Earth.Sand.SandBreath.ChargedBreathBuff", true);
+		DeBuffsPower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.DeBuffPower", 2);
+		DeBuffsDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.DebuffDuration", 60);
+		push = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Earth.Sand.SandBreath.CanDebuffEnemy", true);
+	}
+
 	private int abilityState;
 	private Ability abi = this;
 	private int usage;
@@ -50,6 +54,15 @@ public class SandBreath extends SandAbility implements AddonAbility {
 
 	public SandBreath(Player player) {
 		super(player);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.Cooldown", 6000);
+		this.Range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.Range", 12);
+		this.time = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.Duration", 4000);
+		this.ChargeTime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.ChargeTime", 2000);
+		this.speedsand = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.SpeedOnSand", 6);
+		this.speedearth = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.SpeedOnEarth", 2);
+		this.Dmg = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.Damage", 1);
+		this.durationtuse = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandBreath.DurationToUseBreath", 120);
+
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -64,7 +77,7 @@ public class SandBreath extends SandAbility implements AddonAbility {
 				deltask.clear();
 			}
 			abilityState = 0;
-			time = 0;
+			this.time = 0;
 			start();
 		}
 	}

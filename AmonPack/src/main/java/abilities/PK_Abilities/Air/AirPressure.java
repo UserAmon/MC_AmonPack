@@ -16,15 +16,15 @@ import com.projectkorra.projectkorra.util.ParticleEffect;
 
 public class AirPressure extends AirAbility implements AddonAbility {
 
-	private int Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.AirPressure.Cooldown");
-	private int dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.AirPressure.Dmg");
-	private int sphererange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.AirPressure.Range-Sphere");
-	private int pullrange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.AirPressure.Range-Pull");
-	private int pushpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.AirPressure.PushPower");
-	private int mintime = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.AirPressure.MinHoldTime");
-	private boolean cancontrol = AmonPackPlugin.plugin.getConfig()
+	private int Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Cooldown");
+	private int dmg = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Dmg");
+	private int sphererange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Range-Sphere");
+	private int pullrange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Range-Pull");
+	private int pushpower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.PushPower");
+	private int mintime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.MinHoldTime");
+	private boolean cancontrol = AmonPackPlugin.getAbilitiesConfig()
 			.getBoolean("AmonPack.Air.AirPressure.CanControlSphere");
-	private int maxtime = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Air.AirPressure.MaxHoldTime");
+	private int maxtime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.MaxHoldTime");
 
 	public Location preloc;
 	public int abilityState;

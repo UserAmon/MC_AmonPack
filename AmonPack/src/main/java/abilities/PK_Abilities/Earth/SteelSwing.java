@@ -66,9 +66,9 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
             return;
         }
 
-        this.cooldown = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.Metal.SteelSwing.Cooldown", 5000);
-        this.range = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.Range", 25.0);
-        this.speed = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.Speed", 2.2);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Metal.SteelSwing.Cooldown", 5000);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.Range", 25.0);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.Speed", 2.2);
 
         this.initialSlot = player.getInventory().getHeldItemSlot();
         this.cable1Loc = player.getEyeLocation();

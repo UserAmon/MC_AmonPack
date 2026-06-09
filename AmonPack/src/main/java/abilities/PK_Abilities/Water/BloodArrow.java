@@ -19,6 +19,7 @@ import org.bukkit.util.Vector;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.BloodAbility;
+import Plugin.AmonPackPlugin;
 
 
 public class BloodArrow extends BloodAbility implements AddonAbility {
@@ -29,13 +30,22 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
 
     private State state;
     private long startTime;
-    private long chargeTimePerLevel = 1000;
-    private int maxChargeLevel = 3;
+    private long chargeTimePerLevel;
+    private int maxChargeLevel;
+    private double selfDamage;
+    public double speed;
+    private long cooldown;
     private int lastReportedLevel = -1;
     private List<BloodArrowProjectile> arrows = new ArrayList<>();
 
     public BloodArrow(Player player) {
         super(player);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodArrow.Cooldown", 7000L);
+        this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodArrow.ChargeTimePerLevel", 1000L);
+        this.maxChargeLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodArrow.MaxChargeLevel", 3);
+        this.selfDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.SelfDamage", 1.0);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.Speed", 1.2);
+
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
@@ -64,7 +74,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
             if (level != lastReportedLevel) {
                 lastReportedLevel = level;
                 if (level > 0) {
-                    double newHealth = Math.max(2.0, player.getHealth() - 1.0);
+                    double newHealth = Math.max(2.0, player.getHealth() - this.selfDamage);
                     player.setHealth(newHealth);
                     float pitch = 0.7f + (level * 0.2f);
                     player.playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 0.8f, pitch);
@@ -145,7 +155,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
 
     @Override
     public long getCooldown() {
-        return 7000;
+        return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodArrow.Cooldown", 7000L);
     }
 
     @Override
@@ -209,7 +219,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
         private int chainsRemaining;
         private final double homingRadius;
         private final List<LivingEntity> hitEntities = new ArrayList<>();
-        private final double speed = 1.2;
+        private double speed;
 
         public BloodArrowProjectile(Player player, BloodArrow ability, Location origin, Vector direction,
                 double damage, double maxDistance, int chainsRemaining, double homingRadius) {
@@ -223,6 +233,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
             this.homingRadius = homingRadius;
             this.dead = false;
             this.distanceTraveled = 0;
+            this.speed = ability.speed;
         }
 
         public void progress() {

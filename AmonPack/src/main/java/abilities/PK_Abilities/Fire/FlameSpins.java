@@ -26,8 +26,39 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 	private long lastPunchTime = 0;
 	private int clicksUsed = 0;
 
+	private long cooldown;
+	private long cooldownFirefly;
+	private int maxClicks;
+	private int maxClicksFirefly;
+	private int hoverTicks;
+	private int hoverTicksFirefly;
+	private double dashMultiplier;
+	private double dashYForce;
+	private double dashRange;
+	private double dashDamage;
+	private double projectileSpeed;
+	private int projectileRange;
+	private double projectileDamage;
+	private int projectileFireTicks;
+
 	public FlameSpins(Player player) {
 		super(player);
+		
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.Cooldown", 6000L);
+		this.cooldownFirefly = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.CooldownFirefly", 3000L);
+		this.maxClicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicks", 2);
+		this.maxClicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicksFirefly", 3);
+		this.hoverTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicks", 50);
+		this.hoverTicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicksFirefly", 70);
+		this.dashMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashMultiplier", 1.35);
+		this.dashYForce = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashYForce", 0.85);
+		this.dashRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashRange", 3.5);
+		this.dashDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashDamage", 3.0);
+		this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileSpeed", 0.8);
+		this.projectileRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileRange", 40);
+		this.projectileDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileDamage", 4.0);
+		this.projectileFireTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileFireTicks", 50);
+
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -50,18 +81,18 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 		// Slow falling - 2.5 sekundy opadania (3.5 dla Firefly)
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
 		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-		int hoverTicks = hasFirefly ? 70 : 50;
-		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, hoverTicks, 0, false, false));
+		int ht = hasFirefly ? this.hoverTicksFirefly : this.hoverTicks;
+		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, ht, 0, false, false));
 
 		// Dash - poziome w 100% z ruchu gracza
-		Vector motion  = player.getVelocity().clone().setY(0).multiply(1.35);
+		Vector motion  = player.getVelocity().clone().setY(0).multiply(this.dashMultiplier);
 		Vector dash    = motion.clone();
-		dash.setY(0.85); // mocno w gore
+		dash.setY(this.dashYForce); // mocno w gore
 		player.setVelocity(dash);
 
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), 3.5)) {
+		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), this.dashRange)) {
 			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-				DamageHandler.damageEntity(entity, 3.0, this);
+				DamageHandler.damageEntity(entity, this.dashDamage, this);
 			}
 		}
 
@@ -125,7 +156,7 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 1.1f);
 
 		Location projLoc = player.getEyeLocation().clone();
-		Vector projDir = player.getLocation().getDirection().normalize().multiply(0.8);
+		Vector projDir = player.getLocation().getDirection().normalize().multiply(this.projectileSpeed);
 
 		new BukkitRunnable() {
 			int ticks = 0;
@@ -134,7 +165,7 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 			@Override
 			public void run() {
 				ticks++;
-				if (ticks > 40 || projLoc.getBlock().getType().isSolid()) {
+				if (ticks > FlameSpins.this.projectileRange || projLoc.getBlock().getType().isSolid()) {
 					cancel();
 					return;
 				}
@@ -155,8 +186,8 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 
 				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projLoc, 1.2)) {
 					if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-						DamageHandler.damageEntity(entity, 4.0, FlameSpins.this);
-						entity.setFireTicks(50);
+						DamageHandler.damageEntity(entity, FlameSpins.this.projectileDamage, FlameSpins.this);
+						entity.setFireTicks(FlameSpins.this.projectileFireTicks);
 						cancel();
 						return;
 					}
@@ -166,7 +197,7 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
 		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-		int maxClicks = hasFirefly ? 3 : 2;
+		int maxClicks = hasFirefly ? this.maxClicksFirefly : this.maxClicks;
 
 		if (clicksUsed >= maxClicks) {
 			bPlayer.addCooldown(this);
@@ -178,7 +209,11 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 	public long getCooldown() {
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
 		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-		return hasFirefly ? 3000 : 6000;
+		if (hasFirefly) {
+			return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.CooldownFirefly", 3000L);
+		} else {
+			return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.Cooldown", 6000L);
+		}
 	}
 
 	@Override

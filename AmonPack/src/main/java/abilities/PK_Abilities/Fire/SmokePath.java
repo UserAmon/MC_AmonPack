@@ -8,6 +8,7 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import Abilities.Bending.SmokeAbility;
+import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -28,8 +29,18 @@ public class SmokePath extends SmokeAbility implements AddonAbility {
 	private SmokeSource Source;
 	private long interval;
 
+	private long cooldown;
+	private double range;
+	private double damage;
+	private double speed;
+
 	public SmokePath(Player player) {
 		super(player);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Smoke.SmokePath.Cooldown", 5000L);
+		this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokePath.Range", 15.0);
+		this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokePath.Damage", 1.0);
+		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokePath.Speed", 1.0);
+
 		if (!this.bPlayer.isOnCooldown(getName()) && this.bPlayer.canBend(this)) {
 			Projectiles = new ArrayList<>();
 			interval = 0;
@@ -40,7 +51,7 @@ public class SmokePath extends SmokeAbility implements AddonAbility {
 			Location Projectile = player.getLocation().clone().add(0, 0.5, 0);
 			Projectile.setPitch(0);
 			Vector Dir = Projectile.clone().getDirection();
-			Projectiles.add(new AbilityProjectile(Dir, Projectile, origin, Particles, 1));
+			Projectiles.add(new AbilityProjectile(Dir, Projectile, origin, Particles, this.speed));
 			bPlayer.addCooldown(this);
 			Source = new SmokeSource(origin.clone().add(0, 1.5, 0), 120, 3, 1, player);
 
@@ -60,14 +71,14 @@ public class SmokePath extends SmokeAbility implements AddonAbility {
 			for (AbilityProjectile Projectile : Projectiles) {
 				Location location = Projectile.Advance().clone();
 				Source.AdvanceLocation(location.clone().add(0, 1, 0));
-				if (location.distance(origin) > 15 || !location.clone().add(0, 0.8, 0).getBlock().getType().isAir()
+				if (location.distance(origin) > this.range || !location.clone().add(0, 0.8, 0).getBlock().getType().isAir()
 						|| location.clone().add(0, 0.8, 0).getBlock().getType().isSolid()) {
 					remove();
 					return;
 				} else {
 					for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1)) {
 						if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
-							DamageHandler.damageEntity(entity, 1, this);
+							DamageHandler.damageEntity(entity, this.damage, this);
 						}
 					}
 					SmokeSource Source = new SmokeSource(location.clone().subtract(0, 0.2, 0), 60, 0.25, 2, player,
@@ -79,7 +90,7 @@ public class SmokePath extends SmokeAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 5000;
+		return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Smoke.SmokePath.Cooldown", 5000L);
 	}
 
 	@Override

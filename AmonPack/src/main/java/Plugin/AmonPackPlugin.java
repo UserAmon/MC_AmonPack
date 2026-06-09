@@ -189,6 +189,13 @@ public class AmonPackPlugin extends JavaPlugin {
 
 		AbilitiesConfigFile = new File(getDataFolder(), "abilities_config.yml");
 		AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
+		java.io.InputStream defAbilitiesStream = getResource("abilities_config.yml");
+		if (defAbilitiesStream != null) {
+			org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream, java.nio.charset.StandardCharsets.UTF_8));
+			AbilitiesConfig.setDefaults(defConfig);
+		}
+		Abilities.PK_Abilities.Earth.SandWave.loadConfig();
+		Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
 		sqlConnection();
 		setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
 		// setGuiConfig(YamlConfiguration.loadConfiguration(GuiFile));
@@ -706,6 +713,13 @@ public class AmonPackPlugin extends JavaPlugin {
 			LevelConfig = YamlConfiguration.loadConfiguration(new File(configpath, "Levels.yml"));
 
 			AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "abilities_config.yml"));
+			java.io.InputStream defAbilitiesStream = plugin.getResource("abilities_config.yml");
+			if (defAbilitiesStream != null) {
+				org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream, java.nio.charset.StandardCharsets.UTF_8));
+				AbilitiesConfig.setDefaults(defConfig);
+			}
+			Abilities.PK_Abilities.Earth.SandWave.loadConfig();
+			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
 			// ForestConfig = YamlConfiguration.loadConfiguration(new File(configpath +
 			// File.separator + "RPG", "Forest.yml"));
 			setDungeonsConfig(getMenagerieFilesReload());

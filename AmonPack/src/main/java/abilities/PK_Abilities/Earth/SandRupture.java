@@ -36,8 +36,34 @@ public class SandRupture extends SandAbility implements AddonAbility {
 	private double waveDistanceTraveled = 0.0;
 	private int tickCount = 0;
 
+	private long cooldown;
+	private double waveSpeed;
+	private double waveRange;
+	private double waveDamage;
+	private int waveSlowDuration;
+	private int waveSlowPower;
+	private double waveKnockback;
+	private double waveKnockbackY;
+	private double explosionRadius;
+	private double explosionDamage;
+	private int explosionBlindDuration;
+	private int explosionBlindPower;
+
 	public SandRupture(Player player) {
 		super(player);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Sand.SandRupture.Cooldown", 5000L);
+		this.waveSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Sand.SandRupture.WaveSpeed", 0.7);
+		this.waveRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Sand.SandRupture.WaveRange", 12.0);
+		this.waveDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Sand.SandRupture.WaveDamage", 4.0);
+		this.waveSlowDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandRupture.WaveSlowDuration", 40);
+		this.waveSlowPower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandRupture.WaveSlowPower", 2);
+		this.waveKnockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Sand.SandRupture.WaveKnockback", 0.6);
+		this.waveKnockbackY = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Sand.SandRupture.WaveKnockbackY", 0.35);
+		this.explosionRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Sand.SandRupture.ExplosionRadius", 3.0);
+		this.explosionDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Sand.SandRupture.ExplosionDamage", 3.0);
+		this.explosionBlindDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandRupture.ExplosionBlindDuration", 30);
+		this.explosionBlindPower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Sand.SandRupture.ExplosionBlindPower", 1);
+
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -107,8 +133,8 @@ public class SandRupture extends SandAbility implements AddonAbility {
 			}
 		} else if (state == 3) {
 			tickCount++;
-			waveLoc.add(waveDir.clone().multiply(0.7));
-			waveDistanceTraveled += 0.7;
+			waveLoc.add(waveDir.clone().multiply(this.waveSpeed));
+			waveDistanceTraveled += this.waveSpeed;
 
 			adjustWaveY();
 
@@ -135,15 +161,15 @@ public class SandRupture extends SandAbility implements AddonAbility {
 			for (Entity entity : GeneralMethods.getEntitiesAroundPoint(waveLoc, 1.6)) {
 				if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
 					LivingEntity target = (LivingEntity) entity;
-					DamageHandler.damageEntity(target, 4.0, this);
-					target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
+					DamageHandler.damageEntity(target, this.waveDamage, this);
+					target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, this.waveSlowDuration, this.waveSlowPower));
 
-					Vector knock = waveDir.clone().multiply(0.6).setY(0.35);
+					Vector knock = waveDir.clone().multiply(this.waveKnockback).setY(this.waveKnockbackY);
 					target.setVelocity(knock);
 				}
 			}
 
-			if (waveDistanceTraveled >= 12.0 || waveLoc.getBlock().getType().isSolid()) {
+			if (waveDistanceTraveled >= this.waveRange || waveLoc.getBlock().getType().isSolid()) {
 				explodeSand(waveLoc, Material.SAND);
 				bPlayer.addCooldown(this);
 				remove();
@@ -201,12 +227,12 @@ public class SandRupture extends SandAbility implements AddonAbility {
 
 		Methods.spawnFallingBlocks(loc, mat, 8, 4.0, player);
 
-		double radius = 3.0;
+		double radius = this.explosionRadius;
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius)) {
 			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
 				LivingEntity target = (LivingEntity) entity;
-				DamageHandler.damageEntity(target, 3.0, this);
-				target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 30, 1));
+				DamageHandler.damageEntity(target, this.explosionDamage, this);
+				target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, this.explosionBlindDuration, this.explosionBlindPower));
 			}
 		}
 
@@ -234,7 +260,7 @@ public class SandRupture extends SandAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 5000;
+		return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Sand.SandRupture.Cooldown", 5000L);
 	}
 
 	@Override
