@@ -32,6 +32,7 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
     private double damage;
     private double speed;
     private int interval = 0;
+    private Material sourceMaterial;
 
     public DiscHurl(Player player) {
         super(player);
@@ -44,6 +45,7 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
         }
         Location TargetedBlock = Methods.getTargetLocation(player, 15);
         if (isEarthbendable(player, TargetedBlock.getBlock())) {
+            this.sourceMaterial = TargetedBlock.getBlock().getType();
             selectedBlocks = new ArrayList<>();
             selectedBlocks.add(TargetedBlock);
             new TempBlock(TargetedBlock.getBlock(), Material.AIR).setRevertTime(5000);
@@ -78,7 +80,7 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
                 if (interval >= 2) {
                     interval = 0;
                     selectedBlocks = Methods.BendableBlocksAnimation(selectedBlocks, player.getLocation().clone(),
-                            Material.STONE, 0.8);
+                            sourceMaterial, 0.8);
 
                     if (selectedBlocks.isEmpty() || selectedBlocks.get(0).distance(player.getLocation()) < 2) {
                         state = State.CHARGED;
@@ -93,14 +95,14 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
                     return;
                 }
                 EarthDisc.displayParticle(player.getEyeLocation().clone().add(0, -0.7, 0)
-                        .add(player.getEyeLocation().getDirection().multiply(1.5)));
+                        .add(player.getEyeLocation().getDirection().multiply(1.5)), sourceMaterial);
                 break;
         }
     }
 
     private void shoot() {
         Location spawn = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5));
-        new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, false);
+        new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, false, sourceMaterial);
         player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 0.5f, 1.5f);
         bPlayer.addCooldown(this);
         remove();

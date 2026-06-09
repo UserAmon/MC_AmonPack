@@ -89,7 +89,6 @@ public class SandRupture extends SandAbility implements AddonAbility {
 			}
 
 			chargeProgress++;
-			ParticleEffect.BLOCK_CRACK.display(player.getLocation().clone().add(0, 0.8, 0), 3, 0.4, 0.4, 0.4, 0.05, Material.SAND.createBlockData());
 			
 			if (chargeProgress >= 40) {
 				charged = true;
@@ -116,6 +115,15 @@ public class SandRupture extends SandAbility implements AddonAbility {
 			Block b = waveLoc.getBlock();
 			if (EarthAbility.isEarthbendable(player, b)) {
 				new TempBlock(b, Material.SAND).setRevertTime(5000);
+			}
+
+			for (Block neighbor : GeneralMethods.getBlocksAroundPoint(waveLoc, 2.0)) {
+				if (EarthAbility.isEarthbendable(player, neighbor) && !TempBlock.isTempBlock(neighbor)) {
+					if (Math.random() < 0.25) {
+						new TempBlock(neighbor, Material.SAND).setRevertTime(5000);
+						neighbor.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, neighbor.getLocation().add(0.5, 0.5, 0.5), 2, 0.1, 0.1, 0.1, 0.0, Material.SAND.createBlockData());
+					}
+				}
 			}
 
 			waveLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, waveLoc, 10, 0.5, 0.2, 0.5, 0.05, Material.SAND.createBlockData());

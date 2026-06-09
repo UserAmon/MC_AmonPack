@@ -30,18 +30,23 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 	private static final java.util.HashMap<java.util.UUID, Long> steadyHandLastTime = new java.util.HashMap<>();
 	private boolean leaveSmoke = true;
 
-	private int Cooldown = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Cooldown");
-	private int dmg = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Dmg");
-	private int range = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Range");
-	private int slowpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SlowPower");
-	private int slowdur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SlowDuration");
-	private int poisonpower = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.PoisonPower");
-	private int poisondur = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.PoisonDuration");
-	private int blinddur = AmonPackPlugin.plugin.getConfig()
-			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.BlindnessDuration");
-	private int zonerange = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SmokeZoneRange");
-	private int zonedur = AmonPackPlugin.plugin.getConfig()
-			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.SmokeZoneDuration");
+	private int Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Cooldown",
+			4000);
+	private int dmg = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Dmg", 1);
+	private int range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.Range", 30);
+	private int slowpower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SlowPower", 2);
+	private int slowdur = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.SlowDuration",
+			40);
+	private int poisonpower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeDaggers.PoisonPower",
+			1);
+	private int poisondur = AmonPackPlugin.getAbilitiesConfig()
+			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.PoisonDuration", 40);
+	private int blinddur = AmonPackPlugin.getAbilitiesConfig()
+			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.BlindnessDuration", 40);
+	private int zonerange = AmonPackPlugin.getAbilitiesConfig()
+			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.SmokeZoneRange", 2);
+	private int zonedur = AmonPackPlugin.getAbilitiesConfig()
+			.getInt("AmonPack.Fire.Smoke.SmokeDaggers.SmokeZoneDuration", 100);
 	Location origin;
 	Location location;
 	Location location2;
@@ -54,14 +59,15 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 
 	public SmokeDaggers(Player player) {
 		super(player);
-		
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
+				.GetBranchByPlayerName(player.getName());
 		boolean hasSteadyHand = (branch != null && branch.hasUpgrade("SteadyHand"));
 
 		if (hasSteadyHand) {
 			int clicks = steadyHandClicks.getOrDefault(player.getUniqueId(), 0);
 			long lastClick = steadyHandLastTime.getOrDefault(player.getUniqueId(), 0L);
-			
+
 			if (clicks > 0 && System.currentTimeMillis() - lastClick > 8000) {
 				clicks = 0;
 				steadyHandClicks.put(player.getUniqueId(), 0);
@@ -69,18 +75,20 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 
 			if (clicks == 0 && bPlayer.isOnCooldown(this)) {
 				System.out.println("Cooldown active, cannot start SmokeDaggers.");
+				remove();
 				return;
 			}
-			
+
 			if (clicks > 0 && System.currentTimeMillis() - lastClick < 1000) {
 				System.out.println("Too fast, resetting clicks.");
+				remove();
 				return;
 			}
-			
+
 			clicks++;
 			steadyHandClicks.put(player.getUniqueId(), clicks);
 			steadyHandLastTime.put(player.getUniqueId(), System.currentTimeMillis());
-			
+
 			if (clicks < 3) {
 				this.leaveSmoke = false;
 				bPlayer.removeCooldown(this);
@@ -90,30 +98,32 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 				System.out.println("SmokeDaggers activated with smoke. Clicks: " + clicks);
 				steadyHandClicks.put(player.getUniqueId(), 0);
 			}
-		} else {
-			if (bPlayer.isOnCooldown(this)) {
-				return;
-			}
+		}
+		if (bPlayer.canBend(this) && !bPlayer.isOnCooldown(getName())) {
 			bPlayer.addCooldown(this);
-		}
 
-		if (!bPlayer.canBend(this)) {
-			return;
+			origin = player.getLocation().clone().add(0, 1.3, 0);
+			Projectiles = new ArrayList<>();
+			interval = 0;
+			List<BetterParticles> Particles = new ArrayList<>();
+			Particles.add(new BetterParticles(8, ParticleEffect.SMOKE_NORMAL, 0.3, 0.01, 0.15));
+			Location tloc1 = new Location(player.getWorld(), player.getLocation().getX(),
+					player.getLocation().getY() + 1,
+					player.getLocation().getZ(), (player.getLocation().getYaw() - 15), player.getLocation().getPitch());
+			Vector Loc1Dir = tloc1.clone().getDirection();
+			Location tloc3 = new Location(player.getWorld(), player.getLocation().getX(),
+					player.getLocation().getY() + 1,
+					player.getLocation().getZ(), (player.getLocation().getYaw()), player.getLocation().getPitch());
+			Vector Loc3Dir = tloc3.clone().getDirection();
+			Location tloc2 = new Location(player.getWorld(), player.getLocation().getX(),
+					player.getLocation().getY() + 1,
+					player.getLocation().getZ(), (player.getLocation().getYaw() + 15), player.getLocation().getPitch());
+			Vector Loc2Dir = tloc2.clone().getDirection();
+			Projectiles.add(new AbilityProjectile(Loc1Dir, tloc1, origin, Particles, 1));
+			Projectiles.add(new AbilityProjectile(Loc2Dir, tloc2, origin, Particles, 1));
+			Projectiles.add(new AbilityProjectile(Loc3Dir, tloc3, origin, Particles, 1));
+			start();
 		}
-		origin = player.getLocation().clone().add(0, 1.3, 0);
-		Projectiles = new ArrayList<>();
-		interval = 0;
-		List<BetterParticles> Particles = new ArrayList<>();
-		Particles.add(new BetterParticles(8, ParticleEffect.SMOKE_NORMAL, 0.3, 0.01, 0.15));
-		Location tloc1 = new Location(player.getWorld(), player.getLocation().getX(), player.getLocation().getY() + 1,
-				player.getLocation().getZ(), (player.getLocation().getYaw() - 15), player.getLocation().getPitch());
-		Vector Loc1Dir = tloc1.clone().getDirection();
-		Location tloc2 = new Location(player.getWorld(), player.getLocation().getX(), player.getLocation().getY() + 1,
-				player.getLocation().getZ(), (player.getLocation().getYaw() + 15), player.getLocation().getPitch());
-		Vector Loc2Dir = tloc2.clone().getDirection();
-		Projectiles.add(new AbilityProjectile(Loc1Dir, tloc1, origin, Particles, 1));
-		Projectiles.add(new AbilityProjectile(Loc2Dir, tloc2, origin, Particles, 1));
-		start();
 	}
 
 	@Override
@@ -126,18 +136,20 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 			Location location = Projectile.Advance().clone();
 			for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1)) {
 				if ((entity instanceof LivingEntity) && entity.getUniqueId() != player.getUniqueId()) {
-					DamageHandler.damageEntity(entity, 1, this);
+					DamageHandler.damageEntity(entity, dmg, this);
 					if (leaveSmoke) {
-						SmokeSource SourceEnd = new SmokeSource(location.clone().add(0, 1, 0), 120, 3, 1, player);
+						SmokeSource SourceEnd = new SmokeSource(location.clone().add(0, 1, 0), zonedur, zonerange, 1,
+								player);
 					}
 					Projectiles.remove(Projectile);
 					return;
 				}
 			}
-			if (location.distance(origin) > 20 || !location.clone().add(0, 0.8, 0).getBlock().getType().isAir()
+			if (location.distance(origin) > range || !location.clone().add(0, 0.8, 0).getBlock().getType().isAir()
 					|| location.clone().add(0, 0.8, 0).getBlock().getType().isSolid()) {
 				if (leaveSmoke) {
-					SmokeSource SourceEnd = new SmokeSource(location.clone().add(0, 1, 0), 120, 3, 1, player);
+					SmokeSource SourceEnd = new SmokeSource(location.clone().add(0, 1, 0), zonedur, zonerange, 1,
+							player);
 				}
 				Projectiles.remove(Projectile);
 				return;

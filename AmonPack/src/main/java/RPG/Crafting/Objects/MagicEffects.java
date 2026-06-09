@@ -364,7 +364,6 @@ public class MagicEffects {
     }
 
     public static List<String> AffectedAbilities = new ArrayList<>(List.of("Torrent",
-            "IceArch",
             "IceThorn",
             "Geyser",
             "FrostBreath",

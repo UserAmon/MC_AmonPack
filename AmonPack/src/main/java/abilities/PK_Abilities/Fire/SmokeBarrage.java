@@ -20,15 +20,15 @@ import java.util.Random;
 
 public class SmokeBarrage extends SmokeAbility implements AddonAbility {
 
-	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Cooldown");
+	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Cooldown", 6000);
 	private double Gravity = AmonPackPlugin.getAbilitiesConfig()
-			.getDouble("AmonPack.Fire.Smoke.SmokeBarrage.Gravity-Factor");
+			.getDouble("AmonPack.Fire.Smoke.SmokeBarrage.Gravity-Factor", -0.08);
 	private double progress = AmonPackPlugin.getAbilitiesConfig()
-			.getDouble("AmonPack.Fire.Smoke.SmokeBarrage.Progress-Factor");
-	private long range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Range");
-	private long damage = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Damage");
+			.getDouble("AmonPack.Fire.Smoke.SmokeBarrage.Progress-Factor", 0.15);
+	private long range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Range", 20);
+	private long damage = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBarrage.Damage", 2);
 	private long projectiles = AmonPackPlugin.getAbilitiesConfig()
-			.getInt("AmonPack.Fire.Smoke.SmokeBarrage.Projectiles");
+			.getInt("AmonPack.Fire.Smoke.SmokeBarrage.Projectiles", 3);
 
 	private State AbilityState;
 
@@ -58,7 +58,11 @@ public class SmokeBarrage extends SmokeAbility implements AddonAbility {
 				Progress = 0.75;
 				Projectiles = new ArrayList<>();
 				start();
+			} else {
+				remove();
 			}
+		} else {
+			remove();
 		}
 	}
 

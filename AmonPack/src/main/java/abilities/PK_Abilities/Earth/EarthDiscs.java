@@ -36,6 +36,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
     private long interval;
     private double radius;
     private List<Location> NearBlocks;
+    private Material sourceMaterial = org.bukkit.Material.STONE;
 
     public EarthDiscs(Player player) {
         super(player);
@@ -70,6 +71,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
         if (shuffledList.size() > 4) {
             Collections.shuffle(shuffledList);
             NearBlocks = shuffledList.subList(0, 4);
+            this.sourceMaterial = NearBlocks.get(0).getBlock().getType();
             for (Location loc : NearBlocks) {
                 TempBlock tb1 = new TempBlock(loc.getBlock(), Material.AIR);
                 tb1.setRevertTime(7000);
@@ -95,7 +97,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
                     if (interval >= 2) {
                         interval = 0;
                         NearBlocks = Methods.BendableBlocksAnimation(NearBlocks, player.getLocation().clone(),
-                                Material.STONE, 0.8);
+                                sourceMaterial, 0.8);
                         if (NearBlocks.isEmpty() || NearBlocks.size() < 2) {
                             state = State.ARMED;
                         }
@@ -155,7 +157,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
                         double angle = time * 4 + (j * angleOffset);
                         double x = radius * Math.cos(angle);
                         double z = radius * Math.sin(angle);
-                        EarthDisc.displayParticle(eye.clone().add(x, -0.7, z));
+                        EarthDisc.displayParticle(eye.clone().add(x, -0.7, z), sourceMaterial);
                     }
                 }
                 break;
@@ -167,7 +169,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
             ammo--;
             Location spawn = player.getEyeLocation().clone().add(player.getEyeLocation().getDirection().multiply(1));
 
-            new EarthDisc(player, spawn, player.getLocation().getDirection(), 4, 1, true);
+            new EarthDisc(player, spawn, player.getLocation().getDirection(), 4, 1, true, sourceMaterial);
 
             player.playSound(player.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1f, 0.5f);
 

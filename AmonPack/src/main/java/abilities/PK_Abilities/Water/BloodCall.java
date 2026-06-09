@@ -18,7 +18,7 @@ import org.bukkit.util.Vector;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.BloodAbility;
-import com.projectkorra.projectkorra.util.DamageHandler;
+
 
 import Plugin.AmonPackPlugin;
 
@@ -110,12 +110,14 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
         if (!hurtAt50 && progress >= 0.5) {
             hurtAt50 = true;
-            DamageHandler.damageEntity(player, 1.0, this);
+            double newHealth = Math.max(2.0, player.getHealth() - 1.0);
+            player.setHealth(newHealth);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.8f, 1.0f);
         }
         if (!hurtAt75 && progress >= 0.75) {
             hurtAt75 = true;
-            DamageHandler.damageEntity(player, 1.0, this);
+            double newHealth2 = Math.max(2.0, player.getHealth() - 1.0);
+            player.setHealth(newHealth2);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.8f, 1.0f);
         }
 
@@ -211,7 +213,8 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         target.getWorld().spawnParticle(Particle.DUST, target.getLocation().clone().add(0, 1.0, 0), 40, 1.2, 1.2, 1.2, 0,
                 new Particle.DustOptions(Color.fromRGB(160, 0, 0), 1.3f));
 
-        DamageHandler.damageEntity(target, 2.5, this);
+        double targetNewHealth = Math.max(2.0, target.getHealth() - 2.5);
+        target.setHealth(targetNewHealth);
         target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 10, false, false, false));
         target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1, false, false, false));
         target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 80, 0, false, false, false));

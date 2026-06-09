@@ -251,6 +251,9 @@ AmonPack:
       WallDistance: 12.0
       WallMaterial: STONE
       CrumbleFallingBlocks: 8
+      StandingDuration: 5000
+      WallDamage: 1.0
+      WallPush: 0.45
 
     # Sand - sand elements
     Sand:
@@ -370,6 +373,13 @@ AmonPack:
         SmokeZoneRange: 2
       SmokeBurst:
         Cooldown: 3000
+      SmokeBarrage:
+        Cooldown: 6000
+        Gravity-Factor: -0.08
+        Progress-Factor: 0.15
+        Range: 20
+        Damage: 2
+        Projectiles: 3
       SmokeBlade:
         Cooldown: 3000
         Damage: 2

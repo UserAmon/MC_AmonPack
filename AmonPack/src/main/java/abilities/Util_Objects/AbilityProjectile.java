@@ -28,7 +28,7 @@ public class AbilityProjectile {
         for (BetterParticles particle : Particles){
             particle.Display(location);
         }
-        location.add(direction).multiply(speed);
+        location.add(direction.clone().multiply(speed));
         return location;
     }
     public Location LightningAdvance() {
@@ -55,21 +55,21 @@ public class AbilityProjectile {
         for (BetterParticles particle : Particles){
             particle.Display(location);
         }
-        location.subtract(direction).multiply(speed);
+        location.subtract(direction.clone().multiply(speed));
         return location;
     }
     public Location Advance(Vector dir){
         for (BetterParticles particle : Particles){
             particle.Display(location);
         }
-        location.add(dir).multiply(speed);
+        location.add(dir.clone().multiply(speed));
         return location;
     }
     public Location Advance(double x, double y, double z){
         for (BetterParticles particle : Particles){
             particle.Display(location);
         }
-        location.add(x,y,z).multiply(speed);
+        location.add(x * speed, y * speed, z * speed);
         return location;
     }
 

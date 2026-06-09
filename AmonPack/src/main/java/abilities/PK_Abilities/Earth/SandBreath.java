@@ -123,9 +123,15 @@ public class SandBreath extends SandAbility implements AddonAbility {
 							remove();
 							return;
 						} else {
-							Methods.displayLineBetweenPoints(player.getLocation().subtract(0, 0.3, 0),
-									Methods.getTargetLocation(player, 10).getBlock().getLocation(), 10, Material.SAND,
-									1);
+							Location pStart = player.getLocation().clone().add(
+									(Math.random() - 0.5),
+									0.35 + (Math.random() - 0.5),
+									(Math.random() - 0.5));
+							Location targetLoc = Methods.getTargetLocation(player, 10).getBlock().getLocation().clone().add(
+									(Math.random() - 0.5),
+									(Math.random() - 0.5),
+									(Math.random() - 0.5));
+							Methods.displayLineBetweenPoints(pStart, targetLoc, 10, Material.SAND, 1);
 
 						}
 					} else if (!player.isSneaking()) {

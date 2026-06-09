@@ -70,8 +70,6 @@ public class AbilitiesListener implements Listener {
 						new EarthShift(player);
 					} else if (boundAbility.equalsIgnoreCase("IceThorn")) {
 						new IceThorn(player);
-					} else if (boundAbility.equalsIgnoreCase("Whirlpool")) {
-						new Whirlpool(player);
 					} else if (boundAbility.equalsIgnoreCase("CalmTide")) {
 						new CalmTide(player);
 					} else if (boundAbility.equalsIgnoreCase("EarthDiscs")) {
@@ -102,8 +100,6 @@ public class AbilitiesListener implements Listener {
 					}
 					 else if (boundAbility.equalsIgnoreCase("BloodCall")) {
 						new BloodCall(player);
-					} else if (boundAbility.equalsIgnoreCase("IceArch")) {
-						new IceArch(player);
 					} else if (boundAbility.equalsIgnoreCase("SmokeBurst")) {
 						new SmokeBurst(player, true);
 					} else if (boundAbility.equalsIgnoreCase("SmokeBarrage")) {
@@ -167,8 +163,6 @@ public class AbilitiesListener implements Listener {
 					new SmokeSurge(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokeDaggers")) {
 					new SmokeDaggers(player);
-				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePull")) {
-					new SmokePull(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SmokePath")) {
 					new SmokePath(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SoundCrash")) {

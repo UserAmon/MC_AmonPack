@@ -35,8 +35,13 @@ public class EarthDisc {
     protected double radius = 0.5;
     protected BukkitRunnable runnable;
     protected boolean isDead = false;
+    protected Material sourceMaterial;
 
     public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit) {
+        this(player, location, direction, damage, speed, destroyOnEntityHit, Material.SANDSTONE);
+    }
+
+    public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit, Material sourceMaterial) {
         this.player = player;
         this.location = location;
         this.direction = direction.normalize();
@@ -44,6 +49,7 @@ public class EarthDisc {
         this.baseDamage = damage;
         this.speed = speed;
         this.destroyOnEntityHit = destroyOnEntityHit;
+        this.sourceMaterial = sourceMaterial;
         this.spawnTime = System.currentTimeMillis();
         instances.add(this);
         start();
@@ -136,7 +142,7 @@ public class EarthDisc {
                         Particle.BLOCK,
                         location.clone().add(blockOffset),
                         1, 0, 0, 0, 0,
-                        Material.SANDSTONE.createBlockData()
+                        (sourceMaterial != null ? sourceMaterial : Material.SANDSTONE).createBlockData()
                 );
             }
 
@@ -160,6 +166,10 @@ public class EarthDisc {
     }
 
     public static void displayParticle(Location location) {
+        displayParticle(location, Material.SANDSTONE);
+    }
+
+    public static void displayParticle(Location location, Material material) {
         Vector baseVector = new Vector(0, 0.5, 0);
         Particle.DustOptions dustOptions =
                 new Particle.DustOptions(Color.fromRGB(209, 201, 148), 0.5f);
@@ -172,7 +182,7 @@ public class EarthDisc {
                         Particle.BLOCK,
                         location.clone().add(blockOffset),
                         1, 0, 0, 0, 0,
-                        Material.SANDSTONE.createBlockData()
+                        material.createBlockData()
                 );
             }
             Vector dustOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, 0.2);

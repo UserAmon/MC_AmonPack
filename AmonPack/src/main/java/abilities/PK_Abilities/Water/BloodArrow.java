@@ -19,7 +19,7 @@ import org.bukkit.util.Vector;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.BloodAbility;
-import com.projectkorra.projectkorra.util.DamageHandler;
+
 
 public class BloodArrow extends BloodAbility implements AddonAbility {
 
@@ -64,7 +64,8 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
             if (level != lastReportedLevel) {
                 lastReportedLevel = level;
                 if (level > 0) {
-                    DamageHandler.damageEntity(player, 1.0, this);
+                    double newHealth = Math.max(2.0, player.getHealth() - 1.0);
+                    player.setHealth(newHealth);
                     float pitch = 0.7f + (level * 0.2f);
                     player.playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 0.8f, pitch);
                     player.playSound(player.getLocation(), Sound.BLOCK_BONE_BLOCK_BREAK, 0.4f, pitch);
@@ -275,7 +276,8 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
                 }
 
                 hitEntities.add(target);
-                DamageHandler.damageEntity(target, damage, ability);
+                double newHp = Math.max(2.0, target.getHealth() - damage);
+                target.setHealth(newHp);
                 target.getWorld().playSound(target.getLocation(), Sound.ENTITY_BLAZE_HURT, 0.8f, 1.2f);
                 target.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getLocation().add(0, 1.0, 0), 6, 0.1, 0.5,
                         0.1, 0);

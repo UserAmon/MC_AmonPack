@@ -177,44 +177,55 @@ public class FlameSplit extends FireAbility implements AddonAbility {
         for (double d = 0; d <= currentLen; d += 0.5) {
             Location leftLoc = startLoc.clone().add(forward.clone().multiply(d)).add(right.clone().multiply(-0.3));
             Location rightLoc = startLoc.clone().add(forward.clone().multiply(d)).add(right.clone().multiply(0.3));
-            leftLoc.setY(getGroundY(leftLoc) + 0.5);
-            rightLoc.setY(getGroundY(rightLoc) + 0.5);
+            leftLoc.setY(getGroundY(leftLoc) + 1.0);
+            rightLoc.setY(getGroundY(rightLoc) + 1.0);
 
-            player.getWorld().spawnParticle(Particle.FLAME, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
-            player.getWorld().spawnParticle(Particle.FLAME, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
+            if (!leftLoc.getBlock().getType().isSolid()) {
+                player.getWorld().spawnParticle(Particle.FLAME, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
+            }
+            if (!rightLoc.getBlock().getType().isSolid()) {
+                player.getWorld().spawnParticle(Particle.FLAME, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
+            }
         }
 
         // Particle spark at the tip of the expanding line
         Location leftTip = startLoc.clone().add(forward.clone().multiply(currentLen)).add(right.clone().multiply(-0.3));
         Location rightTip = startLoc.clone().add(forward.clone().multiply(currentLen)).add(right.clone().multiply(0.3));
-        leftTip.setY(getGroundY(leftTip) + 0.5);
-        rightTip.setY(getGroundY(rightTip) + 0.5);
-        player.getWorld().spawnParticle(Particle.SMOKE, leftTip, 2, 0.1, 0.1, 0.1, 0.01);
-        player.getWorld().spawnParticle(Particle.SMOKE, rightTip, 2, 0.1, 0.1, 0.1, 0.01);
+        leftTip.setY(getGroundY(leftTip) + 1.0);
+        rightTip.setY(getGroundY(rightTip) + 1.0);
+        
+        if (!leftTip.getBlock().getType().isSolid()) {
+            player.getWorld().spawnParticle(Particle.SMOKE, leftTip, 2, 0.1, 0.1, 0.1, 0.01);
+        }
+        if (!rightTip.getBlock().getType().isSolid()) {
+            player.getWorld().spawnParticle(Particle.SMOKE, rightTip, 2, 0.1, 0.1, 0.1, 0.01);
+        }
     }
 
     private void drawSweepingLines() {
         double sweepProgress = ticksSweeping / 15.0;
+        double yOffset = 1.0 + (0.75 * sweepProgress);
         for (double d = 0; d <= range; d += 0.5) {
             // Sweeping sideways offset
             double currentSideOffset = 0.3 + (d * 0.65) * sweepProgress;
             Location leftLoc = startLoc.clone().add(forward.clone().multiply(d)).add(right.clone().multiply(-currentSideOffset));
             Location rightLoc = startLoc.clone().add(forward.clone().multiply(d)).add(right.clone().multiply(currentSideOffset));
-            leftLoc.setY(getGroundY(leftLoc) + 0.5);
-            rightLoc.setY(getGroundY(rightLoc) + 0.5);
+            leftLoc.setY(getGroundY(leftLoc) + yOffset);
+            rightLoc.setY(getGroundY(rightLoc) + yOffset);
 
-            player.getWorld().spawnParticle(Particle.FLAME, leftLoc, 2, 0.1, 0.1, 0.1, 0.02);
-            player.getWorld().spawnParticle(Particle.SMOKE, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
+            if (!leftLoc.getBlock().getType().isSolid()) {
+                player.getWorld().spawnParticle(Particle.FLAME, leftLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                player.getWorld().spawnParticle(Particle.SMOKE, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                Vector leftPushDir = right.clone().multiply(-1.0);
+                checkDamageAtLocation(leftLoc, leftPushDir);
+            }
 
-            player.getWorld().spawnParticle(Particle.FLAME, rightLoc, 2, 0.1, 0.1, 0.1, 0.02);
-            player.getWorld().spawnParticle(Particle.SMOKE, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
-
-            // Perpendicular knockback vectors
-            Vector leftPushDir = right.clone().multiply(-1.0);
-            Vector rightPushDir = right.clone();
-
-            checkDamageAtLocation(leftLoc, leftPushDir);
-            checkDamageAtLocation(rightLoc, rightPushDir);
+            if (!rightLoc.getBlock().getType().isSolid()) {
+                player.getWorld().spawnParticle(Particle.FLAME, rightLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                player.getWorld().spawnParticle(Particle.SMOKE, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                Vector rightPushDir = right.clone();
+                checkDamageAtLocation(rightLoc, rightPushDir);
+            }
         }
 
         if (ticksSweeping % 3 == 0) {

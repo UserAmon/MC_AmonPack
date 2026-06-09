@@ -24,7 +24,7 @@ import java.util.List;
 public class Baricade extends EarthAbility implements AddonAbility {
 
     private enum State {
-        CHARGING, READY, WALL_TRAVELING
+        CHARGING, READY, WALL_TRAVELING, STANDING
     }
 
     private State state;
@@ -41,6 +41,9 @@ public class Baricade extends EarthAbility implements AddonAbility {
     private double wallDistance;
     private Material wallMaterial;
     private int crumbleFallingBlocks;
+    private long standingDuration;
+    private double wallDamage;
+    private double wallPush;
 
     // Tracing mechanics
     private Location center;
@@ -56,6 +59,7 @@ public class Baricade extends EarthAbility implements AddonAbility {
     private double distanceTraveled = 0.0;
     private double prevCenterY;
     private List<TempBlock> activeBlocks = new ArrayList<>();
+    private long standingStartTime = 0;
 
     public Baricade(Player player) {
         super(player);
@@ -116,6 +120,9 @@ public class Baricade extends EarthAbility implements AddonAbility {
         }
         
         this.crumbleFallingBlocks = AmonPackPlugin.plugin.getConfig().getInt("AmonPack.Earth.Baricade.CrumbleFallingBlocks", 8);
+        this.standingDuration = AmonPackPlugin.plugin.getConfig().getLong("AmonPack.Earth.Baricade.StandingDuration", 5000);
+        this.wallDamage = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.WallDamage", 1.0);
+        this.wallPush = AmonPackPlugin.plugin.getConfig().getDouble("AmonPack.Earth.Baricade.WallPush", 0.45);
     }
 
     private boolean isNearEarthBlock() {
@@ -140,8 +147,16 @@ public class Baricade extends EarthAbility implements AddonAbility {
             return;
         }
 
-        if (player.getInventory().getHeldItemSlot() != slot) {
+        if ((state == State.CHARGING || state == State.READY) && player.getInventory().getHeldItemSlot() != slot) {
             remove();
+            return;
+        }
+
+        // Manual crumble: if active/standing and sneak-clicking while holding Baricade slot
+        if ((state == State.WALL_TRAVELING || state == State.STANDING) 
+                && player.isSneaking() 
+                && "Baricade".equalsIgnoreCase(bPlayer.getBoundAbilityName())) {
+            crumble();
             return;
         }
 
@@ -165,8 +180,9 @@ public class Baricade extends EarthAbility implements AddonAbility {
                 player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
                         net.md_5.bungee.api.chat.TextComponent.fromLegacyText(ChatColor.GREEN + "§lBARICADE READY - RELEASE SHIFT / BARYKADA GOTOWA - PUŚĆ SHIFT"));
                 
-                // Pulsing success particles
-                player.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, getCenterLoc(), 2, 0.2, 0.2, 0.2, 0);
+                // Pulsing success particles following look direction
+                Location targetLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(circleDistance));
+                player.spawnParticle(org.bukkit.Particle.BLOCK, targetLoc, 1, 0.1, 0.1, 0.1, 0.0, org.bukkit.Material.STONE.createBlockData());
 
                 if (!player.isSneaking()) {
                     triggerWall();
@@ -176,23 +192,32 @@ public class Baricade extends EarthAbility implements AddonAbility {
             case WALL_TRAVELING:
                 progressWall();
                 break;
+
+            case STANDING:
+                if (System.currentTimeMillis() - standingStartTime > standingDuration) {
+                    crumble();
+                }
+                break;
         }
     }
 
     private void drawTracingCircle() {
         Location curCenter = getCenterLoc();
-        // Render neutral grey path and completed green path
-        for (double a = 0; a < 360.0; a += 15.0) {
+        
+        org.bukkit.Particle.DustOptions dustNeutral = new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(150, 110, 80), 0.5f);
+        org.bukkit.Particle.DustOptions dustComplete = new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(60, 180, 60), 0.5f);
+        org.bukkit.Particle.DustOptions dustActive = new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(255, 50, 50), 0.8f);
+
+        // Render neutral path and completed path
+        for (double a = 0; a < 360.0; a += 20.0) {
             double rad = Math.toRadians(a);
             Vector offset = up.clone().multiply(circleRadius * Math.cos(rad)).add(right.clone().multiply(-circleRadius * Math.sin(rad)));
             Location pLoc = curCenter.clone().add(offset);
             
             if (a < targetAngle) {
-                player.spawnParticle(org.bukkit.Particle.BLOCK, pLoc, 1, 0, 0, 0, 0, 
-                        org.bukkit.Material.MOSS_BLOCK.createBlockData());
+                player.spawnParticle(org.bukkit.Particle.DUST, pLoc, 1, 0, 0, 0, 0, dustComplete);
             } else {
-                player.spawnParticle(org.bukkit.Particle.BLOCK, pLoc, 1, 0, 0, 0, 0, 
-                        org.bukkit.Material.DIRT.createBlockData());
+                player.spawnParticle(org.bukkit.Particle.DUST, pLoc, 1, 0, 0, 0, 0, dustNeutral);
             }
         }
 
@@ -200,8 +225,7 @@ public class Baricade extends EarthAbility implements AddonAbility {
         double targetRad = Math.toRadians(targetAngle);
         Vector activeOffset = up.clone().multiply(circleRadius * Math.cos(targetRad)).add(right.clone().multiply(-circleRadius * Math.sin(targetRad)));
         Location activeLoc = curCenter.clone().add(activeOffset);
-        player.spawnParticle(org.bukkit.Particle.BLOCK, activeLoc, 3, 0.05, 0.05, 0.05, 0, 
-                org.bukkit.Material.REDSTONE_BLOCK.createBlockData());
+        player.spawnParticle(org.bukkit.Particle.DUST, activeLoc, 1, 0, 0, 0, 0, dustActive);
     }
 
     private void checkAlignment() {
@@ -231,14 +255,15 @@ public class Baricade extends EarthAbility implements AddonAbility {
             this.wallDir = new Vector(1, 0, 0);
         }
 
-        this.prevCenterY = getGroundY(this.startLoc) - 1.0;
+        this.prevCenterY = getGroundY(this.startLoc);
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_STONE_BREAK, 1.2f, 0.7f);
     }
 
     private void progressWall() {
         distanceTraveled += wallSpeed;
         if (distanceTraveled > wallDistance) {
-            crumble();
+            this.state = State.STANDING;
+            this.standingStartTime = System.currentTimeMillis();
             return;
         }
 
@@ -260,16 +285,22 @@ public class Baricade extends EarthAbility implements AddonAbility {
         
         for (int w = -wallWidth / 2; w <= wallWidth / 2; w++) {
             Location colLoc = currentLoc.clone().add(rightVec.clone().multiply(w));
-            double colGroundY = getGroundY(colLoc) - 1.0;
+            double colGroundY = getGroundY(colLoc);
             
             for (int h = 0; h < wallHeight; h++) {
                 Location blockLoc = colLoc.clone();
                 blockLoc.setY(colGroundY + h);
                 Block b = blockLoc.getBlock();
                 
+                // Obstacle collision check: crumble if hit solid structure
+                if (b.getType().isSolid() && !b.isPassable() && !TempBlock.isTempBlock(b)) {
+                    crumble();
+                    return;
+                }
+
                 if (isTransparent(b) || b.isPassable()) {
                     TempBlock tb = new TempBlock(b, wallMaterial);
-                    tb.setRevertTime(10000); // Safety timeout fallback
+                    tb.setRevertTime(standingDuration + 10000); // Safety timeout fallback
                     activeBlocks.add(tb);
                 }
             }
@@ -281,9 +312,9 @@ public class Baricade extends EarthAbility implements AddonAbility {
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1.2)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                     LivingEntity le = (LivingEntity) entity;
-                    Vector push = wallDir.clone().multiply(0.45).setY(0.25);
+                    Vector push = wallDir.clone().multiply(wallPush).setY(0.25);
                     le.setVelocity(push);
-                    DamageHandler.damageEntity(le, 1.0, this);
+                    DamageHandler.damageEntity(le, wallDamage, this);
                 }
             }
         }
@@ -293,7 +324,7 @@ public class Baricade extends EarthAbility implements AddonAbility {
         Location check = loc.clone();
         for (int dy = 2; dy >= -4; dy--) {
             Block b = check.clone().add(0, dy, 0).getBlock();
-            if (b.getType().isSolid()) {
+            if (b.getType().isSolid() && !TempBlock.isTempBlock(b)) {
                 return b.getY() + 1.0;
             }
         }
