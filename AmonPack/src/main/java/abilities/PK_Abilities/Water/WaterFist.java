@@ -29,17 +29,51 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 	private long lastPunchTime = 0;
 	private int clicksUsed = 0;
 	private double speed;
-
-	// Reka: startuje 1 blok z boku (right), 1 blok do przodu, na wys. ramienia
-	// Segmenty: od 1.0 do 4.0 (4 bloki dlugosci)
-	private static final double HAND_FORWARD_OFFSET = 0.0; // przesuniecie poczatku reki od gracza
-	private static final double HAND_RIGHT_OFFSET    = 1.5; // przesuniecie boczne
-	private static final double HAND_HEIGHT          = 1.05; // wysokosc reki
-	private static final double[] HAND_SEGMENTS      = {1.0, 1.6, 2.2, 2.8}; // 4 segmenty
+	private double damage;
+	private double sourceRange;
+	private double attackRange;
+	private double attackRangeWithUpgrade;
+	private int maxClicks;
+	private int maxClicksWithUpgrade;
+	private long punchCooldown;
+	private double armForwardOffset;
+	private double armRightOffset;
+	private double armHeight;
+	private double knockback;
+	private int slownessDuration;
+	private int slownessLevel;
+	private int iceBlockRevertTime;
+	private long chargeTimeMax;
+	private int extendTicks;
+	private int retractTicks;
+	private double extendSpeed;
+	private long baseCooldown;
 
 	public WaterFist(Player player) {
 		super(player);
+		
+		// Load config values
 		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.Speed", 0.8);
+		this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.Damage", 4.0);
+		this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.SourceRange", 20.0);
+		this.attackRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.AttackRange", 7.0);
+		this.attackRangeWithUpgrade = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.AttackRangeWithUpgrade", 8.0);
+		this.maxClicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterFist.MaxClicks", 3);
+		this.maxClicksWithUpgrade = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterFist.MaxClicksWithUpgrade", 4);
+		this.punchCooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterFist.PunchCooldown", 1000);
+		this.armForwardOffset = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.ArmForwardOffset", 0.0);
+		this.armRightOffset = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.ArmRightOffset", 1.5);
+		this.armHeight = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.ArmHeight", 1.05);
+		this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.Knockback", 0.85);
+		this.slownessDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterFist.SlownessDuration", 60);
+		this.slownessLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterFist.SlownessLevel", 2);
+		this.iceBlockRevertTime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterFist.IceBlockRevertTime", 2000);
+		this.chargeTimeMax = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterFist.ChargeTimeMax", 15000);
+		this.extendTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterFist.ExtendTicks", 6);
+		this.retractTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterFist.RetractTicks", 5);
+		this.extendSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterFist.ExtendSpeed", 0.5);
+		this.baseCooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterFist.Cooldown", 8000);
+		
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -48,7 +82,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 		}
 
 		this.slot = player.getInventory().getHeldItemSlot();
-		sourceLoc = Methods.findWaterSource(player, 20);
+		sourceLoc = Methods.findWaterSource(player, (int) sourceRange);
 		if (sourceLoc == null) {
 			return;
 		}
@@ -100,30 +134,32 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 				}
 			}
 		} else if (state == 2) {
-			if (System.currentTimeMillis() - chargeStartTime > 15000) {
+			if (System.currentTimeMillis() - chargeStartTime > chargeTimeMax) {
 				bPlayer.addCooldown(this);
 				remove();
 				return;
 			}
-			renderWaterHand(HAND_SEGMENTS);
+			renderWaterHand();
 		}
 	}
 
 	/** Punkt kotwicy reki - 1 blok z boku i 1 blok do przodu od gracza */
 	private Location getHandAnchor() {
-		Location base = player.getLocation().clone().add(0, HAND_HEIGHT, 0);
+		Location base = player.getLocation().clone().add(0, armHeight, 0);
 		Vector forward = player.getLocation().getDirection().clone().setY(0).normalize();
 		Vector right   = forward.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-		return base.add(forward.multiply(HAND_FORWARD_OFFSET)).add(right.multiply(HAND_RIGHT_OFFSET));
+		return base.add(forward.multiply(armForwardOffset)).add(right.multiply(armRightOffset));
 	}
 
 	/** Renderuje segmenty reki wzdluz kierunku patrzenia gracza */
-	private void renderWaterHand(double[] segments) {
+	private void renderWaterHand() {
 		Location anchor = getHandAnchor();
 		Vector viewDir  = player.getLocation().getDirection().clone().setY(0).normalize();
 		Vector rightVec = viewDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
 		viewDir.add(rightVec.multiply(0.12)).normalize(); // Lekkie oddalenie od celownika (outward)
 
+		// Generate segments dynamically based on config
+		double[] segments = {1.0, 1.6, 2.2, 2.8};
 		for (double seg : segments) {
 			Location p = anchor.clone().add(viewDir.clone().multiply(seg));
 			spawnWaterBlock(p.getBlock());
@@ -146,13 +182,14 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 		}
 
 		long now = System.currentTimeMillis();
-		if (now - lastPunchTime < 1000) {
+		if (now - lastPunchTime < punchCooldown) {
 			return;
 		}
 
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
 		boolean hasUppercut = (branch != null && branch.hasUpgrade("Uppercut"));
-		int maxClicks = hasUppercut ? 4 : 3;
+		int currentMaxClicks = hasUppercut ? maxClicksWithUpgrade : maxClicks;
+		double currentAttackRange = hasUppercut ? attackRangeWithUpgrade : attackRange;
 
 		clicksUsed++;
 		lastPunchTime = now;
@@ -162,7 +199,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 		// ---- Animacja: extend 3 -> 7/8 blokow, potem retract ----
 		Location anchor   = getHandAnchor();
-		double maxReach = hasUppercut ? 8.0 : 7.0;
+		final double maxReach = currentAttackRange;
 		// Celownik na max reach do przodu od głowy gracza
 		Location targetHit = player.getEyeLocation().clone().add(player.getLocation().getDirection().normalize().multiply(maxReach));
 		Vector viewDir = targetHit.toVector().subtract(anchor.toVector()).normalize();
@@ -170,10 +207,9 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 		new BukkitRunnable() {
 			int tick = 0;
-			// Fazy: 0-5 extend (0.5 bloku/tick), 6-10 retract
-			final int EXTEND_TICKS  = 6;
-			final int RETRACT_TICKS = 5;
-			final double EXTEND_SPEED = 0.5;  // bloków/tick
+			final int EXTEND_TICKS  = extendTicks;
+			final int RETRACT_TICKS = retractTicks;
+			final double EXTEND_SPEED = extendSpeed;
 			final double MAX_REACH    = maxReach;
 
 			@Override
@@ -207,20 +243,20 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 						for (Entity entity : GeneralMethods.getEntitiesAroundPoint(p, 1.4)) {
 							if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
 								LivingEntity target = (LivingEntity) entity;
-								DamageHandler.damageEntity(target, 4.0, WaterFist.this);
+								DamageHandler.damageEntity(target, damage, WaterFist.this);
 
 								Vector knock = target.getLocation().toVector().subtract(player.getLocation().toVector());
 								if (knock.lengthSquared() > 0) {
-									knock.normalize().multiply(0.85).setY(0.25);
+									knock.normalize().multiply(knockback).setY(0.25);
 									target.setVelocity(knock);
 								}
 
-								if (hasUppercut || thisClick == 3) {
+								if (hasUppercut || thisClick == currentMaxClicks) {
 									target.getWorld().spawnParticle(org.bukkit.Particle.SNOWFLAKE, target.getLocation(), 40, 0.5, 0.5, 0.5, 0.1);
-									target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 2));
+									target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slownessDuration, slownessLevel));
 									Block feet = target.getLocation().getBlock();
 									if (feet.getType().isAir()) {
-										new TempBlock(feet, Material.ICE).setRevertTime(2000);
+										new TempBlock(feet, Material.ICE).setRevertTime(iceBlockRevertTime);
 									}
 								}
 								hitDone[0] = true;
@@ -233,7 +269,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 			}
 		}.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
-		if (clicksUsed >= maxClicks) {
+		if (clicksUsed >= currentMaxClicks) {
 			bPlayer.addCooldown(this);
 			remove();
 		}
@@ -241,9 +277,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasUppercut = (branch != null && branch.hasUpgrade("Uppercut"));
-		return hasUppercut ? 4000 : 8000;
+		return baseCooldown;
 	}
 
 	@Override

@@ -95,7 +95,7 @@ public class Methods {
 		return random.nextInt((upper - lower) + 1) + lower;
 	}
 
-	public static List<FallingBlock> SpawnedByMe = new ArrayList<>();
+	public static List<UUID> SpawnedByMe = new ArrayList<>();
 
 	public static void spawnFallingBlocks(Location location, Material mat, int amount, double factor, Player player) {
 		if (location == null || location.getWorld() == null)
@@ -109,7 +109,7 @@ public class Methods {
 			double z = (random.nextDouble() - 0.5) * (0.5 * factor);
 			double y = 0.3 + random.nextDouble() * (0.1 * factor);
 			fallingBlock.setVelocity(new Vector(x, y, z));
-			SpawnedByMe.add(fallingBlock);
+			SpawnedByMe.add(fallingBlock.getUniqueId());
 			if (player != null) {
 				startDamageTask(fallingBlock, player);
 			}

@@ -1103,7 +1103,7 @@ public class Listeners implements Listener {
     @EventHandler
     public void onFallingBlockLand(EntityChangeBlockEvent event) {
         if (event.getEntity() instanceof FallingBlock) {
-            if (Methods.SpawnedByMe.contains(event.getEntity())) {
+            if (Methods.SpawnedByMe.contains(event.getEntity().getUniqueId())) {
                 event.setCancelled(true);
                 event.getEntity().remove();
             }

@@ -1,468 +1,395 @@
-# ==============================================================================
-#                      AmonPack Bending Abilities Configuration
-# ==============================================================================
-# This configuration file controls the parameters for all custom magic moves
-# and elements added by the AmonPack plugin. All values can be reloaded in-game.
-
 AmonPack:
-  # ============================================================================
-  # Water Bending Skills
-  # ============================================================================
   Water:
     Ice:
-      # IcySpace - freezingly slows down enemies in an area
       IcySpace:
-        Cooldown: 12000
-        Range: 5
-        Duration: 10000
-        1stPhaseDelay: 3
-        2ndPhaseDelay: 6
+        Cooldown: 12000 #ms between ability uses
+        Range: 5 #blocks radius of freeze zone
+        Duration: 10000 #ms that area stay frozen
+        1stPhaseDelay: 3 #ticks before first freeze effect applies
+        2ndPhaseDelay: 6 #ticks before second freeze effect applies
         NightAugment:
-          Cooldown: 5000
-          Range: 12
-          Duration: 60000
+          Cooldown: 5000 #ms cooldown during night
+          Range: 12 #blocks radius during night augment
+          Duration: 60000 #ms freeze duration during night
         FullMoonAugment:
-          Cooldown: 12000
-          Range: 8
-          Duration: 20000
+          Cooldown: 12000 #ms cooldown during full moon
+          Range: 8 #blocks radius during full moon
+          Duration: 20000 #ms freeze duration during full moon
 
-      # IceArch - creates a protective frozen barrier of ice
-      IceArch:
-        Cooldown: 4000
-        Range: 20
-        ChargeTime: 1500
-        Damage: 2
-        Arch-Width: 3
-        Arch-Duration: 5000
-        Arch-Thickness: 2
-        CanFreeze: false
-        FreezeDuration: 2000
-        NightAugment:
-          Cooldown: 4000
-          ChargeTime: 1000
-          Range: 30
-          Damage: 3
-          Arch-Width: 4
-          Arch-Duration: 5000
-          Arch-Thickness: 3
-          CanFreeze: false
-          FreezeDuration: 2000
-        FullMoonAugment:
-          Cooldown: 1000
-          ChargeTime: 500
-          Range: 40
-          Damage: 5
-          Arch-Width: 5
-          Arch-Duration: 5000
-          Arch-Thickness: 4
-          CanFreeze: false
-          FreezeDuration: 2000
-
-      # IceThorn - shoots icy spikes out of the ground
       IceThorn:
-        Cooldown: 7000
-        Damage: 1
-        ChargeTime: 2000
-        RevertTime: 10000
-        Range: 20
-        Radius: 2
-        FreezeDuration: 3000
+        Cooldown: 7000 #ms between ability uses
+        Damage: 2 #hearts dealt per spike hit
+        ChargeTime: 2000 #ms to charge the ability
+        RevertTime: 10000 #ms before spikes disappear
+        Range: 20 #blocks range to summon spikes
+        Radius: 2 #blocks radius of spike area
+        FreezeDuration: 3000 #ms enemies are frozen after hit
 
-    # CalmTide - calming self-healing water bending ritual
     CalmTide:
-      Cooldown: 8000
-      Range: 15
-      HealingDuration: 120      # Total ticks of healing (6 seconds)
-      HealingInterval: 10       # Restores health every X ticks
-      HealingAmount: 1.0        # Amount of health restored per interval
-      SpeedAmplifier: 1         # Completion speed buff level
-      SpeedDuration: 100        # Speed duration in ticks
+      Cooldown: 8000 #ms between ability uses
+      Range: 15 #source range
+      HealingDuration: 120 #total ticks of healing (6 seconds)
+      HealingInterval: 10 #restores health every X ticks
+      HealingAmount: 1.0 #hearts restored per interval
+      SpeedAmplifier: 1 #speed buff strength level
+      SpeedDuration: 100 #ticks the speed buff lasts
 
-    # TideLock - locks a target in place using water pressure
     TideLock:
-      Cooldown: 6000
-      ChargeTime: 2000
-      Damage: 2.0
-      Range: 25.0
-      Speed: 1.0
+      Cooldown: 6000 #ms between ability uses
+      ChargeTime: 2000 #ms to charge the ability
+      Damage: 2.0 #hearts dealt on impact
+      Range: 25.0 #blocks max range projectile travels
+      Speed: 1.0 #projectile speed multiplier
 
-    # WaterFist - powerful water fist melee augment
     WaterFist:
-      Speed: 0.8
+      Cooldown: 8000 #ms between ability uses
+      Damage: 4.0 #hearts dealt per punch
+      SourceRange: 20 #blocks range to find water source
+      AttackRange: 7.0 #blocks max reach of punch
+      AttackRangeWithUpgrade: 8.0 #blocks max reach with Uppercut upgrade
+      MaxClicks: 3 #maximum punch clicks before cooldown
+      MaxClicksWithUpgrade: 4 #maximum clicks with Uppercut upgrade
+      PunchCooldown: 1000 #ms cooldown between punches
+      ArmForwardOffset: 0.0 #blocks forward offset of arm anchor point
+      ArmRightOffset: 1.5 #blocks side offset of arm anchor point
+      ArmHeight: 1.05 #blocks height of arm anchor point
+      Knockback: 0.85 #velocity multiplier for knockback
+      SlownessDuration: 60 #ticks slowness effect lasts
+      SlownessLevel: 2 #slowness potion level
+      IceBlockRevertTime: 2000 #ms ice block lasts before reverting
+      ChargeTimeMax: 15000 #ms maximum charge time before auto-cancel
+      ExtendTicks: 6 #ticks for punch extend animation
+      RetractTicks: 5 #ticks for punch retract animation
+      ExtendSpeed: 0.5 #blocks per tick during extend phase
+      Speed: 0.8 #water movement speed to hand anchor
 
-    # Whirlpool - gathers water into a swirling vortex shield and fires it
-    Whirlpool:
-      Cooldown: 6000
-      Damage: 4.0
-      Speed: 1.5
-      Range: 30.0
-      GatheringDuration: 4000
-
-    # BloodCall - bloodbending ritual that traps and nauseates targets
     BloodCall:
-      Cooldown: 3000
-      Range: 25.0
-      Duration: 120             # Max duration in ticks (6 seconds)
-      SelfDamage: 1.0           # Self damage applied during weaving milestones
-      CompletionDamage: 2.5     # Damage dealt upon ritual success
+      Cooldown: 3000 #ms between ability uses
+      Range: 25.0 #blocks detection range for targets
+      Duration: 120 #max ticks ritual lasts
+      SelfDamage: 1.0 #hearts lost per weaving milestone
+      CompletionDamage: 2.5 #hearts dealt when ritual completes
+      ImmobilizeDuration: 60 #ticks target stays immobilized
 
-    # BloodArrow - charges your own blood to fire a chaining homing arrow
     BloodArrow:
-      Cooldown: 7000
-      ChargeTimePerLevel: 1000
-      MaxChargeLevel: 3
-      SelfDamage: 1.0
-      Speed: 1.2
+      Cooldown: 7000 #ms between ability uses
+      ChargeTimePerLevel: 1000 #ms per charge level
+      MaxChargeLevel: 3 #maximum charge levels
+      SelfDamage: 1.0 #hearts lost per charge level
+      Speed: 1.2 #projectile speed multiplier
+      CanTrack: true #if true, arrow tracks targets
+      TrackRange: 5.0 #blocks range to track targets
+      ChainRange: 7.0 #blocks range to chain to nearby enemies
 
-  # ============================================================================
-  # Air Bending Skills
-  # ============================================================================
   Air:
-    # AirPressure - builds up compressed air to blast or pull enemies
     AirPressure:
-      Cooldown: 4000
-      Dmg: 2
-      Range-Sphere: 20
-      Range-Pull: 4
-      PushPower: 1.5
-      MinHoldTime: 500
-      MaxHoldTime: 4000
-      CanControlSphere: false
+      Cooldown: 4000 #ms between ability uses
+      Dmg: 2 #hearts dealt to enemies
+      Range-Sphere: 20 #blocks radius of compressed air sphere
+      Range-Pull: 4 #blocks range for pulling enemies
+      PushPower: 1.5 #velocity multiplier for pushing
+      MinHoldTime: 500 #ms minimum hold to activate
+      MaxHoldTime: 4000 #ms maximum hold time
+      CanControlSphere: false #if true, player can move sphere while held
 
-    # Acoustics - establishes a sonic tether that shocks and chains enemies
     Acoustics:
-      Cooldown: 6000
-      MaxDuration: 100          # Duration in ticks
-      MaxStacks: 20
-      DamageInitial: 5.0
-      DamageContinuous: 4.0
-      DamageStackMax: 1.0
-      DamageChain: 3.0
-      TetherDistance: 10.0
-      TetherDistanceEncore: 16.0
-      SearchRadius: 12.0
-      SearchRadiusEncore: 18.0
-      ChainRadius: 8.0
-      ChainRadiusEncore: 12.0
+      Cooldown: 6000 #ms between ability uses
+      MaxDuration: 100 #ticks sonic tether lasts
+      MaxStacks: 20 #maximum sound stacks buildup
+      StacksInitial: 5.0 #sound stacks from first tether connection
+      StackContinuous: 4.0 #sound stacks per tick while tethered
+      StacksOnChain: 3.0 #sound stacks dealt when chain hits new enemy
+      TetherDistance: 10.0 #blocks range for initial tether
+      TetherDistanceEncore: 16.0 #blocks range with encore bonus
+      SearchRadius: 12.0 #blocks radius to search for enemies
+      SearchRadiusEncore: 18.0 #blocks radius with encore bonus
+      ChainRadius: 8.0 #blocks radius for chain bouncing
+      ChainRadiusEncore: 12.0 #blocks radius with encore bonus
 
-    # AerialPush - launches air projectles that deal extra wall-impact damage
     AerialPush:
-      Cooldown: 3000
-      Damage: 2.0
-      WallDamage: 4.0
-      Knockback: 2.5
-      Speed: 1.5
-      Range: 20.0
-      MonitorDuration: 1000
+      Cooldown: 3000 #ms between ability uses
+      Damage: 1.0 #hearts from projectile hit
+      WallDamage: 4.0 #hearts from wall impact bonus
+      Knockback: 2.5 #velocity when hitting enemies
+      Speed: 1.5 #projectile speed multiplier
+      Range: 20.0 #blocks max projectile range
+      MonitorDuration: 1000 #ms to track wall impacts
 
-    # AirScythe - throws slicing blades of compressed air
     AirScythe:
-      Cooldown: 4000
-      ComboWindow: 3000
-      Damage: 2.0
-      Speed: 1.5
-      Range: 20.0
+      Cooldown: 4000 #ms between ability uses
+      ComboWindow: 3000 #ms window for combo hits
+      Damage: 2.0 #hearts per blade hit
+      Speed: 1.5 #projectile speed multiplier
+      Range: 20.0 #blocks max range
 
-    # Echo - fires echoing sound waves that bounce off walls
     Echo:
-      Cooldown: 3000
-      ProjectileCount: 4
-      StacksToApply: 8.0
-      Damage: 0.0
-      Speed: 1.0
-      Range: 15.0
-      RehitStacks: 2.0
+      Cooldown: 3000 #ms between ability uses
+      ProjectileCount: 4 #how many projectiles will it fire on LPM
+      StacksToApply: 8.0 #how many sound_stacks will it apply at first hit
+      Damage: 0.0 #damage dealt by first projectile hit
+      Speed: 1.0 #speed of projectiles
+      Range: 15.0 #max range of projectiles
+      RehitStacks: 2.0 #sound_stacks applied by projectiles other than first one
 
-    # GustShield - shields you in swirling wind and retaliates when hit
     GustShield:
-      Cooldown: 6000
-      Duration: 2000
-      Speed: 0.7
-      Range: 10.0
-      PushFactor: 1.0
+      Cooldown: 6000 #ms between ability uses
+      Duration: 2000 #ms shield remains active
+      Speed: 0.7 #movement speed while shielded
+      Range: 10.0 #blocks radius of shield
+      PushFactor: 1.0 #velocity when retaliating to hits
 
-    # SoundCrash - unleashes a sonic boom that detonates high sound stacks
     SoundCrash:
-      Cooldown: 3000
-      Range: 20.0
-      Speed: 1.0
-      StacksWithoutSound: 10.0
-      DamageMultiplier: 0.3
-      PushWithoutStacks: 0.8
-      PushWithStacks: 1.2
+      Cooldown: 3000 #ms between ability uses
+      Range: 20.0 #blocks range to detonate sound stacks
+      Speed: 1.0 #projectile speed multiplier
+      StacksWithoutSound: 10.0 #sound_stacks applied upon hitting enemy without sound_stacks
+      DamageMultiplier: 0.3 #if enemy has already sound_stacks - damage dealt will be 1.0 + (sound_stacks_on_enemy * damageMultiplier)
+      PushWithoutStacks: 0.8 #if enemy has no sound_stacks, how strong will it push them
+      PushWithStacks: 1.2 #if enemy already has sound_stacks, how strong will it push them
 
-    # Resonance - tethers a block and pulses waves of sound
     Resonance:
-      Cooldown: 3000
-      Damage: 1.0
-      ChargeTicks: 40
-      ChargeTicksDysonance: 20
-      MaxRadius: 7.0
-      Speed: 0.21
-      StacksWithoutSound: 5.0
-      StacksWithSound: 8.0
-      SecondaryMaxRadius: 6.0
+      Cooldown: 3000 #ms between ability uses
+      Damage: 1.0 #hearts per pulse wave hit
+      ChargeTicks: 40 #ticks to charge sound waves
+      ChargeTicksDysonance: 20 #ticks with dysonance bonus
+      MaxRadius: 7.0 #blocks radius of pulse waves
+      Speed: 0.21 #pulse wave speed multiplier
+      StacksWithoutSound: 5.0 #sound stacks applied without sound active
+      StacksWithSound: 8.0 #sound stacks applied with sound active
+      SecondaryMaxRadius: 6.0 #blocks radius of secondary pulses
 
-  # ============================================================================
-  # Earth & Metal Bending Skills
-  # ============================================================================
   Earth:
-    # EarthHammer - slams a massive earth hammer in front of you
     EarthHammer:
-      Cooldown: 7000
-      Damage: 1
-      ChargeTime: 2000
-      RevertTime: 10000
-      Range: 20
-      Radius: 2
+      Cooldown: 7000 #ms between ability uses
+      Damage: 1 #hearts dealt on impact
+      ChargeTime: 2000 #ms to charge the ability
+      RevertTime: 10000 #ms before hammer disappears
+      Range: 20 #blocks range to summon hammer
+      Radius: 2 #blocks radius of impact
 
-    # DiscHurl - hurls solid earth discs at high speeds
     DiscHurl:
-      Cooldown: 3000
-      Damage: 3.0
-      Speed: 0.8
+      Cooldown: 3000 #ms between ability uses
+      Damage: 3.0 #hearts per disc hit
+      Speed: 0.8 #disc travel speed multiplier
+      SourceRange: 15.0 #blocks range to summon disc source
+      SourceRevertTime: 5000 #ms before source restores
+      RedirectRange: 4.0 #blocks range to redirect discs
+      CanRedirect: true #if true, discs can be redirected
+      MaxBounces: 6 #maximum wall bounces before despawn
+      Range: 30.0 #blocks max range discs travel
 
-    # EarthShift - shifts a block of earth and sweeps enemies on it
     EarthShift:
-      Cooldown: 6000
-      ChargeTime: 1500
-      Range: 15.0
-      Radius: 3.0
-      WaveSpeed: 0.8
+      Cooldown: 6000 #ms between ability uses
+      ChargeTime: 1500 #ms to charge the ability
+      Range: 15.0 #blocks detection range
+      Radius: 3.0 #blocks radius of shifted earth
+      WaveSpeed: 0.8 #sweep wave speed multiplier
 
-    # EarthDiscs - creates spinning earth discs
     EarthDiscs:
-      Cooldown: 6000
-      ChargeTime: 2000
-      Radius: 1.75
+      Cooldown: 6000 #ms between ability uses
+      ChargeTime: 2000 #ms to charge the ability
+      Radius: 1.75 #blocks radius of spinning disc
+      ArmedDuration: 10000 #ms discs remain before attacking
+      MaxAmmo: 2 #maximum discs that can be spawned
+      Damage: 3.0 #hearts per disc hit
+      Speed: 1.0 #disc speed multiplier
+      SourceRange: 10.0 #blocks range to summon discs
+      SourceRevertTime: 7000 #ms before source disappears
+      CanRedirect: true #if true, discs can be redirected
+      MaxBounces: 3 #maximum wall bounces before despawn
+      Range: 30.0 #blocks max range discs travel
 
-    # SandDisc - spinning sand discs
-    SandDisc:
-      Radius: 0.5
-
-    # Baricade - traces a circle of particles to raise a moving earth wall
     Baricade:
-      Cooldown: 8000
-      CircleDistance: 2.0
-      CircleRadius: 0.45
-      WallWidth: 3
-      WallHeight: 3
-      WallSpeed: 0.4
-      WallDistance: 12.0
-      WallMaterial: STONE
-      CrumbleFallingBlocks: 8
-      StandingDuration: 5000
-      WallDamage: 1.0
-      WallPush: 0.45
+      Cooldown: 8000 #ms between ability uses
+      CircleDistance: 2.0 #blocks distance from center for circle preview
+      CircleRadius: 0.45 #blocks radius of preview particles
+      WallWidth: 3 #blocks width of wall
+      WallHeight: 3 #blocks height of wall
+      WallSpeed: 0.4 #wall movement speed multiplier
+      WallDistance: 12.0 #blocks distance wall moves
+      WallMaterial: STONE #material of wall
+      CrumbleFallingBlocks: 8 #blocks falling damage before crumble
+      StandingDuration: 5000 #ms wall stands before falling
+      WallDamage: 1.0 #hearts dealt by wall push
+      WallPush: 0.45 #velocity when pushing enemies
 
-    # Sand - sand elements
     Sand:
       SandWave:
-        Cooldown: 6000
-        Range: 15
-        Duration: 4000
-        Size: 6
-        DeBuffPower: 2
-        DebuffDuration: 50
-        BurrowPower: 1
+        Cooldown: 6000 #ms between ability uses
+        Range: 15 #blocks range of sand wave
+        Duration: 4000 #ms wave lasts
+        Size: 6 #blocks size of wave effect
+        DeBuffPower: 2 #slowness level debuff
+        DebuffDuration: 50 #ticks debuff lasts
+        BurrowPower: 1 #effect power for burrowing
+
       SandBreath:
-        Cooldown: 6000
-        Range: 12
-        Duration: 4000
-        ChargeTime: 2000
-        ChargedBreathBuff: true
-        SpeedOnSand: 6
-        SpeedOnEarth: 2
-        DeBuffPower: 2
-        DebuffDuration: 60
-        Damage: 1
-        DurationToUseBreath: 120
-        CanDebuffEnemy: true
+        Cooldown: 6000 #ms between ability uses
+        Range: 12 #blocks range of breath
+        Duration: 4000 #ms breath lasts
+        ChargeTime: 2000 #ms to charge the ability
+        ChargedBreathBuff: true #if true, charged breath has bonus
+        SpeedOnSand: 6 #speed bonus on sand blocks
+        SpeedOnEarth: 2 #speed bonus on earth blocks
+        DeBuffPower: 2 #slowness level debuff
+        DebuffDuration: 60 #ticks debuff lasts
+        Damage: 1 #hearts per tick in breath
+        DurationToUseBreath: 120 #ticks before breath expires
+        CanDebuffEnemy: true #if true, debuffs enemies
+
       SandRupture:
-        Cooldown: 5000
-        WaveSpeed: 0.7
-        WaveRange: 12.0
-        WaveDamage: 4.0
-        WaveSlowDuration: 40
-        WaveSlowPower: 2
-        WaveKnockback: 0.6
-        WaveKnockbackY: 0.35
-        ExplosionRadius: 3.0
-        ExplosionDamage: 3.0
-        ExplosionBlindDuration: 30
-        ExplosionBlindPower: 1
+        Cooldown: 5000 #ms between ability uses
+        WaveSpeed: 0.7 #sand wave speed multiplier
+        WaveRange: 12.0 #blocks range of wave
+        WaveDamage: 4.0 #hearts from wave hit
+        WaveSlowDuration: 40 #ticks slowness lasts
+        WaveSlowPower: 2 #slowness level
+        WaveKnockback: 0.6 #horizontal knockback on wave hit
+        WaveKnockbackY: 0.35 #vertical knockback on wave hit
+        ExplosionRadius: 3.0 #blocks radius of rupture explosion
+        ExplosionDamage: 3.0 #hearts from explosion
+        ExplosionBlindDuration: 30 #ticks blindness lasts
+        ExplosionBlindPower: 1 #blindness level
 
-    # Metal - metal elements
+      SandDisc:
+        Cooldown: 5000 #ms between ability uses
+        Radius: 0.5 #blocks radius of sand disc
+        Damage: 4.0 #hearts per disc hit
+        Speed: 0.85 #disc speed multiplier
+        MaxAmmo: 1 #maximum discs that can be spawned
+        SelectRange: 20.0 #blocks range to select targets
+        CanRedirect: true #if true, discs can be redirected
+        MaxBounces: 4 #maximum wall bounces before despawn
+        Range: 30.0 #blocks max range discs travel
+
     Metal:
-      SteelShackles:
-        Range: 35
-        Hitbox: 3
-        DamageFirst: 2
-        DamageSecond: 1
-        StunRange: 15
-        StunDuration: 60
-        TimeToEscape: 60
-        DurabilityCost: 20
-        Cooldown: 7000
-      MetalFlex:
-        CooldownNormal: 10000
-        CooldownCrysis: 40000
-        SpeedPower: 3
-        CrysisDuration: 100
-        LowLevel: 5
-      MetalCompress:
-        CooldownMin: 4000
-        CooldownMax: 8000
-        Damage: 2
-        MaxChargeTime: 1700
-        Duration: 5
-        DurabilityCostMin: 10
-        DurabilityCostMax: 30
       SteelSwing:
-        Cooldown: 5000
-        Range: 25.0
-        Speed: 2.2
+        Cooldown: 5000 #ms between ability uses
+        Range: 25.0 #blocks range of swing attack
+        Speed: 2.2 #attack speed multiplier
+        DamageHit: 4.0 #hearts from melee hit
+        DamageExplosion: 6.0 #hearts from explosion
+        AttachDuration: 7000 #ms projectile stays attached
 
-
-  # ============================================================================
-  # Chi & Blades Skills
-  # ============================================================================
-  Chi:
-    Blades:
-      Slash:
-        Dmg-1: 1
-        Dmg-2: 1
-        Dmg-3: 2
-        Cooldown: 4000
-        SpeedPower: 3
-        SpeedDuration: 20
-        InvDuration: 20
-        EvadePower: 1
-      Pierce:
-        SpeedPower: 3
-        SpeedDuration: 60
-        Dmg-1: 1
-        Dmg-2: 3
-        Cooldown: 4000
-        DashPower: 2
-      Stab:
-        Uses: 4
-        Dmg-Left: 2
-        Dmg-Right: 2
-        Cooldown: 4000
-      Counter:
-        MaxHoldTime: 2500
-        EvadePower: 1
-        Cooldown: 4000
-        DashInAir: true
-
-  # ============================================================================
-  # Fire & Smoke Skills
-  # ============================================================================
   Fire:
-    # Smoke elements
     Smoke:
       SmokeSurge:
-        Cooldown: 4000
-        Range: 30
-        Dmg: 1
-        SlowPower: 2
-        SlowDuration: 40
-        PoisonPower: 1
-        PoisonDuration: 40
-        BlindnessDuration: 40
-        SmokeZoneDuration: 100
-        SmokeZoneRange: 3
+        Cooldown: 4000 #ms between ability uses
+        Range: 30 #blocks range to cast
+        Dmg: 1 #hearts dealt to enemies
+        SlowPower: 2 #slowness level debuff
+        SlowDuration: 40 #ticks slowness lasts
+        PoisonPower: 1 #poison level debuff
+        PoisonDuration: 40 #ticks poison lasts
+        BlindnessDuration: 40 #ticks blindness lasts
+        SmokeZoneDuration: 100 #ticks smoke zone remains
+        SmokeZoneRange: 3 #blocks radius of smoke zone
+
       SmokeDaggers:
-        Cooldown: 4000
-        Range: 30
-        Dmg: 1
-        SlowPower: 2
-        SlowDuration: 40
-        PoisonPower: 1
-        PoisonDuration: 40
-        BlindnessDuration: 40
-        SmokeZoneDuration: 100
-        SmokeZoneRange: 2
+        Cooldown: 4000 #ms between ability uses
+        Range: 30 #blocks range to cast
+        Dmg: 1 #hearts per dagger hit
+        SlowPower: 2 #slowness level debuff
+        SlowDuration: 40 #ticks slowness lasts
+        PoisonPower: 1 #poison level debuff
+        PoisonDuration: 40 #ticks poison lasts
+        BlindnessDuration: 40 #ticks blindness lasts
+        SmokeZoneDuration: 100 #ticks smoke zone remains
+        SmokeZoneRange: 2 #blocks radius of smoke zone
+
       SmokeBurst:
-        Cooldown: 3000
+        Cooldown: 3000 #ms between ability uses
+        ChargeTimePerLevel: 1000 #ms per charge level
+        MaxChargeLevel: 3 #maximum charge levels
+        BaseRadius: 4.0 #blocks base explosion radius
+        RadiusPerLevel: 2.5 #blocks radius added per level
+        BaseDamage: 1.0 #hearts base damage
+        DamagePerLevel: 1.0 #hearts damage added per level
+
       SmokeBarrage:
-        Cooldown: 6000
-        Gravity-Factor: -0.08
-        Progress-Factor: 0.15
-        Range: 20
-        Damage: 2
-        Projectiles: 3
-      SmokeBlade:
-        Cooldown: 3000
-        Damage: 2
-        Range: 15
-        BladeSize: 3
+        Cooldown: 6000 #ms between ability uses
+        Gravity-Factor: -0.08 #gravity applied to projectiles
+        Progress-Factor: 0.15 #projectile spread multiplier
+        Range: 20 #blocks range to cast
+        Damage: 2 #hearts per projectile hit
+        Projectiles: 3 #number of projectiles spawned
+
+      SmokeSlash:
+        Cooldown: 3000 #ms between ability uses
+        Damage: 2 #hearts per slash hit
+        Range: 15 #blocks range of slash
+        BladeSize: 3 #blocks size of blade effect
+        SmokeDuration: 100 #ticks smoke effect lasts
+
       SmokeCamouflage:
-        Cooldown: 6000
-        Duration: 60                  # Duration in ticks
-        DashForce: 1.8
-        EffectsPower: 2
+        Cooldown: 6000 #ms between ability uses
+        Duration: 60 #ticks invisibility effect lasts
+        DashForce: 1.8 #velocity multiplier for dash
+        EffectsPower: 2 #effect level amplifier
+
       SmokePath:
-        Cooldown: 5000
-        Range: 15.0
-        Damage: 1.0
-        Speed: 1.0
+        Cooldown: 5000 #ms between ability uses
+        Range: 15.0 #blocks range of smoke path
+        Damage: 1.0 #hearts dealt per tick
+        Speed: 1.0 #movement speed multiplier
 
-    # SmokeSource configs
     SmokeSource:
-      SpeedPower: 4
-      SlowPower: 2
+      SpeedPower: 4 #speed buff level from smoke
+      SlowPower: 2 #slowness level from smoke
 
-    # Flame bending skills
     FlameWeave:
-      Cooldown: 4000
-      Speed: 0.8
+      Cooldown: 4000 #ms between ability uses
+      Speed: 0.8 #attack speed multiplier
+      ChargeTimePerLevel: 1000 #ms per charge level
+      MaxChargeLevel: 3 #maximum charge levels
+      BaseBoltCount: 2 #base number of fire bolts
+      BoltCountMultiplier: 2.5 #bolt multiplier per charge level
+      BaseDamage: 1.0 #hearts base damage per bolt
+      DamageMultiplier: 1.0 #damage multiplier per charge level
+      BaseRange: 10.0 #blocks base range
+      RangeMultiplier: 15.0 #range multiplier per level
 
-    # Ionization - charges the air and unleashes powerful lightning chain bolts
     Ionization:
-      Cooldown: 6000
-      ChargeTime: 3500
-      ChargedWindow: 2000
-      FailCooldown: 3000
-      SelfDamage: 2.0
+      Cooldown: 6000 #ms between ability uses
+      ChargeTime: 3500 #ms to charge the ability
+      ChargedWindow: 2000 #ms window to use charged blast
+      FailCooldown: 3000 #ms cooldown on charge fail
+      SelfDamage: 2.0 #hearts lost from ability use
+      Damage: 4.0 #hearts per chain bolt hit
+      Range: 60.0 #blocks max chain range
+      Bounces: 5 #maximum number of chain bounces
 
-    # FlameSplit - splits fire streams to parry incoming hits and burn enemies
     FlameSplit:
-      Cooldown: 5000
-      Range: 6.0
-      Damage: 1.0
-      FireTicks: 40
-      Knockback: 0.8
+      Cooldown: 5000 #ms between ability uses
+      Range: 6.0 #blocks range of parry
+      Damage: 1.0 #hearts dealt by fire stream
+      FireTicks: 40 #ticks of fire applied to enemies
+      Knockback: 0.8 #velocity when hitting enemies
 
-    # FlameSpins - flaming spin hover and fire disc throws
     FlameSpins:
-      Cooldown: 6000
-      CooldownFirefly: 3000
-      MaxClicks: 2
-      MaxClicksFirefly: 3
-      HoverTicks: 50
-      HoverTicksFirefly: 70
-      DashMultiplier: 1.35
-      DashYForce: 0.85
-      DashRange: 3.5
-      DashDamage: 3.0
-      ProjectileSpeed: 0.8
-      ProjectileRange: 40
-      ProjectileDamage: 4.0
-      ProjectileFireTicks: 50
+      Cooldown: 6000 #ms between ability uses
+      CooldownFirefly: 3000 #ms between firefly mode uses
+      MaxClicks: 2 #maximum clicks for normal mode
+      MaxClicksFirefly: 3 #maximum clicks for firefly mode
+      HoverTicks: 50 #ticks hovering lasts in normal mode
+      HoverTicksFirefly: 70 #ticks hovering lasts in firefly mode
+      DashMultiplier: 1.35 #velocity multiplier for dash
+      DashYForce: 0.85 #vertical velocity for dash
+      DashRange: 3.5 #blocks range of dash
+      DashDamage: 3.0 #hearts from dash collision
+      ProjectileSpeed: 0.8 #fire disc speed multiplier
+      ProjectileRange: 40 #blocks max range of discs
+      ProjectileDamage: 4.0 #hearts per disc hit
+      ProjectileFireTicks: 50 #ticks of fire from disc
 
-  # ============================================================================
-  # General Elemental Elements (Smoke and Water)
-  # ============================================================================
   Elemental:
     Water:
-      DryGrassRevert: 15000
-      DryGrassRange: 3
+      DryGrassRevert: 15000 #ms before water effect reverts dry grass
+      DryGrassRange: 3 #blocks radius to revert dry grass
     Smoke:
-      BlindnessDuration: 40
-      PoisonDuration: 40
-      PoisonPower: 1
-      SlowPower: 3
-      SlowDuration: 40
-      AffectUser: false
+      BlindnessDuration: 40 #ticks blindness lasts
+      PoisonDuration: 40 #ticks poison lasts
+      PoisonPower: 1 #poison level
+      SlowPower: 3 #slowness level
+      SlowDuration: 40 #ticks slowness lasts
+      AffectUser: false #if true, effects apply to caster

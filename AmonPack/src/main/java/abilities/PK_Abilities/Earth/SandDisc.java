@@ -35,11 +35,24 @@ public class SandDisc extends SandAbility implements AddonAbility {
 	private int slot;
 	private long lastDrawTime = 0;
 	double radius = 0.5;
+	private double damage = 4.0;
+	private double speed = 0.85;
 	private int ammo = 1;
+	private long cooldown = 5000;
+	protected boolean canRedirect;
+	protected int maxBounces;
+	protected double range;
 
 	public SandDisc(Player player) {
 		super(player);
-		this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.SandDisc.Radius", 0.5);
+		this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Radius", 0.5);
+		this.canRedirect = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Sand.SandDisc.CanRedirect", true);
+		this.maxBounces = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Sand.SandDisc.MaxBounces", 4);
+		this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Range", 30.0);
+		this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Damage", 4.0);
+		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Speed", 0.85);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Sand.SandDisc.Cooldown", 5000);
+		double selectRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.SelectRange", 20.0);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -52,7 +65,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 			return;
 		}
 
-		Block sourceBlock = player.getTargetBlockExact(20);
+		Block sourceBlock = player.getTargetBlockExact((int) selectRange);
 		if (sourceBlock == null || (sourceBlock.getType() != Material.SAND && sourceBlock.getType() != Material.RED_SAND)) {
 			return;
 		}
@@ -64,7 +77,8 @@ public class SandDisc extends SandAbility implements AddonAbility {
 		
 		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
 		boolean hasProbender = (branch != null && branch.hasUpgrade("Probender"));
-		this.ammo = hasProbender ? 2 : 1;
+		int configMaxAmmo = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.SandDisc.MaxAmmo", 1);
+		this.ammo = hasProbender ? configMaxAmmo + 1 : configMaxAmmo;
 
 		state = 1;
 		start();
@@ -122,7 +136,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 		if (state == 2) {
 			Location spawn = getHandLocation();
 			Vector dir = player.getLocation().getDirection().normalize();
-			new SandEarthDisc(player, spawn, dir, 4.0, 0.85, true, this);
+			new SandEarthDisc(player, spawn, dir, damage, speed, true, this);
 			player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1f, 0.8f);
 			ammo--;
 			if (ammo <= 0) {
@@ -134,7 +148,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 5000;
+		return cooldown;
 	}
 
 	@Override
@@ -188,11 +202,10 @@ public class SandDisc extends SandAbility implements AddonAbility {
 }
 
 class SandEarthDisc extends EarthDisc {
-	private int bounces = 0;
 	private SandDisc sourceAbility;
 
 	public SandEarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit, SandDisc sourceAbility) {
-		super(player, location, direction, damage, speed, destroyOnEntityHit);
+		super(player, location, direction, damage, speed, destroyOnEntityHit, Material.SANDSTONE, sourceAbility.canRedirect, sourceAbility.maxBounces, sourceAbility.range);
 		this.sourceAbility = sourceAbility;
 		this.radius = sourceAbility.radius;
 	}
@@ -216,7 +229,7 @@ class SandEarthDisc extends EarthDisc {
 					location.getWorld().playSound(location, Sound.BLOCK_SAND_HIT, 1f, 1.5f);
 					location.add(result.getHitPosition().subtract(location.toVector()).multiply(0.9));
 
-					bounces++;
+					terrainBounces++;
 					spawnRicochetShrapnel();
 
 					RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
@@ -225,7 +238,7 @@ class SandEarthDisc extends EarthDisc {
 						damage = Math.min(damage + 0.5, baseDamage * 2.0);
 					}
 
-					if (bounces >= 4) {
+					if (terrainBounces >= maxBounces) {
 						explode();
 						remove();
 						return;

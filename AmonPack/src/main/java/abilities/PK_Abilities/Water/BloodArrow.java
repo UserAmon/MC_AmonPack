@@ -37,6 +37,9 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
     private long cooldown;
     private int lastReportedLevel = -1;
     private List<BloodArrowProjectile> arrows = new ArrayList<>();
+    private boolean canTrack;
+    private double trackRange;
+    private double chainRange;
 
     public BloodArrow(Player player) {
         super(player);
@@ -45,6 +48,9 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
         this.maxChargeLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodArrow.MaxChargeLevel", 3);
         this.selfDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.SelfDamage", 1.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.Speed", 1.2);
+        this.canTrack = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Water.BloodArrow.CanTrack", true);
+        this.trackRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.TrackRange", 5.0);
+        this.chainRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.ChainRange", 7.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -145,10 +151,11 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
         double damage = 3.0 + (level * 1.5);
         double range = 20.0 + (level * 10.0);
         int chains = 1 + level;
-        double homing = 5.0 + (level * 2.0);
+        double trackDist = trackRange + (level * 2.0);
+        double chainDist = chainRange + (level * 2.0);
 
         BloodArrowProjectile arrow = new BloodArrowProjectile(player, this, player.getEyeLocation(),
-                player.getLocation().getDirection().clone(), damage, range, chains, homing);
+                player.getLocation().getDirection().clone(), damage, range, chains, canTrack, trackDist, chainDist);
         arrows.add(arrow);
         player.playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1.0f, 1.1f);
     }
@@ -217,12 +224,14 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
         private double distanceTraveled;
         private boolean dead;
         private int chainsRemaining;
-        private final double homingRadius;
+        private final boolean canTrack;
+        private final double trackRange;
+        private final double chainRange;
         private final List<LivingEntity> hitEntities = new ArrayList<>();
         private double speed;
 
         public BloodArrowProjectile(Player player, BloodArrow ability, Location origin, Vector direction,
-                double damage, double maxDistance, int chainsRemaining, double homingRadius) {
+                double damage, double maxDistance, int chainsRemaining, boolean canTrack, double trackRange, double chainRange) {
             this.player = player;
             this.ability = ability;
             this.loc = origin.clone();
@@ -230,7 +239,9 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
             this.damage = damage;
             this.maxDistance = maxDistance;
             this.chainsRemaining = chainsRemaining;
-            this.homingRadius = homingRadius;
+            this.canTrack = canTrack;
+            this.trackRange = trackRange;
+            this.chainRange = chainRange;
             this.dead = false;
             this.distanceTraveled = 0;
             this.speed = ability.speed;
@@ -246,10 +257,12 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
                 return;
             }
 
-            LivingEntity nearest = findNearestTarget(loc, homingRadius);
-            if (nearest != null) {
-                Vector targetDir = GeneralMethods.getDirection(loc, nearest.getLocation()).normalize();
-                dir = dir.clone().multiply(0.85).add(targetDir.multiply(0.15)).normalize();
+            if (canTrack) {
+                LivingEntity nearest = findNearestTarget(loc, trackRange);
+                if (nearest != null) {
+                    Vector targetDir = GeneralMethods.getDirection(loc, nearest.getLocation()).normalize();
+                    dir = dir.clone().multiply(0.85).add(targetDir.multiply(0.15)).normalize();
+                }
             }
 
             RayTraceResult result = loc.getWorld().rayTraceBlocks(loc, dir, speed, FluidCollisionMode.NEVER, true);
@@ -294,7 +307,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
                         0.1, 0);
 
                 if (chainsRemaining > 0) {
-                    LivingEntity next = findNearestTarget(target.getLocation(), homingRadius);
+                    LivingEntity next = findNearestTarget(target.getLocation(), chainRange);
                     if (next != null && !hitEntities.contains(next)) {
                         dir = GeneralMethods.getDirection(target.getLocation(), next.getLocation()).normalize();
                         loc = target.getLocation().clone().add(0, 0.5, 0);

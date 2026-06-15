@@ -36,20 +36,33 @@ public class EarthDisc {
     protected BukkitRunnable runnable;
     protected boolean isDead = false;
     protected Material sourceMaterial;
+    protected boolean canRedirect = true;
+    protected int maxBounces = 3;
+    protected double maxRange = 30.0;
+    protected int terrainBounces = 0;
+    protected Location origin;
 
     public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit) {
         this(player, location, direction, damage, speed, destroyOnEntityHit, Material.SANDSTONE);
     }
 
     public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit, Material sourceMaterial) {
+        this(player, location, direction, damage, speed, destroyOnEntityHit, sourceMaterial, true, 3, 30.0);
+    }
+
+    public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit, Material sourceMaterial, boolean canRedirect, int maxBounces, double maxRange) {
         this.player = player;
         this.location = location;
+        this.origin = location.clone();
         this.direction = direction.normalize();
         this.damage = damage;
         this.baseDamage = damage;
         this.speed = speed;
         this.destroyOnEntityHit = destroyOnEntityHit;
         this.sourceMaterial = sourceMaterial;
+        this.canRedirect = canRedirect;
+        this.maxBounces = maxBounces;
+        this.maxRange = maxRange;
         this.spawnTime = System.currentTimeMillis();
         instances.add(this);
         start();
@@ -65,6 +78,12 @@ public class EarthDisc {
                     return;
                 }
                 if (System.currentTimeMillis() - spawnTime > 5000) {
+                    explode();
+                    remove();
+                    this.cancel();
+                    return;
+                }
+                if (location.distanceSquared(origin) > maxRange * maxRange) {
                     explode();
                     remove();
                     this.cancel();
@@ -96,6 +115,13 @@ public class EarthDisc {
                     player.getWorld().playSound(location, Sound.BLOCK_STONE_HIT, 1f, 1.5f);
                     // Move slightly off the surface to prevent sticking
                     location.add(result.getHitPosition().subtract(location.toVector()).multiply(0.9));
+
+                    terrainBounces++;
+                    if (terrainBounces > maxBounces) {
+                        explode();
+                        remove();
+                        return;
+                    }
 
                     RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
                     boolean hasTrickshot = (branch != null && branch.hasUpgrade("Trickshot"));
@@ -232,7 +258,7 @@ public class EarthDisc {
     public static void redirectNearby(Player player, double range) {
         List<EarthDisc> toRedirect = new ArrayList<>();
         for (EarthDisc disc : instances) {
-            if (disc.getLocation().distance(player.getLocation()) <= range) {
+            if (disc.canRedirect && disc.getLocation().distance(player.getLocation()) <= range) {
                 toRedirect.add(disc);
             }
         }

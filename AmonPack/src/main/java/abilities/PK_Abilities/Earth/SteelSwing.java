@@ -32,6 +32,9 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
     private long cooldown;
     private double range;
     private double speed;
+    private double damageHit;
+    private double damageExplosion;
+    private long attachDuration;
 
     private int initialSlot;
     private Location cable1Loc;
@@ -69,6 +72,9 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Metal.SteelSwing.Cooldown", 5000);
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.Range", 25.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.Speed", 2.2);
+        this.damageHit = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.DamageHit", 4.0);
+        this.damageExplosion = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Metal.SteelSwing.DamageExplosion", 6.0);
+        this.attachDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Metal.SteelSwing.AttachDuration", 7000);
 
         this.initialSlot = player.getInventory().getHeldItemSlot();
         this.cable1Loc = player.getEyeLocation();
@@ -129,7 +135,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
         if (cable1IsAttached && !cable2Traveling && !cable2IsAttached && !isPullingBlock) {
             drawTether(player.getEyeLocation(), cable1AttachedLoc);
 
-            if (System.currentTimeMillis() - firstCableAttachTime > 7000) {
+            if (System.currentTimeMillis() - firstCableAttachTime > attachDuration) {
                 remove();
                 bPlayer.addCooldown(this);
                 return;
@@ -280,7 +286,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(pulledBlockLoc, 1.8)) {
                     if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                         LivingEntity target = (LivingEntity) entity;
-                        DamageHandler.damageEntity(target, 4.0, this);
+                        DamageHandler.damageEntity(target, damageHit, this);
                         Vector pullVector = player.getLocation().toVector().subtract(target.getLocation().toVector())
                                 .normalize().multiply(0.6).setY(0.25);
                         target.setVelocity(pullVector);
@@ -295,7 +301,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
                     for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), 3.5)) {
                         if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                             LivingEntity target = (LivingEntity) entity;
-                            DamageHandler.damageEntity(target, 6.0, this);
+                            DamageHandler.damageEntity(target, damageExplosion, this);
                             Vector pullVector = player.getLocation().toVector().subtract(target.getLocation().toVector())
                                     .normalize().multiply(0.7).setY(0.3);
                             target.setVelocity(pullVector);
@@ -350,7 +356,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
                     for (Entity entity : GeneralMethods.getEntitiesAroundPoint(pulledBlockLoc, 3.5)) {
                         if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                             LivingEntity target = (LivingEntity) entity;
-                            DamageHandler.damageEntity(target, 6.0, this);
+                            DamageHandler.damageEntity(target, damageExplosion, this);
                             Vector pullVector = player.getLocation().toVector().subtract(target.getLocation().toVector())
                                     .normalize().multiply(0.7).setY(0.3);
                             target.setVelocity(pullVector);
@@ -368,7 +374,7 @@ public class SteelSwing extends MetalAbility implements AddonAbility {
                     for (Entity entity : GeneralMethods.getEntitiesAroundPoint(pulledBlockLoc, 3.5)) {
                         if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                             LivingEntity target = (LivingEntity) entity;
-                            DamageHandler.damageEntity(target, 6.0, this);
+                            DamageHandler.damageEntity(target, damageExplosion, this);
                             Vector pullVector = player.getLocation().toVector().subtract(target.getLocation().toVector())
                                     .normalize().multiply(0.7).setY(0.3);
                             target.setVelocity(pullVector);

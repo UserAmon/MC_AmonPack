@@ -30,10 +30,9 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 	private long cooldown;
 	private int maxDuration;
 	private int maxStacks;
-	private double dmgInitial;
-	private double dmgContinuous;
-	private double dmgStackMax;
-	private double dmgChain;
+	private double stacksInitial;
+	private double stacksContinuous;
+	private double stacksChain;
 	private double tetherDistance;
 	private double tetherDistanceEncore;
 	private double searchRadius;
@@ -57,10 +56,9 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Acoustics.Cooldown", 6000);
 		this.maxDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Acoustics.MaxDuration", 100);
 		this.maxStacks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Acoustics.MaxStacks", 20);
-		this.dmgInitial = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageInitial", 5.0);
-		this.dmgContinuous = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageContinuous", 4.0);
-		this.dmgStackMax = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageStackMax", 1.0);
-		this.dmgChain = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.DamageChain", 3.0);
+		this.stacksInitial = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.StacksInitial", 5.0);
+		this.stacksContinuous = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.StackContinuous", 4.0);
+		this.stacksChain = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.StacksOnChain", 3.0);
 		this.tetherDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.TetherDistance", 10.0);
 		this.tetherDistanceEncore = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.TetherDistanceEncore", 16.0);
 		this.searchRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Acoustics.SearchRadius", 12.0);
@@ -77,7 +75,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 
 		chain.add(target);
 		allTargets.add(target);
-		HandleDamage(player, target, dmgInitial);
+		HandleDamage(player, target, stacksInitial);
 		bPlayer.addCooldown(this);
 		start();
 	}
@@ -141,12 +139,12 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 
 				double currentStack = AfffectedEntities.get(target);
 				if (currentStack >= maxstacks) {
-					HandleDamage(player, target, dmgStackMax);
+					HandleDamage(player, target, 1);
 					deadOrShocked.add(target);
 					continue;
 				}
 
-				HandleDamage(player, target, dmgContinuous);
+				HandleDamage(player, target, stacksContinuous);
 				target.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, target.getLocation(), 1, 0, 0, 0, 0);
 
 				double newStack = currentStack + 3.0;
@@ -166,7 +164,7 @@ public class Acoustics extends SoundAbility implements AddonAbility {
 				if (nextTarget != null) {
 					chain.add(nextTarget);
 					allTargets.add(nextTarget);
-					HandleDamage(player, nextTarget, dmgChain);
+					HandleDamage(player, nextTarget, stacksChain);
 					nextTarget.getWorld().spawnParticle(org.bukkit.Particle.SONIC_BOOM, nextTarget.getLocation(), 1, 0,
 							0, 0, 0);
 				}

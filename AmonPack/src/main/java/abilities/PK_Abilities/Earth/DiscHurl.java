@@ -31,24 +31,34 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
     private long cooldown;
     private double damage;
     private double speed;
+    private double sourceRange;
+    private long sourceRevertTime;
     private int interval = 0;
     private Material sourceMaterial;
+    private boolean canRedirect;
+    private int maxBounces;
+    private double range;
 
     public DiscHurl(Player player) {
         super(player);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.DiscHurl.Cooldown", 3000);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.DiscHurl.Damage", 3.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.DiscHurl.Speed", 0.8);
+        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.DiscHurl.SourceRange", 15.0);
+        this.sourceRevertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.DiscHurl.SourceRevertTime", 5000);
+        this.canRedirect = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Earth.DiscHurl.CanRedirect", true);
+        this.maxBounces = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.DiscHurl.MaxBounces", 3);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.DiscHurl.Range", 30.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
-        Location TargetedBlock = Methods.getTargetLocation(player, 15);
+        Location TargetedBlock = Methods.getTargetLocation(player, sourceRange);
         if (isEarthbendable(player, TargetedBlock.getBlock())) {
             this.sourceMaterial = TargetedBlock.getBlock().getType();
             selectedBlocks = new ArrayList<>();
             selectedBlocks.add(TargetedBlock);
-            new TempBlock(TargetedBlock.getBlock(), Material.AIR).setRevertTime(5000);
+            new TempBlock(TargetedBlock.getBlock(), Material.AIR).setRevertTime(sourceRevertTime);
             state = State.SELECTING;
             start();
         }
@@ -102,14 +112,15 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
 
     private void shoot() {
         Location spawn = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5));
-        new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, false, sourceMaterial);
+        new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, false, sourceMaterial, canRedirect, maxBounces, range);
         player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 0.5f, 1.5f);
         bPlayer.addCooldown(this);
         remove();
     }
 
     public static void onLeftClick(Player player) {
-        EarthDisc.redirectNearby(player, 4);
+        double redirectRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.DiscHurl.RedirectRange", 4.0);
+        EarthDisc.redirectNearby(player, redirectRange);
     }
 
     @Override
