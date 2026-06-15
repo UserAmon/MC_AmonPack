@@ -36,20 +36,36 @@ public class EarthDisc {
     protected BukkitRunnable runnable;
     protected boolean isDead = false;
     protected Material sourceMaterial;
+    protected boolean canRedirect = true;
+    protected int maxBounces = 3;
+    protected double maxRange = 30.0;
+    protected int terrainBounces = 0;
+    protected Location origin;
 
-    public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit) {
+    public EarthDisc(Player player, Location location, Vector direction, double damage, double speed,
+            boolean destroyOnEntityHit) {
         this(player, location, direction, damage, speed, destroyOnEntityHit, Material.SANDSTONE);
     }
 
-    public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit, Material sourceMaterial) {
+    public EarthDisc(Player player, Location location, Vector direction, double damage, double speed,
+            boolean destroyOnEntityHit, Material sourceMaterial) {
+        this(player, location, direction, damage, speed, destroyOnEntityHit, sourceMaterial, true, 3, 30.0);
+    }
+
+    public EarthDisc(Player player, Location location, Vector direction, double damage, double speed,
+            boolean destroyOnEntityHit, Material sourceMaterial, boolean canRedirect, int maxBounces, double maxRange) {
         this.player = player;
         this.location = location;
+        this.origin = location.clone();
         this.direction = direction.normalize();
         this.damage = damage;
         this.baseDamage = damage;
         this.speed = speed;
         this.destroyOnEntityHit = destroyOnEntityHit;
         this.sourceMaterial = sourceMaterial;
+        this.canRedirect = canRedirect;
+        this.maxBounces = maxBounces;
+        this.maxRange = maxRange;
         this.spawnTime = System.currentTimeMillis();
         instances.add(this);
         start();
@@ -65,6 +81,12 @@ public class EarthDisc {
                     return;
                 }
                 if (System.currentTimeMillis() - spawnTime > 5000) {
+                    explode();
+                    remove();
+                    this.cancel();
+                    return;
+                }
+                if (location.distanceSquared(origin) > maxRange * maxRange) {
                     explode();
                     remove();
                     this.cancel();
@@ -96,7 +118,6 @@ public class EarthDisc {
                     player.getWorld().playSound(location, Sound.BLOCK_STONE_HIT, 1f, 1.5f);
                     // Move slightly off the surface to prevent sticking
                     location.add(result.getHitPosition().subtract(location.toVector()).multiply(0.9));
-
                     boolean hasTrickshot = false;
                     if (hasTrickshot) {
                         damage = Math.min(damage + 0.5, baseDamage * 2.0);
@@ -114,7 +135,7 @@ public class EarthDisc {
         for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1.5)) {
             if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                 ((LivingEntity) entity).damage(damage);
-                Vector forceDir = GeneralMethods.getDirection(entity.getLocation(), location.clone().subtract(0,1,0));
+                Vector forceDir = GeneralMethods.getDirection(entity.getLocation(), location.clone().subtract(0, 1, 0));
                 entity.setVelocity(forceDir.clone().normalize().multiply(-1));
                 if (destroyOnEntityHit) {
                     explode();
@@ -130,19 +151,16 @@ public class EarthDisc {
     protected void display() {
         World world = location.getWorld();
         Vector baseVector = new Vector(0, 0.5, 0);
-        Particle.DustOptions dustOptions =
-                new Particle.DustOptions(Color.fromRGB(209, 201, 148), 0.5f);
-        Particle.DustOptions dustOptionsBrown =
-                new Particle.DustOptions(Color.fromRGB(87, 56, 11), 0.6f);
+        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(209, 201, 148), 0.5f);
+        Particle.DustOptions dustOptionsBrown = new Particle.DustOptions(Color.fromRGB(87, 56, 11), 0.6f);
         for (double angle = 0; angle < 360; angle += 30) {
-            if(new Random().nextDouble()>0.25){
+            if (new Random().nextDouble() > 0.25) {
                 Vector blockOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius);
                 world.spawnParticle(
                         Particle.BLOCK,
                         location.clone().add(blockOffset),
                         1, 0, 0, 0, 0,
-                        (sourceMaterial != null ? sourceMaterial : Material.SANDSTONE).createBlockData()
-                );
+                        (sourceMaterial != null ? sourceMaterial : Material.SANDSTONE).createBlockData());
             }
 
             Vector dustOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius / 2);
@@ -150,16 +168,14 @@ public class EarthDisc {
                     Particle.DUST,
                     location.clone().add(dustOffset),
                     1, 0, 0, 0, 0,
-                    dustOptions
-            );
+                    dustOptions);
 
-            Vector BrowndustOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius +0.25);
+            Vector BrowndustOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius + 0.25);
             world.spawnParticle(
                     Particle.DUST,
                     location.clone().add(BrowndustOffset),
                     1, 0, 0, 0, 0,
-                    dustOptionsBrown
-            );
+                    dustOptionsBrown);
         }
 
     }
@@ -170,34 +186,29 @@ public class EarthDisc {
 
     public static void displayParticle(Location location, Material material) {
         Vector baseVector = new Vector(0, 0.5, 0);
-        Particle.DustOptions dustOptions =
-                new Particle.DustOptions(Color.fromRGB(209, 201, 148), 0.5f);
-        Particle.DustOptions dustOptionsBrown =
-                new Particle.DustOptions(Color.fromRGB(87, 56, 11), 0.6f);
+        Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(209, 201, 148), 0.5f);
+        Particle.DustOptions dustOptionsBrown = new Particle.DustOptions(Color.fromRGB(87, 56, 11), 0.6f);
         for (double angle = 0; angle < 360; angle += 30) {
-            if(new Random().nextDouble()>0.25){
+            if (new Random().nextDouble() > 0.25) {
                 Vector blockOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, 0.4);
                 location.getWorld().spawnParticle(
                         Particle.BLOCK,
                         location.clone().add(blockOffset),
                         1, 0, 0, 0, 0,
-                        material.createBlockData()
-                );
+                        material.createBlockData());
             }
             Vector dustOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, 0.2);
             location.getWorld().spawnParticle(
                     Particle.DUST,
                     location.clone().add(dustOffset),
                     1, 0, 0, 0, 0,
-                    dustOptions
-            );
+                    dustOptions);
             Vector BrowndustOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, 0.6);
             location.getWorld().spawnParticle(
                     Particle.DUST,
                     location.clone().add(BrowndustOffset),
                     1, 0, 0, 0, 0,
-                    dustOptionsBrown
-            );
+                    dustOptionsBrown);
         }
     }
 
@@ -231,7 +242,7 @@ public class EarthDisc {
     public static void redirectNearby(Player player, double range) {
         List<EarthDisc> toRedirect = new ArrayList<>();
         for (EarthDisc disc : instances) {
-            if (disc.getLocation().distance(player.getLocation()) <= range) {
+            if (disc.canRedirect && disc.getLocation().distance(player.getLocation()) <= range) {
                 toRedirect.add(disc);
             }
         }

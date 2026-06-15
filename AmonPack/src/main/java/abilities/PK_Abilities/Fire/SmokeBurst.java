@@ -34,12 +34,23 @@ public class SmokeBurst extends SmokeAbility implements AddonAbility {
 	private long chargeTimePerLevel = 1000;
 	private int maxChargeLevel = 3;
 	private int lastReportedLevel = -1;
+	private double baseRadius;
+	private double radiusPerLevel;
+	private double baseDamage;
+	private double damagePerLevel;
 
-	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.Cooldown", 3000);
+	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Smoke.SmokeBurst.Cooldown", 3000);
 	private SmokeSource Source;
 
 	public SmokeBurst(Player player, boolean IsShift) {
 		super(player);
+		this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Smoke.SmokeBurst.ChargeTimePerLevel", 1000);
+		this.maxChargeLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.MaxChargeLevel", 3);
+		this.baseRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeBurst.BaseRadius", 4.0);
+		this.radiusPerLevel = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeBurst.RadiusPerLevel", 2.5);
+		this.baseDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeBurst.BaseDamage", 1.0);
+		this.damagePerLevel = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Smoke.SmokeBurst.DamagePerLevel", 1.0);
+
 		if (!this.bPlayer.isOnCooldown(getName()) && this.bPlayer.canBend(this)) {
 			if (IsShift) {
 				SmokeSource source = SmokeAbility.UseSmokeSource(player, 20);
@@ -180,8 +191,8 @@ public class SmokeBurst extends SmokeAbility implements AddonAbility {
 
 	private static void spawnSmokeBladeCircle(Player player, SmokeBurst ability, Location loc, int level,
 			int circleIndex) {
-		double maxRadius = 4.0 + level * 2.5;
-		double damage = 1.0 + level;
+		double maxRadius = ability.baseRadius + level * ability.radiusPerLevel;
+		double damage = ability.baseDamage + level * ability.damagePerLevel;
 
 		loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f - (circleIndex * 0.15f));
 		loc.getWorld().playSound(loc, Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 0.6f, 1.6f - (circleIndex * 0.15f));

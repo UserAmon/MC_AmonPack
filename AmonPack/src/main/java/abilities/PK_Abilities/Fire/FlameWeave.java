@@ -36,11 +36,25 @@ public class FlameWeave extends FireAbility implements AddonAbility {
     private List<FlameBolt> bolts = new ArrayList<>();
     private Random random = new Random();
     private int lastReportedLevel = -1;
+    private int baseBoltCount;
+    private double boltCountMultiplier;
+    private double baseDamage;
+    private double damageMultiplier;
+    private double baseRange;
+    private double rangeMultiplier;
 
     public FlameWeave(Player player) {
         super(player);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameWeave.Cooldown", 4000);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.Speed", 0.8);
+        this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameWeave.ChargeTimePerLevel", 1000);
+        this.maxChargeLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWeave.MaxChargeLevel", 3);
+        this.baseBoltCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWeave.BaseBoltCount", 2);
+        this.boltCountMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.BoltCountMultiplier", 2.5);
+        this.baseDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.BaseDamage", 1.0);
+        this.damageMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.DamageMultiplier", 1.0);
+        this.baseRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.BaseRange", 10.0);
+        this.rangeMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.RangeMultiplier", 15.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -135,9 +149,9 @@ public class FlameWeave extends FireAbility implements AddonAbility {
         bPlayer.addCooldown(this);
         state = State.FIRING;
 
-        int boltCount = (int) (2 + (level * 2.5));
-        double damage = 1 + level;
-        double range = (level * 15) + 10;
+        int boltCount = (int) (baseBoltCount + (level * boltCountMultiplier));
+        double damage = baseDamage + (level * damageMultiplier);
+        double range = (level * rangeMultiplier) + baseRange;
 
         for (int i = 0; i < boltCount; i++) {
             Vector dir = player.getLocation().getDirection().clone();

@@ -39,6 +39,9 @@ public class Ionization extends LightningAbility implements AddonAbility {
     private long cooldown;
     private long failCooldown;
     private double selfDamage;
+    private double damage;
+    private double range;
+    private int bounces;
     private int slot;
 
     public Ionization(Player player) {
@@ -48,6 +51,9 @@ public class Ionization extends LightningAbility implements AddonAbility {
         this.chargedWindow = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Ionization.ChargedWindow", 2000);
         this.failCooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Ionization.FailCooldown", 3000);
         this.selfDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Ionization.SelfDamage", 2.0);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Ionization.Damage", 4.0);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Ionization.Range", 60.0);
+        this.bounces = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Ionization.Bounces", 5);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -126,15 +132,15 @@ public class Ionization extends LightningAbility implements AddonAbility {
         Vector direction = player.getLocation().getDirection();
 
         List<LightningBolt> bolts = new ArrayList<>();
-        bolts.add(new LightningBolt(player, this, origin, direction, 4, 60, 5, true));
+        bolts.add(new LightningBolt(player, this, origin, direction, damage, range, bounces, true));
 
         boolean hasStatic = false;
 
         if (hasStatic) {
             Vector leftDir = rotateY(direction, 20);
             Vector rightDir = rotateY(direction, -20);
-            bolts.add(new LightningBolt(player, this, origin, leftDir, 2.0, 42, 3, false));
-            bolts.add(new LightningBolt(player, this, origin, rightDir, 2.0, 42, 3, false));
+            bolts.add(new LightningBolt(player, this, origin, leftDir, damage * 0.5, range * 0.7, Math.max(1, bounces - 2), false));
+            bolts.add(new LightningBolt(player, this, origin, rightDir, damage * 0.5, range * 0.7, Math.max(1, bounces - 2), false));
         }
 
         new BukkitRunnable() {

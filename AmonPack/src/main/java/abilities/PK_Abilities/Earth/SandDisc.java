@@ -35,11 +35,24 @@ public class SandDisc extends SandAbility implements AddonAbility {
 	private int slot;
 	private long lastDrawTime = 0;
 	double radius = 0.5;
+	private double damage = 4.0;
+	private double speed = 0.85;
 	private int ammo = 1;
+	private long cooldown = 5000;
+	protected boolean canRedirect;
+	protected int maxBounces;
+	protected double range;
 
 	public SandDisc(Player player) {
 		super(player);
-		this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.SandDisc.Radius", 0.5);
+		this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Radius", 0.5);
+		this.canRedirect = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Sand.SandDisc.CanRedirect", true);
+		this.maxBounces = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Sand.SandDisc.MaxBounces", 4);
+		this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Range", 30.0);
+		this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Damage", 4.0);
+		this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.Speed", 0.85);
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Sand.SandDisc.Cooldown", 5000);
+		double selectRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Sand.SandDisc.SelectRange", 20.0);
 		if (bPlayer.isOnCooldown(this)) {
 			return;
 		}
@@ -52,8 +65,9 @@ public class SandDisc extends SandAbility implements AddonAbility {
 			return;
 		}
 
-		Block sourceBlock = player.getTargetBlockExact(20);
-		if (sourceBlock == null || (sourceBlock.getType() != Material.SAND && sourceBlock.getType() != Material.RED_SAND)) {
+		Block sourceBlock = player.getTargetBlockExact((int) selectRange);
+		if (sourceBlock == null
+				|| (sourceBlock.getType() != Material.SAND && sourceBlock.getType() != Material.RED_SAND)) {
 			return;
 		}
 
@@ -61,7 +75,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 		this.sourceLoc = sourceBlock.getLocation().add(0.5, 0.5, 0.5);
 		this.currentSandLoc = sourceLoc.clone();
 		this.lastDrawTime = now;
-		
+
 		boolean hasProbender = false;
 		this.ammo = hasProbender ? 2 : 1;
 
@@ -85,14 +99,15 @@ public class SandDisc extends SandAbility implements AddonAbility {
 			Location handLoc = getHandLocation();
 			Vector dir = handLoc.toVector().subtract(currentSandLoc.toVector());
 			double dist = dir.length();
-			
+
 			if (dist < 1.5) {
 				state = 2;
 				player.getWorld().playSound(player.getLocation(), Sound.BLOCK_SAND_PLACE, 1f, 1.2f);
 			} else {
 				dir.normalize().multiply(0.8);
 				currentSandLoc.add(dir);
-				player.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, currentSandLoc, 4, 0.1, 0.1, 0.1, 0.05, Material.SAND.createBlockData());
+				player.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, currentSandLoc, 4, 0.1, 0.1, 0.1, 0.05,
+						Material.SAND.createBlockData());
 			}
 		} else if (state == 2) {
 			renderSandHand();
@@ -101,7 +116,8 @@ public class SandDisc extends SandAbility implements AddonAbility {
 
 	private Location getHandLocation() {
 		Location hand = player.getLocation().clone().add(0, 1.1, 0);
-		Vector right = player.getLocation().getDirection().clone().crossProduct(new Vector(0, 1, 0)).normalize().multiply(0.35);
+		Vector right = player.getLocation().getDirection().clone().crossProduct(new Vector(0, 1, 0)).normalize()
+				.multiply(0.35);
 		return hand.add(right);
 	}
 
@@ -113,7 +129,8 @@ public class SandDisc extends SandAbility implements AddonAbility {
 			double x = 0.35 * Math.cos(angle);
 			double z = 0.35 * Math.sin(angle);
 			Location p = handLoc.clone().add(x, 0, z);
-			player.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, p, 1, 0, 0, 0, 0, Material.SAND.createBlockData());
+			player.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, p, 1, 0, 0, 0, 0,
+					Material.SAND.createBlockData());
 		}
 	}
 
@@ -121,7 +138,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 		if (state == 2) {
 			Location spawn = getHandLocation();
 			Vector dir = player.getLocation().getDirection().normalize();
-			new SandEarthDisc(player, spawn, dir, 4.0, 0.85, true, this);
+			new SandEarthDisc(player, spawn, dir, damage, speed, true, this);
 			player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1f, 0.8f);
 			ammo--;
 			if (ammo <= 0) {
@@ -133,7 +150,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 
 	@Override
 	public long getCooldown() {
-		return 5000;
+		return cooldown;
 	}
 
 	@Override
@@ -187,11 +204,12 @@ public class SandDisc extends SandAbility implements AddonAbility {
 }
 
 class SandEarthDisc extends EarthDisc {
-	private int bounces = 0;
 	private SandDisc sourceAbility;
 
-	public SandEarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit, SandDisc sourceAbility) {
-		super(player, location, direction, damage, speed, destroyOnEntityHit);
+	public SandEarthDisc(Player player, Location location, Vector direction, double damage, double speed,
+			boolean destroyOnEntityHit, SandDisc sourceAbility) {
+		super(player, location, direction, damage, speed, destroyOnEntityHit, Material.SANDSTONE,
+				sourceAbility.canRedirect, sourceAbility.maxBounces, sourceAbility.range);
 		this.sourceAbility = sourceAbility;
 		this.radius = sourceAbility.radius;
 	}
@@ -215,7 +233,7 @@ class SandEarthDisc extends EarthDisc {
 					location.getWorld().playSound(location, Sound.BLOCK_SAND_HIT, 1f, 1.5f);
 					location.add(result.getHitPosition().subtract(location.toVector()).multiply(0.9));
 
-					bounces++;
+					terrainBounces++;
 					spawnRicochetShrapnel();
 
 					boolean hasTrickshot = false;
@@ -223,7 +241,7 @@ class SandEarthDisc extends EarthDisc {
 						damage = Math.min(damage + 0.5, baseDamage * 2.0);
 					}
 
-					if (bounces >= 4) {
+					if (terrainBounces >= maxBounces) {
 						explode();
 						remove();
 						return;
@@ -262,9 +280,9 @@ class SandEarthDisc extends EarthDisc {
 		World world = location.getWorld();
 		Vector baseVector = new Vector(0, 0.5, 0);
 		// Sand colours: bright sand / dark sand / orange grain
-		Particle.DustOptions dustSand   = new Particle.DustOptions(Color.fromRGB(237, 201, 122), 0.55f);
-		Particle.DustOptions dustDark   = new Particle.DustOptions(Color.fromRGB(160, 120,  50), 0.60f);
-		Particle.DustOptions dustOrange = new Particle.DustOptions(Color.fromRGB(210, 160,  70), 0.45f);
+		Particle.DustOptions dustSand = new Particle.DustOptions(Color.fromRGB(237, 201, 122), 0.55f);
+		Particle.DustOptions dustDark = new Particle.DustOptions(Color.fromRGB(160, 120, 50), 0.60f);
+		Particle.DustOptions dustOrange = new Particle.DustOptions(Color.fromRGB(210, 160, 70), 0.45f);
 		for (double angle = 0; angle < 360; angle += 30) {
 			if (new Random().nextDouble() > 0.25) {
 				Vector blockOffset = GeneralMethods.getOrthogonalVector(baseVector, angle, radius);
@@ -284,12 +302,15 @@ class SandEarthDisc extends EarthDisc {
 
 	@Override
 	public void explode() {
-		location.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, location, 30, 0.5, 0.5, 0.5, 0.1, Material.SAND.createBlockData());
+		location.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, location, 30, 0.5, 0.5, 0.5, 0.1,
+				Material.SAND.createBlockData());
 		location.getWorld().playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1f, 1.4f);
 
 		for (int i = 0; i < 5; i++) {
 			Location shLoc = location.clone();
-			Vector shDir = direction.clone().add(new Vector((Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.15, (Math.random() - 0.5) * 0.3)).normalize().multiply(0.6);
+			Vector shDir = direction.clone().add(
+					new Vector((Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.15, (Math.random() - 0.5) * 0.3))
+					.normalize().multiply(0.6);
 			new BukkitRunnable() {
 				int t = 0;
 
@@ -301,7 +322,8 @@ class SandEarthDisc extends EarthDisc {
 						return;
 					}
 					shLoc.add(shDir);
-					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 4, 0.1, 0.1, 0.1, 0, Material.SAND.createBlockData());
+					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 4, 0.1, 0.1, 0.1, 0,
+							Material.SAND.createBlockData());
 
 					for (Entity e : GeneralMethods.getEntitiesAroundPoint(shLoc, 1.2)) {
 						if (e instanceof LivingEntity && e.getUniqueId() != player.getUniqueId()) {
@@ -325,7 +347,8 @@ class SandEarthDisc extends EarthDisc {
 	private void spawnRicochetShrapnel() {
 		for (int i = 0; i < 6; i++) {
 			Location shLoc = location.clone();
-			Vector shDir = new Vector(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiply(0.6);
+			Vector shDir = new Vector(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize()
+					.multiply(0.6);
 			new BukkitRunnable() {
 				int t = 0;
 
@@ -337,7 +360,8 @@ class SandEarthDisc extends EarthDisc {
 						return;
 					}
 					shLoc.add(shDir);
-					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 4, 0.1, 0.1, 0.1, 0, Material.SAND.createBlockData());
+					shLoc.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, shLoc, 4, 0.1, 0.1, 0.1, 0,
+							Material.SAND.createBlockData());
 
 					for (Entity e : GeneralMethods.getEntitiesAroundPoint(shLoc, 1.2)) {
 						if (e instanceof LivingEntity && e.getUniqueId() != player.getUniqueId()) {

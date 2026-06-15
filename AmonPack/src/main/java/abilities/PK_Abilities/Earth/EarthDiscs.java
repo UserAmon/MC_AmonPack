@@ -35,14 +35,31 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
     private int maxAmmo = 2;
     private long interval;
     private double radius;
+    private double damage;
+    private double speed;
     private List<Location> NearBlocks;
     private Material sourceMaterial = org.bukkit.Material.STONE;
+    private boolean canRedirect;
+    private int maxBounces;
+    private double range;
 
     public EarthDiscs(Player player) {
         super(player);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthDiscs.Cooldown", 6000);
         this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthDiscs.ChargeTime", 2000);
         this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthDiscs.Radius", 1.75);
+        this.armedDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthDiscs.ArmedDuration",
+                10000);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthDiscs.Damage", 4.0);
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthDiscs.Speed", 1.0);
+        double sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthDiscs.SourceRange",
+                10.0);
+        long sourceRevertTime = AmonPackPlugin.getAbilitiesConfig()
+                .getLong("AmonPack.Earth.EarthDiscs.SourceRevertTime", 7000);
+        this.canRedirect = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Earth.EarthDiscs.CanRedirect",
+                true);
+        this.maxBounces = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthDiscs.MaxBounces", 3);
+        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthDiscs.Range", 30.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -61,19 +78,19 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
         interval = 0;
         state = State.BENDABLE;
         List<Location> shuffledList = new ArrayList<>();
-        for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 10)) {
+        for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), sourceRange)) {
             if (b.getLocation().getY() <= player.getLocation().getY() + 1
                     && b.getLocation().distance(player.getLocation()) > 7 && EarthAbility.isEarthbendable(player, b)) {
                 shuffledList.add(b.getLocation());
             }
         }
-        if (shuffledList.size() > 4) {
+        if (shuffledList.size() >= this.maxAmmo) {
             Collections.shuffle(shuffledList);
-            NearBlocks = shuffledList.subList(0, 4);
+            NearBlocks = shuffledList.subList(0, this.maxAmmo);
             this.sourceMaterial = NearBlocks.get(0).getBlock().getType();
             for (Location loc : NearBlocks) {
                 TempBlock tb1 = new TempBlock(loc.getBlock(), Material.AIR);
-                tb1.setRevertTime(7000);
+                tb1.setRevertTime(sourceRevertTime);
                 loc.setY(loc.getY() + 2);
             }
             start();
@@ -168,7 +185,8 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
             ammo--;
             Location spawn = player.getEyeLocation().clone().add(player.getEyeLocation().getDirection().multiply(1));
 
-            new EarthDisc(player, spawn, player.getLocation().getDirection(), 4, 1, true, sourceMaterial);
+            new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, true, sourceMaterial,
+                    canRedirect, maxBounces, range);
 
             player.playSound(player.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1f, 0.5f);
 

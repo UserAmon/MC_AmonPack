@@ -41,6 +41,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
     private double selfDamage;
     private double completionDamage;
     private long cooldown;
+    private int immobilizeDuration;
 
     private static final double FOLLOW_THRESHOLD = 0.97;
     private static final double ANGLE_STEP = 6.0;
@@ -52,6 +53,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         this.selfDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.SelfDamage", 1.0);
         this.completionDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.CompletionDamage", 2.5);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodCall.Cooldown", 3000L);
+        this.immobilizeDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodCall.ImmobilizeDuration", 60);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -226,16 +228,16 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
         double targetNewHealth = Math.max(2.0, target.getHealth() - this.completionDamage);
         target.setHealth(targetNewHealth);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 10, false, false, false));
-        target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1, false, false, false));
-        target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 80, 0, false, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, immobilizeDuration, 10, false, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (immobilizeDuration * 0.67), 1, false, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, (int) (immobilizeDuration * 1.33), 0, false, false, false));
 
         new BukkitRunnable() {
             private int counter = 0;
 
             @Override
             public void run() {
-                if (counter++ > 20 || target == null || target.isDead()) {
+                if (counter++ > immobilizeDuration || target == null || target.isDead()) {
                     cancel();
                     return;
                 }

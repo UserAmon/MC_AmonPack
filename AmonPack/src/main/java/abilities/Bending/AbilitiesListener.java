@@ -5,9 +5,13 @@ import Abilities.PK_Abilities.Earth.*;
 import Abilities.PK_Abilities.Fire.*;
 import Abilities.PK_Abilities.Water.*;
 import Abilities.Util_Objects.EarthDisc;
+import Plugin.Methods;
+
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 
@@ -71,11 +75,9 @@ public class AbilitiesListener implements Listener {
 						if (!com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSplit.class)) {
 							new FlameSplit(player);
 						}
-					}
-					 else if (boundAbility.equalsIgnoreCase("BloodArrow")) {
+					} else if (boundAbility.equalsIgnoreCase("BloodArrow")) {
 						new BloodArrow(player);
-					}
-					 else if (boundAbility.equalsIgnoreCase("BloodCall")) {
+					} else if (boundAbility.equalsIgnoreCase("BloodCall")) {
 						new BloodCall(player);
 					} else if (boundAbility.equalsIgnoreCase("SmokeBurst")) {
 						new SmokeBurst(player, true);
@@ -89,6 +91,16 @@ public class AbilitiesListener implements Listener {
 				return;
 		} else
 			return;
+	}
+
+	@EventHandler
+	public void onFallingBlockLand(EntityChangeBlockEvent event) {
+		if (event.getEntity() instanceof FallingBlock) {
+			if (Methods.SpawnedByMe.contains(event.getEntity())) {
+				event.setCancelled(true);
+				event.getEntity().remove();
+			}
+		}
 	}
 
 	@EventHandler
@@ -207,7 +219,8 @@ public class AbilitiesListener implements Listener {
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("SteelSwing")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, SteelSwing.class)) {
-						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SteelSwing.class).onClick();
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SteelSwing.class)
+								.onClick();
 					} else {
 						new SteelSwing(player);
 					}
@@ -376,8 +389,10 @@ public class AbilitiesListener implements Listener {
 	@EventHandler
 	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
 		if (event.getEntity() instanceof Player p) {
-			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p, Abilities.PK_Abilities.Air.GustShield.class)) {
-				Abilities.PK_Abilities.Air.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(p, Abilities.PK_Abilities.Air.GustShield.class);
+			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p,
+					Abilities.PK_Abilities.Air.GustShield.class)) {
+				Abilities.PK_Abilities.Air.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility
+						.getAbility(p, Abilities.PK_Abilities.Air.GustShield.class);
 				event.setCancelled(true);
 				shield.onHit();
 			}
