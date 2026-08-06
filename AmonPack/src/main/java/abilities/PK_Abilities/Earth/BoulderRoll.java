@@ -214,17 +214,19 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         distanceTraveled += speed;
         boulderLoc.add(rollDir.clone().multiply(speed));
 
-        Block currentBlock = boulderLoc.getBlock();
-        if (currentBlock.getType() != Material.AIR && !PlantAbility.isPlant(currentBlock)) {
+        // Sprawdzaj ukształtowanie terenu 1.5 bloku do przodu z pominięciem TempBlocków
+        Location aheadLoc = boulderLoc.clone().add(rollDir.clone().multiply(1.5));
+        Block aheadBlock = aheadLoc.getBlock();
+        Block aheadBelow = aheadLoc.clone().subtract(0, 1, 0).getBlock();
+
+        if (aheadBlock.getType() != Material.AIR && !PlantAbility.isPlant(aheadBlock) && !TempBlock.isTempBlock(aheadBlock)) {
             boulderLoc.setY(boulderLoc.getY() + 1);
-        }
-        Block belowBlock = boulderLoc.clone().subtract(0, 1, 0).getBlock();
-        if (belowBlock.getType() == Material.AIR || PlantAbility.isPlant(belowBlock)) {
+        } else if ((aheadBelow.getType() == Material.AIR || PlantAbility.isPlant(aheadBelow) || TempBlock.isTempBlock(aheadBelow)) && !TempBlock.isTempBlock(boulderLoc.clone().subtract(0, 1, 0).getBlock())) {
             boulderLoc.setY(boulderLoc.getY() - 1);
         }
 
-        Block obstacleBlock = boulderLoc.clone().add(0, 1, 0).getBlock();
-        if (distanceTraveled >= range || (!isEarthbendable(player, obstacleBlock) && obstacleBlock.getType() != Material.AIR && !PlantAbility.isPlant(obstacleBlock))) {
+        Block wallAhead = aheadLoc.clone().add(0, 1, 0).getBlock();
+        if (distanceTraveled >= range || (wallAhead.getType() != Material.AIR && !PlantAbility.isPlant(wallAhead) && !TempBlock.isTempBlock(wallAhead) && !isEarthbendable(player, wallAhead))) {
             explodeAndFinish();
             return;
         }

@@ -330,6 +330,18 @@ AmonPack:
           - "&7Przyciąga lód ze źródła wody (do 3 stacków)."
           - "&7Wciśnięcie SHIFT wystrzeliwuje sople lodu."
           - "&e[Ruch Specjalny - SWAP (F)]"
+      VineSnare:
+        Cost: 35
+        Place: 26
+        IsSpecialBindAbility: true
+        ReqAbilities:
+          - Hoarfrost
+        Description:
+          - "&7Tworzy zielony krąg pnączy w wskazanym miejscu roślińskim."
+          - "&7Po 2s animacji pnącza strzelają w górę i przyciągają wrogów."
+          - "&7Przeciwnicy są unieruchomieni przez 3s."
+          - "&7Po zakończeniu w miejscu uwięzienia zakwitają kwiaty!"
+          - "&e[Ruch Specjalny - SWAP (F) / ADVANCEMENT (L)]"
       Uppercut:
         Cost: 2
         Place: 20

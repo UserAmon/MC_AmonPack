@@ -93,6 +93,16 @@ AmonPack:
       TrackRange: 5.0 #blocks range to track targets
       ChainRange: 7.0 #blocks range to chain to nearby enemies
 
+    Plant:
+      VineSnare:
+        Cooldown: 9000 #ms between ability uses
+        Range: 20 #blocks detection range
+        Radius: 3.5 #blocks radius of vine ring
+        ChargeTime: 2000 #ms for 2-second vine preview animation
+        HoldDuration: 3000 #ms enemies are trapped in vines
+        Damage: 3.0 #hearts dealt on vine eruption
+        FlowerRevertTime: 10000 #ms flowers stay bloomed after snare
+
   Air:
     AirPressure:
       Cooldown: 4000 #ms between ability uses
