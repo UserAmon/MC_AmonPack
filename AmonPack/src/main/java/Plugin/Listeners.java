@@ -868,16 +868,46 @@ public class Listeners implements Listener {
                 }
             } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BindingAbilitiesMenu)) {
                 event.setCancelled(true);
+                if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta()) return;
+
+                PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+                String abilityName = Objects.requireNonNull(event.getClickedInventory().getItem(4).getItemMeta()).getDisplayName();
+                int rawSlot = event.getRawSlot();
+
+                if (rawSlot == 0) {
+                    if (branch != null) {
+                        if (branch.getSwapAbility().equalsIgnoreCase(abilityName)) {
+                            branch.setSwapAbility("");
+                            p.sendMessage(ChatColor.YELLOW + "Usunięto umiejętność ze slotu SWAP (F)!");
+                        } else {
+                            branch.setSwapAbility(abilityName);
+                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName + " do slotu SWAP (klawisz F)!");
+                        }
+                    }
+                    p.closeInventory();
+                    return;
+                } else if (rawSlot == 1) {
+                    if (branch != null) {
+                        if (branch.getDropAbility().equalsIgnoreCase(abilityName)) {
+                            branch.setDropAbility("");
+                            p.sendMessage(ChatColor.YELLOW + "Usunięto umiejętność ze slotu DROP (Q)!");
+                        } else {
+                            branch.setDropAbility(abilityName);
+                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName + " do slotu DROP (klawisz Q)!");
+                        }
+                    }
+                    p.closeInventory();
+                    return;
+                }
+
                 Material clickedItem = event.getCurrentItem().getType();
                 BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
-                if (clickedItem.equals(Material.PAPER)) {
+                if (clickedItem.equals(Material.PAPER) && rawSlot >= 9 && rawSlot <= 17) {
                     bPlayer.bindAbility(
-                            Objects.requireNonNull(event.getClickedInventory().getItem(4).getItemMeta())
-                                    .getDisplayName(),
+                            abilityName,
                             Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
                     bPlayer.saveAbility(
-                            Objects.requireNonNull(event.getClickedInventory().getItem(4)).getItemMeta()
-                                    .getDisplayName(),
+                            abilityName,
                             Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
                     if (AmonPackPlugin.levelsBending.isPlayerInDungeon(p)) {
                         AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(p.getName());

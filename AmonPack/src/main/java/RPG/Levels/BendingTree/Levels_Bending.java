@@ -51,6 +51,15 @@ public class Levels_Bending {
         Inventory inv = inventory.getInternal();
         int modelid=SkillTreeConfig.getInt("AmonPack.Menu." + element.getName().toString().toLowerCase() + ".Green");
         inv.setItem(4, FastEasyStack(Material.PAPER,AbilityName,modelid));
+
+        String curSwap = branch.getSwapAbility();
+        String swapLore = curSwap.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO SWAP (F)]" : (curSwap.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curSwap);
+        inv.setItem(0, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.GOLD + "Slot SWAP (F)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do F", swapLore), 10071));
+
+        String curDrop = branch.getDropAbility();
+        String dropLore = curDrop.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO DROP (Q)]" : (curDrop.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curDrop);
+        inv.setItem(1, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.AQUA + "Slot DROP (Q)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do Q", dropLore), 10072));
+
         int baseint = 10062;
         for (int i = 9; i < 18; i++) {
             inv.setItem(i, FastEasyStack(Material.PAPER,""+(i-8),baseint));

@@ -63,6 +63,13 @@ AmonPack:
       ExtendSpeed: 0.5 #blocks per tick during extend phase
       Speed: 0.8 #water movement speed to hand anchor
 
+    WaterWhip:
+      Cooldown: 5000 #ms miedzy uzyciami
+      Damage: 5.0 #obrazenia bicza wodnego
+      Range: 12.0 #zasieg bicza
+      Knockback: 0.7 #odrzut
+      ChargeTicks: 20 #czas nagrywania obrotu kamery (20 tickow = 1s)
+
     BloodCall:
       Cooldown: 3000 #ms between ability uses
       Range: 25.0 #blocks detection range for targets

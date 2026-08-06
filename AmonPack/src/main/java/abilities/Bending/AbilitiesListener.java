@@ -15,6 +15,10 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.Element;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import RPG.Levels.BendingTree.PlayerBendingBranch;
+import Plugin.AmonPackPlugin;
 import RPG.Crafting.CraftingMenager;
 import org.bukkit.potion.PotionEffectType;
 
@@ -393,6 +397,36 @@ public class AbilitiesListener implements Listener {
 				if (fs != null && fs.isParrying()) {
 					event.setCancelled(true);
 					fs.onParryDamage();
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onSwapHandItems(PlayerSwapHandItemsEvent event) {
+		Player player = event.getPlayer();
+		if (AmonPackPlugin.levelsBending == null) return;
+		PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		if (branch != null) {
+			String swapAbi = branch.getSwapAbility();
+			if (swapAbi != null && !swapAbi.isEmpty()) {
+				if (SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP)) {
+					event.setCancelled(true);
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onDropItem(PlayerDropItemEvent event) {
+		Player player = event.getPlayer();
+		if (AmonPackPlugin.levelsBending == null) return;
+		PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		if (branch != null) {
+			String dropAbi = branch.getDropAbility();
+			if (dropAbi != null && !dropAbi.isEmpty()) {
+				if (SpecialTriggerManager.executeSpecialAbility(player, dropAbi, SpecialTriggerable.TriggerType.DROP)) {
+					event.setCancelled(true);
 				}
 			}
 		}

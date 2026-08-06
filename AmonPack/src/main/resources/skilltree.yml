@@ -303,6 +303,15 @@ AmonPack:
         Place: 37
         ReqAbilities:
           - WaterManipulation
+      WaterWhip:
+        Cost: 20
+        Place: 23
+        ReqAbilities:
+          - WaterFist
+        Description:
+          - "&7Wystrzeliwuje bicz wodny podążający za ścieżką"
+          - "&7obrotu kamery z odrzutem i obrażeniami."
+          - "&e[Ruch Specjalny - SWAP (F) / DROP (Q)]"
       Uppercut:
         Cost: 2
         Place: 20

@@ -1,0 +1,110 @@
+================================================================================
+                    AMONPACK - DOKUMENTACJA TECHNICZNA PLUGINU
+================================================================================
+Wersja dokumentu: 2.1.0
+Wersja API Minecraft: 1.20+ (Bukkit / Spigot / Paper API)
+Główna zależność: ProjectKorra (v1.12.0+)
+Zależności opcjonalne (softdepend): WorldEdit, FastAsyncWorldEdit, ItemsAdder
+Autor: Amon
+
+Niniejszy plik zawiera kompletny, szczegółowy opis architektury, klas, metod,
+podsystemów BENDINGU (w tym wyzwalaczy SWAP/DROP) oraz WSZYSTKICH MODUŁÓW RPG / MMO.
+================================================================================
+
+
+--------------------------------------------------------------------------------
+1. ARCHITEKTURA PROJEKTU I PEŁNA STRUKTURA KATALOGÓW
+--------------------------------------------------------------------------------
+Projekt podzielony jest na trzy główne pakiety: sterujący (`Plugin`), magii (`Abilities`)
+oraz zaawansowanych systemów RPG/MMO (`RPG`):
+
+AmonPack/
+ ├── pom.xml                                -> Konfiguracja Maven i zależności
+ ├── ProjectKorra-1.12.0.jar               -> Biblioteka ProjectKorra
+ ├── ItemsAdder_4.0.15.jar                 -> Biblioteka ItemsAdder (GUI/Fonty)
+ ├── src/main/resources/
+ │    ├── plugin.yml                        -> Manifest pluginu, komendy, zależności
+ │    ├── abilities_config.yml              -> Główny plik konfiguracyjny parametrów mocy
+ │    ├── BossConfig.yml                    -> Konfiguracja Bossów
+ │    ├── Bounties.yml                      -> Konfiguracja systemu Bounties
+ │    ├── Crafting_Items.yml                -> Receptury i przedmioty craftingu
+ │    ├── dung_build.yml                    -> Ulepszenia lobby dungeonów
+ │    ├── skilltree.yml                     -> Drzewko umiejętności Bendingu
+ │    └── dungeons/                         -> Szablony i pliki dungeonów
+ └── src/main/java/
+      ├── Plugin/                           -> Główny pakiet sterujący i narzędziowy
+      │    ├── AmonPackPlugin.java          -> Klasa główna (JavaPlugin, Build Flags, SQLite Schema)
+      │    ├── Commands.java                -> Centralna obsługa komend serwera
+      │    ├── Methods.java                 -> Moduł fizyki, cząsteczek i bloków
+      │    ├── Listeners.java               -> Odbiorca zdarzeń RPG (GUI, Crafting, EXP, Bloki, Binding)
+      │    ├── ArmorEffectsRunnable.java    -> Pętla efektów specjalnych pancerzy
+      │    ├── ConfigsMenager.java          -> Menedżer plików konfiguracyjnych
+      │    └── SimpleWorldGenerator.java    -> Generator odizolowanych światów
+      │
+      ├── Abilities/                        -> Moduł Magii i Umiejętności ProjectKorra
+      │    ├── Bending/                     -> Abstrakcje, Listener i Wyzwalacze Specjalne
+      │    │    ├── AbilitiesListener.java  -> Listener zdarzeń (onShift, OnSwing, SWAP F, DROP Q)
+      │    │    ├── SmokeAbility.java       -> Klasa bazowa pod-żywiołu Dymu (Smoke)
+      │    │    ├── SoundAbility.java       -> Klasa bazowa pod-żywiołu Dźwięku (Sound)
+      │    │    ├── SpecialTriggerable.java -> Interfejs dla skilli wyzwalanych klawiszami F/Q
+      │    │    └── SpecialTriggerManager.java -> Uniwersalny menedżer aktywacji skilli SWAP/DROP
+      │    │
+      │    ├── Util_Objects/                -> Obiekty matematyczno-fizyczne mocy
+      │    │    ├── AbilityProjectile.java  -> Pociski na wektorach i cząsteczkach
+      │    │    ├── BetterParticles.java    -> Wrapper silnika cząsteczek Bukkit/DustOptions
+      │    │    ├── EarthDisc.java          -> Ricochetujące dyski ziemne z rykoszetem ścian
+      │    │    ├── LightningBolt.java      -> Pioruny z odbiciem od ścian i rozgałęzieniami
+      │    │    └── SmokeSource.java        -> Trwałe obiekty stref dymnych (buff/debuff)
+      │    │
+      │    └── PK_Abilities/                -> Umiejętności Bendingu (49 klas)
+      │         ├── Air/                    -> Powietrze & Dźwięk (9 klas)
+      │         ├── Earth/                  -> Ziemia, Piasek & Metal (10 klas)
+      │         ├── Fire/                   -> Ogień & Dym (11 klas)
+      │         └── Water/                  -> Woda, Lód, Krew & Bicz (8 klas: WaterWhip)
+      │
+      └── RPG/                              -> KOMPLETNY MODUŁ RPG / MMO (65+ KLAS)
+           ├── Bounties/                    -> System Listów Gończych (Bounties)
+           ├── Crafting/                    -> System Customowego Craftingu i Broni
+           ├── Dungeons/                    -> System Dungeonów Rogue-Lite i Menagerii
+           ├── Gathering/                   -> Zbieractwo, Górnictwo, Rolnictwo i Drewno
+           ├── Levels/                      -> System Poziomów Gracza i Drzewka Skilli (BendingTree, SWAP/DROP)
+           ├── Matchmaking/                 -> System Kolejkowania i Aren PvP/PvE
+           ├── Party/                       -> System Drużyn i Czatu Druzynowego
+           ├── Util/                        -> Moduł Narzędziowy RPG
+           └── UnUsed/                      -> Archiwalne moduły Menagerii (Legacy)
+
+
+--------------------------------------------------------------------------------
+2. UNIWERSALNY SYSTEM SPECJALNYCH SLOTÓW MAGII (SWAP & DROP)
+--------------------------------------------------------------------------------
+AmonPack oferuje uniwersalny system 2 nowych slotów specjalnych na umiejętności magii:
+  1. Slot SWAP (Klawisz F - PlayerSwapHandItemsEvent):
+     Wciśnięcie klawisza zamiany rąk F anuluje przemieszczenie przedmiotu i aktywuje skill przypisany do slotu SWAP.
+  2. Slot DROP (Klawisz Q - PlayerDropItemEvent):
+     Wciśnięcie klawisza wyrzucenia przedmiotu Q anuluje wyrzucenie przedmiotu i aktywuje skill przypisany do slotu DROP.
+
+Komponenty systemu:
+  - Abilities.Bending.SpecialTriggerable (Interface):
+    Interfejs implementowany przez skille specjalne (np. WaterWhip). Określa typ wyzwalacza (SWAP, DROP, BOTH).
+  - Abilities.Bending.SpecialTriggerManager:
+    Uniwersalna klasa wykonawcza. Sprawdza odblokowanie skilla w drzewku gracza, poziom, cooldown oraz uruchamia go przez refleksję.
+  - Integration z BendingTree i GUI:
+    W klasie PlayerBendingBranch dodano pola `SwapAbility` i `DropAbility` zapisywane w SQLite w tabeli `BendingTree`.
+    W menu przypisywania umiejętności (`OpenBindingMenu`) gracz może jednym kliknięciem przypisać lub odpiąć skill ze slotów F/Q.
+
+
+--------------------------------------------------------------------------------
+3. UMIEJĘTNOŚĆ WATERWHIP (PAKIEAT: Abilities.PK_Abilities.Water)
+--------------------------------------------------------------------------------
+Class: Abilities.PK_Abilities.Water.WaterWhip
+Implementuje: AddonAbility, SpecialTriggerable
+
+Mechanika:
+  1. Faza 1 (Charge & Trajectory Tracking - 1 Sekunda / 20 ticków):
+     Podczas pierwszej sekundy w ręce gracza generują się efekty wody (WATER_WAKE, WATER_SPLASH, WATER_DROP) oraz dźwięk.
+     Przez 20 ticków skrypt rejestruje klatka po klatce wektory obrotu kamery (pitch, yaw) oraz pozycje oczu gracza.
+  2. Faza 2 (Whip Launch):
+     Po 1 sekundzie bicz z wody zostaje dynamicznie wystrzelony wzdłuż zarejestrowanej paraboli ruchu kamery.
+     Stworzone segmenty dają efekt bicza, generują tymczasowe bloki wody (`TempBlock`) oraz zadają obrażenia (5.0)
+     i odrzut (0.7) wszystkim stworzeniom na trasie bicza.
+================================================================================

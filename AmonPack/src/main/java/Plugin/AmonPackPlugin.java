@@ -64,6 +64,10 @@ public class AmonPackPlugin extends JavaPlugin {
 	private java.io.File configFile;
 	public FileConfiguration config;
 
+	public static boolean ENABLE_BENDING_ABILITIES = true;
+	public static boolean ENABLE_SKILL_TREE, ENABLE_DUNGEONS, ENABLE_RPG_GATHERING, ENABLE_BOUNTIES, ENABLE_PARTY,
+			ENABLE_DATABASE, ENABLE_WORLD_GEN, ENABLE_ARMOR_EFFECTS = true;
+
 	@Override
 	public FileConfiguration getConfig() {
 		if (config == null) {
@@ -81,7 +85,9 @@ public class AmonPackPlugin extends JavaPlugin {
 
 		java.io.InputStream defConfigStream = getResource("abilities_config.yml");
 		if (defConfigStream != null) {
-			org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(defConfigStream, java.nio.charset.StandardCharsets.UTF_8));
+			org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration
+					.loadConfiguration(
+							new java.io.InputStreamReader(defConfigStream, java.nio.charset.StandardCharsets.UTF_8));
 			config.setDefaults(defConfig);
 		}
 	}
@@ -103,10 +109,11 @@ public class AmonPackPlugin extends JavaPlugin {
 		if (configFile == null) {
 			configFile = new java.io.File(getDataFolder(), "abilities_config.yml");
 		}
-		if (!configFile.exists()) {            
+		if (!configFile.exists()) {
 			saveResource("abilities_config.yml", false);
 		}
 	}
+
 	static List<File> MenagerieConfigFile;
 	// static File PvPFile;
 	static File LevelConfigFile;
@@ -132,138 +139,198 @@ public class AmonPackPlugin extends JavaPlugin {
 	public void onEnable() {
 		BuildingOnArenas = false;
 		plugin = this;
-		getLogger().info("AmonPack włączony");
-
-		configs_menager = new ConfigsMenager(getDataFolder());
-		configs_menager.CreateMenagers();
-
-		// BladesElement = new SubElement("Blades", Element.CHI, ElementType.BLOCKING,
-		// this);
-		SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
-		SoundElement = new SubElement("Sound", Element.AIR, ElementType.BENDING, ProjectKorra.plugin);
-		CoreAbility.registerPluginAbilities(this, "Abilities.PK_Abilities");
-		createconf();
-
-		// PvPFile = new File(getDataFolder(), "PvPConfig.yml");
-		// setPvPConfig(YamlConfiguration.loadConfiguration(PvPFile));
-
-		MenagerieConfigFile = getMenagerieFiles();
-		SkillTreeFile = new File(getDataFolder(), "skilltree.yml");
-		if (!SkillTreeFile.exists()) {
-			saveResource("skilltree.yml", false);
-		}
-
-		File dungeonsDir = new File(getDataFolder(), "dungeons");
-		if (!dungeonsDir.exists()) {
-			dungeonsDir.mkdirs();
-		}
-		File exampleDungeonFile = new File(dungeonsDir, "przykladowy_dungeon.yml");
-		if (!exampleDungeonFile.exists()) {
-			saveResource("dungeons/przykladowy_dungeon.yml", false);
-		}
-		File docsFile = new File(dungeonsDir, "dokumentacja_dungeonow.yml");
-		if (!docsFile.exists()) {
-			saveResource("dungeons/dokumentacja_dungeonow.yml", false);
-		}
-
-		setDungeonsConfig(MenagerieConfigFile);
-		
-		DungeonConfigFile = new File(getDataFolder(), "dungeons/dungeon_config.yml");
-		if (!DungeonConfigFile.exists()) {
-			saveResource("dungeons/dungeon_config.yml", false);
-		}
-		setDungeonConfig(YamlConfiguration.loadConfiguration(DungeonConfigFile));
-
-		File craftingItemsFile = new File(getDataFolder(), "Crafting_Items.yml");
-		if (!craftingItemsFile.exists()) {
-			saveResource("Crafting_Items.yml", false);
-		}
+		getLogger().info("AmonPack włączony [Bending: " + ENABLE_BENDING_ABILITIES +
+				", SkillTree: " + ENABLE_SKILL_TREE +
+				", Dungeons: " + ENABLE_DUNGEONS +
+				", RPG: " + ENABLE_RPG_GATHERING +
+				", Bounties: " + ENABLE_BOUNTIES +
+				", Party: " + ENABLE_PARTY +
+				", Database: " + ENABLE_DATABASE + "]");
 
 		configpath = getDataFolder();
-		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
-		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 
-		// ForestConfigFile = new File(getDataFolder() + File.separator + "RPG",
-		// "Forest.yml");
-		// ForestConfig = YamlConfiguration.loadConfiguration(ForestConfigFile);
+		// --- 1. RUCHY MAGICZNE (BENDING ABILITIES) ---
+		if (ENABLE_BENDING_ABILITIES) {
+			SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
+			SoundElement = new SubElement("Sound", Element.AIR, ElementType.BENDING, ProjectKorra.plugin);
+			CoreAbility.registerPluginAbilities(this, "Abilities.PK_Abilities");
+			createconf();
 
-		AbilitiesConfigFile = new File(getDataFolder(), "abilities_config.yml");
-		AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
-		java.io.InputStream defAbilitiesStream = getResource("abilities_config.yml");
-		if (defAbilitiesStream != null) {
-			org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream, java.nio.charset.StandardCharsets.UTF_8));
-			AbilitiesConfig.setDefaults(defConfig);
+			AbilitiesConfigFile = new File(getDataFolder(), "abilities_config.yml");
+			AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
+			java.io.InputStream defAbilitiesStream = getResource("abilities_config.yml");
+			if (defAbilitiesStream != null) {
+				org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration
+						.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream,
+								java.nio.charset.StandardCharsets.UTF_8));
+				AbilitiesConfig.setDefaults(defConfig);
+			}
+			Abilities.PK_Abilities.Earth.SandWave.loadConfig();
+			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
+			this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
+			try {
+				StartDeafnessTimer();
+			} catch (Exception e) {
+				getLogger().warning("Nie udało się uruchomić StartDeafnessTimer: " + e.getMessage());
+			}
 		}
-		Abilities.PK_Abilities.Earth.SandWave.loadConfig();
-		Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
-		sqlConnection();
-		setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
-		// setGuiConfig(YamlConfiguration.loadConfiguration(GuiFile));
+
+		// --- 2. BAZA DANYCH SQLITE ---
+		if (ENABLE_DATABASE) {
+			sqlConnection();
+		}
+
+		// --- 3. RPG GATHERING & CRAFTING ---
+		if (ENABLE_RPG_GATHERING) {
+			configs_menager = new ConfigsMenager(getDataFolder());
+			configs_menager.CreateMenagers();
+
+			File craftingItemsFile = new File(getDataFolder(), "Crafting_Items.yml");
+			if (!craftingItemsFile.exists()) {
+				saveResource("Crafting_Items.yml", false);
+			}
+			farmmenager = new FarmMenager();
+			combatMenager = new CombatMenager();
+		}
+
+		// --- 4. SKILL TREE & LEVELS ---
+		if (ENABLE_SKILL_TREE) {
+			SkillTreeFile = new File(getDataFolder(), "skilltree.yml");
+			if (!SkillTreeFile.exists()) {
+				saveResource("skilltree.yml", false);
+			}
+			setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
+			saveSkillTreeConfig();
+
+			LevelConfigFile = new File(getDataFolder(), "Levels.yml");
+			LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
+
+			levelsBending = new Levels_Bending();
+			try {
+				PlayerMenager = new PlayerLevelMenager();
+				PlayerMenager.CreateInventories();
+				new UpgradesMenager();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		// --- 5. DUNGEONS & MENAGERIE ---
+		if (ENABLE_DUNGEONS) {
+			MenagerieConfigFile = getMenagerieFiles();
+			File dungeonsDir = new File(getDataFolder(), "dungeons");
+			if (!dungeonsDir.exists()) {
+				dungeonsDir.mkdirs();
+			}
+			File exampleDungeonFile = new File(dungeonsDir, "przykladowy_dungeon.yml");
+			if (!exampleDungeonFile.exists()) {
+				saveResource("dungeons/przykladowy_dungeon.yml", false);
+			}
+			File docsFile = new File(dungeonsDir, "dokumentacja_dungeonow.yml");
+			if (!docsFile.exists()) {
+				saveResource("dungeons/dokumentacja_dungeonow.yml", false);
+			}
+
+			setDungeonsConfig(MenagerieConfigFile);
+
+			DungeonConfigFile = new File(getDataFolder(), "dungeons/dungeon_config.yml");
+			if (!DungeonConfigFile.exists()) {
+				saveResource("dungeons/dungeon_config.yml", false);
+			}
+			setDungeonConfig(YamlConfiguration.loadConfiguration(DungeonConfigFile));
+
+			this.getServer().getPluginManager().registerEvents(new RPG.Dungeons.DungBuildManager(), this);
+			RPG.Dungeons.DungBuildManager.init();
+			try {
+				new RPG.Dungeons.DungeonManager();
+				this.getServer().getPluginManager().registerEvents(RPG.Dungeons.DungeonManager.getInstance(), this);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		// --- 6. BOUNTIES ---
+		if (ENABLE_BOUNTIES) {
+			bountiesMenager = new RPG.Bounties.BountiesMenager();
+			this.getServer().getPluginManager().registerEvents(bountiesMenager, this);
+		}
+
+		// --- 7. WORLD GENERATOR ---
+		if (ENABLE_WORLD_GEN) {
+			SimpleWorldGenerator.loadAllWorlds();
+		}
+
 		SaveConfigs();
-		// savePvPConfig();
-		saveSkillTreeConfig();
-		// saveDungeonConfig();
-		SimpleWorldGenerator.loadAllWorlds();
-		// saveMinesConfig();
-		levelsBending = new Levels_Bending();
-		farmmenager = new FarmMenager();
-		combatMenager = new CombatMenager();
-		bountiesMenager = new RPG.Bounties.BountiesMenager();
 
 		upgradeKey = new NamespacedKey(this, "playerUpgrade");
-		this.getCommand("Craft").setExecutor(new Commands());
-		this.getCommand("Level").setExecutor(new Commands());
-		this.getCommand("SelectElement").setExecutor(new Commands());
-		this.getCommand("ArenaBuilding").setExecutor(new Commands());
 		Commands cmdExecutor = new Commands();
-		this.getCommand("Menagerie").setExecutor(cmdExecutor);
-		this.getCommand("Dungeons").setExecutor(cmdExecutor);
-		this.getCommand("Dungeons").setTabCompleter(cmdExecutor);
-		// this.getCommand("Menagerie").setTabCompleter(new CommandsTabMenager());
-		// this.getCommand("ArenaBuilding").setTabCompleter(new CommandsTabMenager());
-		// this.getCommand("PvP").setExecutor(new Commands());
-		this.getCommand("Reload").setExecutor(cmdExecutor);
-		this.getCommand("Bounties").setExecutor(cmdExecutor);
-		this.getCommand("party").setExecutor(cmdExecutor);
-		this.getCommand("party").setTabCompleter(cmdExecutor);
-		this.getCommand("p").setExecutor(new Commands());
-		this.getCommand("dungbuild").setExecutor(cmdExecutor);
-		this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
-		this.getServer().getPluginManager().registerEvents(new Listeners(), this);
-		this.getServer().getPluginManager().registerEvents(bountiesMenager, this);
-		this.getServer().getPluginManager().registerEvents(new RPG.Dungeons.DungBuildManager(), this);
-		RPG.Dungeons.DungBuildManager.init();
-		try {
-			StartDeafnessTimer();
-			PlayerMenager = new PlayerLevelMenager();
-			PlayerMenager.CreateInventories();
-			new UpgradesMenager();
-			new RPG.Dungeons.DungeonManager();
-			this.getServer().getPluginManager().registerEvents(RPG.Dungeons.DungeonManager.getInstance(), this);
-		} catch (SQLException e) {
-			e.printStackTrace();
+
+		// Rejestracja komend sterowana flagami
+		if (ENABLE_RPG_GATHERING) {
+			if (this.getCommand("Craft") != null)
+				this.getCommand("Craft").setExecutor(cmdExecutor);
 		}
-		System.out.println("Amonpack Załadowany");
-		new ArmorEffectsRunnable().runTaskTimer(this, 0, 20);
+		if (ENABLE_SKILL_TREE) {
+			if (this.getCommand("Level") != null)
+				this.getCommand("Level").setExecutor(cmdExecutor);
+			if (this.getCommand("SelectElement") != null)
+				this.getCommand("SelectElement").setExecutor(cmdExecutor);
+		}
+		if (this.getCommand("ArenaBuilding") != null)
+			this.getCommand("ArenaBuilding").setExecutor(cmdExecutor);
+		if (ENABLE_DUNGEONS) {
+			if (this.getCommand("Menagerie") != null)
+				this.getCommand("Menagerie").setExecutor(cmdExecutor);
+			if (this.getCommand("Dungeons") != null) {
+				this.getCommand("Dungeons").setExecutor(cmdExecutor);
+				this.getCommand("Dungeons").setTabCompleter(cmdExecutor);
+			}
+			if (this.getCommand("dungbuild") != null)
+				this.getCommand("dungbuild").setExecutor(cmdExecutor);
+		}
+		if (this.getCommand("Reload") != null)
+			this.getCommand("Reload").setExecutor(cmdExecutor);
+		if (ENABLE_BOUNTIES) {
+			if (this.getCommand("Bounties") != null)
+				this.getCommand("Bounties").setExecutor(cmdExecutor);
+		}
+		if (ENABLE_PARTY) {
+			if (this.getCommand("party") != null) {
+				this.getCommand("party").setExecutor(cmdExecutor);
+				this.getCommand("party").setTabCompleter(cmdExecutor);
+			}
+			if (this.getCommand("p") != null)
+				this.getCommand("p").setExecutor(cmdExecutor);
+		}
+
+		if (ENABLE_SKILL_TREE || ENABLE_RPG_GATHERING || ENABLE_DUNGEONS) {
+			this.getServer().getPluginManager().registerEvents(new Listeners(), this);
+		}
+
+		if (ENABLE_ARMOR_EFFECTS) {
+			new ArmorEffectsRunnable().runTaskTimer(this, 0, 20);
+		}
+
+		System.out.println("Amonpack Załadowany!");
 	}
 
 	@Override
 	public void onDisable() {
 		try {
-			if (RPG.Dungeons.DungeonManager.getInstance() != null) {
+			if (ENABLE_DUNGEONS && RPG.Dungeons.DungeonManager.getInstance() != null) {
 				RPG.Dungeons.DungeonManager.getInstance().cleanupAll();
 			}
-			if (PlayerMenager != null) {
+			if (ENABLE_SKILL_TREE && PlayerMenager != null) {
 				PlayerMenager.LoadIntoDatabase();
 			}
-			if (bountiesMenager != null) {
+			if (ENABLE_BOUNTIES && bountiesMenager != null) {
 				bountiesMenager.SaveAll();
 			}
 			SaveConfigs();
-			if (sqlite != null) {
+			if (ENABLE_DATABASE && sqlite != null) {
 				sqlite.close();
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		getLogger().info("AmonPack wyłączony");
@@ -295,345 +362,17 @@ public class AmonPackPlugin extends JavaPlugin {
 		BuildingOnArenas = true;
 	}
 
-	/*
-	 * public static void savePvPConfig(){
-	 * try{
-	 * if (!getPvPConfig().contains("AmonPack")) {
-	 * 
-	 * getPvPConfig().set("AmonPack.PvP1.Loc.X", -1240);
-	 * getPvPConfig().set("AmonPack.PvP1.Loc.Y", 70);
-	 * getPvPConfig().set("AmonPack.PvP1.Loc.Z", 64);
-	 * getPvPConfig().set("AmonPack.PvP1.Loc.Radius", 275);
-	 * 
-	 * getPvPConfig().set("AmonPack.PvP.Loc.X", 64);
-	 * getPvPConfig().set("AmonPack.PvP.Loc.Y", 70);
-	 * getPvPConfig().set("AmonPack.PvP.Loc.Z", 64);
-	 * getPvPConfig().set("AmonPack.PvP.Loc.World", "kojlerek");
-	 * getPvPConfig().set("AmonPack.PvP.Loc.Radius", 320);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.FallPeriod", 45);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Loot.Drobniak", 1);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Loot.Ksymil", 1);
-	 * 
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Combat.C1.Loot.Jadeit", 1);
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Combat.C1.Loot.Bazalt", 1);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Combat.C1.EType", new
-	 * String[]{"World_Żołnierz_Ognia_Mag_2","World_Żołnierz_Ognia_Wojownik_2"});
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Combat.C1.EAmount",
-	 * 2);
-	 * 
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Combat.C2.Loot.Skyrim", 1);
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Combat.C2.Loot.Meteoryt", 1);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Combat.C2.EType", new
-	 * String[]{"World_Żołnierz_Ognia_Mag_2","World_Żołnierz_Ognia_Wojownik_2"});
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Combat.C2.EAmount",
-	 * 5);
-	 * 
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Command.Co1.Loot.Celestyn", 1);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Command.Co1.Command",
-	 * "say test to ejst komenda");
-	 * 
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Parkour.P1.Loot.KwiatWisni", 1);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Parkour.P1.EndLoc.X",
-	 * -19);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Parkour.P1.EndLoc.Y",
-	 * -53);
-	 * getPvPConfig().set("AmonPack.PvP.FallingChest.Occurance.Parkour.P1.EndLoc.Z",
-	 * 89);
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Parkour.P1.StartLoc.X",-43);
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Parkour.P1.StartLoc.Y",-59);
-	 * getPvPConfig().set(
-	 * "AmonPack.PvP.FallingChest.Occurance.Parkour.P1.StartLoc.Z",88);
-	 * 
-	 * 
-	 * getPvPConfig().set("AmonPack.PvP.Events.RandomSpawns.Period",30);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RandomSpawns.Spawn1.EType" , new
-	 * String[]{"World_Żołnierz_Ognia_Mag_2","World_Żołnierz_Ognia_Wojownik_2"});
-	 * getPvPConfig().set("AmonPack.PvP.Events.RandomSpawns.Spawn1.EAmount",3);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RandomSpawns.Spawn1.SpaAmount",4);
-	 * 
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.LocX",-74);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.LocY",-39);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.LocZ",62);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.BossLocX",-74);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.BossLocY",-39);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.BossLocZ",62);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.ArenaRadius",10);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.ArenaHeight",6);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.Loot.iron", 1);
-	 * getPvPConfig().set("AmonPack.PvP.Events.RaidBoss.Boss1.BossName",
-	 * "Boss_WładcaOgnia_1");
-	 * }
-	 * getPvPConfig().save(PvPFile);
-	 * }catch(Exception e){
-	 * e.printStackTrace();
-	 * }
-	 * 
-	 * }
-	 */
-	public static void SaveConfigs() {
-		try {
-			// if (!ForestConfig.contains("AmonPack")) {
-			// ForestConfig.set("AmonPack.Forest.Forest1.World", "AvatarServGlownyNowy");
-			// }
-			if (!LevelConfig.contains("AmonPack")) {
-				LevelConfig.set("AmonPack.Levels.GENERAL.Gui.Place", 4);
-				LevelConfig.set("AmonPack.Levels.GENERAL.Gui.Title", ChatColor.GOLD + "Poziom Ogólny: ");
-				LevelConfig.set("AmonPack.Levels.MINING.Gui.Place", 20);
-				LevelConfig.set("AmonPack.Levels.MINING.Gui.Title", ChatColor.GOLD + "Doświadczenie w Kopalni: ");
-				LevelConfig.set("AmonPack.Levels.COMBAT.Gui.Place", 22);
-				LevelConfig.set("AmonPack.Levels.COMBAT.Gui.Title", ChatColor.GOLD + "Doświadczenie w Strefie Walki: ");
-				LevelConfig.set("AmonPack.Levels.DUNGEON.Gui.Place", 24);
-				LevelConfig.set("AmonPack.Levels.DUNGEON.Gui.Title", ChatColor.GOLD + "Poziom Eksploracji Dungeonów: ");
-			}
-			LevelConfig.save(LevelConfigFile);
-			AbilitiesConfig.save(AbilitiesConfigFile);
-
-			// ForestConfig.save(ForestConfigFile);
-		} catch (Exception e) {
-			System.out.println("Błąd z konfigiem! " + e.getMessage());
-		}
+	public void createconf() {
+		saveDefaultConfig();
+		getConfig().options().copyDefaults(true);
+		saveConfig();
 	}
 
-	public static void saveDungeonConfig() {
-		try {
-			FileConfiguration config = GetMenagerieConfig().get(0);
-			if (!config.contains("Menagerie.PróbaOgnia")) {
-				config.set("Menagerie.PróbaOgnia.Center_Location", new int[] { 0, 46, 20 });
-				config.set("Menagerie.PróbaOgnia.Base_World_Name", "MultiWorlds/MenageriaOgnia/MenageriaOgnia1");
-				config.set("Menagerie.PróbaOgnia.Range_X", 200);
-				config.set("Menagerie.PróbaOgnia.Range_Z", 200);
-			}
-
-			if (!config.contains("Menagerie.PróbaOgnia.Encounters.Encounter1")) {
-				config.set("Menagerie.PróbaOgnia.Encounters.Encounter1.Spawn_Location", new int[] { -1, 47, 18 });
-				config.set("Menagerie.PróbaOgnia.Encounters.Encounter1.Doors_1", new int[] { 0, 48, 21 });
-				config.set("Menagerie.PróbaOgnia.Encounters.Encounter1.Doors_2", new int[] { -2, 46, 21 });
-				config.set("Menagerie.PróbaOgnia.Encounters.Encounter1.Doors_Material", "BARRIER");
-
-				String obj1Path = "Menagerie.PróbaOgnia.Encounters.Encounter1.Objectives.Obj1";
-				if (!config.contains(obj1Path)) {
-					config.set(obj1Path + ".Next_Objectives", new String[] { "Obj2" });
-					config.set(obj1Path + ".Display_Title_Main", "Zaakceptuj");
-					config.set(obj1Path + ".Display_Title_Sub", "Użyj darów");
-					config.set(obj1Path + ".Effects.Effect1.Message", "Start!");
-					config.set(obj1Path + ".Conditions.Condition1.AllPlayersReady", true);
-				}
-
-				String obj2Path = "Menagerie.PróbaOgnia.Encounters.Encounter1.Objectives.Obj2";
-				if (!config.contains(obj2Path)) {
-					config.set(obj2Path + ".Next_Objectives", new String[] { "Obj3" });
-					config.set(obj2Path + ".Display_Title_Main", "Przebij się dalej");
-					config.set(obj2Path + ".Display_Title_Sub", "Pokonaj Strażników");
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.Name", "WaveDefender_FireMage_1");
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.DisplayName", "&4&lMag Ognia");
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.Type", "HUSK");
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.SpawnLocation", new int[] { 13, 46, 43 });
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.SpawnLocationRange", 1);
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.SpawnChance", 100);
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.Amount", 2);
-					config.set(obj2Path + ".Effects.Effect1.Enemies.enemy1.MaxLvl", 1);
-					config.set(obj2Path + ".Conditions.Condition1.locationCondition.activationLoc",
-							new int[] { -1, 46, 35 });
-					config.set(obj2Path + ".Conditions.Condition1.locationCondition.activationRange", 10.0);
-				}
-
-				String obj3Path = "Menagerie.PróbaOgnia.Encounters.Encounter1.Objectives.Obj3";
-				if (!config.contains(obj3Path)) {
-					config.set(obj3Path + ".Next_Objectives", new String[] { "Obj4" });
-					config.set(obj3Path + ".Display_Title_Main", "Przebij się dalej");
-					config.set(obj3Path + ".Display_Title_Sub", "Pokonaj kolejną fale");
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.Name", "WaveDefender_FireMage_1");
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.DisplayName", "&4&lMag Ognia");
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.Type", "HUSK");
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.SpawnLocation", new int[] { -15, 46, 49 });
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.SpawnLocationRange", 1);
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.SpawnChance", 100);
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.Amount", 2);
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy1.MaxLvl", 1);
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.Name", "WaveDefender_FireSentinel_1");
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.DisplayName", "&4&lŻołnierz Ognia");
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.Type", "HUSK");
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.SpawnLocation", new int[] { 13, 46, 43 });
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.SpawnLocationRange", 1);
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.SpawnChance", 100);
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.Amount", 1);
-					config.set(obj3Path + ".Effects.Effect1.Enemies.enemy2.MaxLvl", 1);
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.Name",
-							"WaveDefender_FireMage_1");
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.DisplayName", "&4&lMag Ognia");
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.Type", "HUSK");
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.SpawnLocation",
-							new int[] { 13, 46, 43 });
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.SpawnLocationRange", 1);
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.SpawnChance", 100);
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.Amount", 2);
-					config.set(obj3Path + ".Conditions.Condition1.killCondition.enemy1.MaxLvl", 1);
-				}
-				/*
-				 * String obj4Path =
-				 * "Menagerie.PróbaOgnia.Encounters.Encounter1.Objectives.Obj4";
-				 * if (!config.contains(obj4Path)) {
-				 * config.set(obj4Path + ".Display_Title_Main",
-				 * "Znajdź sposób na otwarcie wrót");
-				 * config.set(obj4Path + ".Display_Title_Sub", "Poszukaj klucza");
-				 * config.set(obj4Path + ".Effects.Effect1.Message", "Objective Completed! <3");
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy1.Name",
-				 * "WaveDefender_FireMage_1");
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy1.DisplayName", "&4&lMag Ognia");
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy1.Type",
-				 * "HUSK");
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy1.SpawnLocation", new int[]{-15,
-				 * 46, 49});
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy1.SpawnLocationRange", 1);
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy1.SpawnChance", 100);
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy1.Amount",
-				 * 2);
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy1.MaxLvl",
-				 * 1);
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy2.Name",
-				 * "WaveDefender_FireSentinel_1");
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy2.DisplayName",
-				 * "&4&lŻołnierz Ognia");
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy2.Type",
-				 * "HUSK");
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy2.SpawnLocation", new int[]{13,
-				 * 46, 43});
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy2.SpawnLocationRange", 1);
-				 * config.set(obj4Path +
-				 * ".Conditions.Condition1.killCondition.enemy2.SpawnChance", 100);
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy2.Amount",
-				 * 1);
-				 * config.set(obj4Path + ".Conditions.Condition1.killCondition.enemy2.MaxLvl",
-				 * 1);
-				 * }
-				 */
-			}
-			config.save(MenagerieConfigFile.get(0));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/*
-	 * public static void saveGuiConfig(){
-	 * try{
-	 * if (!getGuiConfig().contains("AmonPack")) {
-	 * 
-	 * getGuiConfig().set("AmonPack.Gui.Help.0.Type", "HONEYCOMB");
-	 * getGuiConfig().set("AmonPack.Gui.Help.0.Name", "&6&lPvP");
-	 * getGuiConfig().set("AmonPack.Gui.Help.0.Lore",
-	 * "&5Nakurwiasz się z graczami");
-	 * 
-	 * getGuiConfig().set("AmonPack.Gui.ItemList.0.Type", "HONEYCOMB");
-	 * getGuiConfig().set("AmonPack.Gui.ItemList.0.Name", "&6&lKsymil");
-	 * getGuiConfig().set("AmonPack.Gui.ItemList.0.Source",
-	 * "&5Materiał, Pozyswkiwane z Kopalni na spawnie");
-	 * 
-	 * 
-	 * }
-	 * getGuiConfig().save(GuiFile);
-	 * }catch(Exception e){
-	 * e.printStackTrace();
-	 * }}
-	 */
 	public static void saveSkillTreeConfig() {
 		try {
-			if (!getSkillTreeConfig().contains("AmonPack")) {
-				// getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Command", "say");
-				/*
-				 * 
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Fire.PathDecoration",
-				 * new Integer[]{10,11,12});
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Fire.FireBlast.Cost",
-				 * 0);
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Fire.FireBlast.Place",
-				 * 0);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Fire.FireBlast.ReqAbilities", new String[]{});
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Fire.SmokeDaggers.Cost", 1);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Fire.SmokeDaggers.Place", 1);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Fire.SmokeDaggers.ReqAbilities", new
-				 * String[]{"FireBlast"});
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Fire.FireBurst.Cost",
-				 * 1);
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Fire.FireBurst.Place",
-				 * 2);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Fire.FireBurst.ReqAbilities", new
-				 * String[]{"FireBlast"});
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Fire.SmokeSurge.Cost",
-				 * 2);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Fire.SmokeSurge.Place", 10);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Fire.SmokeSurge.ReqAbilities", new
-				 * String[]{"SmokeDaggers","FireBurst"});
-				 * 
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Air.PathDecoration",
-				 * new Integer[]{10,11,12});
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Air.AirSwipe.Cost",
-				 * 0);
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Air.AirSwipe.Place",
-				 * 0);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Air.AirSwipe.ReqAbilities", new String[]{});
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Air.AirBlast.Cost",
-				 * 1);
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Air.AirBlast.Place",
-				 * 1);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Air.AirBlast.ReqAbilities", new
-				 * String[]{"AirSwipe"});
-				 * 
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Water.PathDecoration",
-				 * new Integer[]{10,11,12});
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Water.WaterManipulation.Cost", 0);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Water.WaterManipulation.Place", 0);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Water.WaterManipulation.ReqAbilities", new
-				 * String[]{});
-				 * 
-				 * getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.Earth.PathDecoration",
-				 * new Integer[]{10,11,12});
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Earth.EarthBlast.Cost", 0);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Earth.EarthBlast.Place", 0);
-				 * getSkillTreeConfig().set(
-				 * "AmonPack.SpellTree.Abilities.Earth.EarthBlast.ReqAbilities", new
-				 * String[]{});
-				 */
-
-				// getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.air", new
-				// String[]{"AirPressure","AirBlast","AirBurst"});
-				// getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.earth", new
-				// String[]{"SandBreath","EarthBlast",});
-				// getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.chi", new
-				// String[]{"QuickStrike","Counter",});
-				// getSkillTreeConfig().set("AmonPack.SpellTree.Abilities.water", new
-				// String[]{"IceArch","Torrent",});
+			if (getSkillTreeConfig() != null && SkillTreeFile != null) {
+				getSkillTreeConfig().save(SkillTreeFile);
 			}
-			getSkillTreeConfig().save(SkillTreeFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -652,8 +391,12 @@ public class AmonPackPlugin extends JavaPlugin {
 					" EarthPoints INT," +
 					" UnlockedAbilities TEXT," +
 					" CurrentElement TEXT," +
-					" AllElements TEXT" +
+					" AllElements TEXT," +
+					" SwapAbility TEXT," +
+					" DropAbility TEXT" +
 					")");
+			try { ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN SwapAbility TEXT;"); } catch (Exception ignored) {}
+			try { ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN DropAbility TEXT;"); } catch (Exception ignored) {}
 			ExecuteQuery(
 					"CREATE TABLE IF NOT EXISTS SpellTree (Player VARCHAR(50) PRIMARY KEY, SkillPoint INT, Path TEXT, Element TEXT, AllElements TEXT)");
 			ExecuteQuery(
@@ -666,9 +409,11 @@ public class AmonPackPlugin extends JavaPlugin {
 					"CREATE TABLE IF NOT EXISTS PartyMembers (player_uuid VARCHAR(36) PRIMARY KEY, party_id VARCHAR(36))");
 			ExecuteQuery("CREATE TABLE IF NOT EXISTS LevelGENERAL"
 					+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100), UpgradePercent DOUBLE)");
-			for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
-				ExecuteQuery("CREATE TABLE IF NOT EXISTS Level" + key
-						+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
+			if (LevelConfig != null) {
+				for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
+					ExecuteQuery("CREATE TABLE IF NOT EXISTS Level" + key
+							+ " (Player VARCHAR(50) PRIMARY KEY, GeneralLevel DOUBLE, UsedRewards VARCHAR(100),UpgradePercent DOUBLE)");
+				}
 			}
 		} catch (Exception e) {
 			plugin.getLogger().info(e.getMessage());
@@ -678,14 +423,41 @@ public class AmonPackPlugin extends JavaPlugin {
 
 	public static void ExecuteQuery(String query) {
 		try {
-			Statement stmt = sqlite.getConnection().createStatement();
-			stmt.executeUpdate(query);
-			stmt.close();
+			if (sqlite != null && sqlite.getConnection() != null) {
+				Statement stmt = sqlite.getConnection().createStatement();
+				stmt.executeUpdate(query);
+				stmt.close();
+			}
 		} catch (Exception var3) {
 			PrintStream var10000 = System.err;
 			String var10001 = var3.getClass().getName();
 			var10000.println(var10001 + ": " + var3.getMessage());
 			var3.printStackTrace();
+		}
+	}
+
+	public static void SaveConfigs() {
+		try {
+			if (ENABLE_SKILL_TREE && LevelConfigFile != null && LevelConfig != null) {
+				if (!LevelConfig.contains("AmonPack")) {
+					LevelConfig.set("AmonPack.Levels.GENERAL.Gui.Place", 4);
+					LevelConfig.set("AmonPack.Levels.GENERAL.Gui.Title", ChatColor.GOLD + "Poziom Ogólny: ");
+					LevelConfig.set("AmonPack.Levels.MINING.Gui.Place", 20);
+					LevelConfig.set("AmonPack.Levels.MINING.Gui.Title", ChatColor.GOLD + "Doświadczenie w Kopalni: ");
+					LevelConfig.set("AmonPack.Levels.COMBAT.Gui.Place", 22);
+					LevelConfig.set("AmonPack.Levels.COMBAT.Gui.Title",
+							ChatColor.GOLD + "Doświadczenie w Strefie Walki: ");
+					LevelConfig.set("AmonPack.Levels.DUNGEON.Gui.Place", 24);
+					LevelConfig.set("AmonPack.Levels.DUNGEON.Gui.Title",
+							ChatColor.GOLD + "Poziom Eksploracji Dungeonów: ");
+				}
+				LevelConfig.save(LevelConfigFile);
+			}
+			if (ENABLE_BENDING_ABILITIES && AbilitiesConfigFile != null && AbilitiesConfig != null) {
+				AbilitiesConfig.save(AbilitiesConfigFile);
+			}
+		} catch (Exception e) {
+			System.out.println("Błąd z konfigiem! " + e.getMessage());
 		}
 	}
 
@@ -701,38 +473,51 @@ public class AmonPackPlugin extends JavaPlugin {
 		return SoundElement;
 	}
 
-	public void createconf() {
-		saveDefaultConfig();
-		getConfig().options().copyDefaults(true);
-		saveConfig();
-	}
-
 	public static void reloadAllConfigs() {
 		try {
-			plugin.reloadConfig();
-			LevelConfig = YamlConfiguration.loadConfiguration(new File(configpath, "Levels.yml"));
-
-			AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "abilities_config.yml"));
-			java.io.InputStream defAbilitiesStream = plugin.getResource("abilities_config.yml");
-			if (defAbilitiesStream != null) {
-				org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream, java.nio.charset.StandardCharsets.UTF_8));
-				AbilitiesConfig.setDefaults(defConfig);
+			if (ENABLE_BENDING_ABILITIES) {
+				plugin.reloadConfig();
+				AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "abilities_config.yml"));
+				java.io.InputStream defAbilitiesStream = plugin.getResource("abilities_config.yml");
+				if (defAbilitiesStream != null) {
+					org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration
+							.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream,
+									java.nio.charset.StandardCharsets.UTF_8));
+					AbilitiesConfig.setDefaults(defConfig);
+				}
+				Abilities.PK_Abilities.Earth.SandWave.loadConfig();
+				Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
 			}
-			Abilities.PK_Abilities.Earth.SandWave.loadConfig();
-			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
-			// ForestConfig = YamlConfiguration.loadConfiguration(new File(configpath +
-			// File.separator + "RPG", "Forest.yml"));
-			setDungeonsConfig(getMenagerieFilesReload());
-			// = YamlConfiguration.loadConfiguration(new File(configpath, "PvPConfig.yml"));
-			// MenaMenager.ReloadMenageries();
-			// ForestMenager.LoadData();
-			SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(configpath, "skilltree.yml"));
-			DungeonConfig = YamlConfiguration.loadConfiguration(new File(configpath, "dungeons/dungeon_config.yml"));
-			levelsBending.LoadData();
-			farmmenager.ReloadConfig();
-			combatMenager.ReloadConfig();
-			configs_menager.LoadAllConfigs();
-			configs_menager.ReloadMenagers();
+
+			if (ENABLE_SKILL_TREE) {
+				if (configpath != null) {
+					LevelConfig = YamlConfiguration.loadConfiguration(new File(configpath, "Levels.yml"));
+					SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(configpath, "skilltree.yml"));
+				}
+				if (levelsBending != null) {
+					levelsBending.LoadData();
+				}
+			}
+
+			if (ENABLE_DUNGEONS) {
+				setDungeonsConfig(getMenagerieFilesReload());
+				if (configpath != null) {
+					DungeonConfig = YamlConfiguration
+							.loadConfiguration(new File(configpath, "dungeons/dungeon_config.yml"));
+				}
+			}
+
+			if (ENABLE_RPG_GATHERING) {
+				if (farmmenager != null)
+					farmmenager.ReloadConfig();
+				if (combatMenager != null)
+					combatMenager.ReloadConfig();
+				if (configs_menager != null) {
+					configs_menager.LoadAllConfigs();
+					configs_menager.ReloadMenagers();
+				}
+			}
+
 			System.out.println("pomyślnie zrobiono reload!");
 		} catch (Exception e) {
 			System.out.println("ERROR!!!  " + e);

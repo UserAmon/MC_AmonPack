@@ -24,6 +24,8 @@ public class PlayerBendingBranch {
     List<Element> TemporaryElements;
     Element CurrentElement;
     int CurrentPage;
+    String SwapAbility = "";
+    String DropAbility = "";
 
 
     public PlayerBendingBranch(int airPoints, Element currentElement, int earthPoints, List<Element> elementsInPossesion, int firePoints, String name, List<String> unlockedAbilities, int waterPoints) {
@@ -39,6 +41,32 @@ public class PlayerBendingBranch {
         WaterPoints = waterPoints;
 
         unlockDefaultAbilities();
+    }
+
+    public String getSwapAbility() {
+        return SwapAbility != null ? SwapAbility : "";
+    }
+
+    public void setSwapAbility(String swapAbility) {
+        this.SwapAbility = swapAbility != null ? swapAbility : "";
+        try {
+            SaveInDatabaes();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getDropAbility() {
+        return DropAbility != null ? DropAbility : "";
+    }
+
+    public void setDropAbility(String dropAbility) {
+        this.DropAbility = dropAbility != null ? dropAbility : "";
+        try {
+            SaveInDatabaes();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void unlockDefaultAbilities() {
@@ -140,6 +168,8 @@ public class PlayerBendingBranch {
         String elementsText = ElementsInPossesion.stream().map(Element::getName).collect(Collectors.joining(","));
         String abilitiesText = String.join(",", UnlockedAbilities);
         String currentElementName = (CurrentElement != null) ? CurrentElement.getName() : "";
+        String swapAbiText = (SwapAbility != null) ? SwapAbility : "";
+        String dropAbiText = (DropAbility != null) ? DropAbility : "";
         if (rs.next()) {
             String st = "UPDATE BendingTree SET" +
                     " AirPoints = '" + AirPoints + "'," +
@@ -148,11 +178,13 @@ public class PlayerBendingBranch {
                     " EarthPoints = '" + EarthPoints + "'," +
                     " CurrentElement = '" + currentElementName + "'," +
                     " AllElements = '" + elementsText + "'," +
-                    " UnlockedAbilities = '" + abilitiesText + "'" +
+                    " UnlockedAbilities = '" + abilitiesText + "'," +
+                    " SwapAbility = '" + swapAbiText + "'," +
+                    " DropAbility = '" + dropAbiText + "'" +
                     " WHERE Player = '"+ Name+"';";
             ExecuteQuery(st);
         }else {
-            String st = "INSERT INTO BendingTree (Player, AirPoints, FirePoints, WaterPoints, EarthPoints, CurrentElement, AllElements, UnlockedAbilities) VALUES (" +
+            String st = "INSERT INTO BendingTree (Player, AirPoints, FirePoints, WaterPoints, EarthPoints, CurrentElement, AllElements, UnlockedAbilities, SwapAbility, DropAbility) VALUES (" +
                     "'" + Name + "', " +
                     "'" + AirPoints + "', " +
                     "'" + FirePoints + "', " +
@@ -160,7 +192,9 @@ public class PlayerBendingBranch {
                     "'" + EarthPoints + "', " +
                     "'" + currentElementName + "', " +
                     "'" + elementsText + "', " +
-                    "'" + abilitiesText + "');";
+                    "'" + abilitiesText + "', " +
+                    "'" + swapAbiText + "', " +
+                    "'" + dropAbiText + "');";
             ExecuteQuery(st);
         }
         stmt.close();
