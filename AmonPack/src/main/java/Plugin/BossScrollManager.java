@@ -46,7 +46,9 @@ public class BossScrollManager implements Listener {
     }
 
     private void loadConfig() {
-        config = AmonPackPlugin.getConfigs_menager().getBoss_Config();
+        if (AmonPackPlugin.getConfigs_menager() != null) {
+            config = AmonPackPlugin.getConfigs_menager().getBoss_Config();
+        }
     }
 
     public void reloadConfig() {

@@ -410,9 +410,8 @@ public class AbilitiesListener implements Listener {
 		if (branch != null) {
 			String swapAbi = branch.getSwapAbility();
 			if (swapAbi != null && !swapAbi.isEmpty()) {
-				if (SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP)) {
-					event.setCancelled(true);
-				}
+				event.setCancelled(true);
+				SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP);
 			}
 		}
 	}
@@ -425,9 +424,8 @@ public class AbilitiesListener implements Listener {
 		if (branch != null) {
 			String dropAbi = branch.getDropAbility();
 			if (dropAbi != null && !dropAbi.isEmpty()) {
-				if (SpecialTriggerManager.executeSpecialAbility(player, dropAbi, SpecialTriggerable.TriggerType.DROP)) {
-					event.setCancelled(true);
-				}
+				event.setCancelled(true);
+				SpecialTriggerManager.executeSpecialAbility(player, dropAbi, SpecialTriggerable.TriggerType.DROP);
 			}
 		}
 	}

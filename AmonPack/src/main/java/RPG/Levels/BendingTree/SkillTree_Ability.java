@@ -12,6 +12,7 @@ public class SkillTree_Ability {
     int place;
     boolean def;
     boolean IsUpgrade=false;
+    boolean isSpecialBindAbility=false;
 
     public SkillTree_Ability(Element element, String name, int cost, List<String> listOfPreAbility, int place, boolean aDefault) {
         this.element = element;
@@ -51,5 +52,11 @@ public class SkillTree_Ability {
     }
     public void setUpgrade(boolean upgrade) {
         IsUpgrade = upgrade;
+    }
+    public boolean isSpecialBindAbility() {
+        return isSpecialBindAbility;
+    }
+    public void setSpecialBindAbility(boolean specialBindAbility) {
+        isSpecialBindAbility = specialBindAbility;
     }
 }

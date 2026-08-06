@@ -40,18 +40,26 @@ public class PlayerLevelMenager {
     public static InventoryXHolder SelectElementMenu;
     public static List<LevelSkill.SkillType> EnabledSkillTypes;
 
-    public PlayerLevelMenager() throws SQLException {
+    public PlayerLevelMenager() {
         AllPlayerLevels = new ArrayList<>();
         EnabledSkillTypes = new ArrayList<>();
+        CreateInventories();
+
         FileConfiguration config = AmonPackPlugin.getLevelConfig();
-        try {
-            for (String key : config.getStringList("AmonPack.Levels.Enabled")) {
-                EnabledSkillTypes.add(LevelSkill.SkillType.valueOf(key));
+        if (config != null) {
+            try {
+                for (String key : config.getStringList("AmonPack.Levels.Enabled")) {
+                    EnabledSkillTypes.add(LevelSkill.SkillType.valueOf(key));
+                }
+            } catch (Exception e) {
+                System.out.println("Error loading enabled skill types: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
         }
-        LoadPlayersFromDatabase();
+        try {
+            LoadPlayersFromDatabase();
+        } catch (Exception e) {
+            System.out.println("[AmonPack] Ostrzeżenie przy wczytywaniu graczy z bazy danych: " + e.getMessage());
+        }
     }
 
     public static void TryOpenPlayerLevel(Player player) {

@@ -52,13 +52,19 @@ public class Levels_Bending {
         int modelid=SkillTreeConfig.getInt("AmonPack.Menu." + element.getName().toString().toLowerCase() + ".Green");
         inv.setItem(4, FastEasyStack(Material.PAPER,AbilityName,modelid));
 
-        String curSwap = branch.getSwapAbility();
-        String swapLore = curSwap.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO SWAP (F)]" : (curSwap.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curSwap);
-        inv.setItem(0, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.GOLD + "Slot SWAP (F)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do F", swapLore), 10071));
+        boolean isSpecial = SkillTreeConfig.getBoolean("AmonPack.Tree." + element.getName() + "." + AbilityName + ".IsSpecialBindAbility", false);
+        if (isSpecial) {
+            String curSwap = branch.getSwapAbility();
+            String swapLore = curSwap.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO SWAP (F)]" : (curSwap.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curSwap);
+            inv.setItem(0, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.GOLD + "Slot SWAP (F)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do F", swapLore), 10071));
 
-        String curDrop = branch.getDropAbility();
-        String dropLore = curDrop.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO DROP (Q)]" : (curDrop.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curDrop);
-        inv.setItem(1, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.AQUA + "Slot DROP (Q)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do Q", dropLore), 10072));
+            String curDrop = branch.getDropAbility();
+            String dropLore = curDrop.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO DROP (Q)]" : (curDrop.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curDrop);
+            inv.setItem(1, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.AQUA + "Slot DROP (Q)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do Q", dropLore), 10072));
+        } else {
+            inv.setItem(0, null);
+            inv.setItem(1, null);
+        }
 
         int baseint = 10062;
         for (int i = 9; i < 18; i++) {
@@ -239,6 +245,9 @@ public class Levels_Bending {
                 SkillTree_Ability AbilityObject = new SkillTree_Ability(pk_element,Ability,Cost,ReqAbi,Place,Cost == 0);
                 if(SkillTreeConfig.getBoolean("AmonPack.Tree."+Element+"."+Ability+".IsAbilityUpgrade")){
                     AbilityObject.setUpgrade(true);
+                }
+                if(SkillTreeConfig.getBoolean("AmonPack.Tree."+Element+"."+Ability+".IsSpecialBindAbility")){
+                    AbilityObject.setSpecialBindAbility(true);
                 }
                 ElementAbilities.add(AbilityObject);
                 if (MaxPlace < Place){

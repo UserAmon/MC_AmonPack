@@ -3,6 +3,7 @@ package Plugin;
 import java.io.File;
 import java.io.PrintStream;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -179,6 +180,13 @@ public class AmonPackPlugin extends JavaPlugin {
 				getLogger().warning("Nie udalo sie zapisac domyslnego zasobu: " + res + " - " + e.getMessage());
 			}
 		}
+
+		// --- 0.1 Wczytanie konfiguracji poziomów przed utworzeniem bazy SQL ---
+		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
+		if (!LevelConfigFile.exists()) {
+			saveResource("Levels.yml", false);
+		}
+		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 
 		// --- 2. BAZA DANYCH SQLITE ---
 		if (ENABLE_DATABASE) {
@@ -434,14 +442,8 @@ public class AmonPackPlugin extends JavaPlugin {
 					" SwapAbility TEXT," +
 					" DropAbility TEXT" +
 					")");
-			try {
-				ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN SwapAbility TEXT;");
-			} catch (Exception ignored) {
-			}
-			try {
-				ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN DropAbility TEXT;");
-			} catch (Exception ignored) {
-			}
+			ensureColumnExists("BendingTree", "SwapAbility");
+			ensureColumnExists("BendingTree", "DropAbility");
 			ExecuteQuery(
 					"CREATE TABLE IF NOT EXISTS SpellTree (Player VARCHAR(50) PRIMARY KEY, SkillPoint INT, Path TEXT, Element TEXT, AllElements TEXT)");
 			ExecuteQuery(
@@ -464,6 +466,27 @@ public class AmonPackPlugin extends JavaPlugin {
 			plugin.getLogger().info(e.getMessage());
 			getPluginLoader().disablePlugin(plugin);
 		}
+	}
+
+	private void ensureColumnExists(String table, String column) {
+		try {
+			if (sqlite != null && sqlite.getConnection() != null) {
+				Statement stmt = sqlite.getConnection().createStatement();
+				ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + table + ");");
+				boolean exists = false;
+				while (rs.next()) {
+					if (column.equalsIgnoreCase(rs.getString("name"))) {
+						exists = true;
+						break;
+					}
+				}
+				rs.close();
+				stmt.close();
+				if (!exists) {
+					ExecuteQuery("ALTER TABLE " + table + " ADD COLUMN " + column + " TEXT;");
+				}
+			}
+		} catch (Exception ignored) {}
 	}
 
 	public static void ExecuteQuery(String query) {

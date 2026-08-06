@@ -306,6 +306,7 @@ AmonPack:
       WaterWhip:
         Cost: 20
         Place: 23
+        IsSpecialBindAbility: true
         ReqAbilities:
           - WaterFist
         Description:

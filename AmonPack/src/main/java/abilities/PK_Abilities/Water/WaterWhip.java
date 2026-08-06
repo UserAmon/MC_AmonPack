@@ -8,7 +8,6 @@ import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import Plugin.AmonPackPlugin;
-import Plugin.Methods;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -18,38 +17,35 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTriggerable {
 
-    private int state = 0; // 0 = Ładowanie i nagrywanie kamery, 1 = Wypuszczenie bicza, 2 = Zakończono
-    private int chargeTicks = 0;
-    private int maxChargeTicks = 20;
-    private final List<Vector> trajectoryDirections = new ArrayList<>();
-    private final List<Location> trajectoryLocations = new ArrayList<>();
+    private int durationTicks = 0;
+    private int maxDurationTicks = 100; // 100 ticków = 5 sekund
 
-    private int whipIndex = 0;
+    private double currentLength = 2.0; // Startowa i minimalna długość = 2 bloki
+    private final double minLength = 2.0;
+    private double maxLength;
     private double damage;
-    private double range;
     private double knockback;
     private long cooldown;
+
+    private Vector lastDirection = null;
 
     public WaterWhip(Player player) {
         super(player);
 
-        if (bPlayer.isOnCooldown(this)) {
-            return;
-        }
-        if (!bPlayer.canBend(this)) {
+        if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
             return;
         }
 
-        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Damage", 5.0);
-        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Range", 12.0);
-        this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Knockback", 0.7);
-        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterWhip.Cooldown", 5000);
-        this.maxChargeTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterWhip.ChargeTicks", 20); // 20 ticków = 1 sekunda
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Damage", 4.0);
+        this.maxLength = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.MaxRange", 12.0);
+        this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Knockback", 0.6);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterWhip.Cooldown", 6000);
+        this.maxDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterWhip.DurationTicks", 100);
 
         start();
     }
@@ -61,71 +57,80 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
             return;
         }
 
-        // --- FAZA 1: 1 Sekunda ładowania + śledzenie obrotu kamery ---
-        if (state == 0) {
-            chargeTicks++;
+        durationTicks++;
+        if (durationTicks >= maxDurationTicks) {
+            bPlayer.addCooldown(this);
+            remove();
+            return;
+        }
 
-            Location eyeLoc = player.getEyeLocation();
-            Vector dir = eyeLoc.getDirection().clone().normalize();
+        Location eyeLoc = player.getEyeLocation();
+        Vector currentDirection = eyeLoc.getDirection().clone().normalize();
 
-            // Zapisujemy pozycję i kierunek patrzania z każdego ticku (tworząc parabolę obrotów kamery)
-            trajectoryLocations.add(eyeLoc.clone());
-            trajectoryDirections.add(dir.clone());
-
-            // Efekty cząsteczkowe wody w ręce i przed oczami gracza
-            Location handLoc = getHandLocation();
-            ParticleEffect.WATER_WAKE.display(handLoc, 4, 0.08, 0.08, 0.08, 0.02);
-            ParticleEffect.WATER_SPLASH.display(handLoc, 4, 0.08, 0.08, 0.08, 0.02);
-            ParticleEffect.WATER_DROP.display(handLoc, 2, 0.05, 0.05, 0.05, 0.01);
-
-            if (chargeTicks % 5 == 0) {
-                player.getWorld().playSound(player.getLocation(), Sound.ITEM_BOTTLE_FILL, 0.7f, 1.3f);
+        // Wyliczanie prędkości ruchu myszką (kąt obrotu kamery między tickami)
+        if (lastDirection != null) {
+            double angleDiff = Math.toDegrees(lastDirection.angle(currentDirection));
+            if (Double.isNaN(angleDiff)) {
+                angleDiff = 0;
             }
 
-            // Po 1 sekundzie (20 tickach) przechodzimy do wystrzelenia bicza
-            if (chargeTicks >= maxChargeTicks) {
-                state = 1;
-                whipIndex = 0;
-                player.getWorld().playSound(player.getLocation(), Sound.ITEM_TRIDENT_RIPTIDE_1, 1.2f, 1.1f);
+            // Rozciąganie bicza przy szybkim ruchu myszką
+            if (angleDiff > 1.0) {
+                double lengthGain = angleDiff * 0.45;
+                currentLength = Math.min(maxLength, currentLength + lengthGain);
+            } else {
+                // Gdy ruch ustaje, bicz powoli skraca się z powrotem do 2 bloków
+                currentLength = Math.max(minLength, currentLength - 0.4);
             }
         }
-        // --- FAZA 2: Wystrzelenie bicza po zarejestrowanej paraboli ---
-        else if (state == 1) {
-            if (whipIndex >= trajectoryDirections.size()) {
-                bPlayer.addCooldown(this);
-                remove();
-                return;
+        lastDirection = currentDirection.clone();
+
+        Location handLoc = getHandLocation();
+        Set<LivingEntity> hitEntities = new HashSet<>();
+
+        // Renderowanie bicza od ręki gracza w kierunku patrzania
+        int segments = (int) Math.ceil(currentLength * 2.5);
+        for (int i = 0; i <= segments; i++) {
+            double progressRatio = (double) i / (double) segments;
+            double dist = progressRatio * currentLength;
+
+            // Fala / wygięcie bicza w zależności od długości
+            double waveOffset = Math.sin(progressRatio * Math.PI) * 0.35 * (currentLength / maxLength);
+            Vector rightVector = currentDirection.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+
+            Location segmentLoc = handLoc.clone()
+                    .add(currentDirection.clone().multiply(dist))
+                    .add(rightVector.multiply(waveOffset));
+
+            // Cząsteczki wodne bicza (jak w WaterFist)
+            ParticleEffect.WATER_WAKE.display(segmentLoc, 3, 0.08, 0.08, 0.08, 0.02);
+            ParticleEffect.WATER_SPLASH.display(segmentLoc, 3, 0.08, 0.08, 0.08, 0.02);
+            if (i % 3 == 0) {
+                ParticleEffect.WATER_DROP.display(segmentLoc, 2, 0.05, 0.05, 0.05, 0.01);
             }
 
-            // Pobieramy zapisany punkt i kierunek z paraboli
-            Location startLoc = trajectoryLocations.get(whipIndex);
-            Vector dirVec = trajectoryDirections.get(whipIndex);
-
-            // Tworzymy punkt bicza wysunięty wzdłuż paraboli
-            double distMult = (whipIndex + 1) * (range / maxChargeTicks);
-            Location whipPoint = startLoc.clone().add(dirVec.clone().multiply(distMult));
-
-            // Efekty cząsteczkowe i bloki wody bicza (stylizowane jak w WaterFist)
-            ParticleEffect.WATER_WAKE.display(whipPoint, 6, 0.12, 0.12, 0.12, 0.03);
-            ParticleEffect.WATER_SPLASH.display(whipPoint, 6, 0.12, 0.12, 0.12, 0.03);
-
-            Block b = whipPoint.getBlock();
-            if (b.getType() == Material.AIR) {
-                new TempBlock(b, Material.WATER).setRevertTime(220);
+            Block block = segmentLoc.getBlock();
+            if (block.getType() == Material.AIR) {
+                new TempBlock(block, Material.WATER).setRevertTime(180);
             }
 
-            // Detekcja trafień w przeciwników
-            for (Entity entity : GeneralMethods.getEntitiesAroundPoint(whipPoint, 1.8)) {
+            // Kolizja z przeciwnikami i zadawanie obrażeń + odrzut
+            for (Entity entity : GeneralMethods.getEntitiesAroundPoint(segmentLoc, 1.3)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                     LivingEntity target = (LivingEntity) entity;
-                    DamageHandler.damageEntity(target, damage, this);
-                    target.setVelocity(dirVec.clone().multiply(knockback).setY(0.25));
-                    player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.4f);
-                    ParticleEffect.WATER_SPLASH.display(target.getLocation().add(0, 1, 0), 12, 0.2, 0.2, 0.2, 0.1);
+                    if (!hitEntities.contains(target)) {
+                        hitEntities.add(target);
+                        DamageHandler.damageEntity(target, damage, this);
+                        target.setVelocity(currentDirection.clone().multiply(knockback).setY(0.2));
+                        player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
+                        ParticleEffect.WATER_SPLASH.display(target.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.08);
+                    }
                 }
             }
+        }
 
-            whipIndex++;
+        if (durationTicks % 8 == 0) {
+            player.getWorld().playSound(handLoc, Sound.ITEM_TRIDENT_RIPTIDE_1, 0.6f, 1.4f);
         }
     }
 
@@ -138,7 +143,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public TriggerType getSupportedTriggerType() {
-        return TriggerType.BOTH; // WaterWhip może być przypisany do SWAP (F) oraz DROP (Q)
+        return TriggerType.BOTH;
     }
 
     @Override
@@ -173,7 +178,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override

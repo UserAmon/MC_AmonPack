@@ -92,7 +92,7 @@ public class ConfigsMenager {
             forest_menager.ReloadConfig();
         if (AmonPackPlugin.combatMenager != null)
             AmonPackPlugin.combatMenager.ReloadConfig();
-        if (Plugin.BossScrollManager.getInstance() != null)
+        if (AmonPackPlugin.getConfigs_menager() != null && AmonPackPlugin.getConfigs_menager().getBoss_Config() != null && Plugin.BossScrollManager.getInstance() != null)
             Plugin.BossScrollManager.getInstance().reloadConfig();
         // if (perks_menager != null) perks_menager.ReloadConfig();
     }
