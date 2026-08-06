@@ -65,8 +65,9 @@ public class AmonPackPlugin extends JavaPlugin {
 	public FileConfiguration config;
 
 	public static boolean ENABLE_BENDING_ABILITIES = true;
-	public static boolean ENABLE_SKILL_TREE, ENABLE_DUNGEONS, ENABLE_RPG_GATHERING, ENABLE_BOUNTIES, ENABLE_PARTY,
-			ENABLE_DATABASE, ENABLE_WORLD_GEN, ENABLE_ARMOR_EFFECTS = true;
+	public static boolean ENABLE_SKILL_TREE = true, ENABLE_DUNGEONS = true, ENABLE_RPG_GATHERING = true,
+			ENABLE_BOUNTIES = true, ENABLE_PARTY = true,
+			ENABLE_DATABASE = true, ENABLE_WORLD_GEN = true, ENABLE_ARMOR_EFFECTS = true;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -154,16 +155,16 @@ public class AmonPackPlugin extends JavaPlugin {
 			getDataFolder().mkdirs();
 		}
 		String[] resourcesToSave = {
-			"abilities_config.yml",
-			"BossConfig.yml",
-			"Bounties.yml",
-			"Crafting_Items.yml",
-			"dung_build.yml",
-			"skilltree.yml",
-			"Levels.yml",
-			"dungeons/dungeon_config.yml",
-			"dungeons/przykladowy_dungeon.yml",
-			"dungeons/dokumentacja_dungeonow.yml"
+				"abilities_config.yml",
+				"BossConfig.yml",
+				"Bounties.yml",
+				"Crafting_Items.yml",
+				"dung_build.yml",
+				"skilltree.yml",
+				"Levels.yml",
+				"dungeons/dungeon_config.yml",
+				"dungeons/przykladowy_dungeon.yml",
+				"dungeons/dokumentacja_dungeonow.yml"
 		};
 		for (String res : resourcesToSave) {
 			try {
@@ -433,8 +434,14 @@ public class AmonPackPlugin extends JavaPlugin {
 					" SwapAbility TEXT," +
 					" DropAbility TEXT" +
 					")");
-			try { ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN SwapAbility TEXT;"); } catch (Exception ignored) {}
-			try { ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN DropAbility TEXT;"); } catch (Exception ignored) {}
+			try {
+				ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN SwapAbility TEXT;");
+			} catch (Exception ignored) {
+			}
+			try {
+				ExecuteQuery("ALTER TABLE BendingTree ADD COLUMN DropAbility TEXT;");
+			} catch (Exception ignored) {
+			}
 			ExecuteQuery(
 					"CREATE TABLE IF NOT EXISTS SpellTree (Player VARCHAR(50) PRIMARY KEY, SkillPoint INT, Path TEXT, Element TEXT, AllElements TEXT)");
 			ExecuteQuery(

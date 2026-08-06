@@ -1,0 +1,170 @@
+AmonPack:
+  Levels:
+    Enabled:
+    - GENERAL
+    - MINING
+    - LUMBERING
+    - COMBAT
+    - FARMING
+    - SMITHING
+    - CRAFTING
+    - BOUNTY
+    - DUNGEON
+    GENERAL:
+      Gui:
+        Place: 4
+        Item: PLAYER_HEAD
+        Title: §6Poziom Ogólny
+        SkillDisplay: §9Twój poziom Umiejętności
+        BuffSkilllore: 'G§3Rozwój tej Umiejętności zapewnia szansę na podwójny drop
+          podczas kopania! %break% Obecna szansa: %chance%'
+      Details:
+        LockedItem: STONE
+        UnLockedItem: DIRT
+    DUNGEON:
+      Gui:
+        Place: 27
+        Item: COMPASS
+        Title: §6Dungeony
+        SkillDisplay: §9Twój poziom Umiejętności
+        BuffSkilllore: 'G§3Zdolność do przechodzenia przez portale lochów %break%
+          z mniejszym cooldownem! %break% Obecny cooldown: %chance%'
+      Details:
+        LockedItem: COMPASS
+        UnLockedItem: GOLDEN_APPLE
+      Level_1:
+        ReqExp: 250
+        Reward_1: command:economy give %player% 500
+      Level_2:
+        ReqExp: 750
+        Reward: command:economy give %player% 1500
+    BOUNTY:
+      Gui:
+        Place: 5
+        Item: GOLD_INGOT
+        Title: §6Zlecenia
+        SkillDisplay: §9Twój poziom Umiejętności
+        BuffSkilllore: 'G§3Rozwój tej Umiejętności zapewnia szansę na podwójny drop
+          podczas kopania! %break% Obecna szansa: %chance%'
+      Details:
+        LockedItem: CHEST
+        UnLockedItem: DIAMOND
+      Level_1:
+        ReqExp: 10
+        Reward_1: command:economy give %player% 500
+      Level_2:
+        ReqExp: 30
+        Reward: command:economy give %player% 1500
+    LUMBERING:
+      Gui:
+        Place: 25
+        Item: IRON_AXE
+        Title: §6Drwalstwo
+        SkillDisplay: §9Twój poziom Umiejętności
+        BuffSkilllore: '§3Szansa na podwójny drop podczas kopania: %chance%'
+      Details:
+        LockedItem: DEEPSLATE
+        UnLockedItem: DEEPSLATE_DIAMOND_ORE
+      Level_1:
+        ReqExp: 50
+        Reward_1: command:economy give %player% 500
+        Reward_3: SkillPoints:25
+    MINING:
+      Gui:
+        Place: 21
+        Item: IRON_PICKAXE
+        Title: §6Górnictwo
+        SkillDisplay: §9Twój poziom Umiejętności
+        BuffSkilllore: '§3Szansa na podwójny drop podczas kopania: %chance%'
+      Details:
+        LockedItem: DEEPSLATE
+        UnLockedItem: DEEPSLATE_DIAMOND_ORE
+      Level_1:
+        ReqExp: 0
+        Reward_1: command:economy give %player% 500
+        Reward_3: SkillPoints:25
+      Level_2:
+        ReqExp: 150
+        Reward: command:economy give %player% 1500
+        Reward_3: SkillPoints:100
+        Reward_2: skillupgrade:10
+      Level_3:
+        ReqExp: 400
+        Reward: command:economy give %player% 6000
+        Reward_2: skillupgrade:20
+      Level_4:
+        ReqExp: 750
+        Reward: command:economy give %player% 10000
+        Reward_3: SkillPoints:100
+        Reward_2_Lore: daje dostęp do niższego piętra
+      Level_5:
+        ReqExp: 1000
+        Reward: command:economy give %player% 25000
+        Reward_2: skillupgrade:30
+      Level_6:
+        ReqExp: 1500
+        Reward: command:economy give %player% 50000
+        Reward_3: SkillPoints:100
+    COMBAT:
+      Gui:
+        Place: 23
+        Item: IRON_SWORD
+        Title: §6Doświadczenie w Strefie Walki
+        SkillDisplay: §9Twój poziom Umiejętności
+        BuffSkilllore: '§3Rozwój tej Umiejętności zapewnia szansę na podwójny drop
+          %break% podczas zabójstwa w Strefie Bezprawia! %break% Obecna szansa: %chance%'
+      Details:
+        LockedItem: DIAMOND_SWORD
+        UnLockedItem: DIAMOND_SWORD
+        UnLockedItemModelData: 10014
+      Level_1:
+        ReqExp: 0
+        Reward_1: command:economy give %player% 500
+        Reward_4: 'SkillPoints: 30'
+      Level_2:
+        ReqExp: 150
+        Reward_1: command:economy give %player% 1000
+        Reward_4: SkillPoints:40
+      Level_3:
+        ReqExp: 150
+        Reward_1: command:economy give %player% 5000
+        Reward_4: SkillPoints:50
+        Reward_2_Lore: zabiera dostęp do PvP1
+    FARMING:
+      Gui:
+        Place: 19
+        Item: IRON_HOE
+        Title: §6Doświadczenie w Rolnictwie
+        SkillDisplay: §9Twój poziom Umiejętności
+        BuffSkilllore: '§3Zapewnia szanse na podwójny drop %break%§3Obecna szansa:
+          %chance%'
+      Details:
+        LockedItem: WHEAT_SEEDS
+        UnLockedItem: WHEAT
+      Level_1:
+        ReqExp: 0
+        Reward_1: command:economy give %player% 500
+        Reward_2_Lore: zapewnia dostęp do działki
+      Level_2:
+        ReqExp: 150
+        Reward_1: command:economy give %player% 1500
+    MasteryFIRE:
+      Gui:
+        Place: 29
+        ModelData: 10017
+        Title: §4Ogień
+    MasteryWATER:
+      Gui:
+        Place: 30
+        ModelData: 10021
+        Title: §bWoda
+    MasteryAIR:
+      Gui:
+        Place: 32
+        ModelData: 10025
+        Title: §7Powietrze
+    MasteryEARTH:
+      Gui:
+        Place: 33
+        ModelData: 10029
+        Title: §aZiemia
