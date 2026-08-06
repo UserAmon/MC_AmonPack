@@ -149,6 +149,46 @@ public class AmonPackPlugin extends JavaPlugin {
 
 		configpath = getDataFolder();
 
+		// --- 0. ZAPISYWANIE WSZYSTKICH ZASOBÓW Z RESOURCES NA DYSK ---
+		if (!getDataFolder().exists()) {
+			getDataFolder().mkdirs();
+		}
+		String[] resourcesToSave = {
+			"abilities_config.yml",
+			"BossConfig.yml",
+			"Bounties.yml",
+			"Crafting_Items.yml",
+			"dung_build.yml",
+			"skilltree.yml",
+			"Levels.yml",
+			"dungeons/dungeon_config.yml",
+			"dungeons/przykladowy_dungeon.yml",
+			"dungeons/dokumentacja_dungeonow.yml"
+		};
+		for (String res : resourcesToSave) {
+			try {
+				File file = new File(getDataFolder(), res);
+				if (!file.exists()) {
+					if (res.contains("/")) {
+						file.getParentFile().mkdirs();
+					}
+					saveResource(res, false);
+				}
+			} catch (Exception e) {
+				getLogger().warning("Nie udalo sie zapisac domyslnego zasobu: " + res + " - " + e.getMessage());
+			}
+		}
+
+		// --- 2. BAZA DANYCH SQLITE ---
+		if (ENABLE_DATABASE) {
+			try {
+				sqlConnection();
+			} catch (Exception e) {
+				getLogger().severe("Nie udalo sie polaczyc z SQLite: " + e.getMessage());
+				e.printStackTrace();
+			}
+		}
+
 		// --- 1. RUCHY MAGICZNE (BENDING ABILITIES) ---
 		if (ENABLE_BENDING_ABILITIES) {
 			SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
@@ -175,11 +215,6 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 		}
 
-		// --- 2. BAZA DANYCH SQLITE ---
-		if (ENABLE_DATABASE) {
-			sqlConnection();
-		}
-
 		// --- 3. RPG GATHERING & CRAFTING ---
 		if (ENABLE_RPG_GATHERING) {
 			configs_menager = new ConfigsMenager(getDataFolder());
@@ -203,6 +238,9 @@ public class AmonPackPlugin extends JavaPlugin {
 			saveSkillTreeConfig();
 
 			LevelConfigFile = new File(getDataFolder(), "Levels.yml");
+			if (!LevelConfigFile.exists()) {
+				saveResource("Levels.yml", false);
+			}
 			LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 
 			levelsBending = new Levels_Bending();

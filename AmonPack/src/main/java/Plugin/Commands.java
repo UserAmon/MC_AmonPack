@@ -30,23 +30,29 @@ public class Commands implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         String cmdName = cmd.getName().toLowerCase();
         if (!AmonPackPlugin.ENABLE_SKILL_TREE && (cmdName.equals("selectelement") || cmdName.equals("level"))) {
-            sender.sendMessage(ChatColor.RED + "[AmonPack] Ta funkcja (Drzewko Skilli / Poziomy) jest wyłączona w tym buildzie pluginu!");
+            sender.sendMessage(ChatColor.RED
+                    + "[AmonPack] Ta funkcja (Drzewko Skilli / Poziomy) jest wyłączona w tym buildzie pluginu!");
             return true;
         }
-        if (!AmonPackPlugin.ENABLE_DUNGEONS && (cmdName.equals("dungeons") || cmdName.equals("dungbuild") || cmdName.equals("menagerie"))) {
-            sender.sendMessage(ChatColor.RED + "[AmonPack] Ta funkcja (Dungeony / Menagerie) jest wyłączona w tym buildzie pluginu!");
+        if (!AmonPackPlugin.ENABLE_DUNGEONS
+                && (cmdName.equals("dungeons") || cmdName.equals("dungbuild") || cmdName.equals("menagerie"))) {
+            sender.sendMessage(ChatColor.RED
+                    + "[AmonPack] Ta funkcja (Dungeony / Menagerie) jest wyłączona w tym buildzie pluginu!");
             return true;
         }
         if (!AmonPackPlugin.ENABLE_BOUNTIES && cmdName.equals("bounties")) {
-            sender.sendMessage(ChatColor.RED + "[AmonPack] Ta funkcja (System Nagród / Bounties) jest wyłączona w tym buildzie pluginu!");
+            sender.sendMessage(ChatColor.RED
+                    + "[AmonPack] Ta funkcja (System Nagród / Bounties) jest wyłączona w tym buildzie pluginu!");
             return true;
         }
         if (!AmonPackPlugin.ENABLE_PARTY && (cmdName.equals("party") || cmdName.equals("p"))) {
-            sender.sendMessage(ChatColor.RED + "[AmonPack] Ta funkcja (System Drużyn / Party) jest wyłączona w tym buildzie pluginu!");
+            sender.sendMessage(ChatColor.RED
+                    + "[AmonPack] Ta funkcja (System Drużyn / Party) jest wyłączona w tym buildzie pluginu!");
             return true;
         }
         if (!AmonPackPlugin.ENABLE_RPG_GATHERING && cmdName.equals("craft")) {
-            sender.sendMessage(ChatColor.RED + "[AmonPack] Ta funkcja (Crafting / RPG) jest wyłączona w tym buildzie pluginu!");
+            sender.sendMessage(
+                    ChatColor.RED + "[AmonPack] Ta funkcja (Crafting / RPG) jest wyłączona w tym buildzie pluginu!");
             return true;
         }
 
@@ -100,6 +106,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     }
                 } else {
                     if (sender instanceof Player) {
+                        System.out.println("Otwieram menu levela!");
                         try {
                             PlayerLevelMenager.TryOpenPlayerLevel((Player) sender);
                         } catch (Exception e) {
@@ -127,7 +134,8 @@ public class Commands implements CommandExecutor, TabCompleter {
                         }
                     } else if (args[0].equalsIgnoreCase("leave") && sender instanceof Player) {
                         Player player = (Player) sender;
-                        RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance().getActiveInstance(player);
+                        RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance()
+                                .getActiveInstance(player);
                         if (run != null) {
                             run.ejectPlayer(player);
                         } else {
@@ -135,7 +143,8 @@ public class Commands implements CommandExecutor, TabCompleter {
                         }
                     } else if (args[0].equalsIgnoreCase("skills") && sender instanceof Player) {
                         Player player = (Player) sender;
-                        RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance().getActiveInstance(player);
+                        RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance()
+                                .getActiveInstance(player);
                         if (run != null) {
                             AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(player.getName());
                         } else {
@@ -158,7 +167,8 @@ public class Commands implements CommandExecutor, TabCompleter {
                         }
                         RPG.Dungeons.DungeonEntryGui.open(player, dungId);
                     } else {
-                        sender.sendMessage(ChatColor.RED + "Niepoprawne argumenty! Dostepne: start, leave, skills, reload");
+                        sender.sendMessage(
+                                ChatColor.RED + "Niepoprawne argumenty! Dostepne: start, leave, skills, reload");
                     }
                 } else {
                     sender.sendMessage(ChatColor.RED + "Dostepne podkomendy: start, leave, skills, reload");
@@ -199,7 +209,8 @@ public class Commands implements CommandExecutor, TabCompleter {
                                 break;
                             }
                         }
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                    }
                 }
                 if (args.length > 0) {
                     MenagerieMenager.StartMenagerie(listofplayers, args[0]);
@@ -228,22 +239,30 @@ public class Commands implements CommandExecutor, TabCompleter {
                 }
                 Player pParty = (Player) sender;
                 if (args.length == 0) {
-                    pParty.sendMessage(ChatColor.GOLD + "========== " + ChatColor.AQUA + "SYSTEM PARTY" + ChatColor.GOLD + " ==========");
-                    pParty.sendMessage(ChatColor.YELLOW + "/party invite <gracz> " + ChatColor.GRAY + "- Zaprasza gracza do party");
-                    pParty.sendMessage(ChatColor.YELLOW + "/party accept " + ChatColor.GRAY + "- Akceptuje zaproszenie");
+                    pParty.sendMessage(ChatColor.GOLD + "========== " + ChatColor.AQUA + "SYSTEM PARTY" + ChatColor.GOLD
+                            + " ==========");
+                    pParty.sendMessage(ChatColor.YELLOW + "/party invite <gracz> " + ChatColor.GRAY
+                            + "- Zaprasza gracza do party");
+                    pParty.sendMessage(
+                            ChatColor.YELLOW + "/party accept " + ChatColor.GRAY + "- Akceptuje zaproszenie");
                     pParty.sendMessage(ChatColor.YELLOW + "/party leave " + ChatColor.GRAY + "- Opuszcza obecne party");
-                    pParty.sendMessage(ChatColor.YELLOW + "/party kick <gracz> " + ChatColor.GRAY + "- Wyrzuca gracza z party (lider)");
-                    pParty.sendMessage(ChatColor.YELLOW + "/party pvp " + ChatColor.GRAY + "- Przełącza friendly fire (lider)");
-                    pParty.sendMessage(ChatColor.YELLOW + "/party list " + ChatColor.GRAY + "- Pokazuje liste graczy w party");
-                    pParty.sendMessage(ChatColor.YELLOW + "/party chat <tekst> " + ChatColor.GRAY + "- Wysyła wiadomość do party");
-                    pParty.sendMessage(ChatColor.YELLOW + "/party togglechat " + ChatColor.GRAY + "- Togglowanie pętli czatu");
+                    pParty.sendMessage(ChatColor.YELLOW + "/party kick <gracz> " + ChatColor.GRAY
+                            + "- Wyrzuca gracza z party (lider)");
+                    pParty.sendMessage(
+                            ChatColor.YELLOW + "/party pvp " + ChatColor.GRAY + "- Przełącza friendly fire (lider)");
+                    pParty.sendMessage(
+                            ChatColor.YELLOW + "/party list " + ChatColor.GRAY + "- Pokazuje liste graczy w party");
+                    pParty.sendMessage(
+                            ChatColor.YELLOW + "/party chat <tekst> " + ChatColor.GRAY + "- Wysyła wiadomość do party");
+                    pParty.sendMessage(
+                            ChatColor.YELLOW + "/party togglechat " + ChatColor.GRAY + "- Togglowanie pętli czatu");
                     pParty.sendMessage(ChatColor.GOLD + "========================================");
                     return true;
                 }
-                
+
                 String sub = args[0].toLowerCase();
                 RPG.Party.PartyManager pm = RPG.Party.PartyManager.getInstance();
-                
+
                 if (sub.equals("invite") || sub.equals("zapros")) {
                     if (args.length < 2) {
                         pParty.sendMessage(ChatColor.RED + "Podaj nazwę gracza: /party invite <gracz>");
@@ -278,15 +297,17 @@ public class Commands implements CommandExecutor, TabCompleter {
                         pParty.sendMessage(ChatColor.RED + "Nie jesteś w żadnej drużynie!");
                         return true;
                     }
-                    pParty.sendMessage(ChatColor.GOLD + "=== Członkowie drużyny (FF: " + (partyObj.isFriendlyFireEnabled() ? "ON" : "OFF") + ") ===");
+                    pParty.sendMessage(ChatColor.GOLD + "=== Członkowie drużyny (FF: "
+                            + (partyObj.isFriendlyFireEnabled() ? "ON" : "OFF") + ") ===");
                     for (UUID uuid : partyObj.getMembers()) {
                         String name = Bukkit.getOfflinePlayer(uuid).getName();
-                        if (name == null) name = uuid.toString();
-                        
-                        String status = Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline() 
-                                ? ChatColor.GREEN + "[ONLINE]" 
+                        if (name == null)
+                            name = uuid.toString();
+
+                        String status = Bukkit.getPlayer(uuid) != null && Bukkit.getPlayer(uuid).isOnline()
+                                ? ChatColor.GREEN + "[ONLINE]"
                                 : ChatColor.RED + "[OFFLINE]";
-                                
+
                         String suffix = partyObj.getLeaderUUID().equals(uuid) ? ChatColor.GOLD + " (Lider) *" : "";
                         pParty.sendMessage(ChatColor.YELLOW + "- " + name + suffix + " " + status);
                     }
@@ -330,7 +351,8 @@ public class Commands implements CommandExecutor, TabCompleter {
                     for (String key : AmonPackPlugin.getAbilitiesConfig().getConfigurationSection("AmonPack.Items")
                             .getKeys(false)) {
                         if (AmonPackPlugin.getAbilitiesConfig().getString("AmonPack.Items." + key + ".Name") != null) {
-                            String type = AmonPackPlugin.getAbilitiesConfig().getString("AmonPack.Items." + key + ".Type");
+                            String type = AmonPackPlugin.getAbilitiesConfig()
+                                    .getString("AmonPack.Items." + key + ".Type");
                             String name = "" + AmonPackPlugin.getAbilitiesConfig()
                                     .getString("AmonPack.Items." + key + ".Name").replace("&", "§");
                             List<String> lorelist = new ArrayList<String>();
@@ -351,7 +373,8 @@ public class Commands implements CommandExecutor, TabCompleter {
                             if (AmonPackPlugin.getAbilitiesConfig()
                                     .getConfigurationSection("AmonPack.Items." + key + ".Enchantment") != null) {
                                 for (String enchname : AmonPackPlugin.getAbilitiesConfig()
-                                        .getConfigurationSection("AmonPack.Items." + key + ".Enchantment").getKeys(false)) {
+                                        .getConfigurationSection("AmonPack.Items." + key + ".Enchantment")
+                                        .getKeys(false)) {
                                     int enchpower = AmonPackPlugin.getAbilitiesConfig().getInt(
                                             "AmonPack.Items." + key + ".Enchantment." + enchname + ".EnchantmentLevel");
                                     QuestItemMeta.addEnchant(Enchantment.getByName(enchname), enchpower, true);
@@ -377,7 +400,8 @@ public class Commands implements CommandExecutor, TabCompleter {
 
     public static ItemStack QuestItemConfig(String itemname) {
         ItemStack QuestItem = new ItemStack(Material.DIRT, 1);
-        for (String key : AmonPackPlugin.getAbilitiesConfig().getConfigurationSection("AmonPack.Items").getKeys(false)) {
+        for (String key : AmonPackPlugin.getAbilitiesConfig().getConfigurationSection("AmonPack.Items")
+                .getKeys(false)) {
             if (key.equalsIgnoreCase(itemname)) {
                 String name = null;
                 String type = AmonPackPlugin.getAbilitiesConfig().getString("AmonPack.Items." + key + ".Type");
@@ -418,7 +442,8 @@ public class Commands implements CommandExecutor, TabCompleter {
                 QuestItem.setItemMeta(QuestItemMeta);
             }
         }
-        for (String key : AmonPackPlugin.getAbilitiesConfig().getConfigurationSection("AmonPack.Items").getKeys(false)) {
+        for (String key : AmonPackPlugin.getAbilitiesConfig().getConfigurationSection("AmonPack.Items")
+                .getKeys(false)) {
             if (key.equalsIgnoreCase(itemname)) {
                 String name = null;
                 String type = AmonPackPlugin.getAbilitiesConfig().getString("AmonPack.Items." + key + ".Type");
@@ -472,7 +497,7 @@ public class Commands implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
-        
+
         if (cmd.getName().equalsIgnoreCase("dungeons")) {
             if (args.length == 1) {
                 List<String> subCommands = Arrays.asList("start", "leave", "skills", "reload");
@@ -494,7 +519,8 @@ public class Commands implements CommandExecutor, TabCompleter {
             }
         } else if (cmd.getName().equalsIgnoreCase("party")) {
             if (args.length == 1) {
-                List<String> subCommands = Arrays.asList("invite", "accept", "leave", "kick", "pvp", "list", "chat", "togglechat");
+                List<String> subCommands = Arrays.asList("invite", "accept", "leave", "kick", "pvp", "list", "chat",
+                        "togglechat");
                 String currentArg = args[0].toLowerCase();
                 for (String sub : subCommands) {
                     if (sub.startsWith(currentArg)) {
@@ -510,7 +536,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                 }
             }
         }
-        
+
         return completions;
     }
 

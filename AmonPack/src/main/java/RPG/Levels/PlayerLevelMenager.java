@@ -211,6 +211,10 @@ public class PlayerLevelMenager {
          * }
          */
         FileConfiguration config = AmonPackPlugin.getLevelConfig();
+        if (config == null || config.getConfigurationSection("AmonPack.Levels") == null) {
+            System.out.println("[AmonPack] Blad: Konfiguracja Levels.yml nie zostala zaladowana lub brakuje sekcji AmonPack.Levels!");
+            return;
+        }
         try {
             for (String key : config.getConfigurationSection("AmonPack.Levels").getKeys(false)) {
                 if (!key.startsWith("Enabled")) {
