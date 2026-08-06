@@ -64,12 +64,11 @@ public class Levels_Bending {
         } else {
             inv.setItem(0, null);
             inv.setItem(1, null);
-        }
-
-        int baseint = 10062;
-        for (int i = 9; i < 18; i++) {
-            inv.setItem(i, FastEasyStack(Material.PAPER,""+(i-8),baseint));
-            baseint++;
+            int baseint = 10062;
+            for (int i = 9; i < 18; i++) {
+                inv.setItem(i, FastEasyStack(Material.PAPER,""+(i-8),baseint));
+                baseint++;
+            }
         }
         inv.setItem(8, FastEasyStack(Material.PAPER, ChatColor.RED+"Zamknij",10013));
         inventory.showInventory(Bukkit.getPlayer(name));

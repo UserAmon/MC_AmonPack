@@ -4,12 +4,42 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class SpecialTriggerManager {
+
+    private static final Set<UUID> activeSpecialPlayers = new HashSet<>();
+
+    public static void registerActiveSpecial(Player player) {
+        if (player != null) {
+            activeSpecialPlayers.add(player.getUniqueId());
+        }
+    }
+
+    public static void unregisterActiveSpecial(Player player) {
+        if (player != null) {
+            activeSpecialPlayers.remove(player.getUniqueId());
+        }
+    }
+
+    public static boolean isSpecialActive(Player player) {
+        if (player == null) return false;
+        // Sprawdzamy czy gracz jest na naszej liście lub czy posiada aktywną instancję skilla z SpecialTriggerable
+        if (activeSpecialPlayers.contains(player.getUniqueId())) {
+            return true;
+        }
+        for (CoreAbility ability : CoreAbility.getAbilities(player, CoreAbility.class)) {
+            if (ability instanceof SpecialTriggerable) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Uniwersalna metoda aktywująca umiejętność specjalną przypisaną do danego wyzwalacza (SWAP lub DROP).
@@ -76,7 +106,6 @@ public class SpecialTriggerManager {
             SpecialTriggerable st = (SpecialTriggerable) ability;
             return st.isTriggerTypeSupported(triggerType);
         }
-        // Domyślnie dopuszczamy wszystkie zdefiniowane skille autorskie
         return true;
     }
 }

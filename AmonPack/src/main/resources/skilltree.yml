@@ -313,6 +313,16 @@ AmonPack:
           - "&7Wystrzeliwuje bicz wodny podążający za ścieżką"
           - "&7obrotu kamery z odrzutem i obrażeniami."
           - "&e[Ruch Specjalny - SWAP (F) / DROP (Q)]"
+      VineWave:
+        Cost: 25
+        Place: 25
+        IsSpecialBindAbility: true
+        ReqAbilities:
+          - WaterWhip
+        Description:
+          - "&7Tka energię pnączy wzorem V, ładuje lód w obu dłoniach"
+          - "&7i wystrzeliwuje podskakującą falę pnączy z rykoszetem ścian."
+          - "&e[Ruch Specjalny - SWAP (F) / DROP (Q)]"
       Uppercut:
         Cost: 2
         Place: 20

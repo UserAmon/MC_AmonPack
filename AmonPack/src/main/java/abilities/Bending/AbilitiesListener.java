@@ -47,6 +47,9 @@ public class AbilitiesListener implements Listener {
 	@EventHandler
 	public void onShift(PlayerToggleSneakEvent event) {
 		Player player = event.getPlayer();
+		if (SpecialTriggerManager.isSpecialActive(player)) {
+			return;
+		}
 		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
 		if (bPlayer.getBoundAbility() != null) {
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
@@ -121,6 +124,9 @@ public class AbilitiesListener implements Listener {
 	@EventHandler
 	public void OnSwing(PlayerAnimationEvent event) {
 		Player player = event.getPlayer();
+		if (SpecialTriggerManager.isSpecialActive(player)) {
+			return;
+		}
 		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
 		if (bPlayer.getBoundAbility() != null) {
 			if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")
