@@ -4,6 +4,7 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
@@ -18,6 +19,7 @@ public class SpecialTriggerManager {
     public static void registerActiveSpecial(Player player) {
         if (player != null) {
             activeSpecialPlayers.add(player.getUniqueId());
+            applySoftCooldownToToolbar(player);
         }
     }
 
@@ -29,7 +31,6 @@ public class SpecialTriggerManager {
 
     public static boolean isSpecialActive(Player player) {
         if (player == null) return false;
-        // Sprawdzamy czy gracz jest na naszej liście lub czy posiada aktywną instancję skilla z SpecialTriggerable
         if (activeSpecialPlayers.contains(player.getUniqueId())) {
             return true;
         }
@@ -42,7 +43,60 @@ public class SpecialTriggerManager {
     }
 
     /**
-     * Uniwersalna metoda aktywująca umiejętność specjalną przypisaną do danego wyzwalacza (SWAP lub DROP).
+     * Nakłada lekki 0.1s (100ms) cooldown na nieużywane umiejętności z paska toolbaru,
+     * tak aby nie były używalne podczas trwania skilla specjalnego (nie nadpisując długich CD).
+     */
+    public static void applySoftCooldownToToolbar(Player player) {
+        BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
+        if (bPlayer == null) return;
+        for (String boundAbi : bPlayer.getAbilities().values()) {
+            if (boundAbi != null && !boundAbi.isEmpty()) {
+                if (!bPlayer.isOnCooldown(boundAbi)) {
+                    bPlayer.addCooldown(boundAbi, 100);
+                }
+            }
+        }
+    }
+
+    /**
+     * Rejestruje ProtocolLib PacketListener przechwytujący wciśnięcie klawisza L (ADVANCEMENT_TAB).
+     */
+    public static void registerAdvancementPacketListener() {
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("ProtocolLib")) {
+                com.comphenix.protocol.ProtocolLibrary.getProtocolManager().addPacketListener(
+                    new com.comphenix.protocol.events.PacketAdapter(
+                        AmonPackPlugin.plugin,
+                        com.comphenix.protocol.events.ListenerPriority.HIGH,
+                        com.comphenix.protocol.PacketType.Play.Client.ADVANCEMENTS
+                    ) {
+                        @Override
+                        public void onPacketReceiving(com.comphenix.protocol.events.PacketEvent event) {
+                            Player player = event.getPlayer();
+                            if (player == null || AmonPackPlugin.levelsBending == null) return;
+
+                            PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+                            if (branch != null) {
+                                String advAbi = branch.getDropAbility(); // Wykorzystujemy 2. slot specjalny w bazie DB dla L
+                                if (advAbi != null && !advAbi.isEmpty()) {
+                                    event.setCancelled(true);
+                                    Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+                                        executeSpecialAbility(player, advAbi, SpecialTriggerable.TriggerType.ADVANCEMENT);
+                                    });
+                                }
+                            }
+                        }
+                    }
+                );
+                System.out.println("[AmonPack] Zarejestrowano ProtocolLib PacketListener dla klawisza L (ADVANCEMENT_TAB)!");
+            }
+        } catch (Throwable t) {
+            System.err.println("[AmonPack] Nie udało się zarejestrować ProtocolLib PacketListenera dla klawisza L: " + t.getMessage());
+        }
+    }
+
+    /**
+     * Uniwersalna metoda aktywująca umiejętność specjalną przypisaną do wyzwalacza SWAP (F) lub ADVANCEMENT (L).
      */
     public static boolean executeSpecialAbility(Player player, String abilityName, SpecialTriggerable.TriggerType triggerType) {
         if (abilityName == null || abilityName.isEmpty()) {
@@ -62,6 +116,13 @@ public class SpecialTriggerManager {
         BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
         if (bPlayer == null) {
             return false;
+        }
+
+        // Jeśli jakakolwiek umiejętność z paska toolbaru jest już aktywna, zablokuj uruchomienie skilla specjalnego
+        for (CoreAbility activeAbility : CoreAbility.getAbilities(player, CoreAbility.class)) {
+            if (activeAbility != null && !(activeAbility instanceof SpecialTriggerable)) {
+                return false;
+            }
         }
 
         // Pobranie instancji CoreAbility ProjectKorra
@@ -85,6 +146,7 @@ public class SpecialTriggerManager {
             Class<?> clazz = ability.getClass();
             Constructor<?> constructor = clazz.getConstructor(Player.class);
             constructor.newInstance(player);
+            applySoftCooldownToToolbar(player);
             return true;
         } catch (Exception e) {
             System.err.println("[AmonPack] Błąd podczas aktywacji specjalnego skilla " + abilityName + ": " + e.getMessage());
@@ -95,7 +157,7 @@ public class SpecialTriggerManager {
     }
 
     /**
-     * Sprawdza czy dana umiejętność wspiera dany typ wyzwalacza (SWAP/DROP).
+     * Sprawdza czy dana umiejętność wspiera dany typ wyzwalacza.
      */
     public static boolean isTriggerSupported(String abilityName, SpecialTriggerable.TriggerType triggerType) {
         if (abilityName == null || abilityName.isEmpty()) {

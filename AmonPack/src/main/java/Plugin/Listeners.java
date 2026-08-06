@@ -890,10 +890,10 @@ public class Listeners implements Listener {
                     if (branch != null) {
                         if (branch.getDropAbility().equalsIgnoreCase(abilityName)) {
                             branch.setDropAbility("");
-                            p.sendMessage(ChatColor.YELLOW + "Usunięto umiejętność ze slotu DROP (Q)!");
+                            p.sendMessage(ChatColor.YELLOW + "Usunięto umiejętność ze slotu Osiągnięć (L)!");
                         } else {
                             branch.setDropAbility(abilityName);
-                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName + " do slotu DROP (klawisz Q)!");
+                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName + " do slotu Osiągnięć (klawisz L)!");
                         }
                     }
                     p.closeInventory();

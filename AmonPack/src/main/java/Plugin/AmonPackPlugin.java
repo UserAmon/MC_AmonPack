@@ -217,6 +217,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			Abilities.PK_Abilities.Earth.SandWave.loadConfig();
 			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
 			this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
+			Abilities.Bending.SpecialTriggerManager.registerAdvancementPacketListener();
 			try {
 				StartDeafnessTimer();
 			} catch (Exception e) {

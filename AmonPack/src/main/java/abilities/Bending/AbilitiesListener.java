@@ -14,6 +14,7 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.Element;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -418,20 +419,6 @@ public class AbilitiesListener implements Listener {
 			if (swapAbi != null && !swapAbi.isEmpty()) {
 				event.setCancelled(true);
 				SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP);
-			}
-		}
-	}
-
-	@EventHandler
-	public void onDropItem(PlayerDropItemEvent event) {
-		Player player = event.getPlayer();
-		if (AmonPackPlugin.levelsBending == null) return;
-		PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		if (branch != null) {
-			String dropAbi = branch.getDropAbility();
-			if (dropAbi != null && !dropAbi.isEmpty()) {
-				event.setCancelled(true);
-				SpecialTriggerManager.executeSpecialAbility(player, dropAbi, SpecialTriggerable.TriggerType.DROP);
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 ================================================================================
                     AMONPACK - DOKUMENTACJA TECHNICZNA PLUGINU
 ================================================================================
-Wersja dokumentu: 2.1.0
+Wersja dokumentu: 2.2.0
 Wersja API Minecraft: 1.20+ (Bukkit / Spigot / Paper API)
 Główna zależność: ProjectKorra (v1.12.0+)
 Zależności opcjonalne (softdepend): WorldEdit, FastAsyncWorldEdit, ItemsAdder
@@ -38,16 +38,15 @@ AmonPack/
       │    ├── Methods.java                 -> Moduł fizyki, cząsteczek i bloków
       │    ├── Listeners.java               -> Odbiorca zdarzeń RPG (GUI, Crafting, EXP, Bloki, Binding)
       │    ├── ArmorEffectsRunnable.java    -> Pętla efektów specjalnych pancerzy
-      │    ├── ConfigsMenager.java          -> Menedżer plików konfiguracyjnych
-      │    └── SimpleWorldGenerator.java    -> Generator odizolowanych światów
+      │    ├── BossScrollManager.java       -> Obsługa zwojów przyzwania Bossów
+      │    ├── ConfigsMenager.java          -> Centralny zarządek konfiguracji
+      │    └── DynamicBossManager.java      -> Silnik dynamicznych Bossów i powiadomień
       │
-      ├── Abilities/                        -> Moduł Magii i Umiejętności ProjectKorra
-      │    ├── Bending/                     -> Abstrakcje, Listener i Wyzwalacze Specjalne
-      │    │    ├── AbilitiesListener.java  -> Listener zdarzeń (onShift, OnSwing, SWAP F, DROP Q)
-      │    │    ├── SmokeAbility.java       -> Klasa bazowa pod-żywiołu Dymu (Smoke)
-      │    │    ├── SoundAbility.java       -> Klasa bazowa pod-żywiołu Dźwięku (Sound)
-      │    │    ├── SpecialTriggerable.java -> Interfejs dla skilli wyzwalanych klawiszami F/Q
-      │    │    └── SpecialTriggerManager.java -> Uniwersalny menedżer aktywacji skilli SWAP/DROP
+      ├── Abilities/                        -> KOMPLETNY MODUŁ BENDINGU (50+ KLAS)
+      │    ├── Bending/                     -> Zdarzenia, listeners i menedżer aktywacji
+      │    │    ├── AbilitiesListener.java  -> Rejestrator zdarzeń przycisków F, Q, L shift, pętla Q-atrap
+      │    │    ├── SpecialTriggerable.java -> Interfejs skilli specjalnych (SWAP, DROP, BOTH)
+      │    │    └── SpecialTriggerManager.java -> Menedżer aktywacji SWAP/DROP, weryfikacja aktywnych skilli z toolbaru i soft-cooldown 100ms
       │    │
       │    ├── Util_Objects/                -> Obiekty matematyczno-fizyczne mocy
       │    │    ├── AbilityProjectile.java  -> Pociski na wektorach i cząsteczkach
@@ -56,11 +55,11 @@ AmonPack/
       │    │    ├── LightningBolt.java      -> Pioruny z odbiciem od ścian i rozgałęzieniami
       │    │    └── SmokeSource.java        -> Trwałe obiekty stref dymnych (buff/debuff)
       │    │
-      │    └── PK_Abilities/                -> Umiejętności Bendingu (49 klas)
+      │    └── PK_Abilities/                -> Umiejętności Bendingu (50 klas)
       │         ├── Air/                    -> Powietrze & Dźwięk (9 klas)
       │         ├── Earth/                  -> Ziemia, Piasek & Metal (10 klas)
       │         ├── Fire/                   -> Ogień & Dym (11 klas)
-      │         └── Water/                  -> Woda, Lód, Krew & Bicz (8 klas: WaterWhip)
+      │         └── Water/                  -> Woda, Lód, Krew & Bicz (9 klas: WaterWhip, Hoarfrost)
       │
       └── RPG/                              -> KOMPLETNY MODUŁ RPG / MMO (65+ KLAS)
            ├── Bounties/                    -> System Listów Gończych (Bounties)
@@ -82,29 +81,40 @@ AmonPack oferuje uniwersalny system 2 nowych slotów specjalnych na umiejętnoś
      Wciśnięcie klawisza zamiany rąk F anuluje przemieszczenie przedmiotu i aktywuje skill przypisany do slotu SWAP.
   2. Slot DROP (Klawisz Q - PlayerDropItemEvent):
      Wciśnięcie klawisza wyrzucenia przedmiotu Q anuluje wyrzucenie przedmiotu i aktywuje skill przypisany do slotu DROP.
+     W przypadku trzymania pustej dłoni (`AIR`), system automatycznie utrzymuje niewidoczną atrapę przedmiotu (`PAPER`),
+     aby silnik gry wysyłał zdarzenie Q do serwera.
 
 Komponenty systemu:
   - Abilities.Bending.SpecialTriggerable (Interface):
-    Interfejs implementowany przez skille specjalne (np. WaterWhip). Określa typ wyzwalacza (SWAP, DROP, BOTH).
+    Interfejs implementowany przez skille specjalne (np. WaterWhip, Hoarfrost). Określa typ wyzwalacza (SWAP, DROP, BOTH).
   - Abilities.Bending.SpecialTriggerManager:
-    Uniwersalna klasa wykonawcza. Sprawdza odblokowanie skilla w drzewku gracza, poziom, cooldown oraz uruchamia go przez refleksję.
+    Uniwersalna klasa wykonawcza. Sprawdza czy jakikolwiek skill z paska toolbaru jest już aktywny (jeśli tak, blokuje aktywację SWAP/DROP).
+    Podczas trwania skilli specjalnych nakłada lekki 100ms soft-cooldown na nieużywane umiejętności z toolbaru (zapobiegając konfliktom).
   - Integration z BendingTree i GUI:
     W klasie PlayerBendingBranch dodano pola `SwapAbility` i `DropAbility` zapisywane w SQLite w tabeli `BendingTree`.
-    W menu przypisywania umiejętności (`OpenBindingMenu`) gracz może jednym kliknięciem przypisać lub odpiąć skill ze slotów F/Q.
+    W menu przypisywania umiejętności (`OpenBindingMenu`) dla skilli z flagą `IsSpecialBindAbility: true` wyświetlane są wyłącznie sloty F/Q,
+    natomiast sloty 1-9 paska toolbaru są ukryte.
 
 
 --------------------------------------------------------------------------------
-3. UMIEJĘTNOŚĆ WATERWHIP (PAKIEAT: Abilities.PK_Abilities.Water)
+3. SKILLE SPECJALNE WODY: WATERWHIP ORAZ HOARFROST
 --------------------------------------------------------------------------------
 Class: Abilities.PK_Abilities.Water.WaterWhip
 Implementuje: AddonAbility, SpecialTriggerable
 
-Mechanika:
-  1. Faza 1 (Charge & Trajectory Tracking - 1 Sekunda / 20 ticków):
-     Podczas pierwszej sekundy w ręce gracza generują się efekty wody (WATER_WAKE, WATER_SPLASH, WATER_DROP) oraz dźwięk.
-     Przez 20 ticków skrypt rejestruje klatka po klatce wektory obrotu kamery (pitch, yaw) oraz pozycje oczu gracza.
-  2. Faza 2 (Whip Launch):
-     Po 1 sekundzie bicz z wody zostaje dynamicznie wystrzelony wzdłuż zarejestrowanej paraboli ruchu kamery.
-     Stworzone segmenty dają efekt bicza, generują tymczasowe bloki wody (`TempBlock`) oraz zadają obrażenia (5.0)
-     i odrzut (0.7) wszystkim stworzeniom na trasie bicza.
+Mechanika WaterWhip:
+  - Bicz przytwierdzony jest do prawej dłoni gracza (offset z WaterFist: 1.2 bloku w bok, 1.05 na wysokość).
+  - Posiada bezwładność opóźnienia kamery (Camera Lag LERP): bicz płynnie pływa za celownikiem gracza.
+  - Szybkie poruszanie myszką wydłuża bicz (tempo rozciągania skrócone o 50%, max długość 7.0 bloków).
+  - Wykrywa kolizje z bytami na całej długości fali cząsteczek, zadając 4.5 obrażeń oraz odrzut.
+
+Class: Abilities.PK_Abilities.Water.Hoarfrost
+Implementuje: AddonAbility, SpecialTriggerable
+
+Mechanika Hoarfrost:
+  - Aktywacja wymaga patrzenia na blok wody/lodu w zasięgu do 20 bloków.
+  - Wyciąga strumień wody ze źródła i tworzy 1. stack lodu.
+  - Gracz ma 5-sekundowe okno czasowe na wchłonięcie do 3 stacków (z dynamicznym licznikiem na Action Barze).
+  - Wciśnięcie SHIFT wystrzeliwuje 1, 2 lub 3 heavy sople lodu (FallingBlock z automatycznym czyszczeniem),
+    które spadają po paraboli grawitacji, zadając obrażenia obszarowe, odrzut i efekty mrozu.
 ================================================================================

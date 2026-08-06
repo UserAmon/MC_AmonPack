@@ -58,9 +58,9 @@ public class Levels_Bending {
             String swapLore = curSwap.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO SWAP (F)]" : (curSwap.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curSwap);
             inv.setItem(0, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.GOLD + "Slot SWAP (F)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do F", swapLore), 10071));
 
-            String curDrop = branch.getDropAbility();
-            String dropLore = curDrop.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO DROP (Q)]" : (curDrop.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curDrop);
-            inv.setItem(1, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.AQUA + "Slot DROP (Q)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do Q", dropLore), 10072));
+            String curAdv = branch.getDropAbility();
+            String advLore = curAdv.equalsIgnoreCase(AbilityName) ? ChatColor.GREEN + "[PRZYPISANO DO OSIĄGNIĘĆ (L)]" : (curAdv.isEmpty() ? ChatColor.GRAY + "Aktualnie: Brak" : ChatColor.GRAY + "Aktualnie: " + curAdv);
+            inv.setItem(1, AmonPackPlugin.FastEasyStackWithLoreModelData(Material.PAPER, ChatColor.AQUA + "Slot OSIĄGNIĘĆ (L)", Arrays.asList(ChatColor.YELLOW + "Kliknij, aby przypisać ten skill do L", advLore), 10072));
         } else {
             inv.setItem(0, null);
             inv.setItem(1, null);

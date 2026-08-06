@@ -70,12 +70,10 @@ AmonPack:
       Knockback: 0.6 #odrzut
       DurationTicks: 100 #czas trwania bicza (100 tickow = 5 sekund)
 
-    VineWave:
-      Cooldown: 7000 #ms miedzy uzyciami
-      Damage: 5.5 #obrazenia fali pnaczy
-      MaxRange: 25.0 #maksymalny zasieg fali
-      Speed: 1.1 #predkosc poruszania sie fali
-      Knockback: 0.6 #odrzut
+    Hoarfrost:
+      Cooldown: 6000 #ms miedzy uzyciami
+      DamagePerSpear: 2 #obrazenia od jednego sopla lodu
+      Knockback: 0.8 #odrzut od uderzenia sopla
 
     BloodCall:
       Cooldown: 3000 #ms between ability uses
