@@ -218,20 +218,27 @@ AmonPack:
         Cost: 10
         Place: 4
         ReqAbilities: []
-      RaiseEarth:
-        Cost: 25
-        Place: 12
-        ReqAbilities:
-        - EarthBlast
       EarthKick:
         Cost: 25
         Place: 20
         ReqAbilities: []
-      EarthShard:
+      RaiseEarth:
         Cost: 40
         Place: 21
         ReqAbilities:
         - EarthKick
+      BoulderRoll:
+        Cost: 35
+        Place: 22
+        IsSpecialBindAbility: true
+        ReqAbilities:
+          - RaiseEarth
+        Description:
+          - "&7Po aktywacji generuje 4 punkty przed kamerą."
+          - "&7Musisz cały czas kucać (SHIFT) podczas zbierania!"
+          - "&7Najeźdź kamerą na punkty i wciskaj F/L, aby je zbierać."
+          - "&7Po zebraniu 4 punktów puść SHIFT, aby zamienić się w toczący się głaz."
+          - "&e[Ruch Specjalny - SWAP (F) / ADVANCEMENT (L)]"
     Water:
       PathDecoration:
         - 38

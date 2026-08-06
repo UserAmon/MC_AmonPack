@@ -67,28 +67,41 @@ public class SpecialTriggerManager {
                 com.comphenix.protocol.ProtocolLibrary.getProtocolManager().addPacketListener(
                     new com.comphenix.protocol.events.PacketAdapter(
                         AmonPackPlugin.plugin,
-                        com.comphenix.protocol.events.ListenerPriority.HIGH,
+                        com.comphenix.protocol.events.ListenerPriority.HIGHEST,
                         com.comphenix.protocol.PacketType.Play.Client.ADVANCEMENTS
                     ) {
                         @Override
                         public void onPacketReceiving(com.comphenix.protocol.events.PacketEvent event) {
                             Player player = event.getPlayer();
-                            if (player == null || AmonPackPlugin.levelsBending == null) return;
+                            if (player == null) return;
 
-                            PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-                            if (branch != null) {
-                                String advAbi = branch.getDropAbility(); // Wykorzystujemy 2. slot specjalny w bazie DB dla L
-                                if (advAbi != null && !advAbi.isEmpty()) {
-                                    event.setCancelled(true);
-                                    Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
-                                        executeSpecialAbility(player, advAbi, SpecialTriggerable.TriggerType.ADVANCEMENT);
-                                    });
+                            // 1. Zawsze anuluj pakiet otwierający okno osiągnięć Vanilla (klawisz L)
+                            event.setCancelled(true);
+
+                            // 2. Natychmiastowe wymuszenie zamknięcia GUI po stronie klienta (ponieważ klient otwiera je lokalnie)
+                            Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+                                player.closeInventory();
+                                if (AmonPackPlugin.levelsBending != null) {
+                                    PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+                                    if (branch != null) {
+                                        String advAbi = branch.getDropAbility(); // Wykorzystujemy 2. slot specjalny w bazie DB dla L
+                                        if (advAbi != null && !advAbi.isEmpty()) {
+                                            executeSpecialAbility(player, advAbi, SpecialTriggerable.TriggerType.ADVANCEMENT);
+                                        }
+                                    }
                                 }
-                            }
+                            });
+
+                            // Dodatkowe zabezpieczenie po 1 ticku, gdyby klient otworzył ramkę z opóźnieniem
+                            Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
+                                if (player.isOnline()) {
+                                    player.closeInventory();
+                                }
+                            }, 1L);
                         }
                     }
                 );
-                System.out.println("[AmonPack] Zarejestrowano ProtocolLib PacketListener dla klawisza L (ADVANCEMENT_TAB)!");
+                System.out.println("[AmonPack] Zarejestrowano ProtocolLib PacketListener z blokowaniem GUI Osiągnięć dla klawisza L!");
             }
         } catch (Throwable t) {
             System.err.println("[AmonPack] Nie udało się zarejestrować ProtocolLib PacketListenera dla klawisza L: " + t.getMessage());

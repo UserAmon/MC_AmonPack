@@ -22,6 +22,9 @@ commands:
     usage: /<command>
   Reload:
     usage: /<command>
+  amonpack:
+    usage: /<command>
+    description: "Glowna komenda pluginu AmonPack"
   Craft:
     usage: /<command>
   bounties:

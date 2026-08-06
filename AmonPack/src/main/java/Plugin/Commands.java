@@ -119,8 +119,14 @@ public class Commands implements CommandExecutor, TabCompleter {
                 return true;
 
             case "reload":
-                AmonPackPlugin.reloadAllConfigs();
-                sender.sendMessage(ChatColor.GREEN + "[AmonPack] Konfiguracja przeładowana pomyślnie!");
+                if (sender.hasPermission("amonpack.admin") || sender.isOp() || !(sender instanceof Player)) {
+                    if (AmonPackPlugin.plugin != null) {
+                        ((AmonPackPlugin) AmonPackPlugin.plugin).reloadPluginConfigurations();
+                    }
+                    sender.sendMessage(ChatColor.GREEN + "[AmonPack] Zresetowano i odświeżono wszystkie konfiguracje oraz instancje pluginu!");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Brak uprawnień do tej komendy.");
+                }
                 return true;
 
             case "dungeons":
@@ -393,6 +399,23 @@ public class Commands implements CommandExecutor, TabCompleter {
                 } else {
                     System.out.println("QuestItems");
                 }
+                return true;
+
+
+
+            case "amonpack":
+                if (args != null && args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+                    if (sender.hasPermission("amonpack.admin") || sender.isOp() || !(sender instanceof Player)) {
+                        if (AmonPackPlugin.plugin != null) {
+                            ((AmonPackPlugin) AmonPackPlugin.plugin).reloadPluginConfigurations();
+                        }
+                        sender.sendMessage(ChatColor.GREEN + "[AmonPack] Zresetowano i odświeżono wszystkie konfiguracje oraz instancje pluginu!");
+                    } else {
+                        sender.sendMessage(ChatColor.RED + "Brak uprawnień do tej komendy.");
+                    }
+                    return true;
+                }
+                sender.sendMessage(ChatColor.GOLD + "[AmonPack] Użycie: /amonpack reload");
                 return true;
         }
         return false;

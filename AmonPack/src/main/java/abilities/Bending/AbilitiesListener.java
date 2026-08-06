@@ -406,6 +406,12 @@ public class AbilitiesListener implements Listener {
 					fs.onParryDamage();
 				}
 			}
+			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, BoulderRoll.class)) {
+				BoulderRoll br = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, BoulderRoll.class);
+				if (br != null && br.isRolling()) {
+					event.setCancelled(true);
+				}
+			}
 		}
 	}
 

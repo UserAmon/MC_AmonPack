@@ -228,7 +228,7 @@ public class Levels_Bending {
         stmt.close();
     }//Przy reloadzie pobierz wszystkich graczy z DB
     private void DefineAvailableAbilities(){
-
+        ListOfElements.clear();
         for(String Element : Objects.requireNonNull(SkillTreeConfig.getConfigurationSection("AmonPack.Tree")).getKeys(false)) {
 
             com.projectkorra.projectkorra.Element pk_element= com.projectkorra.projectkorra.Element.getElement(Element);

@@ -116,6 +116,94 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 	}
 
+	public void reloadPluginConfigurations() {
+		getLogger().info("Rozpoczynanie pełnego przeładowania i odświeżania wszystkich konfiguracji AmonPack...");
+
+		// 1. Ponowne wczytanie plików konfiguracyjnych z dysku
+		reloadConfig();
+
+		AbilitiesConfigFile = new File(getDataFolder(), "abilities_config.yml");
+		if (AbilitiesConfigFile.exists()) {
+			AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
+		}
+
+		SkillTreeFile = new File(getDataFolder(), "skilltree.yml");
+		if (SkillTreeFile.exists()) {
+			setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
+		}
+
+		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
+		if (LevelConfigFile.exists()) {
+			LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
+		}
+
+		DungeonConfigFile = new File(getDataFolder(), "dungeons/dungeon_config.yml");
+		if (DungeonConfigFile.exists()) {
+			setDungeonConfig(YamlConfiguration.loadConfiguration(DungeonConfigFile));
+		}
+
+		// 2. Przeładowanie skryptów i konfiguracji umiejętności Magii (Bending)
+		if (ENABLE_BENDING_ABILITIES) {
+			Abilities.PK_Abilities.Earth.SandWave.loadConfig();
+			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
+		}
+
+		// 3. Przeładowanie systemów Gathering/Crafting/Boss/Bounties w ConfigsMenager
+		if (configs_menager != null) {
+			configs_menager.LoadAllConfigs();
+			configs_menager.ReloadMenagers();
+		}
+		if (ENABLE_RPG_GATHERING) {
+			farmmenager = new FarmMenager();
+			combatMenager = new CombatMenager();
+		}
+
+		// 4. Przeładowanie Drzewka Skilli (Levels_Bending) oraz Poziomów (PlayerLevelMenager)
+		if (ENABLE_SKILL_TREE) {
+			if (levelsBending != null) {
+				levelsBending.LoadData();
+			}
+			if (PlayerMenager != null) {
+				PlayerLevelMenager.EnabledSkillTypes.clear();
+				if (LevelConfig != null) {
+					try {
+						for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
+							PlayerLevelMenager.EnabledSkillTypes.add(RPG.Levels.Objects.LevelSkill.SkillType.valueOf(key));
+						}
+					} catch (Exception e) {
+						getLogger().warning("Błąd podczas odświeżania EnabledSkillTypes: " + e.getMessage());
+					}
+				}
+				PlayerMenager.CreateInventories();
+			}
+			try {
+				new UpgradesMenager();
+			} catch (Exception e) {
+				getLogger().warning("Błąd odświeżania UpgradesMenager: " + e.getMessage());
+			}
+		}
+
+		// 5. Przeładowanie Dungeonów i Menagerie
+		if (ENABLE_DUNGEONS) {
+			MenagerieConfigFile = getMenagerieFiles();
+			setDungeonsConfig(MenagerieConfigFile);
+			RPG.Dungeons.DungBuildManager.init();
+			if (RPG.Dungeons.DungeonManager.getInstance() != null) {
+				RPG.Dungeons.DungeonManager.getInstance().loadTemplates();
+			}
+		}
+
+		// 6. Przeładowanie Bounties & BossScrollManager
+		if (ENABLE_BOUNTIES && bountiesMenager != null) {
+			bountiesMenager.ReloadConfig();
+		}
+		if (BossScrollManager.getInstance() != null) {
+			BossScrollManager.getInstance().reloadConfig();
+		}
+
+		getLogger().info("Pełny reload konfiguracji oraz instancji AmonPack zakończony sukcesem!");
+	}
+
 	static List<File> MenagerieConfigFile;
 	// static File PvPFile;
 	static File LevelConfigFile;
@@ -338,6 +426,8 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 		if (this.getCommand("Reload") != null)
 			this.getCommand("Reload").setExecutor(cmdExecutor);
+		if (this.getCommand("amonpack") != null)
+			this.getCommand("amonpack").setExecutor(cmdExecutor);
 		if (ENABLE_BOUNTIES) {
 			if (this.getCommand("Bounties") != null)
 				this.getCommand("Bounties").setExecutor(cmdExecutor);

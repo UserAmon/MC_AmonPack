@@ -225,6 +225,15 @@ AmonPack:
       WallDamage: 1.0 #hearts dealt by wall push
       WallPush: 0.45 #velocity when pushing enemies
 
+    BoulderRoll:
+      Cooldown: 8000 #ms between ability uses
+      Damage: 5.0 #hearts dealt on rolling impact
+      Knockback: 1.2 #horizontal knockback force
+      Range: 22 #max blocks boulder rolls
+      Speed: 0.7 #blocks per tick speed of rolling boulder
+      Radius: 1.5 #radius of boulder damage and collision
+      RevertTime: 10000 #ms before temporary earth blocks revert
+
     Sand:
       SandWave:
         Cooldown: 6000 #ms between ability uses
