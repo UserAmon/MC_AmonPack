@@ -26,6 +26,7 @@ public class AirSteps extends AirAbility implements AddonAbility {
     private double knockback;
     private double radius;
     private int ticksElapsed = 0;
+    private long lastJumpTime = 0L;
 
     public AirSteps(Player player) {
         super(player);
@@ -54,6 +55,11 @@ public class AirSteps extends AirAbility implements AddonAbility {
         if (usedJumps >= maxJumps) {
             return;
         }
+
+        if (System.currentTimeMillis() - lastJumpTime < 500L) {
+            return;
+        }
+        lastJumpTime = System.currentTimeMillis();
 
         usedJumps++;
 

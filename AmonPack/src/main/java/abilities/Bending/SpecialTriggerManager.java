@@ -128,7 +128,10 @@ public class SpecialTriggerManager {
             return false;
         }
 
-        if (!branch.getUnlockedAbilities().contains(abilityName) && !branch.hasUpgrade(abilityName)) {
+        boolean isUnlocked = abilityName.equalsIgnoreCase(branch.getSwapAbility())
+                || branch.hasUpgrade(abilityName)
+                || (branch.getUnlockedAbilities() != null && branch.getUnlockedAbilities().stream().anyMatch(a -> a.equalsIgnoreCase(abilityName)));
+        if (!isUnlocked) {
             return false;
         }
 

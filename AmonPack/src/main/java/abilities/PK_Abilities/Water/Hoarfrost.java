@@ -122,8 +122,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
         Location center = player.getLocation().add(0, 1.1, 0);
         for (int s = 0; s < stacks; s++) {
             double angle = (durationTicks * 0.25) + (s * (2 * Math.PI / stacks));
-            double x = 1.5 * Math.cos(angle);
-            double z = 1.5 * Math.sin(angle);
+            double x = 3.0 * Math.cos(angle);
+            double z = 3.0 * Math.sin(angle);
             Location orbLoc = center.clone().add(x, 0, z);
 
             Block b = orbLoc.getBlock();
@@ -145,10 +145,10 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
 
         // Wystrzeliwanie długich na 3 bloki włóczni lodu (TempBlocki 100ms duration) z grawitacją
         for (int i = 0; i < stacks; i++) {
-            double angleOffset = (i - (stacks - 1) / 2.0) * 0.22;
+            double angleOffset = (i - (stacks - 1) / 2.0) * 0.35;
             Vector spreadDir = baseDir.clone().add(new Vector(angleOffset, 0.05, 0.0)).normalize().multiply(1.3);
 
-            Location startSpawn = eye.clone().add(spreadDir.clone().normalize().multiply(1.2));
+            Location startSpawn = eye.clone().add(spreadDir.clone().normalize().multiply(2.5));
 
             new BukkitRunnable() {
                 private Location currLoc = startSpawn.clone();
@@ -165,14 +165,13 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
                         return;
                     }
 
-                    // Grawitacja działająca na włócznię lodu
                     vel.add(new Vector(0, -0.035, 0));
                     currLoc.add(vel);
 
                     Vector dir = vel.clone().normalize();
-                    // Tworzenie długiej na 3 bloki włóczni z TempBlocków (100ms duration)
+                    // Tworzenie długiej na 3 bloki włóczni wysuniętej do przodu
                     for (int seg = 0; seg < 3; seg++) {
-                        Location segLoc = currLoc.clone().subtract(dir.clone().multiply(seg * 0.8));
+                        Location segLoc = currLoc.clone().add(dir.clone().multiply(seg * 0.9));
                         Block b = segLoc.getBlock();
                         if (b.getType() == Material.AIR) {
                             TempBlock tb = new TempBlock(b, Material.PACKED_ICE);

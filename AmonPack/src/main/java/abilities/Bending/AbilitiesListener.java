@@ -116,6 +116,8 @@ public class AbilitiesListener implements Listener {
 						new SmokeCamouflage(player);
 					} else if (boundAbility.equalsIgnoreCase("AirSteps")) {
 						new AirSteps(player);
+					} else if (boundAbility.equalsIgnoreCase("Blossom")) {
+						new Blossom(player);
 					}
 				}
 			} else
@@ -132,7 +134,9 @@ public class AbilitiesListener implements Listener {
 		}
 		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
 		if (bPlayer.getBoundAbility() != null) {
-			if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")
+			if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Cyclone")) {
+				new Cyclone(player);
+			} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")
 					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")
 					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("SandDisc")) {
 				EarthDisc.redirectNearby(player, 4.0);
@@ -425,8 +429,10 @@ public class AbilitiesListener implements Listener {
 		if (branch != null) {
 			String swapAbi = branch.getSwapAbility();
 			if (swapAbi != null && !swapAbi.isEmpty()) {
-				event.setCancelled(true);
-				SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP);
+				boolean executed = SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP);
+				if (executed) {
+					event.setCancelled(true);
+				}
 			}
 		}
 	}

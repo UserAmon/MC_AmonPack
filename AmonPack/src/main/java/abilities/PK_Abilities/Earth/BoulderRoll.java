@@ -306,19 +306,19 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.STONE.createBlockData());
         }
 
-        // Gracza przenieś 4 kratki w tył i 4 w górę za kulą + zapobieganie przechodzeniu przez ściany (noclip prevention)
-        Location centerLoc = boulderLoc.clone().add(0, 0.5, 0);
-        Location idealPlayerDest = centerLoc.clone().subtract(rollDir.clone().multiply(4.0)).add(0, 4.0, 0);
-        Vector ray = idealPlayerDest.toVector().subtract(centerLoc.toVector());
+        // Gracza przenieś 3 kratki w tył i 3 w górę za kulą + skieruj kamerę 40 stopni w dół na kulę
+        Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(3.0)).add(0, 3.0, 0);
+        Location rayStart = boulderLoc.clone().add(0, 1.8, 0);
+        Vector ray = idealPlayerDest.toVector().subtract(rayStart.toVector());
         double dist = ray.length();
-        if (dist > 0.01) {
-            org.bukkit.util.RayTraceResult rtr = centerLoc.getWorld().rayTraceBlocks(
-                centerLoc, ray.clone().normalize(), dist,
+        if (dist > 0.1) {
+            org.bukkit.util.RayTraceResult rtr = rayStart.getWorld().rayTraceBlocks(
+                rayStart, ray.clone().normalize(), dist,
                 org.bukkit.FluidCollisionMode.NEVER, true
             );
             if (rtr != null && rtr.getHitPosition() != null) {
-                idealPlayerDest = rtr.getHitPosition().toLocation(centerLoc.getWorld())
-                    .subtract(ray.clone().normalize().multiply(0.4));
+                idealPlayerDest = rtr.getHitPosition().toLocation(rayStart.getWorld())
+                    .subtract(ray.clone().normalize().multiply(0.3));
             }
         }
 

@@ -97,13 +97,34 @@ AmonPack:
       VineSnare:
         Cooldown: 9000 #ms between ability uses
         Range: 20 #blocks detection range
-        Radius: 3.5 #blocks radius of vine ring
-        ChargeTime: 2000 #ms for 2-second vine preview animation
+        Radius: 15.0 #blocks radius of vine ring
+        ChargeTime: 3000 #ms for 3-second vine preview animation
         HoldDuration: 3000 #ms enemies are trapped in vines
         Damage: 3.0 #hearts dealt on vine eruption
         FlowerRevertTime: 10000 #ms flowers stay bloomed after snare
 
+      Blossom:
+        Cooldown: 6000 #ms between ability uses
+        ChargeTime: 2000 #ms to charge V-shape cone
+        Damage: 4.0 #hearts dealt by flower wave
+        Range: 18.0 #blocks max wave range
+        Speed: 1.2 #wave speed multiplier
+
+      Withering:
+        Cooldown: 8000 #ms between ability uses
+        DryingDuration: 2000 #ms drying animation lasts
+        Radius: 8.0 #blocks radius of withering area
+        Damage: 5.0 #hearts dealt on thorn eruption
+        RevertTime: 10000 #ms thorn blocks revert
+
   Air:
+    Cyclone:
+      Cooldown: 7000 #ms between ability uses
+      Damage: 4.0 #hearts dealt on cyclone release
+      Range: 20.0 #max blocks cyclone travels
+      Speed: 1.0 #speed multiplier of cyclone
+      HoldDuration: 3000 #ms enemies are trapped in vortex
+
     AirSteps:
       Cooldown: 6000 #ms between ability uses
       MaxJumps: 3 #max air steps per use

@@ -348,6 +348,26 @@ AmonPack:
           - "&7Przeciwnicy są unieruchomieni przez 3s."
           - "&7Po zakończeniu w miejscu uwięzienia zakwitają kwiaty!"
           - "&e[Ruch Specjalny - SWAP (F)]"
+      Blossom:
+        Cost: 25
+        Place: 28
+        ReqAbilities:
+          - VineSnare
+        Description:
+          - "&7Ładuje falę trawy i kwiatów w stożku V przed graczem."
+          - "&7Po puszczeniu SHIFT fala kwiatów wystrzeliwuje na wprost,"
+          - "&7strzela pnączami na boki i zostawia dzikie kwiaty na ziemi."
+      Withering:
+        Cost: 40
+        Place: 29
+        IsSpecialBindAbility: true
+        ReqAbilities:
+          - Blossom
+        Description:
+          - "&7Powoduje 2s usychanie roślin w obszarze."
+          - "&7Następnie podłoże zamienia się w wyjałowioną ziemię"
+          - "&7i wykwitają wysokie pola cierni (2-3 bloki) z efektem Wither."
+          - "&e[Ruch Specjalny - SWAP (F)]"
       Uppercut:
         Cost: 2
         Place: 20
@@ -442,3 +462,12 @@ AmonPack:
           - "&7Każdy podskok wystrzeliwuje podmuch powietrza w dół,"
           - "&7odrzucający wrogów na boki."
           - "&7Uderzenie odrzuconego wroga w ścianę zadaje obrażenia!"
+      Cyclone:
+        Cost: 30
+        Place: 28
+        ReqAbilities:
+          - AirSteps
+        Description:
+          - "&7Wystrzeliwuje małe tornado poruszające się naprzód."
+          - "&7Przechwytuje wroga, odrywa go od ziemi, trzyma"
+          - "&7i obraca w wirowym powietrzu."

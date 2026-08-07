@@ -64,7 +64,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.Cooldown", 9000L);
         this.range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Plant.VineSnare.Range", 20);
-        this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Radius", 10.0); // Zasięg 10 bloków
+        this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Radius", 15.0); // Zasięg na boki do 15 kratek
         this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.ChargeTime", 3000L);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Damage", 3.0);
         this.flowerRevertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.FlowerRevertTime", 10000L);
@@ -80,7 +80,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         }
 
         this.targetLoc = targetBlock.getLocation().add(0.5, 1.0, 0.5);
-        this.centerY = targetLoc.getY(); // Blokujemy wysokość Y centrum
+        this.centerY = targetLoc.getY();
         this.state = State.PREVIEW;
         SpecialTriggerManager.registerActiveSpecial(player);
         start();
@@ -138,16 +138,15 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                 }
             }
 
-            // Pnącza stoją przez 2 sekundy (40 ticków) po wystrzałach przed rozpoczęciem zwijania
             if (ticksElapsed >= (chargeTime / 50) + 40) {
                 startRetractingPhase();
             }
         } else if (state == State.RETRACTING) {
-            // Zwijanie pnączy z powrotem do środka i silne przyciąganie wrogów do środka
+            // Przyciąganie wrogów do środka i W DÓŁ (setY -0.4 zamiast w górę)
             for (LivingEntity entity : trappedEntities) {
                 if (entity != null && !entity.isDead() && entity.isValid()) {
                     Vector pull = targetLoc.clone().toVector().subtract(entity.getLocation().toVector()).normalize().multiply(0.65);
-                    pull.setY(0.15);
+                    pull.setY(-0.4);
                     entity.setVelocity(pull);
                     ParticleEffect.SLIME.display(entity.getLocation(), 3, 0.2, 0.2, 0.2, 0.02);
                 }
@@ -180,7 +179,6 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         Block randomGround = area.get(rand.nextInt(area.size()));
         if (isPlantbendableGround(randomGround)) {
             Block above = randomGround.getRelative(0, 1, 0);
-            // Wyklucza układanie na sobie oraz przestrzega limitu Y <= centerY + 1
             if (above.getY() <= centerY + 1.0 && above.getType() == Material.AIR && !TempBlock.isTempBlock(above)) {
                 Item vineItem = above.getWorld().dropItem(above.getLocation().add(0.5, 0.2, 0.5), new ItemStack(Material.VINE));
                 vineItem.setPickupDelay(32767);
@@ -196,13 +194,21 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         targetLoc.getWorld().playSound(targetLoc, Sound.BLOCK_GRASS_BREAK, 1.4f, 0.7f);
         targetLoc.getWorld().playSound(targetLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 1.0f);
 
-        // Faza wystrzału pnączy: 12 pocisków pnączy rozrastających się na boki (10 bloków)
         Random rand = new Random();
+        List<Vector> directions = new ArrayList<>();
+
+        // 12 pocisków na boki (zasięg do 15 kratek)
         int projCount = 12;
         for (int p = 0; p < projCount; p++) {
             double angle = (Math.PI * 2 / projCount) * p;
-            Vector dir = new Vector(Math.cos(angle), 0.3 + (rand.nextDouble() * 0.25), Math.sin(angle)).normalize();
+            directions.add(new Vector(Math.cos(angle), 0.3 + (rand.nextDouble() * 0.2), Math.sin(angle)).normalize());
+        }
 
+        // Dodatkowe 2 pociski skierowane wyżej w górę
+        directions.add(new Vector(0.2, 0.85, 0.2).normalize());
+        directions.add(new Vector(-0.2, 0.85, -0.2).normalize());
+
+        for (Vector dir : directions) {
             new BukkitRunnable() {
                 Location projLoc = targetLoc.clone();
                 double dist = 0;
@@ -216,7 +222,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                     if (b.getType() == Material.AIR) {
                         Material mat = rand.nextBoolean() ? Material.TWISTING_VINES : (rand.nextBoolean() ? Material.OAK_LEAVES : Material.VINE);
                         TempBlock tb = new TempBlock(b, mat);
-                        tb.setRevertTime(6000L); // Stoją przez 2 sekundy + czas zwijania
+                        tb.setRevertTime(6000L);
                         vineBlocks.add(tb);
                     }
 
@@ -225,22 +231,22 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                             LivingEntity le = (LivingEntity) entity;
                             if (!trappedEntities.contains(le)) {
                                 DamageHandler.damageEntity(le, damage, VineSnare.this);
+                                // Przyciąganie w dół (setY -0.4)
                                 Vector pull = targetLoc.clone().toVector().subtract(le.getLocation().toVector()).normalize().multiply(0.8);
-                                pull.setY(0.2);
+                                pull.setY(-0.4);
                                 le.setVelocity(pull);
                                 trappedEntities.add(le);
                             }
                         }
                     }
 
-                    if (dist >= 10.0 || b.getType().isSolid()) {
+                    if (dist >= 15.0 || b.getType().isSolid()) {
                         cancel();
                     }
                 }
             }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
         }
 
-        // Po strzale pnącza stoją przez 2 sekundy
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -255,7 +261,6 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         state = State.RETRACTING;
         targetLoc.getWorld().playSound(targetLoc, Sound.BLOCK_VINE_STEP, 1.2f, 0.6f);
 
-        // Zwijanie pnączy spowrotem do środka pola przez 25 ticków
         new BukkitRunnable() {
             int step = 0;
 
@@ -291,7 +296,6 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         Random rand = new Random();
         Material[] chosenFlowers = endPlantPairs[rand.nextInt(endPlantPairs.length)];
 
-        // Zakwitanie kwiatów WYŁĄCZNIE NA ZIEMI i NIE WYŻEJ NIŻ centerY + 1
         List<Block> area = GeneralMethods.getBlocksAroundPoint(targetLoc, (int) radius);
         for (Block b : area) {
             if (isPlantbendableGround(b)) {
@@ -393,7 +397,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getDescription() {
-        return "Tworzy krąg pnączy (10m), które po 3s wystrzeliwują macki, stoją w miejscu przez 2 sekundy, a następnie powoli się chowają ściągając wrogów do środka i zakwitając kwiatami.";
+        return "Tworzy krąg pnączy (15m), które po 3s wystrzeliwują macki (w tym 2 w górę), stoją w miejscu przez 2 sekundy, a następnie powoli się chowają ściągając wrogów w dół do środka i zakwitając kwiatami.";
     }
 
     @Override
