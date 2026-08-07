@@ -102,6 +102,8 @@ AmonPack:
         HoldDuration: 3000 #ms enemies are trapped in vines
         Damage: 3.0 #hearts dealt on vine eruption
         FlowerRevertTime: 10000 #ms flowers stay bloomed after snare
+        ProjectileRange: 15.0 #max distance of vine tentacles
+        ProjectileCount: 14 #number of vine tentacles launched
 
       Blossom:
         Cooldown: 6000 #ms between ability uses

@@ -17,10 +17,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -46,13 +44,15 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
     private long chargeTime;
     private double damage;
     private long flowerRevertTime;
+    private double projectileRange;
+    private int projectileCount;
     private double centerY;
 
     private Location targetLoc;
     private List<LivingEntity> trappedEntities = new ArrayList<>();
-    private List<Item> droppedVines = new ArrayList<>();
     private List<TempBlock> vineBlocks = new ArrayList<>();
     private int ticksElapsed = 0;
+    private Random random = new Random();
 
     public VineSnare(Player player) {
         super(player);
@@ -64,10 +64,12 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.Cooldown", 9000L);
         this.range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Plant.VineSnare.Range", 20);
-        this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Radius", 15.0); // Zasięg na boki do 15 kratek
+        this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Radius", 15.0);
         this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.ChargeTime", 3000L);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Damage", 3.0);
         this.flowerRevertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.FlowerRevertTime", 10000L);
+        this.projectileRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.ProjectileRange", 15.0);
+        this.projectileCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Plant.VineSnare.ProjectileCount", 14);
 
         if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
             return;
@@ -90,7 +92,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         if (b == null) return false;
         Material m = b.getType();
         return m == Material.GRASS_BLOCK || m == Material.DIRT || m == Material.COARSE_DIRT || m == Material.PODZOL
-                || m == Material.MOSS_BLOCK || m == Material.FARMLAND || m == Material.OAK_LEAVES || m == Material.JUNGLE_LEAVES
+                || m == Material.MOSS_BLOCK || m == Material.FARMLAND
                 || WaterAbility.isPlantbendable(player, m, false) || PlantAbility.isPlant(b);
     }
 
@@ -103,14 +105,15 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
         ticksElapsed++;
 
-        // Animacja kręgu pola nieprzerwanie do momentu zakwitnięcia kwiatów
-        displayPreviewRingParticles();
+        // Cząsteczki BLOCK_CRACK rozproszone losowo po całym obszarze wnętrza koła (BEZ HAPPY VILLAGER)
+        displayScatteredGreenParticles();
+
+        // Powolne i stopniowe terraformowanie oraz wyrastanie pojedynczych kwiatów w trakcie działania skilla
+        if (ticksElapsed % 4 == 0) {
+            terraformAndGradualFlowers();
+        }
 
         if (state == State.PREVIEW) {
-            if (ticksElapsed % 5 == 0) {
-                spawnGradualPlantsOnGround();
-            }
-
             if (ticksElapsed % 8 == 0) {
                 targetLoc.getWorld().playSound(targetLoc, Sound.BLOCK_GRASS_STEP, 0.7f, 0.8f);
             }
@@ -129,8 +132,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                         double x = 0.6 * Math.cos(angle);
                         double z = 0.6 * Math.sin(angle);
                         Location pLoc = eLoc.clone().add(x, y, z);
-                        ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.OAK_LEAVES.createBlockData());
-                        ParticleEffect.SLIME.display(pLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                        ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.JUNGLE_LEAVES.createBlockData());
                     }
 
                     entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 10, false, false));
@@ -142,48 +144,49 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                 startRetractingPhase();
             }
         } else if (state == State.RETRACTING) {
-            // Przyciąganie wrogów do środka i W DÓŁ (setY -0.4 zamiast w górę)
+            // Ściąganie wrogów do środka i W DÓŁ
             for (LivingEntity entity : trappedEntities) {
                 if (entity != null && !entity.isDead() && entity.isValid()) {
                     Vector pull = targetLoc.clone().toVector().subtract(entity.getLocation().toVector()).normalize().multiply(0.65);
                     pull.setY(-0.4);
                     entity.setVelocity(pull);
-                    ParticleEffect.SLIME.display(entity.getLocation(), 3, 0.2, 0.2, 0.2, 0.02);
                 }
             }
         }
     }
 
-    private void displayPreviewRingParticles() {
-        Random rand = new Random();
-        for (double angle = 0; angle < Math.PI * 2; angle += Math.PI / 10) {
-            double outerR = radius + (rand.nextDouble() - 0.5) * 0.4;
-            double x1 = outerR * Math.cos(angle);
-            double z1 = outerR * Math.sin(angle);
-            Location locOuter = targetLoc.clone().add(x1, 0.1, z1);
-            ParticleEffect.COMPOSTER.display(locOuter, 1, 0.1, 0.1, 0.1, 0.01);
-
-            double innerR = (radius * 0.45) + (rand.nextDouble() - 0.5) * 0.3;
-            double x2 = innerR * Math.cos(angle);
-            double z2 = innerR * Math.sin(angle);
-            Location locInner = targetLoc.clone().add(x2, 0.1, z2);
-            ParticleEffect.BLOCK_CRACK.display(locInner, 1, 0.1, 0.1, 0.1, 0.02, Material.JUNGLE_LEAVES.createBlockData());
+    private void displayScatteredGreenParticles() {
+        for (int i = 0; i < 8; i++) {
+            double r = random.nextDouble() * radius;
+            double angle = random.nextDouble() * Math.PI * 2;
+            double x = r * Math.cos(angle);
+            double z = r * Math.sin(angle);
+            Location loc = targetLoc.clone().add(x, 0.1, z);
+            ParticleEffect.BLOCK_CRACK.display(loc, 1, 0.1, 0.1, 0.1, 0.02, Material.JUNGLE_LEAVES.createBlockData());
         }
     }
 
-    private void spawnGradualPlantsOnGround() {
-        Random rand = new Random();
+    private void terraformAndGradualFlowers() {
         List<Block> area = GeneralMethods.getBlocksAroundPoint(targetLoc, (int) radius);
         if (area.isEmpty()) return;
 
-        Block randomGround = area.get(rand.nextInt(area.size()));
-        if (isPlantbendableGround(randomGround)) {
-            Block above = randomGround.getRelative(0, 1, 0);
-            if (above.getY() <= centerY + 1.0 && above.getType() == Material.AIR && !TempBlock.isTempBlock(above)) {
-                Item vineItem = above.getWorld().dropItem(above.getLocation().add(0.5, 0.2, 0.5), new ItemStack(Material.VINE));
-                vineItem.setPickupDelay(32767);
-                vineItem.setInvulnerable(true);
-                droppedVines.add(vineItem);
+        Block randomGround = area.get(random.nextInt(area.size()));
+        if (randomGround != null) {
+            // Terraformowanie: stone -> dirt -> grass_block
+            if (randomGround.getType() == Material.STONE || randomGround.getType() == Material.COBBLESTONE || randomGround.getType() == Material.DEEPSLATE) {
+                new TempBlock(randomGround, Material.DIRT).setRevertTime(flowerRevertTime);
+            } else if (randomGround.getType() == Material.DIRT || randomGround.getType() == Material.COARSE_DIRT || randomGround.getType() == Material.PODZOL) {
+                new TempBlock(randomGround, Material.GRASS_BLOCK).setRevertTime(flowerRevertTime);
+            }
+
+            // BEZWZGLĘDNA ZASADA: Kwiaty mogą pojawić się TYLKO bezpośrednio na DIRT lub GRASS_BLOCK!
+            if (randomGround.getType() == Material.GRASS_BLOCK || randomGround.getType() == Material.DIRT) {
+                Block above = randomGround.getRelative(0, 1, 0);
+                if (above.getY() <= centerY + 1.0 && above.getType() == Material.AIR && !TempBlock.isTempBlock(above)) {
+                    Material[] flowers = {Material.SHORT_GRASS, Material.POPPY, Material.DANDELION, Material.BLUE_ORCHID, Material.ALLIUM, Material.AZURE_BLUET};
+                    Material chosen = flowers[random.nextInt(flowers.length)];
+                    new TempBlock(above, chosen).setRevertTime(flowerRevertTime);
+                }
             }
         }
     }
@@ -194,17 +197,15 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         targetLoc.getWorld().playSound(targetLoc, Sound.BLOCK_GRASS_BREAK, 1.4f, 0.7f);
         targetLoc.getWorld().playSound(targetLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 1.0f);
 
-        Random rand = new Random();
         List<Vector> directions = new ArrayList<>();
 
-        // 12 pocisków na boki (zasięg do 15 kratek)
-        int projCount = 12;
-        for (int p = 0; p < projCount; p++) {
-            double angle = (Math.PI * 2 / projCount) * p;
-            directions.add(new Vector(Math.cos(angle), 0.3 + (rand.nextDouble() * 0.2), Math.sin(angle)).normalize());
+        // Wystrzał macki pnączy (zależny od opcji z konfigu: projectileCount i projectileRange)
+        for (int p = 0; p < projectileCount; p++) {
+            double angle = (Math.PI * 2 / projectileCount) * p;
+            directions.add(new Vector(Math.cos(angle), 0.3 + (random.nextDouble() * 0.2), Math.sin(angle)).normalize());
         }
 
-        // Dodatkowe 2 pociski skierowane wyżej w górę
+        // Dodatkowe 2 pociski skierowane bardziej w górę
         directions.add(new Vector(0.2, 0.85, 0.2).normalize());
         directions.add(new Vector(-0.2, 0.85, -0.2).normalize());
 
@@ -220,7 +221,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
                     Block b = projLoc.getBlock();
                     if (b.getType() == Material.AIR) {
-                        Material mat = rand.nextBoolean() ? Material.TWISTING_VINES : (rand.nextBoolean() ? Material.OAK_LEAVES : Material.VINE);
+                        // WYŁĄCZNIE WARPED_ROOTS oraz TWISTING_VINES (BEZ LIŚCI!)
+                        Material mat = random.nextBoolean() ? Material.WARPED_ROOTS : Material.TWISTING_VINES;
                         TempBlock tb = new TempBlock(b, mat);
                         tb.setRevertTime(6000L);
                         vineBlocks.add(tb);
@@ -231,7 +233,6 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                             LivingEntity le = (LivingEntity) entity;
                             if (!trappedEntities.contains(le)) {
                                 DamageHandler.damageEntity(le, damage, VineSnare.this);
-                                // Przyciąganie w dół (setY -0.4)
                                 Vector pull = targetLoc.clone().toVector().subtract(le.getLocation().toVector()).normalize().multiply(0.8);
                                 pull.setY(-0.4);
                                 le.setVelocity(pull);
@@ -240,7 +241,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                         }
                     }
 
-                    if (dist >= 15.0 || b.getType().isSolid()) {
+                    if (dist >= projectileRange || b.getType().isSolid()) {
                         cancel();
                     }
                 }
@@ -285,25 +286,15 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
     }
 
     private void finishAbility() {
-        Material[][] endPlantPairs = {
-            {Material.SHORT_GRASS, Material.POPPY},
-            {Material.FERN, Material.DANDELION},
-            {Material.LILY_OF_THE_VALLEY, Material.BLUE_ORCHID},
-            {Material.WITHER_ROSE, Material.ALLIUM},
-            {Material.RED_TULIP, Material.AZURE_BLUET},
-            {Material.PINK_TULIP, Material.CORNFLOWER}
-        };
-        Random rand = new Random();
-        Material[] chosenFlowers = endPlantPairs[rand.nextInt(endPlantPairs.length)];
-
+        // Dodatkowe wykwitanie dzikich kwiatów w miejscu zakwitu TYLKO na ziemi/trawie
         List<Block> area = GeneralMethods.getBlocksAroundPoint(targetLoc, (int) radius);
         for (Block b : area) {
-            if (isPlantbendableGround(b)) {
+            if (b.getType() == Material.GRASS_BLOCK || b.getType() == Material.DIRT) {
                 Block above = b.getRelative(0, 1, 0);
                 if (above.getY() <= centerY + 1.0 && above.getType() == Material.AIR && !TempBlock.isTempBlock(above)) {
-                    Material flowerMat = chosenFlowers[rand.nextInt(chosenFlowers.length)];
-                    TempBlock tb = new TempBlock(above, flowerMat);
-                    tb.setRevertTime(flowerRevertTime);
+                    Material[] flowers = {Material.SHORT_GRASS, Material.POPPY, Material.DANDELION, Material.BLUE_ORCHID, Material.ALLIUM, Material.AZURE_BLUET, Material.FERN};
+                    Material chosen = flowers[random.nextInt(flowers.length)];
+                    new TempBlock(above, chosen).setRevertTime(flowerRevertTime);
                 }
             }
         }
@@ -325,13 +316,6 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
             }
         }
         vineBlocks.clear();
-
-        for (Item item : droppedVines) {
-            if (item != null && item.isValid()) {
-                item.remove();
-            }
-        }
-        droppedVines.clear();
 
         for (LivingEntity entity : trappedEntities) {
             if (entity != null && entity.isValid()) {
@@ -397,7 +381,7 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getDescription() {
-        return "Tworzy krąg pnączy (15m), które po 3s wystrzeliwują macki (w tym 2 w górę), stoją w miejscu przez 2 sekundy, a następnie powoli się chowają ściągając wrogów w dół do środka i zakwitając kwiatami.";
+        return "Tworzy pole rozrastających się pnączy (15m), które po 3s wystrzeliwują macki z warped roots i twisting vines, ściągając wrogów w dół i wykwitając kwiatami na ziemi.";
     }
 
     @Override

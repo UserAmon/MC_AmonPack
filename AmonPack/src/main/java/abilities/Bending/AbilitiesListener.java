@@ -116,8 +116,6 @@ public class AbilitiesListener implements Listener {
 						new SmokeCamouflage(player);
 					} else if (boundAbility.equalsIgnoreCase("AirSteps")) {
 						new AirSteps(player);
-					} else if (boundAbility.equalsIgnoreCase("Blossom")) {
-						new Blossom(player);
 					}
 				}
 			} else
@@ -136,6 +134,8 @@ public class AbilitiesListener implements Listener {
 		if (bPlayer.getBoundAbility() != null) {
 			if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Cyclone")) {
 				new Cyclone(player);
+			} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Blossom")) {
+				new Blossom(player);
 			} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DiscHurl")
 					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")
 					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("SandDisc")) {

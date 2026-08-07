@@ -21,28 +21,26 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class Withering extends WaterAbility implements AddonAbility, SpecialTriggerable {
 
-    private enum State {
-        DRYING, ERUPT_THORNS
-    }
-
-    private State state;
-    private long startTime;
-    private long dryingDuration;
+    private long cooldown;
     private double radius;
     private double damage;
-    private long cooldown;
     private long revertTime;
 
+    private Block initialTargetBlock;
     private Location centerLoc;
+    private Set<Block> witheredBlocks = new HashSet<>();
+    private List<TempBlock> deadBushTempBlocks = new ArrayList<>();
     private int ticksElapsed = 0;
-    private List<TempBlock> createdThorns = new ArrayList<>();
     private Random random = new Random();
 
     public Withering(Player player) {
@@ -57,120 +55,134 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
             return;
         }
 
-        this.dryingDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Withering.DryingDuration", 2000L); // 2s animacja usychania
         this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Withering.Radius", 8.0);
-        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Withering.Damage", 5.0);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Withering.Damage", 4.0);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Withering.Cooldown", 8000L);
         this.revertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Withering.RevertTime", 10000L);
 
         Block targetBlock = player.getTargetBlockExact(18);
-        if (targetBlock != null && isPlantbendableGround(targetBlock)) {
-            this.centerLoc = targetBlock.getLocation().add(0.5, 1.0, 0.5);
-        } else {
-            this.centerLoc = player.getLocation().clone();
+        if (targetBlock == null || !isPlantbendableGround(targetBlock)) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§cMusisz patrzeć na blok roślinny!"));
+            return;
         }
 
-        this.state = State.DRYING;
-        this.startTime = System.currentTimeMillis();
+        this.initialTargetBlock = targetBlock;
+        this.centerLoc = targetBlock.getLocation().add(0.5, 1.0, 0.5);
 
         SpecialTriggerManager.registerActiveSpecial(player);
         start();
+        startWitheringProcess();
     }
 
     private boolean isPlantbendableGround(Block b) {
         if (b == null) return false;
         Material m = b.getType();
         return m == Material.GRASS_BLOCK || m == Material.DIRT || m == Material.COARSE_DIRT || m == Material.PODZOL
-                || m == Material.MOSS_BLOCK || m == Material.FARMLAND || m == Material.OAK_LEAVES || m == Material.JUNGLE_LEAVES
+                || m == Material.MOSS_BLOCK || m == Material.FARMLAND
                 || WaterAbility.isPlantbendable(player, m, false) || PlantAbility.isPlant(b);
     }
 
-    @Override
-    public void progress() {
-        if (player == null || player.isDead() || !player.isOnline()) {
-            finish();
-            return;
-        }
+    private void startWitheringProcess() {
+        // Faza 1 (1s / 20 ticków): Animacja usychania na celowanym bloku
+        new BukkitRunnable() {
+            private int phase1Ticks = 0;
 
-        ticksElapsed++;
+            @Override
+            public void run() {
+                phase1Ticks++;
+                SpecialTriggerManager.applySoftCooldownToToolbar(player);
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§8[Withering] Usychanie na bloku..."));
 
-        if (state == State.DRYING) {
-            SpecialTriggerManager.applySoftCooldownToToolbar(player);
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§8[Withering] Rośliny usychają..."));
+                ParticleEffect.SMOKE_NORMAL.display(initialTargetBlock.getLocation().add(0.5, 1.0, 0.5), 3, 0.2, 0.2, 0.2, 0.02);
+                ParticleEffect.ASH.display(initialTargetBlock.getLocation().add(0.5, 1.0, 0.5), 3, 0.2, 0.2, 0.2, 0.02);
 
-            // 2-sekundowa animacja usychania roślin i bloków trawy
-            List<Block> area = GeneralMethods.getBlocksAroundPoint(centerLoc, (int) radius);
-            for (Block b : area) {
-                if (isPlantbendableGround(b) && random.nextDouble() < 0.2) {
-                    ParticleEffect.SMOKE_NORMAL.display(b.getLocation().add(0.5, 1.0, 0.5), 1, 0.2, 0.2, 0.2, 0.01);
-                    ParticleEffect.ASH.display(b.getLocation().add(0.5, 1.0, 0.5), 1, 0.2, 0.2, 0.2, 0.01);
+                if (phase1Ticks % 4 == 0) {
+                    initialTargetBlock.getWorld().playSound(initialTargetBlock.getLocation(), Sound.BLOCK_GRASS_BREAK, 0.8f, 0.5f);
+                }
+
+                if (phase1Ticks >= 20) {
+                    this.cancel();
+                    witherBlock(initialTargetBlock);
+                    startSpreadingPhase();
                 }
             }
-
-            if (ticksElapsed % 6 == 0) {
-                centerLoc.getWorld().playSound(centerLoc, Sound.BLOCK_GRASS_BREAK, 0.8f, 0.5f);
-                centerLoc.getWorld().playSound(centerLoc, Sound.ENTITY_WITHER_AMBIENT, 0.3f, 1.6f);
-            }
-
-            if (System.currentTimeMillis() - startTime >= dryingDuration) {
-                eruptThorns();
-            }
-        }
+        }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
     }
 
-    private void eruptThorns() {
-        state = State.ERUPT_THORNS;
+    private void startSpreadingPhase() {
+        // Faza 2: Powolne i losowe rozrastanie usychania na pobliskie bloki plantbendable
+        new BukkitRunnable() {
+            private int spreadTicks = 0;
 
-        centerLoc.getWorld().playSound(centerLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 0.7f);
-        centerLoc.getWorld().playSound(centerLoc, Sound.ENTITY_WITHER_HURT, 0.6f, 1.2f);
+            @Override
+            public void run() {
+                spreadTicks++;
+                SpecialTriggerManager.applySoftCooldownToToolbar(player);
 
-        Material[] thornMats = {
-            Material.POINTED_DRIPSTONE, Material.SWEET_BERRY_BUSH, Material.DEAD_BUSH, Material.TWISTING_VINES
-        };
-
-        List<Block> area = GeneralMethods.getBlocksAroundPoint(centerLoc, (int) radius);
-        for (Block b : area) {
-            if (isPlantbendableGround(b)) {
-                // Trawa i podłoże usychają w wyjałowioną ziemię
-                if (b.getType() == Material.GRASS_BLOCK || b.getType() == Material.DIRT || b.getType() == Material.MOSS_BLOCK) {
-                    new TempBlock(b, Material.COARSE_DIRT).setRevertTime(revertTime);
-                }
-
-                Block above = b.getRelative(0, 1, 0);
-                if (above.getType() == Material.AIR || PlantAbility.isPlant(above)) {
-                    // Tworzenie wyższych pól cierni (2-3 bloki w górę)
-                    int thornHeight = 2 + random.nextInt(2);
-                    for (int h = 0; h < thornHeight; h++) {
-                        Block tBlock = b.getRelative(0, 1 + h, 0);
-                        if (tBlock.getType() == Material.AIR || PlantAbility.isPlant(tBlock)) {
-                            Material thornMat = thornMats[random.nextInt(thornMats.length)];
-                            TempBlock tb = new TempBlock(tBlock, thornMat);
-                            tb.setRevertTime(revertTime);
-                            createdThorns.add(tb);
+                // Losowy rozrost na 1-2 sąsiednie bloki
+                List<Block> candidates = GeneralMethods.getBlocksAroundPoint(centerLoc, (int) radius);
+                if (!candidates.isEmpty()) {
+                    for (int i = 0; i < 2; i++) {
+                        Block b = candidates.get(random.nextInt(candidates.size()));
+                        if (isPlantbendableGround(b) && !witheredBlocks.contains(b)) {
+                            witherBlock(b);
                         }
                     }
                 }
+
+                // Uschnięte krzewy (DEAD_BUSH) emitują cząsteczki i zadają obrażenia oraz spowolnienie przechodzącym wrogom
+                for (TempBlock deadBushTB : deadBushTempBlocks) {
+                    if (deadBushTB != null && deadBushTB.getBlock().getType() == Material.DEAD_BUSH) {
+                        Location dLoc = deadBushTB.getLocation().add(0.5, 0.5, 0.5);
+                        ParticleEffect.SMOKE_NORMAL.display(dLoc, 1, 0.1, 0.1, 0.1, 0.01);
+                        ParticleEffect.ASH.display(dLoc, 1, 0.1, 0.1, 0.1, 0.01);
+
+                        for (Entity entity : GeneralMethods.getEntitiesAroundPoint(dLoc, 1.3)) {
+                            if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+                                LivingEntity target = (LivingEntity) entity;
+                                DamageHandler.damageEntity(target, damage / 3.0, Withering.this);
+                                target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 2, false, false));
+                                ParticleEffect.CRIT.display(target.getLocation().add(0, 1, 0), 3, 0.2, 0.2, 0.2, 0.02);
+                            }
+                        }
+                    }
+                }
+
+                if (spreadTicks >= 60) { // 3 sekundy rozrastania
+                    this.cancel();
+                    finish();
+                }
             }
+        }.runTaskTimer(AmonPackPlugin.plugin, 0L, 2L);
+    }
+
+    private void witherBlock(Block b) {
+        witheredBlocks.add(b);
+
+        // Zamiana trawy na PODZOL
+        if (b.getType() == Material.GRASS_BLOCK || b.getType() == Material.DIRT || b.getType() == Material.MOSS_BLOCK) {
+            new TempBlock(b, Material.PODZOL).setRevertTime(revertTime);
         }
 
-        // Obrażenia i debuff usychania dla wrogów w obszarze
-        for (Entity entity : GeneralMethods.getEntitiesAroundPoint(centerLoc, radius + 1.0)) {
-            if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-                LivingEntity target = (LivingEntity) entity;
-                DamageHandler.damageEntity(target, damage, this);
-                target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 1, false, false));
-                target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 2, false, false));
-                ParticleEffect.SMOKE_LARGE.display(target.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0.05);
-            }
+        // Zamiana roślin/kwiatów/trawy na górze w DEAD_BUSH
+        Block above = b.getRelative(0, 1, 0);
+        if (above.getType() == Material.AIR || PlantAbility.isPlant(above)) {
+            TempBlock deadBushTB = new TempBlock(above, Material.DEAD_BUSH);
+            deadBushTB.setRevertTime(revertTime);
+            deadBushTempBlocks.add(deadBushTB);
         }
 
-        finish();
+        b.getWorld().playSound(b.getLocation(), Sound.BLOCK_GRASS_BREAK, 0.6f, 0.6f);
     }
 
     private void finish() {
         SpecialTriggerManager.unregisterActiveSpecial(player);
         bPlayer.addCooldown(this, cooldown);
         remove();
+    }
+
+    @Override
+    public void progress() {
     }
 
     @Override
@@ -200,7 +212,7 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -224,11 +236,11 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getDescription() {
-        return "Powoduje 2-sekundowe usychanie roślin w obszarze, po czym podłoże zamienia się w wyjałowioną ziemię i wystrzeliwuje wysokie pola cierni (2-3 bloki) zadające obrażenia i efekty Wither/Slowness.";
+        return "Ususza wskazany blok roślinny (po 1s zmienia go w Podzol i Dead Bush), po czym usychanie losowo rozrasta się na pobliskie bloki. Uschnięte krzewy emitują dym i zadają obrażenia oraz spowolnienie wrogom.";
     }
 
     @Override
     public String getInstructions() {
-        return "Naciśnij F (SWAP), aby aktywować usychanie roślin!";
+        return "Spójrz na blok roślinny i naciśnij F (SWAP), aby go ususzyć!";
     }
 }

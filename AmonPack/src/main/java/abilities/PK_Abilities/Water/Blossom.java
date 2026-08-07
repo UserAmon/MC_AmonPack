@@ -3,7 +3,6 @@ package Abilities.PK_Abilities.Water;
 import Plugin.AmonPackPlugin;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
-import com.projectkorra.projectkorra.ability.PlantAbility;
 import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
@@ -20,27 +19,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 public class Blossom extends WaterAbility implements AddonAbility {
 
-    private enum State {
-        CHARGING, RELEASED
-    }
-
-    private State state;
-    private long startTime;
-    private long chargeTime;
     private double damage;
     private double range;
     private double speed;
     private long cooldown;
-
-    private int ticksCharging = 0;
     private Random random = new Random();
 
     public Blossom(Player player) {
@@ -50,91 +38,17 @@ public class Blossom extends WaterAbility implements AddonAbility {
             return;
         }
 
-        this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Blossom.ChargeTime", 2000L);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Blossom.Damage", 4.0);
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Blossom.Range", 18.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Blossom.Speed", 1.2);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Blossom.Cooldown", 6000L);
 
-        this.state = State.CHARGING;
-        this.startTime = System.currentTimeMillis();
-
+        bPlayer.addCooldown(this, cooldown);
         start();
-    }
-
-    @Override
-    public void progress() {
-        if (player == null || player.isDead() || !player.isOnline()) {
-            remove();
-            return;
-        }
-
-        if (state == State.CHARGING) {
-            ticksCharging++;
-
-            if (!player.isSneaking()) {
-                if (System.currentTimeMillis() - startTime >= chargeTime) {
-                    launchWave();
-                } else {
-                    remove();
-                }
-                return;
-            }
-
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    new TextComponent(System.currentTimeMillis() - startTime >= chargeTime
-                            ? "§a§l[BLOSSOM NAŁADOWANE] Puść SHIFT, aby wystrzelić falę!"
-                            : "§e[Blossom] Ładowanie kukurydzy i kwiatów..."));
-
-            // Efekty V-shape w stożku przed graczem na ziemi
-            if (ticksCharging % 3 == 0) {
-                renderVConetherraform();
-            }
-        }
-    }
-
-    private void renderVConetherraform() {
-        Location base = player.getLocation();
-        Vector dir = base.getDirection().setY(0).normalize();
-        if (dir.lengthSquared() < 0.01) dir = new Vector(1, 0, 0);
-
-        Vector right = dir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-
-        double maxDist = 6.0;
-        for (double d = 1.0; d <= maxDist; d += 1.0) {
-            double halfSpread = d * 0.55; // Stożek V-Shape
-            for (double s = -halfSpread; s <= halfSpread; s += 0.8) {
-                Location spot = base.clone().add(dir.clone().multiply(d)).add(right.clone().multiply(s));
-                Block ground = getGroundBlock(spot);
-                if (ground != null) {
-                    Block above = ground.getRelative(0, 1, 0);
-
-                    // Przekształcanie kamienia w ziemię, ziemi w trawę
-                    if (ground.getType() == Material.STONE || ground.getType() == Material.COBBLESTONE || ground.getType() == Material.DEEPSLATE) {
-                        new TempBlock(ground, Material.DIRT).setRevertTime(8000L);
-                    } else if (ground.getType() == Material.DIRT || ground.getType() == Material.COARSE_DIRT || ground.getType() == Material.PODZOL) {
-                        new TempBlock(ground, Material.GRASS_BLOCK).setRevertTime(8000L);
-                    }
-
-                    if (above.getType() == Material.AIR && !TempBlock.isTempBlock(above) && random.nextDouble() < 0.25) {
-                        Material mat = random.nextBoolean() ? Material.SHORT_GRASS : (random.nextBoolean() ? Material.DANDELION : Material.POPPY);
-                        new TempBlock(above, mat).setRevertTime(8000L);
-                    }
-
-                    ParticleEffect.COMPOSTER.display(above.getLocation().add(0.5, 0.2, 0.5), 1, 0.2, 0.2, 0.2, 0.01);
-                }
-            }
-        }
-
-        if (ticksCharging % 6 == 0) {
-            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GRASS_STEP, 0.8f, 1.2f);
-        }
+        launchWave();
     }
 
     private void launchWave() {
-        state = State.RELEASED;
-        bPlayer.addCooldown(this, cooldown);
-
         final Location origin = player.getLocation().clone();
         Vector initWaveDir = player.getLocation().getDirection().setY(0).normalize();
         if (initWaveDir.lengthSquared() < 0.01) initWaveDir = new Vector(1, 0, 0);
@@ -146,7 +60,7 @@ public class Blossom extends WaterAbility implements AddonAbility {
 
         Material[] waveFlowers = {
             Material.POPPY, Material.DANDELION, Material.BLUE_ORCHID,
-            Material.ALLIUM, Material.AZURE_BLUET, Material.SHORT_GRASS, Material.FERN
+            Material.ALLIUM, Material.AZURE_BLUET, Material.SHORT_GRASS, Material.FERN, Material.PITCHER_PLANT
         };
 
         new BukkitRunnable() {
@@ -168,32 +82,41 @@ public class Blossom extends WaterAbility implements AddonAbility {
 
                 Location centerWaveLoc = ground.getLocation().add(0.5, 1.0, 0.5);
 
-                // Tworzenie fali kwiatów wysokości 1 bloku w szerokości 3 bloków
+                // Fala kwiatów (1 blok wysokości) na szerokość 3 bloków
                 for (double offset = -1.2; offset <= 1.2; offset += 1.2) {
                     Location waveSpot = centerWaveLoc.clone().add(rightVec.clone().multiply(offset));
                     Block wGround = getGroundBlock(waveSpot);
                     if (wGround != null) {
-                        Block wAbove = wGround.getRelative(0, 1, 0);
-                        if (wAbove.getType() == Material.AIR) {
-                            Material flowerMat = waveFlowers[random.nextInt(waveFlowers.length)];
-                            new TempBlock(wAbove, flowerMat).setRevertTime(1500L); // 1.5s fala kwiatów
+                        // Terraformowanie terenu: stone -> dirt, dirt -> grass_block
+                        if (wGround.getType() == Material.STONE || wGround.getType() == Material.COBBLESTONE || wGround.getType() == Material.DEEPSLATE) {
+                            new TempBlock(wGround, Material.DIRT).setRevertTime(8000L);
+                        } else if (wGround.getType() == Material.DIRT || wGround.getType() == Material.COARSE_DIRT || wGround.getType() == Material.PODZOL) {
+                            new TempBlock(wGround, Material.GRASS_BLOCK).setRevertTime(8000L);
                         }
 
-                        // Strzelanie pnączami na boki
+                        Block wAbove = wGround.getRelative(0, 1, 0);
+                        if (wAbove.getType() == Material.AIR && !TempBlock.isTempBlock(wAbove)) {
+                            Material flowerMat = waveFlowers[random.nextInt(waveFlowers.length)];
+                            new TempBlock(wAbove, flowerMat).setRevertTime(2000L);
+                        }
+
+                        // Efekty cząsteczek na boki
                         Location vineSpot = wAbove.getLocation().add(rightVec.clone().multiply(offset > 0 ? 1.5 : -1.5));
                         ParticleEffect.COMPOSTER.display(vineSpot, 3, 0.3, 0.3, 0.3, 0.05);
                         ParticleEffect.BLOCK_CRACK.display(waveSpot, 3, 0.2, 0.2, 0.2, 0.05, Material.OAK_LEAVES.createBlockData());
                     }
                 }
 
-                // Zostawianie dzikich kwiatów na ziemi po fali (wildflowers)
-                Block trailAbove = ground.getRelative(0, 1, 0);
-                if (trailAbove.getType() == Material.AIR && !TempBlock.isTempBlock(trailAbove)) {
-                    Material trailMat = waveFlowers[random.nextInt(waveFlowers.length)];
-                    new TempBlock(trailAbove, trailMat).setRevertTime(8000L);
+                // Pozostawianie dzikich kwiatów i krzewów (WILDFLOWERS) na blokach trawy po przejściu fali
+                if (ground.getType() == Material.GRASS_BLOCK || ground.getType() == Material.DIRT) {
+                    Block trailAbove = ground.getRelative(0, 1, 0);
+                    if (trailAbove.getType() == Material.AIR && !TempBlock.isTempBlock(trailAbove)) {
+                        Material trailMat = waveFlowers[random.nextInt(waveFlowers.length)];
+                        new TempBlock(trailAbove, trailMat).setRevertTime(8000L);
+                    }
                 }
 
-                // Podrzucanie wrogów w powietrze i zadawanie obrażeń
+                // Podrzucanie i obrażenia wrogów
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(centerWaveLoc, 2.2)) {
                     if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                         LivingEntity target = (LivingEntity) entity;
@@ -206,7 +129,7 @@ public class Blossom extends WaterAbility implements AddonAbility {
                     }
                 }
 
-                if (traveled % 4 == 0) {
+                if ((int) traveled % 4 == 0) {
                     centerWaveLoc.getWorld().playSound(centerWaveLoc, Sound.BLOCK_GRASS_BREAK, 0.8f, 1.2f);
                 }
             }
@@ -222,6 +145,10 @@ public class Blossom extends WaterAbility implements AddonAbility {
             }
         }
         return null;
+    }
+
+    @Override
+    public void progress() {
     }
 
     @Override
@@ -246,7 +173,7 @@ public class Blossom extends WaterAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -256,7 +183,7 @@ public class Blossom extends WaterAbility implements AddonAbility {
 
     @Override
     public boolean isSneakAbility() {
-        return true;
+        return false;
     }
 
     @Override
@@ -270,11 +197,11 @@ public class Blossom extends WaterAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Ładuje falę trawy i kwiatów w stożku V przed graczem. Po zwolnieniu SHIFT fala kwiatów wystrzeliwuje na wprost, strzela pnączami na boki i zostawia wildflowers.";
+        return "Wystrzeliwuje natychmiastową falę kwiatów i trawy (LPM). Fala zamienia kamień w ziemię, a ziemię w trawę, strzela na boki pnączami i zostawia dzikie kwiaty (wildflowers) na ziemi.";
     }
 
     @Override
     public String getInstructions() {
-        return "Przytrzymaj SHIFT, aby naładować falę kwiatów, i puść SHIFT, aby ją wystrzelić!";
+        return "Naciśnij LPM, aby natychmiast wystrzelić falę kwiatów!";
     }
 }
