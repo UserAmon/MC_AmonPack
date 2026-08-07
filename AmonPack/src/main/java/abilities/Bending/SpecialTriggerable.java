@@ -7,9 +7,7 @@ package Abilities.Bending;
 public interface SpecialTriggerable {
 
     enum TriggerType {
-        SWAP("Zamiana Rąk (F)"),
-        ADVANCEMENT("Osiągnięcia (L)"),
-        BOTH("Swap (F) / Advancement (L)");
+        SWAP("Zamiana Rąk (F)");
 
         private final String displayName;
 
@@ -22,13 +20,9 @@ public interface SpecialTriggerable {
         }
     }
 
-    /**
-     * Zwraca typ wyzwalacza wspierany przez tę umiejętność.
-     */
     TriggerType getSupportedTriggerType();
 
     default boolean isTriggerTypeSupported(TriggerType type) {
-        TriggerType supported = getSupportedTriggerType();
-        return supported == TriggerType.BOTH || supported == type;
+        return type == TriggerType.SWAP;
     }
 }

@@ -136,6 +136,9 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void drawRotatingDiscs() {
+        boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+        Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+
         double angleRad = Math.toRadians(ticksCharging * 15.0);
         Vector curForward = player.getLocation().getDirection().setY(0).normalize();
         if (curForward.lengthSquared() < 0.01) {
@@ -151,7 +154,7 @@ public class FlameSplit extends FireAbility implements AddonAbility {
             double angle = angleRad + Math.toRadians(i * 180.0);
             Vector offset = curRight.clone().multiply(radius * Math.sin(angle)).add(new Vector(0, radius * Math.cos(angle), 0));
 
-            player.getWorld().spawnParticle(Particle.FLAME, centerLoc.clone().add(offset), 1, 0, 0, 0, 0);
+            player.getWorld().spawnParticle(flameParticle, centerLoc.clone().add(offset), 1, 0, 0, 0, 0);
         }
 
         if (ticksCharging % 5 == 0) {

@@ -114,6 +114,8 @@ public class AbilitiesListener implements Listener {
 						new SmokeBarrage(player);
 					} else if (boundAbility.equalsIgnoreCase("SmokeCamouflage")) {
 						new SmokeCamouflage(player);
+					} else if (boundAbility.equalsIgnoreCase("AirSteps")) {
+						new AirSteps(player);
 					}
 				}
 			} else

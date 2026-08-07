@@ -1,16 +1,14 @@
-package Abilities.PK_Abilities.Water;
+package Abilities.PK_Abilities.Fire;
 
 import Abilities.Bending.SpecialTriggerable;
 import Abilities.Bending.SpecialTriggerManager;
+import Plugin.AmonPackPlugin;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
-import com.projectkorra.projectkorra.ability.WaterAbility;
+import com.projectkorra.projectkorra.ability.FireAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
-import com.projectkorra.projectkorra.util.TempBlock;
-import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -21,34 +19,36 @@ import org.bukkit.util.Vector;
 import java.util.HashSet;
 import java.util.Set;
 
-public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTriggerable {
+public class FlameWhip extends FireAbility implements AddonAbility, SpecialTriggerable {
 
     private int durationTicks = 0;
-    private int maxDurationTicks = 100;
+    private int maxDurationTicks = 80;
 
-    private double currentLength = 0.3; // Bardzo krótki start przy dłoni
+    private double currentLength = 0.3;
     private final double minLength = 1.0;
     private double maxLength;
     private double damage;
     private double knockback;
     private long cooldown;
+    private int burnDuration;
 
     private Vector currentWhipDir = null;
     private Vector lastCameraDir = null;
-    private Location currentHandLoc = null; // Śledzenie lokalizacji z bezwładnością/opóźnieniem
+    private Location currentHandLoc = null;
 
-    public WaterWhip(Player player) {
+    public FlameWhip(Player player) {
         super(player);
 
         if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
             return;
         }
 
-        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Damage", 4.5);
-        this.maxLength = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.MaxRange", 7.0);
-        this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Knockback", 0.6);
-        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterWhip.Cooldown", 5000);
-        this.maxDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterWhip.DurationTicks", 100);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWhip.Damage", 4.0);
+        this.maxLength = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWhip.MaxRange", 9.0);
+        this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWhip.Knockback", 0.7);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameWhip.Cooldown", 6000L);
+        this.maxDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWhip.DurationTicks", 80);
+        this.burnDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWhip.BurnDuration", 60);
 
         SpecialTriggerManager.registerActiveSpecial(player);
         start();
@@ -98,69 +98,80 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
         }
         lastCameraDir = targetCameraDir.clone();
 
-        // Bezwładność i spowolnienie podążania ręki/punktu startowego za ruchem gracza
-        Location targetHand = getHandLocation();
+        // Bezwładność i spowolnienie podążania ręki za ruchem gracza
+        Location targetHand = eyeLoc.clone();
         if (currentHandLoc == null) {
             currentHandLoc = targetHand.clone();
         } else {
             currentHandLoc.add(targetHand.clone().subtract(currentHandLoc).multiply(0.25));
         }
 
+        Vector rightVector = currentWhipDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+        Location leftHand = currentHandLoc.clone().add(rightVector.clone().multiply(-1.1)).subtract(0, 0.3, 0);
+        Location rightHand = currentHandLoc.clone().add(rightVector.clone().multiply(1.1)).subtract(0, 0.3, 0);
+
         Set<LivingEntity> hitEntities = new HashSet<>();
 
+        renderWhipBranch(leftHand, currentWhipDir, rightVector, -1, hitEntities);
+        renderWhipBranch(rightHand, currentWhipDir, rightVector, 1, hitEntities);
+
+        if (durationTicks % 4 == 0) {
+            eyeLoc.getWorld().playSound(eyeLoc, Sound.ITEM_FLINTANDSTEEL_USE, 0.8f, 1.2f);
+            eyeLoc.getWorld().playSound(eyeLoc, Sound.ENTITY_BLAZE_SHOOT, 0.6f, 1.4f);
+        }
+    }
+
+    private void renderWhipBranch(Location handLoc, Vector whipDir, Vector rightVec, int sideMultiplier, Set<LivingEntity> hitEntities) {
         int segments = (int) Math.ceil(currentLength * 6.0);
         for (int i = 0; i <= segments; i++) {
             double progressRatio = (double) i / (double) segments;
             double dist = progressRatio * currentLength;
 
-            double waveOffset = Math.sin(progressRatio * Math.PI) * 0.28 * (currentLength / maxLength);
+            double waveOffset = Math.sin(progressRatio * Math.PI) * 0.3 * sideMultiplier * (currentLength / maxLength);
             double verticalWave = Math.sin(progressRatio * Math.PI * 3.0 + (durationTicks * 0.4)) * 0.5;
-            Vector rightVector = currentWhipDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
 
-            Location segmentLoc = currentHandLoc.clone()
-                    .add(currentWhipDir.clone().multiply(dist))
-                    .add(rightVector.multiply(waveOffset))
+            Location segmentLoc = handLoc.clone()
+                    .add(whipDir.clone().multiply(dist))
+                    .add(rightVec.clone().multiply(waveOffset))
                     .add(0, verticalWave, 0);
 
+            if (i % 2 == 0) {
+                ParticleEffect.FLAME.display(segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
+            }
             if (i % 4 == 0) {
-                ParticleEffect.WATER_DROP.display(segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
-                ParticleEffect.WATER_SPLASH.display(segmentLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                ParticleEffect.SMOKE_NORMAL.display(segmentLoc, 1, 0.02, 0.02, 0.02, 0.01);
+            }
+            if (i == segments) {
+                ParticleEffect.LAVA.display(segmentLoc, 2, 0.1, 0.1, 0.1, 0.05);
             }
 
             Block block = segmentLoc.getBlock();
-            if (block.getType() == Material.AIR) {
-                new TempBlock(block, Material.WATER).setRevertTime(150);
+            if (block.getType().isSolid()) {
+                break;
             }
 
-            for (Entity entity : GeneralMethods.getEntitiesAroundPoint(segmentLoc, 1.2)) {
-                if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
+            for (Entity entity : GeneralMethods.getEntitiesAroundPoint(segmentLoc, 1.3)) {
+                if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                     LivingEntity target = (LivingEntity) entity;
                     if (!hitEntities.contains(target)) {
                         hitEntities.add(target);
                         DamageHandler.damageEntity(target, damage, this);
-                        target.setVelocity(currentWhipDir.clone().multiply(knockback).setY(0.2));
-                        player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
-                        ParticleEffect.WATER_SPLASH.display(target.getLocation().add(0, 1, 0), 8, 0.15, 0.15, 0.15, 0.05);
+                        target.setFireTicks(burnDuration);
+
+                        Vector kb = whipDir.clone().multiply(knockback).setY(0.25);
+                        target.setVelocity(kb);
+
+                        segmentLoc.getWorld().playSound(segmentLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
+                        ParticleEffect.FLAME.display(segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
                     }
                 }
             }
         }
-
-        if (durationTicks % 8 == 0) {
-            player.getWorld().playSound(currentHandLoc, Sound.ITEM_TRIDENT_RIPTIDE_1, 0.5f, 1.5f);
-        }
-    }
-
-    private Location getHandLocation() {
-        Location base = player.getLocation().clone().add(0, 1.05, 0);
-        Vector forward = player.getLocation().getDirection().clone().setY(0).normalize();
-        Vector right = forward.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-        return base.add(forward.multiply(0.3)).add(right.multiply(1.7));
     }
 
     private void finish() {
+        bPlayer.addCooldown(this, cooldown);
         SpecialTriggerManager.unregisterActiveSpecial(player);
-        bPlayer.addCooldown(this);
         remove();
     }
 
@@ -181,7 +192,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getName() {
-        return "WaterWhip";
+        return "FlameWhip";
     }
 
     @Override
@@ -215,11 +226,11 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getDescription() {
-        return "Bicz wodny podążający z opóźnieniem i bezwładnością za ruchem kamery i gracza (2s rozwijanie, falowanie góra/dół).";
+        return "Podwójne ogniste bicze podążające z opóźnieniem i bezwładnością za kamerą i ruchem gracza (2s rozwijanie, falowanie góra/dół).";
     }
 
     @Override
     public String getInstructions() {
-        return "Naciśnij F (SWAP), aby aktywować wodny bicz!";
+        return "Naciśnij F (SWAP), aby aktywować podwójny ognisty bicz!";
     }
 }

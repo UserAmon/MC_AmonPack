@@ -234,14 +234,22 @@ public class SmokeBurst extends SmokeAbility implements AddonAbility {
 							LivingEntity le = (LivingEntity) entity;
 							DamageHandler.damageEntity(le, damage, ability);
 
+							int blindBase = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.BlindnessDurationBase", 40);
+							int blindPerLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.BlindnessDurationPerLevel", 20);
+							int blindAmp = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.BlindnessLevel", 0);
+							int slowDur = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.SlownessDuration", 60);
+							int slowAmp = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.SlownessLevel", 1);
+							int poisonDur = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.PoisonDuration", 60);
+							int poisonAmp = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Smoke.SmokeBurst.PoisonLevel", 0);
+
 							if (level >= 1) {
-								le.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40 + level * 20, 0));
+								le.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blindBase + level * blindPerLevel, blindAmp));
 							}
 							if (level >= 2) {
-								le.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, level - 1));
+								le.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowDur, Math.max(0, slowAmp)));
 							}
 							if (level >= 3) {
-								le.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 60, 0));
+								le.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisonDur, Math.max(0, poisonAmp)));
 							}
 
 							Vector pushDir = le.getLocation().toVector().subtract(loc.toVector());

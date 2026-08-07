@@ -101,21 +101,24 @@ public class FlameWeave extends FireAbility implements AddonAbility {
 			player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
 					net.md_5.bungee.api.chat.TextComponent.fromLegacyText(bar));
 
+			boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+			Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+
 			// Orbiting particles
 			double radius = 0.8 + (level * 0.15);
 			double angle = (System.currentTimeMillis() / 150.0) * (level + 1);
 			double x = radius * Math.cos(angle);
 			double z = radius * Math.sin(angle);
 			Location pLoc = player.getLocation().clone().add(x, 0.2 + (level * 0.4), z);
-			player.getWorld().spawnParticle(Particle.FLAME, pLoc, 1, 0, 0, 0, 0);
-			player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.ORANGE, 0.8f));
+			player.getWorld().spawnParticle(flameParticle, pLoc, 1, 0, 0, 0, 0);
+			player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(isBlue ? Color.AQUA : Color.ORANGE, 0.8f));
 
 			if (level > 0) {
 				Location eye = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(0.5)).clone()
 						.add(0, -0.5, 0);
-				Particle.DustOptions dust = new Particle.DustOptions(Color.ORANGE, 0.5f + (level * 0.2f));
+				Particle.DustOptions dust = new Particle.DustOptions(isBlue ? Color.AQUA : Color.ORANGE, 0.5f + (level * 0.2f));
 				eye.getWorld().spawnParticle(Particle.DUST, eye, level * 2, 0.25, 0.1, 0.25, 0, dust);
-				eye.getWorld().spawnParticle(Particle.FLAME, eye, level, 0.1, 0.1, 0.1, 0.02);
+				eye.getWorld().spawnParticle(flameParticle, eye, level, 0.1, 0.1, 0.1, 0.02);
 			}
 		} else if (state == State.FIRING) {
             if (bolts.isEmpty()) {

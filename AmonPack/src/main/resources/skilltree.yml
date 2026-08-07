@@ -29,8 +29,6 @@ AmonPack:
       PathDecoration:
         - 12
         - 13
-        - 23
-        - 25
         - 28
         - 29
         - 31
@@ -62,6 +60,17 @@ AmonPack:
         Place: 38
         ReqAbilities:
         - FireBlast
+      FlameWhip:
+        Cost: 25
+        Place: 23
+        IsSpecialBindAbility: true
+        ReqAbilities:
+          - FlameSpins
+        Description:
+          - "&7Wystrzeliwuje dwa ogniste bicze z obu rąk."
+          - "&7Bicze podążają za ruchem kamery, podpalając,"
+          - "&7odrzucając i zadając obrażenia przeciwnikom."
+          - "&e[Ruch Specjalny - SWAP (F)]"
       FireJet:
         Cost: 15
         Place: 20
@@ -234,11 +243,11 @@ AmonPack:
         ReqAbilities:
           - RaiseEarth
         Description:
-          - "&7Po aktywacji generuje 4 punkty przed kamerą."
+          - "&7Po aktywacji generuje 4 losowe punkty przed kamerą."
           - "&7Musisz cały czas kucać (SHIFT) podczas zbierania!"
-          - "&7Najeźdź kamerą na punkty i wciskaj F/L, aby je zbierać."
-          - "&7Po zebraniu 4 punktów puść SHIFT, aby zamienić się w toczący się głaz."
-          - "&e[Ruch Specjalny - SWAP (F) / ADVANCEMENT (L)]"
+          - "&7Najeźdź precyzyjnie kamerą na punkty i wciskaj F, aby je zbierać."
+          - "&7Po zebraniu 4 punktów puść SHIFT, aby przetoczyć głaz."
+          - "&e[Ruch Specjalny - SWAP (F)]"
     Water:
       PathDecoration:
         - 38
@@ -258,28 +267,31 @@ AmonPack:
         - 3
         - 105
         - 96
-        - 95
-      WaterManipulation:
+      WaterFist:
         Cost: 0
         Place: 49
         ReqAbilities: []
+      WaterManipulation:
+        Cost: 5
+        Place: 38
+        ReqAbilities:
+        - WaterFist
       Surge:
         Cost: 20
         Place: 31
         ReqAbilities:
         - WaterManipulation
       PhaseChange:
-        Cost: 30
-        Place: 13
+        Cost: 15
+        Place: 37
         ReqAbilities:
-        - Surge
+        - WaterManipulation
       IceThorn:
         Cost: 50
         Place: 4
         ReqAbilities:
         - PhaseChange
         - WaterFist
-
       HealingWaters:
         Cost: 10
         Place: 33
@@ -304,12 +316,6 @@ AmonPack:
         Place: 94
         ReqAbilities:
         - BloodBending
-
-      WaterFist:
-        Cost: 15
-        Place: 37
-        ReqAbilities:
-          - WaterManipulation
       WaterWhip:
         Cost: 20
         Place: 23
@@ -337,11 +343,11 @@ AmonPack:
         ReqAbilities:
           - Hoarfrost
         Description:
-          - "&7Tworzy zielony krąg pnączy w wskazanym miejscu roślińskim."
-          - "&7Po 2s animacji pnącza strzelają w górę i przyciągają wrogów."
+          - "&7Tworzy zielony krąg pnączy w wskazanym miejscu roślinnym."
+          - "&7Po 2s animacji macki pnączy strzelają w górę i przyciągają wrogów."
           - "&7Przeciwnicy są unieruchomieni przez 3s."
           - "&7Po zakończeniu w miejscu uwięzienia zakwitają kwiaty!"
-          - "&e[Ruch Specjalny - SWAP (F) / ADVANCEMENT (L)]"
+          - "&e[Ruch Specjalny - SWAP (F)]"
       Uppercut:
         Cost: 2
         Place: 20
@@ -426,3 +432,13 @@ AmonPack:
           - "&7Zwiększa &ezasięg łączenia &7oraz zasięg maksymalny linów w Acoustics."
           - "&7Każda umiejętność dźwiękowa nakłada o &e1 stack więcej&7."
           - "&7Pocisk &eSoundCrash &7podczas lotu &elekko podąża za celownikiem&7."
+      AirSteps:
+        Cost: 20
+        Place: 26
+        ReqAbilities:
+          - AirSwipe
+        Description:
+          - "&7Kucnięcie (SHIFT) w powietrzu pozwala na 3 podskoki."
+          - "&7Każdy podskok wystrzeliwuje podmuch powietrza w dół,"
+          - "&7odrzucający wrogów na boki."
+          - "&7Uderzenie odrzuconego wroga w ścianę zadaje obrażenia!"

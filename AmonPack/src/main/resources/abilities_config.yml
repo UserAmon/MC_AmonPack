@@ -104,6 +104,13 @@ AmonPack:
         FlowerRevertTime: 10000 #ms flowers stay bloomed after snare
 
   Air:
+    AirSteps:
+      Cooldown: 6000 #ms between ability uses
+      MaxJumps: 3 #max air steps per use
+      Damage: 3.5 #damage dealt on wall impact
+      Knockback: 1.2 #knockback multiplier
+      Radius: 3.5 #radius of air blast
+
     AirPressure:
       Cooldown: 4000 #ms between ability uses
       Dmg: 2 #hearts dealt to enemies
@@ -336,6 +343,13 @@ AmonPack:
         RadiusPerLevel: 2.5 #blocks radius added per level
         BaseDamage: 1.0 #hearts base damage
         DamagePerLevel: 1.0 #hearts damage added per level
+        BlindnessDurationBase: 40 #ticks base blindness duration
+        BlindnessDurationPerLevel: 20 #ticks blindness per charge level
+        BlindnessLevel: 0 #blindness amplifier level
+        SlownessDuration: 60 #ticks slowness duration
+        SlownessLevel: 1 #slowness amplifier level
+        PoisonDuration: 60 #ticks poison duration
+        PoisonLevel: 0 #poison amplifier level
 
       SmokeBarrage:
         Cooldown: 6000 #ms between ability uses
@@ -367,6 +381,14 @@ AmonPack:
     SmokeSource:
       SpeedPower: 4 #speed buff level from smoke
       SlowPower: 2 #slowness level from smoke
+
+    FlameWhip:
+      Cooldown: 6000 #ms between ability uses
+      Damage: 4.0 #hearts dealt per whip hit
+      MaxRange: 9.0 #blocks max reach of dual fire whips
+      Knockback: 0.7 #knockback force
+      DurationTicks: 80 #ticks ability lasts (4 seconds)
+      BurnDuration: 60 #ticks target is ignited (3 seconds)
 
     FlameWeave:
       Cooldown: 4000 #ms between ability uses

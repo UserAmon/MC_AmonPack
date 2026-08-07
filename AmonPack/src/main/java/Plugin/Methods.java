@@ -105,11 +105,30 @@ public class Methods {
 		for (int i = 0; i < amount; i++) {
 			FallingBlock fallingBlock = world.spawnFallingBlock(location, mat.createBlockData());
 			fallingBlock.setDropItem(false);
+			fallingBlock.setCancelDrop(true);
 			double x = (random.nextDouble() - 0.5) * (0.5 * factor);
 			double z = (random.nextDouble() - 0.5) * (0.5 * factor);
 			double y = 0.3 + random.nextDouble() * (0.1 * factor);
 			fallingBlock.setVelocity(new Vector(x, y, z));
 			SpawnedByMe.add(fallingBlock.getUniqueId());
+
+			// Automatyszny cleanup task zapewniający zniknięcie po wylądowaniu / 25 tickach
+			new BukkitRunnable() {
+				int ticks = 0;
+				@Override
+				public void run() {
+					ticks++;
+					if (fallingBlock.isDead() || !fallingBlock.isValid() || fallingBlock.isOnGround() || ticks > 25) {
+						if (fallingBlock.isValid()) {
+							com.projectkorra.projectkorra.util.ParticleEffect.BLOCK_CRACK.display(fallingBlock.getLocation(), 4, 0.2, 0.2, 0.2, 0.05, mat.createBlockData());
+							fallingBlock.remove();
+						}
+						SpawnedByMe.remove(fallingBlock.getUniqueId());
+						this.cancel();
+					}
+				}
+			}.runTaskTimer(AmonPackPlugin.plugin, 1L, 1L);
+
 			if (player != null) {
 				startDamageTask(fallingBlock, player);
 			}

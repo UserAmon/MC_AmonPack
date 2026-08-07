@@ -1,6 +1,8 @@
 package Abilities.Bending;
 
 import com.projectkorra.projectkorra.BendingPlayer;
+import com.projectkorra.projectkorra.Element;
+import com.projectkorra.projectkorra.Element.SubElement;
 import com.projectkorra.projectkorra.ability.CoreAbility;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
@@ -44,7 +46,7 @@ public class SpecialTriggerManager {
 
     /**
      * Nakłada lekki 0.1s (100ms) cooldown na nieużywane umiejętności z paska toolbaru,
-     * tak aby nie były używalne podczas trwania skilla specjalnego (nie nadpisując długich CD).
+     * tak aby nie były używalne podczas trwania skilla specjalnego.
      */
     public static void applySoftCooldownToToolbar(Player player) {
         BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
@@ -60,6 +62,7 @@ public class SpecialTriggerManager {
 
     /**
      * Rejestruje ProtocolLib PacketListener przechwytujący wciśnięcie klawisza L (ADVANCEMENT_TAB).
+     * Zapobiega otwieraniu waniliowego menu osiągnięć.
      */
     public static void registerAdvancementPacketListener() {
         try {
@@ -75,24 +78,12 @@ public class SpecialTriggerManager {
                             Player player = event.getPlayer();
                             if (player == null) return;
 
-                            // 1. Zawsze anuluj pakiet otwierający okno osiągnięć Vanilla (klawisz L)
                             event.setCancelled(true);
 
-                            // 2. Natychmiastowe wymuszenie zamknięcia GUI po stronie klienta (ponieważ klient otwiera je lokalnie)
                             Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
                                 player.closeInventory();
-                                if (AmonPackPlugin.levelsBending != null) {
-                                    PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-                                    if (branch != null) {
-                                        String advAbi = branch.getDropAbility(); // Wykorzystujemy 2. slot specjalny w bazie DB dla L
-                                        if (advAbi != null && !advAbi.isEmpty()) {
-                                            executeSpecialAbility(player, advAbi, SpecialTriggerable.TriggerType.ADVANCEMENT);
-                                        }
-                                    }
-                                }
                             });
 
-                            // Dodatkowe zabezpieczenie po 1 ticku, gdyby klient otworzył ramkę z opóźnieniem
                             Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
                                 if (player.isOnline()) {
                                     player.closeInventory();
@@ -101,7 +92,6 @@ public class SpecialTriggerManager {
                         }
                     }
                 );
-                System.out.println("[AmonPack] Zarejestrowano ProtocolLib PacketListener z blokowaniem GUI Osiągnięć dla klawisza L!");
             }
         } catch (Throwable t) {
             System.err.println("[AmonPack] Nie udało się zarejestrować ProtocolLib PacketListenera dla klawisza L: " + t.getMessage());
@@ -109,7 +99,24 @@ public class SpecialTriggerManager {
     }
 
     /**
-     * Uniwersalna metoda aktywująca umiejętność specjalną przypisaną do wyzwalacza SWAP (F) lub ADVANCEMENT (L).
+     * Weryfikuje czy gracz w jakimkolwiek trybie gry (w tym w Survival GM 0) może użyć skilla specjalnego.
+     */
+    public static boolean canPlayerBendSpecial(BendingPlayer bPlayer, CoreAbility ability) {
+        if (bPlayer == null || ability == null) return false;
+        Player player = bPlayer.getPlayer();
+        if (player == null || !player.isOnline() || player.isDead()) return false;
+        if (bPlayer.isChiBlocked() || bPlayer.isParalyzed()) return false;
+        if (!bPlayer.isToggled() || !bPlayer.isElementToggled(ability.getElement())) return false;
+
+        Element mainElement = ability.getElement();
+        if (mainElement instanceof SubElement) {
+            mainElement = ((SubElement) mainElement).getParentElement();
+        }
+        return bPlayer.hasElement(mainElement) || bPlayer.hasElement(ability.getElement());
+    }
+
+    /**
+     * Uniwersalna metoda aktywująca umiejętność specjalną przypisaną do wyzwalacza SWAP (F).
      */
     public static boolean executeSpecialAbility(Player player, String abilityName, SpecialTriggerable.TriggerType triggerType) {
         if (abilityName == null || abilityName.isEmpty()) {
@@ -121,7 +128,6 @@ public class SpecialTriggerManager {
             return false;
         }
 
-        // Weryfikacja czy gracz posiada odblokowaną daną umiejętność
         if (!branch.getUnlockedAbilities().contains(abilityName) && !branch.hasUpgrade(abilityName)) {
             return false;
         }
@@ -131,30 +137,26 @@ public class SpecialTriggerManager {
             return false;
         }
 
-        // Jeśli jakakolwiek umiejętność z paska toolbaru jest już aktywna, zablokuj uruchomienie skilla specjalnego
         for (CoreAbility activeAbility : CoreAbility.getAbilities(player, CoreAbility.class)) {
             if (activeAbility != null && !(activeAbility instanceof SpecialTriggerable)) {
                 return false;
             }
         }
 
-        // Pobranie instancji CoreAbility ProjectKorra
         CoreAbility ability = CoreAbility.getAbility(abilityName);
         if (ability == null) {
             return false;
         }
 
-        // Sprawdzenie czy gracz może używać magii (czy żywioł się zgadza i czy nie ma blokady)
-        if (!bPlayer.canBendIgnoreBinds(ability)) {
+        // Poprawiona weryfikacja działająca poprawnie w GM 0 (Survival) oraz GM 1 (Creative)
+        if (!canPlayerBendSpecial(bPlayer, ability)) {
             return false;
         }
 
-        // Sprawdzenie cooldownu
         if (bPlayer.isOnCooldown(ability)) {
             return false;
         }
 
-        // Próba uruchomienia umiejętności za pomocą refleksji (konstruktor z argumentem Player)
         try {
             Class<?> clazz = ability.getClass();
             Constructor<?> constructor = clazz.getConstructor(Player.class);
@@ -169,9 +171,6 @@ public class SpecialTriggerManager {
         return false;
     }
 
-    /**
-     * Sprawdza czy dana umiejętność wspiera dany typ wyzwalacza.
-     */
     public static boolean isTriggerSupported(String abilityName, SpecialTriggerable.TriggerType triggerType) {
         if (abilityName == null || abilityName.isEmpty()) {
             return false;

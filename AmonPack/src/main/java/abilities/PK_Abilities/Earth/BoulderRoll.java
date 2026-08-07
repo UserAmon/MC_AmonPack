@@ -75,7 +75,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Damage", 5.0);
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Knockback", 1.2);
         this.range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.BoulderRoll.Range", 22);
-        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Speed", 0.7);
+        // Spowolnienie dwukrotne ruchu kuli
+        this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Speed", 0.7) / 2.0;
         this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Radius", 1.5);
         this.revertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.BoulderRoll.RevertTime", 10000L);
 
@@ -91,7 +92,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
     private void initTargetPoints() {
         Location eyeLoc = player.getEyeLocation();
-        Vector forward = eyeLoc.getDirection().normalize().multiply(3.5);
+        Vector forward = eyeLoc.getDirection().normalize();
         Vector right = new Vector(-forward.getZ(), 0, forward.getX()).normalize();
         if (right.lengthSquared() < 0.01) {
             right = new Vector(1, 0, 0);
@@ -99,10 +100,25 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         Vector up = right.clone().crossProduct(forward).normalize();
 
         Random rand = new Random();
-        pointOffsets.add(forward.clone().add(right.clone().multiply(-1.0 + (rand.nextDouble() * 0.4))).add(up.clone().multiply(0.8 + (rand.nextDouble() * 0.3))));
-        pointOffsets.add(forward.clone().add(right.clone().multiply(1.0 - (rand.nextDouble() * 0.4))).add(up.clone().multiply(0.7 + (rand.nextDouble() * 0.3))));
-        pointOffsets.add(forward.clone().add(right.clone().multiply(-0.9 + (rand.nextDouble() * 0.4))).add(up.clone().multiply(-0.6 - (rand.nextDouble() * 0.3))));
-        pointOffsets.add(forward.clone().add(right.clone().multiply(0.9 - (rand.nextDouble() * 0.4))).add(up.clone().multiply(-0.7 - (rand.nextDouble() * 0.3))));
+        pointOffsets.clear();
+
+        for (int i = 0; i < 4; i++) {
+            double distance = 3.5 + (rand.nextDouble() * 3.5);
+            double offsetX = (rand.nextDouble() - 0.5) * 5.5;
+            double offsetY = (rand.nextDouble() - 0.5) * 3.8;
+
+            Vector pt = forward.clone().multiply(distance)
+                    .add(right.clone().multiply(offsetX))
+                    .add(up.clone().multiply(offsetY));
+
+            Location testLoc = eyeLoc.clone().add(pt);
+            int safety = 0;
+            while ((testLoc.getBlock().getType().isSolid() || GeneralMethods.isObstructed(eyeLoc, testLoc)) && safety < 10) {
+                testLoc.subtract(testLoc.clone().subtract(eyeLoc).toVector().normalize().multiply(0.4));
+                safety++;
+            }
+            pointOffsets.add(testLoc.subtract(eyeLoc).toVector());
+        }
     }
 
     public void tryCollectPoint() {
@@ -121,7 +137,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                 Vector toTarget = targetLoc.clone().subtract(eyeLoc).toVector().normalize();
                 double angle = Math.toDegrees(lookDir.angle(toTarget));
 
-                if (angle < 25.0 && angle < minAngle) {
+                // Zwiększona precyzja - wymaga dokładniejszego patrzenia na punkt (kąt < 9.0°)
+                if (angle < 9.0 && angle < minAngle) {
                     minAngle = angle;
                     bestPoint = i;
                 }
@@ -289,9 +306,25 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.STONE.createBlockData());
         }
 
-        Location playerDest = boulderLoc.clone().add(0, 1.8, 0);
+        // Gracza przenieś 4 kratki w tył i 4 w górę za kulą + zapobieganie przechodzeniu przez ściany (noclip prevention)
+        Location centerLoc = boulderLoc.clone().add(0, 0.5, 0);
+        Location idealPlayerDest = centerLoc.clone().subtract(rollDir.clone().multiply(4.0)).add(0, 4.0, 0);
+        Vector ray = idealPlayerDest.toVector().subtract(centerLoc.toVector());
+        double dist = ray.length();
+        if (dist > 0.01) {
+            org.bukkit.util.RayTraceResult rtr = centerLoc.getWorld().rayTraceBlocks(
+                centerLoc, ray.clone().normalize(), dist,
+                org.bukkit.FluidCollisionMode.NEVER, true
+            );
+            if (rtr != null && rtr.getHitPosition() != null) {
+                idealPlayerDest = rtr.getHitPosition().toLocation(centerLoc.getWorld())
+                    .subtract(ray.clone().normalize().multiply(0.4));
+            }
+        }
+
+        Location playerDest = idealPlayerDest;
         playerDest.setYaw(initialYaw);
-        playerDest.setPitch(initialPitch);
+        playerDest.setPitch(40.0f);
         player.teleport(playerDest);
         player.setVelocity(new Vector(0, 0, 0));
         player.getInventory().setHeldItemSlot(initialSlot);
@@ -345,7 +378,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
     @Override
     public TriggerType getSupportedTriggerType() {
-        return TriggerType.BOTH;
+        return TriggerType.SWAP;
     }
 
     @Override
