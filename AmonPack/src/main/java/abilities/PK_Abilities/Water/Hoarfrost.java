@@ -159,7 +159,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
                 @Override
                 public void run() {
                     ticks++;
-                    if (ticks > 40 || currLoc.getBlock().getType().isSolid()) {
+                    Block blockCheck = currLoc.getBlock();
+                    if (ticks > 40 || (blockCheck.getType().isSolid() && !TempBlock.isTempBlock(blockCheck))) {
                         explodeSpearHit(currLoc, vel.clone().normalize());
                         this.cancel();
                         return;

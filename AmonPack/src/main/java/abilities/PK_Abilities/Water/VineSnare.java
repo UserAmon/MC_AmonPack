@@ -164,6 +164,14 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
             Location loc = targetLoc.clone().add(x, 0.1, z);
             ParticleEffect.BLOCK_CRACK.display(loc, 1, 0.1, 0.1, 0.1, 0.02, Material.JUNGLE_LEAVES.createBlockData());
         }
+
+        // Dodatkowy zewnętrzny zielony okrąg z cząsteczek VILLAGER_HAPPY
+        for (double angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
+            double x = radius * Math.cos(angle);
+            double z = radius * Math.sin(angle);
+            Location ringLoc = targetLoc.clone().add(x, 0.1, z);
+            ParticleEffect.VILLAGER_HAPPY.display(ringLoc, 1, 0.05, 0.05, 0.05, 0.01);
+        }
     }
 
     private void terraformAndGradualFlowers() {

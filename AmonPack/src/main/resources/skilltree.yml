@@ -350,7 +350,7 @@ AmonPack:
           - "&e[Ruch Specjalny - SWAP (F)]"
       Blossom:
         Cost: 25
-        Place: 28
+        Place: 90
         ReqAbilities:
           - VineSnare
         Description:
@@ -359,7 +359,7 @@ AmonPack:
           - "&7strzela pnączami na boki i zostawia dzikie kwiaty na ziemi."
       Withering:
         Cost: 40
-        Place: 29
+        Place: 78
         IsSpecialBindAbility: true
         ReqAbilities:
           - Blossom

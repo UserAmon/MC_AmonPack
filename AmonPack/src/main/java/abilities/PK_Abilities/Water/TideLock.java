@@ -275,6 +275,9 @@ public class TideLock extends WaterAbility implements AddonAbility {
     @Override
     public void remove() {
         super.remove();
+        if (bPlayer != null && cooldown > 0) {
+            bPlayer.addCooldown(this, cooldown);
+        }
     }
 
     @Override

@@ -306,8 +306,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.STONE.createBlockData());
         }
 
-        // Gracza przenieś 3 kratki w tył i 3 w górę za kulą + skieruj kamerę 40 stopni w dół na kulę
-        Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(3.0)).add(0, 3.0, 0);
+        // Gracza przenieś 6 kratek w tył i 6 w górę za kulą + skieruj kamerę 40 stopni w dół na kulę
+        Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(6.0)).add(0, 6.0, 0);
         Location rayStart = boulderLoc.clone().add(0, 1.8, 0);
         Vector ray = idealPlayerDest.toVector().subtract(rayStart.toVector());
         double dist = ray.length();
