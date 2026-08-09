@@ -180,8 +180,14 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 				Location p1 = projLoc.clone().add(x1, 0, z1);
 				Location p2 = projLoc.clone().subtract(x1, 0, z1);
 
-				ParticleEffect.FLAME.display(p1, 1, 0, 0, 0, 0);
-				ParticleEffect.FLAME.display(p2, 1, 0, 0, 0, 0);
+				boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+				if (isBlue) {
+					p1.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p1, 1, 0, 0, 0, 0);
+					p2.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p2, 1, 0, 0, 0, 0);
+				} else {
+					ParticleEffect.FLAME.display(p1, 1, 0, 0, 0, 0);
+					ParticleEffect.FLAME.display(p2, 1, 0, 0, 0, 0);
+				}
 				ParticleEffect.SMOKE_NORMAL.display(projLoc, 1, 0.1, 0.1, 0.1, 0.01);
 
 				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projLoc, 1.2)) {

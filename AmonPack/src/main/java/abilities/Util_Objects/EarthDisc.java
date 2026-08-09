@@ -140,9 +140,16 @@ public class EarthDisc {
 
         for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, 1.5)) {
             if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
-                ((LivingEntity) entity).damage(damage);
-                Vector forceDir = GeneralMethods.getDirection(entity.getLocation(), location.clone().subtract(0,1,0));
-                entity.setVelocity(forceDir.clone().normalize().multiply(-1));
+                if (entity.hasMetadata("NPC")) {
+                    continue;
+                }
+                LivingEntity target = (LivingEntity) entity;
+                double healthBefore = target.getHealth();
+                DamageHandler.damageEntity(target, damage, CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.DiscHurl.class));
+                if (target.getHealth() < healthBefore || target.isDead()) {
+                    Vector forceDir = GeneralMethods.getDirection(target.getLocation(), location.clone().subtract(0,1,0));
+                    target.setVelocity(forceDir.clone().normalize().multiply(-1));
+                }
                 if (destroyOnEntityHit) {
                     explode();
                     remove();

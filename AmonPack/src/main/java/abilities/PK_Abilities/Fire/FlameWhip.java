@@ -8,7 +8,9 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.FireAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
+import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -75,11 +77,9 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
         if (currentWhipDir == null) {
             currentWhipDir = targetCameraDir.clone();
         } else {
-            // Zmniejszona 2-krotnie prędkość podążania za kamerą (LERP factor 0.045)
             currentWhipDir.add(targetCameraDir.clone().subtract(currentWhipDir).multiply(0.045)).normalize();
         }
 
-        // Wydłużenie rozciągania: 2 sekundy (40 ticków) na osiągnięcie pełnej długości od bardzo krótkiego przy dłoni
         if (durationTicks <= 40) {
             currentLength = Math.min(maxLength, 0.3 + (((double) durationTicks / 40.0) * (maxLength - 0.3)));
         } else if (lastCameraDir != null) {
@@ -88,7 +88,6 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
                 angleDiff = 0;
             }
 
-            // Spowolnione rozciąganie ruchem kamery
             if (angleDiff > 0.8) {
                 double lengthGain = angleDiff * 0.05;
                 currentLength = Math.min(maxLength, currentLength + lengthGain);
@@ -98,7 +97,6 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
         }
         lastCameraDir = targetCameraDir.clone();
 
-        // Bezwładność i spowolnienie podążania ręki za ruchem gracza
         Location targetHand = eyeLoc.clone();
         if (currentHandLoc == null) {
             currentHandLoc = targetHand.clone();
@@ -122,6 +120,7 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
     }
 
     private void renderWhipBranch(Location handLoc, Vector whipDir, Vector rightVec, int sideMultiplier, Set<LivingEntity> hitEntities) {
+        boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
         int segments = (int) Math.ceil(currentLength * 6.0);
         for (int i = 0; i <= segments; i++) {
             double progressRatio = (double) i / (double) segments;
@@ -136,13 +135,21 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
                     .add(0, verticalWave, 0);
 
             if (i % 2 == 0) {
-                ParticleEffect.FLAME.display(segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
+                if (isBlue) {
+                    segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
+                } else {
+                    ParticleEffect.FLAME.display(segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
+                }
             }
             if (i % 4 == 0) {
                 ParticleEffect.SMOKE_NORMAL.display(segmentLoc, 1, 0.02, 0.02, 0.02, 0.01);
             }
             if (i == segments) {
-                ParticleEffect.LAVA.display(segmentLoc, 2, 0.1, 0.1, 0.1, 0.05);
+                if (isBlue) {
+                    segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 3, 0.1, 0.1, 0.1, 0.05);
+                } else {
+                    ParticleEffect.LAVA.display(segmentLoc, 2, 0.1, 0.1, 0.1, 0.05);
+                }
             }
 
             Block block = segmentLoc.getBlock();
@@ -162,7 +169,11 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
                         target.setVelocity(kb);
 
                         segmentLoc.getWorld().playSound(segmentLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
-                        ParticleEffect.FLAME.display(segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
+                        if (isBlue) {
+                            segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
+                        } else {
+                            ParticleEffect.FLAME.display(segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
+                        }
                     }
                 }
             }
@@ -202,7 +213,7 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -221,16 +232,16 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
     @Override
     public void stop() {
-        remove();
+        finish();
     }
 
     @Override
     public String getDescription() {
-        return "Podwójne ogniste bicze podążające z opóźnieniem i bezwładnością za kamerą i ruchem gracza (2s rozwijanie, falowanie góra/dół).";
+        return "Wystrzeliwuje dwa ogniste bicze z obu rąk z pełną obsługą niebieskiego ognia.";
     }
 
     @Override
     public String getInstructions() {
-        return "Naciśnij F (SWAP), aby aktywować podwójny ognisty bicz!";
+        return "Naciśnij F (SWAP), aby uderzyć ognistymi biczami!";
     }
 }

@@ -67,7 +67,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         }
 
         if (!player.isSneaking()) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§cTego ruchu można użyć tylko kucając!"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§cTego ruchu można użyć tylko kucając!"));
             return;
         }
 
@@ -113,7 +114,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
             Location testLoc = eyeLoc.clone().add(pt);
             int safety = 0;
-            while ((testLoc.getBlock().getType().isSolid() || GeneralMethods.isObstructed(eyeLoc, testLoc)) && safety < 10) {
+            while ((testLoc.getBlock().getType().isSolid() || GeneralMethods.isObstructed(eyeLoc, testLoc))
+                    && safety < 10) {
                 testLoc.subtract(testLoc.clone().subtract(eyeLoc).toVector().normalize().multiply(0.4));
                 safety++;
             }
@@ -152,7 +154,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
             List<Block> nearbyBlocks = GeneralMethods.getBlocksAroundPoint(player.getLocation(), 10);
             for (Block b : nearbyBlocks) {
-                if (b.getY() <= player.getLocation().getY() + 1 && isEarthbendable(player, b) && b.getType() != Material.AIR) {
+                if (b.getY() <= player.getLocation().getY() + 1 && isEarthbendable(player, b)
+                        && b.getType() != Material.AIR) {
                     TempBlock tb = new TempBlock(b, Material.AIR);
                     tb.setRevertTime(revertTime);
                     flyingBlocks.add(b.getLocation().add(0.5, 0.5, 0.5));
@@ -179,7 +182,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         if (state == State.CHARGING || state == State.FULLY_CHARGED) {
             if (!player.isSneaking()) {
                 if (state == State.CHARGING) {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§cRuch anulowany - przestałeś kucać!"));
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            TextComponent.fromLegacyText("§cRuch anulowany - przestałeś kucać!"));
                     cancelAbility();
                     return;
                 } else if (state == State.FULLY_CHARGED) {
@@ -194,18 +198,23 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                     if (!collectedPoints[i]) {
                         Location ptLoc = eyeLoc.clone().add(pointOffsets.get(i));
                         ParticleEffect.CRIT.display(ptLoc, 3, 0.1, 0.1, 0.1, 0.05);
-                        ParticleEffect.BLOCK_CRACK.display(ptLoc, 3, 0.1, 0.1, 0.1, 0.05, Material.STONE.createBlockData());
+                        ParticleEffect.BLOCK_CRACK.display(ptLoc, 3, 0.1, 0.1, 0.1, 0.05,
+                                Material.STONE.createBlockData());
                     }
                 }
 
                 if (!flyingBlocks.isEmpty() && tickCounter % 2 == 0) {
-                    flyingBlocks = Methods.BendableBlocksAnimation(flyingBlocks, player.getLocation().clone(), Material.STONE, 0.8);
+                    flyingBlocks = Methods.BendableBlocksAnimation(flyingBlocks, player.getLocation().clone(),
+                            Material.STONE, 0.8);
                 }
 
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§6[BoulderRoll] Zbieranie głazu: §e" + collectedCount + "/4 §7(Najeźdź cel i naciśnij F/L)"));
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
+                        "§6[BoulderRoll] Zbieranie głazu: §e" + collectedCount + "/4 §7(Najeźdź cel i naciśnij F/L)"));
             } else if (state == State.FULLY_CHARGED) {
-                ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.4, 0.2, 0.4, 0.1, Material.DIRT.createBlockData());
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§aGłaz załadowany! Puść SHIFT, aby go przetoczyć!"));
+                ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.4, 0.2, 0.4, 0.1,
+                        Material.DIRT.createBlockData());
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        TextComponent.fromLegacyText("§aGłaz załadowany! Puść SHIFT, aby go przetoczyć!"));
             }
         } else if (state == State.ROLLING) {
             processRolling();
@@ -236,19 +245,24 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         Block aheadBlock = aheadLoc.getBlock();
         Block aheadBelow = aheadLoc.clone().subtract(0, 1, 0).getBlock();
 
-        if (aheadBlock.getType() != Material.AIR && !PlantAbility.isPlant(aheadBlock) && !TempBlock.isTempBlock(aheadBlock)) {
+        if (aheadBlock.getType() != Material.AIR && !PlantAbility.isPlant(aheadBlock)
+                && !TempBlock.isTempBlock(aheadBlock)) {
             boulderLoc.setY(boulderLoc.getY() + 1);
-        } else if ((aheadBelow.getType() == Material.AIR || PlantAbility.isPlant(aheadBelow) || TempBlock.isTempBlock(aheadBelow)) && !TempBlock.isTempBlock(boulderLoc.clone().subtract(0, 1, 0).getBlock())) {
+        } else if ((aheadBelow.getType() == Material.AIR || PlantAbility.isPlant(aheadBelow)
+                || TempBlock.isTempBlock(aheadBelow))
+                && !TempBlock.isTempBlock(boulderLoc.clone().subtract(0, 1, 0).getBlock())) {
             boulderLoc.setY(boulderLoc.getY() - 1);
         }
 
         Block wallAhead = aheadLoc.clone().add(0, 1, 0).getBlock();
-        if (distanceTraveled >= range || (wallAhead.getType() != Material.AIR && !PlantAbility.isPlant(wallAhead) && !TempBlock.isTempBlock(wallAhead) && !isEarthbendable(player, wallAhead))) {
+        if (distanceTraveled >= range || (wallAhead.getType() != Material.AIR && !PlantAbility.isPlant(wallAhead)
+                && !TempBlock.isTempBlock(wallAhead) && !isEarthbendable(player, wallAhead))) {
             explodeAndFinish();
             return;
         }
 
-        // 1. Stwórz w środku kuli poruszającą się kulę dirtu i stone (tempbloki z czas revertTime 100ms / 50ms) w promieniu 1 od środka
+        // 1. Stwórz w środku kuli poruszającą się kulę dirtu i stone (tempbloki z czas
+        // revertTime 100ms / 50ms) w promieniu 1 od środka
         Location center = boulderLoc.clone().add(0, 0.5, 0);
         Random rand = new Random();
 
@@ -268,7 +282,8 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             }
         }
 
-        // 2. W obrębie okręgu o rozmiarze 3 (promień 1.5) rozproszone fallingblocki tworzące dynamiczny efekt toczącego się głazu
+        // 2. W obrębie okręgu o rozmiarze 3 (promień 1.5) rozproszone fallingblocki
+        // tworzące dynamiczny efekt toczącego się głazu
         if (tickCounter % 2 == 0) {
             for (int i = 0; i < 3; i++) {
                 double offsetX = (rand.nextDouble() - 0.5) * 3.0; // w obrębie okręgu/kuli o rozmiarze 3
@@ -276,19 +291,23 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                 double offsetZ = (rand.nextDouble() - 0.5) * 3.0;
                 Location spawnLoc = center.clone().add(offsetX, offsetY, offsetZ);
 
-                Material fbMat = rand.nextInt(3) == 0 ? Material.STONE : (rand.nextBoolean() ? Material.DIRT : Material.COARSE_DIRT);
-                org.bukkit.entity.FallingBlock fb = spawnLoc.getWorld().spawnFallingBlock(spawnLoc, fbMat.createBlockData());
+                Material fbMat = rand.nextInt(3) == 0 ? Material.STONE
+                        : (rand.nextBoolean() ? Material.DIRT : Material.COARSE_DIRT);
+                org.bukkit.entity.FallingBlock fb = spawnLoc.getWorld().spawnFallingBlock(spawnLoc,
+                        fbMat.createBlockData());
                 fb.setDropItem(false);
 
                 Vector vel = rollDir.clone().multiply(speed * 0.8)
-                        .add(new Vector((rand.nextDouble() - 0.5) * 0.3, 0.15 + (rand.nextDouble() * 0.15), (rand.nextDouble() - 0.5) * 0.3));
+                        .add(new Vector((rand.nextDouble() - 0.5) * 0.3, 0.15 + (rand.nextDouble() * 0.15),
+                                (rand.nextDouble() - 0.5) * 0.3));
                 fb.setVelocity(vel);
 
                 Methods.SpawnedByMe.add(fb.getUniqueId());
 
                 org.bukkit.Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
                     if (fb.isValid() && !fb.isDead()) {
-                        ParticleEffect.BLOCK_CRACK.display(fb.getLocation(), 4, 0.2, 0.2, 0.2, 0.05, fbMat.createBlockData());
+                        ParticleEffect.BLOCK_CRACK.display(fb.getLocation(), 4, 0.2, 0.2, 0.2, 0.05,
+                                fbMat.createBlockData());
                         fb.remove();
                     }
                 }, 10L);
@@ -306,19 +325,19 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.STONE.createBlockData());
         }
 
-        // Gracza przenieś 6 kratek w tył i 6 w górę za kulą + skieruj kamerę 40 stopni w dół na kulę
+        // Gracza przenieś 6 kratek w tył i 6 w górę za kulą + skieruj kamerę 40 stopni
+        // w dół na kulę
         Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(6.0)).add(0, 6.0, 0);
         Location rayStart = boulderLoc.clone().add(0, 1.8, 0);
         Vector ray = idealPlayerDest.toVector().subtract(rayStart.toVector());
         double dist = ray.length();
         if (dist > 0.1) {
             org.bukkit.util.RayTraceResult rtr = rayStart.getWorld().rayTraceBlocks(
-                rayStart, ray.clone().normalize(), dist,
-                org.bukkit.FluidCollisionMode.NEVER, true
-            );
+                    rayStart, ray.clone().normalize(), dist,
+                    org.bukkit.FluidCollisionMode.NEVER, true);
             if (rtr != null && rtr.getHitPosition() != null) {
                 idealPlayerDest = rtr.getHitPosition().toLocation(rayStart.getWorld())
-                    .subtract(ray.clone().normalize().multiply(0.3));
+                        .subtract(ray.clone().normalize().multiply(0.3));
             }
         }
 

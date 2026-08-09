@@ -72,12 +72,15 @@ public class FlameSplit extends FireAbility implements AddonAbility {
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSplit.Knockback", 0.8);
     }
 
+    private boolean hasParried = false;
+
     public boolean isParrying() {
-        return state == State.CHARGING;
+        return state == State.CHARGING && !hasParried;
     }
 
     public void onParryDamage() {
-        if (state == State.CHARGING) {
+        if (state == State.CHARGING && !hasParried) {
+            hasParried = true;
             playParryEffect();
             triggerRelease();
         }
@@ -176,6 +179,9 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void drawExtendingLines() {
+        boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+        Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+
         double currentLen = (ticksExtending / 7.0) * range;
         for (double d = 0; d <= currentLen; d += 0.5) {
             Location leftLoc = startLoc.clone().add(forward.clone().multiply(d)).add(right.clone().multiply(-0.3));
@@ -184,10 +190,10 @@ public class FlameSplit extends FireAbility implements AddonAbility {
             rightLoc.setY(getGroundY(rightLoc) + 1.0);
 
             if (!leftLoc.getBlock().getType().isSolid()) {
-                player.getWorld().spawnParticle(Particle.FLAME, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                player.getWorld().spawnParticle(flameParticle, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
             }
             if (!rightLoc.getBlock().getType().isSolid()) {
-                player.getWorld().spawnParticle(Particle.FLAME, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                player.getWorld().spawnParticle(flameParticle, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
             }
         }
 
@@ -206,6 +212,9 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void drawSweepingLines() {
+        boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+        Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+
         double sweepProgress = ticksSweeping / 15.0;
         double yOffset = 1.0 + (0.75 * sweepProgress);
         for (double d = 0; d <= range; d += 0.5) {
@@ -217,7 +226,7 @@ public class FlameSplit extends FireAbility implements AddonAbility {
             rightLoc.setY(getGroundY(rightLoc) + yOffset);
 
             if (!leftLoc.getBlock().getType().isSolid()) {
-                player.getWorld().spawnParticle(Particle.FLAME, leftLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                player.getWorld().spawnParticle(flameParticle, leftLoc, 2, 0.1, 0.1, 0.1, 0.02);
                 player.getWorld().spawnParticle(Particle.SMOKE, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
                 Vector leftPushDir = right.clone().multiply(-1.0);
                 checkDamageAtLocation(leftLoc, leftPushDir);

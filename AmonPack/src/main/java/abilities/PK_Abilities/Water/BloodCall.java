@@ -15,10 +15,12 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.BloodAbility;
-
+import com.projectkorra.projectkorra.ability.ChiAbility;
+import com.projectkorra.projectkorra.chiblocking.util.ChiblockingManager;
 
 import Plugin.AmonPackPlugin;
 
@@ -35,7 +37,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
     private long startTime;
     private boolean hurtAt50;
     private boolean hurtAt75;
-    
+
     private double maxRange;
     private int maxDuration;
     private double selfDamage;
@@ -51,9 +53,11 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         this.maxRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.Range", 25.0);
         this.maxDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodCall.Duration", 120);
         this.selfDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.SelfDamage", 1.0);
-        this.completionDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.CompletionDamage", 2.5);
+        this.completionDamage = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Water.BloodCall.CompletionDamage", 2.5);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodCall.Cooldown", 3000L);
-        this.immobilizeDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodCall.ImmobilizeDuration", 60);
+        this.immobilizeDuration = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Water.BloodCall.ImmobilizeDuration", 60);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -63,7 +67,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         }
 
         this.slot = player.getInventory().getHeldItemSlot();
-        this.target = findTarget(player, 6.0);
+        this.target = findTarget(player, maxRange);
         if (this.target == null) {
             return;
         }
@@ -91,7 +95,8 @@ public class BloodCall extends BloodAbility implements AddonAbility {
             return;
         }
 
-        if (target == null || target.isDead() || target.getLocation().distanceSquared(player.getLocation()) > this.maxRange * this.maxRange) {
+        if (target == null || target.isDead()
+                || target.getLocation().distance(player.getLocation()) > this.maxRange * this.maxRange) {
             remove();
             return;
         }
@@ -119,7 +124,8 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
         drawGuidanceRing(targetCenter, progress);
         Location guide = getGuidanceLocation(targetCenter, progress);
-        player.spawnParticle(Particle.DUST, guide, 6, 0.05, 0.05, 0.05, 0, new Particle.DustOptions(Color.fromRGB(170, 20, 20), 1.2f));
+        player.spawnParticle(Particle.DUST, guide, 6, 0.05, 0.05, 0.05, 0,
+                new Particle.DustOptions(Color.fromRGB(170, 20, 20), 1.2f));
 
         if (!hurtAt50 && progress >= 0.5) {
             hurtAt50 = true;
@@ -144,7 +150,8 @@ public class BloodCall extends BloodAbility implements AddonAbility {
             }
         } else {
             player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                    new net.md_5.bungee.api.chat.TextComponent("" + org.bukkit.ChatColor.DARK_RED + "Skup się na krążącej krwi"));
+                    new net.md_5.bungee.api.chat.TextComponent(
+                            "" + org.bukkit.ChatColor.DARK_RED + "Skup się na krążącej krwi"));
         }
 
         if (weaveAngle >= 360.0) {
@@ -222,15 +229,20 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         }
 
         player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 0.8f);
-        target.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getLocation().add(0, 1.0, 0), 12, 0.3, 1.0, 0.3, 0);
-        target.getWorld().spawnParticle(Particle.DUST, target.getLocation().clone().add(0, 1.0, 0), 40, 1.2, 1.2, 1.2, 0,
+        target.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getLocation().add(0, 1.0, 0), 12, 0.3, 1.0,
+                0.3, 0);
+        target.getWorld().spawnParticle(Particle.DUST, target.getLocation().clone().add(0, 1.0, 0), 40, 1.2, 1.2, 1.2,
+                0,
                 new Particle.DustOptions(Color.fromRGB(160, 0, 0), 1.3f));
 
         double targetNewHealth = Math.max(2.0, target.getHealth() - this.completionDamage);
         target.setHealth(targetNewHealth);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, immobilizeDuration, 10, false, false, false));
-        target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (immobilizeDuration * 0.67), 1, false, false, false));
-        target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, (int) (immobilizeDuration * 1.33), 0, false, false, false));
+        target.addPotionEffect(
+                new PotionEffect(PotionEffectType.SLOWNESS, immobilizeDuration, 10, false, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (immobilizeDuration * 0.67), 1, false,
+                false, false));
+        target.addPotionEffect(
+                new PotionEffect(PotionEffectType.NAUSEA, (int) (immobilizeDuration * 1.33), 0, false, false, false));
 
         new BukkitRunnable() {
             private int counter = 0;

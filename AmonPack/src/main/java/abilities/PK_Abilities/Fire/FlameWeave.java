@@ -1,7 +1,6 @@
 package Abilities.PK_Abilities.Fire;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -71,56 +70,54 @@ public class FlameWeave extends FireAbility implements AddonAbility {
             return;
         }
 
-		if (state == State.CHARGING) {
-			if (!player.isSneaking()) {
-				fire();
-				return;
-			}
+        if (state == State.CHARGING) {
+            if (!player.isSneaking()) {
+                fire();
+                return;
+            }
 
-			int level = getChargeLevel();
-			if (level != lastReportedLevel) {
-				lastReportedLevel = level;
-				if (level > 0) {
-					float pitch = 0.7f + (level * 0.3f);
-					player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, pitch);
-					player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.4f, pitch);
-				}
-			}
+            int level = getChargeLevel();
+            if (level != lastReportedLevel) {
+                lastReportedLevel = level;
+                if (level > 0) {
+                    float pitch = 0.7f + (level * 0.3f);
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, pitch);
+                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.4f, pitch);
+                }
+            }
 
-			// Action Bar progress bar
-			String bar;
-			if (level == 0) {
-				bar = "§7[ §f░░░ §7] §7§lWEAVING...";
-			} else if (level == 1) {
-				bar = "§e[ §6█§7░░ §e] §e§lLEVEL 1";
-			} else if (level == 2) {
-				bar = "§6[ §e██§7░ §6] §6§lLEVEL 2";
-			} else {
-				bar = "§c§l[ §e███ §c§l] §e§lWEAVE COMPLETE!";
-			}
-			player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
-					net.md_5.bungee.api.chat.TextComponent.fromLegacyText(bar));
+            String bar;
+            if (level == 0) {
+                bar = "§7[ §f░░░ §7] §7§lWEAVING...";
+            } else if (level == 1) {
+                bar = "§e[ §6█§7░░ §e] §e§lLEVEL 1";
+            } else if (level == 2) {
+                bar = "§6[ §e██§7░ §6] §6§lLEVEL 2";
+            } else {
+                bar = "§c§l[ §e███ §c§l] §e§lWEAVE COMPLETE!";
+            }
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText(bar));
 
-			boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
-			Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+            Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
 
-			// Orbiting particles
-			double radius = 0.8 + (level * 0.15);
-			double angle = (System.currentTimeMillis() / 150.0) * (level + 1);
-			double x = radius * Math.cos(angle);
-			double z = radius * Math.sin(angle);
-			Location pLoc = player.getLocation().clone().add(x, 0.2 + (level * 0.4), z);
-			player.getWorld().spawnParticle(flameParticle, pLoc, 1, 0, 0, 0, 0);
-			player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(isBlue ? Color.AQUA : Color.ORANGE, 0.8f));
+            double radius = 0.8 + (level * 0.15);
+            double angle = (System.currentTimeMillis() / 150.0) * (level + 1);
+            double x = radius * Math.cos(angle);
+            double z = radius * Math.sin(angle);
+            Location pLoc = player.getLocation().clone().add(x, 0.2 + (level * 0.4), z);
+            player.getWorld().spawnParticle(flameParticle, pLoc, 1, 0, 0, 0, 0);
+            player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(isBlue ? Color.AQUA : Color.ORANGE, 0.8f));
 
-			if (level > 0) {
-				Location eye = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(0.5)).clone()
-						.add(0, -0.5, 0);
-				Particle.DustOptions dust = new Particle.DustOptions(isBlue ? Color.AQUA : Color.ORANGE, 0.5f + (level * 0.2f));
-				eye.getWorld().spawnParticle(Particle.DUST, eye, level * 2, 0.25, 0.1, 0.25, 0, dust);
-				eye.getWorld().spawnParticle(flameParticle, eye, level, 0.1, 0.1, 0.1, 0.02);
-			}
-		} else if (state == State.FIRING) {
+            if (level > 0) {
+                Location eye = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(0.5)).clone()
+                        .add(0, -0.5, 0);
+                Particle.DustOptions dust = new Particle.DustOptions(isBlue ? Color.AQUA : Color.ORANGE, 0.5f + (level * 0.2f));
+                eye.getWorld().spawnParticle(Particle.DUST, eye, level * 2, 0.25, 0.1, 0.25, 0, dust);
+                eye.getWorld().spawnParticle(flameParticle, eye, level, 0.1, 0.1, 0.1, 0.02);
+            }
+        } else if (state == State.FIRING) {
             if (bolts.isEmpty()) {
                 remove();
                 return;
@@ -197,7 +194,7 @@ public class FlameWeave extends FireAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -267,6 +264,10 @@ public class FlameWeave extends FireAbility implements AddonAbility {
                         (random.nextDouble() - 0.5) * 0.1)).normalize();
             }
 
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+            Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+            Material fireMat = isBlue ? Material.SOUL_FIRE : Material.FIRE;
+
             Vector velocity = dir.clone().multiply(speed);
             RayTraceResult result = null;
             try {
@@ -296,7 +297,7 @@ public class FlameWeave extends FireAbility implements AddonAbility {
                         loc = result.getHitPosition().toLocation(loc.getWorld()).add(normal.multiply(0.3));
 
                         if (isTransparent(loc.getBlock())) {
-                            new TempBlock(loc.getBlock(), Material.FIRE).setRevertTime(2000);
+                            new TempBlock(loc.getBlock(), fireMat).setRevertTime(2000);
                         }
                         loc.getWorld().playSound(loc, Sound.BLOCK_FIRE_AMBIENT, 0.5f, 2f);
 
@@ -330,7 +331,7 @@ public class FlameWeave extends FireAbility implements AddonAbility {
                 }
             }
 
-            loc.getWorld().spawnParticle(Particle.FLAME, loc, 2, 0.1, 0.1, 0.1, 0.02);
+            loc.getWorld().spawnParticle(flameParticle, loc, 2, 0.1, 0.1, 0.1, 0.02);
             loc.getWorld().spawnParticle(Particle.SMOKE, loc, 1, 0.1, 0.1, 0.1, 0);
         }
 
@@ -348,5 +349,4 @@ public class FlameWeave extends FireAbility implements AddonAbility {
     public String getInstructions() {
         return "Sneak to weave flames, relase and launch your bolts!";
     }
-
 }
