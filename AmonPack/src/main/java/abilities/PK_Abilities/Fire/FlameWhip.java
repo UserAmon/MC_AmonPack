@@ -88,8 +88,8 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
         }
 
         boolean isCameraMoving = durationTicks <= 40;
-        if (durationTicks <= 40) {
-            currentLength = maxLength * ((double) durationTicks / 120.0);
+        if (durationTicks <= 20) {
+            currentLength = maxLength * ((double) durationTicks / 80.0);
         } else if (lastCameraDir != null) {
             double angleDiff = Math.toDegrees(lastCameraDir.angle(targetCameraDir));
             if (Double.isNaN(angleDiff)) {
@@ -100,10 +100,10 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
             }
 
             if (angleDiff > 0.8) {
-                double lengthGain = angleDiff * 0.05;
+                double lengthGain = angleDiff * 0.02;
                 currentLength = Math.min(maxLength, currentLength + lengthGain);
             } else {
-                currentLength = Math.max(minLength, currentLength - 0.2);
+                currentLength = Math.max(minLength, currentLength - 0.1);
             }
         }
         lastCameraDir = targetCameraDir.clone();

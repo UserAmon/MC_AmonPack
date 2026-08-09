@@ -13,15 +13,19 @@ import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -49,7 +53,9 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
     private boolean[] collectedPoints = new boolean[4];
     private int collectedCount = 0;
     private List<Location> flyingBlocks = new ArrayList<>();
+    private List<TempBlock> activeTempBlocks = new ArrayList<>();
 
+    private Location projectileLoc;
     private Location boulderLoc;
     private Vector rollDir;
     private double distanceTraveled = 0.0;
@@ -70,18 +76,11 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Damage", 5.0);
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Knockback", 1.2);
         this.range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.BoulderRoll.Range", 22);
-        // Spowolnienie dwukrotne ruchu kuli
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Speed", 0.7) / 2.0;
         this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Radius", 1.5);
         this.revertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.BoulderRoll.RevertTime", 10000L);
 
         if (AmonPackPlugin.ENABLE_SKILL_TREE) {
-            if (!player.isSneaking()) {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        TextComponent.fromLegacyText("§cTego ruchu można użyć tylko kucając!"));
-                return;
-            }
-
             if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
                 return;
             }
@@ -217,7 +216,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                 }
 
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
-                        "§6[BoulderRoll] Zbieranie głazu: §e" + collectedCount + "/4 §7(Najeźdź cel i naciśnij F/L)"));
+                        "§6[BoulderRoll] Zbieranie głazu: §e" + collectedCount + "/4 §7(Najeźdź cel i naciśnij F/LPM)"));
             } else if (state == State.FULLY_CHARGED) {
                 ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.4, 0.2, 0.4, 0.1,
                         Material.DIRT.createBlockData());
@@ -231,7 +230,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
     private void startRolling() {
         state = State.ROLLING;
-        boulderLoc = player.getLocation().clone();
+        projectileLoc = player.getLocation().clone();
         rollDir = player.getLocation().getDirection().setY(0).normalize();
         if (rollDir.lengthSquared() < 0.01) {
             rollDir = player.getLocation().getDirection().normalize();
@@ -241,33 +240,37 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         initialSlot = player.getInventory().getHeldItemSlot();
 
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 300, 1, false, false));
-        player.getWorld().playSound(boulderLoc, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.5f);
+        player.getWorld().playSound(projectileLoc, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.5f);
     }
 
     private void processRolling() {
         distanceTraveled += speed;
-        boulderLoc.add(rollDir.clone().multiply(speed));
+        projectileLoc.add(rollDir.clone().multiply(speed));
 
-        Location aheadLoc = boulderLoc.clone().add(rollDir.clone().multiply(1.5));
+        boulderLoc = projectileLoc.clone().subtract(rollDir.clone().multiply(2.0));
+
+        Location aheadLoc = projectileLoc.clone().add(rollDir.clone().multiply(1.0));
         Block aheadBlock = aheadLoc.getBlock();
         Block aheadBelow = aheadLoc.clone().subtract(0, 1, 0).getBlock();
 
-        if (aheadBlock.getType() != Material.AIR && !PlantAbility.isPlant(aheadBlock)
-                && !TempBlock.isTempBlock(aheadBlock)) {
-            boulderLoc.setY(boulderLoc.getY() + 1);
-        } else if ((aheadBelow.getType() == Material.AIR || PlantAbility.isPlant(aheadBelow)
-                || TempBlock.isTempBlock(aheadBelow))
-                && !TempBlock.isTempBlock(boulderLoc.clone().subtract(0, 1, 0).getBlock())) {
-            boulderLoc.setY(boulderLoc.getY() - 1);
+        if (aheadBlock.getType().isSolid() && !TempBlock.isTempBlock(aheadBlock)) {
+            projectileLoc.setY(projectileLoc.getY() + 1);
+        } else if (!aheadBelow.getType().isSolid() && !TempBlock.isTempBlock(aheadBelow)) {
+            projectileLoc.setY(projectileLoc.getY() - 1);
         }
 
         Block wallAhead = aheadLoc.clone().add(0, 1, 0).getBlock();
-        if (distanceTraveled >= range || (wallAhead.getType() != Material.AIR && !PlantAbility.isPlant(wallAhead)
-                && !TempBlock.isTempBlock(wallAhead) && !isEarthbendable(player, wallAhead))) {
+        if (distanceTraveled >= range || (wallAhead.getType().isSolid() && !TempBlock.isTempBlock(wallAhead) && !isEarthbendable(player, wallAhead))) {
             explodeAndFinish();
             return;
         }
-        Location center = boulderLoc.clone().add(0, 0.5, 0);
+
+        for (TempBlock tb : activeTempBlocks) {
+            tb.revertBlock();
+        }
+        activeTempBlocks.clear();
+
+        Location center = boulderLoc.clone().add(0, 0.75, 0);
         Random rand = new Random();
 
         for (int x = -1; x <= 1; x++) {
@@ -280,78 +283,67 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                             Material mat = rand.nextBoolean() ? Material.DIRT : Material.STONE;
                             TempBlock tb = new TempBlock(b, mat);
                             tb.setRevertTime(100L);
+                            activeTempBlocks.add(tb);
                         }
                     }
                 }
             }
         }
 
-        if (tickCounter % 2 == 0) {
-            for (int i = 0; i < 3; i++) {
-                double offsetX = (rand.nextDouble() - 0.5) * 3.0;
-                double offsetY = (rand.nextDouble() - 0.5) * 2.0 + 0.5;
-                double offsetZ = (rand.nextDouble() - 0.5) * 3.0;
-                Location spawnLoc = center.clone().add(offsetX, offsetY, offsetZ);
-
-                Material fbMat = rand.nextInt(3) == 0 ? Material.STONE
-                        : (rand.nextBoolean() ? Material.DIRT : Material.COARSE_DIRT);
-                org.bukkit.entity.FallingBlock fb = spawnLoc.getWorld().spawnFallingBlock(spawnLoc,
-                        fbMat.createBlockData());
-                fb.setDropItem(false);
-
-                Vector vel = rollDir.clone().multiply(speed * 0.8)
-                        .add(new Vector((rand.nextDouble() - 0.5) * 0.3, 0.15 + (rand.nextDouble() * 0.15),
-                                (rand.nextDouble() - 0.5) * 0.3));
-                fb.setVelocity(vel);
-
-                Methods.SpawnedByMe.add(fb.getUniqueId());
-
-                org.bukkit.Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
-                    if (fb.isValid() && !fb.isDead()) {
-                        ParticleEffect.BLOCK_CRACK.display(fb.getLocation(), 4, 0.2, 0.2, 0.2, 0.05,
-                                fbMat.createBlockData());
-                        fb.remove();
-                    }
-                }, 10L);
+        double rollAngle = distanceTraveled * 3.0;
+        for (double phi = 0; phi <= Math.PI; phi += Math.PI / 3) {
+            for (double theta = 0; theta <= 2 * Math.PI; theta += Math.PI / 3) {
+                double x = radius * Math.sin(phi) * Math.cos(theta + rollAngle);
+                double y = radius * Math.cos(phi);
+                double z = radius * Math.sin(phi) * Math.sin(theta + rollAngle);
+                Location pLoc = center.clone().add(x, y, z);
+                ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.05, 0.05, 0.05, 0.02, Material.DIRT.createBlockData());
+                ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.05, 0.05, 0.05, 0.02, Material.STONE.createBlockData());
             }
+        }
+
+        if (tickCounter % 3 == 0) {
+            Location spawnLoc = center.clone().add((rand.nextDouble() - 0.5) * 1.5, (rand.nextDouble() - 0.5) * 1.5, (rand.nextDouble() - 0.5) * 1.5);
+            Material fbMat = rand.nextBoolean() ? Material.STONE : Material.DIRT;
+            FallingBlock fb = spawnLoc.getWorld().spawnFallingBlock(spawnLoc, fbMat.createBlockData());
+            fb.setDropItem(false);
+            fb.setVelocity(rollDir.clone().multiply(speed * 0.5).add(new Vector((rand.nextDouble() - 0.5) * 0.2, 0.1, (rand.nextDouble() - 0.5) * 0.2)));
+            Methods.SpawnedByMe.add(fb.getUniqueId());
+
+            Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
+                if (fb.isValid() && !fb.isDead()) {
+                    fb.remove();
+                }
+            }, 6L);
             boulderLoc.getWorld().playSound(boulderLoc, Sound.BLOCK_GRASS_STEP, 0.8f, 0.6f);
         }
 
-        double angle = distanceTraveled * 3.0;
-        for (double i = 0; i < Math.PI * 2; i += Math.PI / 4) {
-            double x = radius * Math.cos(i + angle);
-            double z = radius * Math.sin(i + angle);
-            double y = radius * Math.sin(i * 2);
-            Location pLoc = boulderLoc.clone().add(x, y + 0.7, z);
-            ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.DIRT.createBlockData());
-            ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.STONE.createBlockData());
-        }
+        Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(3.5)).add(0, 3.5, 0);
 
-        // Gracza przenieś 6 kratek w tył i 6 w górę za kulą + skieruj kamerę 40 stopni
-        // w dół na kulę
-        Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(10.0)).add(0, 10.0, 0);
-        Location rayStart = boulderLoc.clone().add(0, 1.8, 0);
+        Location rayStart = boulderLoc.clone().add(0, 0.75, 0);
         Vector ray = idealPlayerDest.toVector().subtract(rayStart.toVector());
         double dist = ray.length();
         if (dist > 0.1) {
-            org.bukkit.util.RayTraceResult rtr = rayStart.getWorld().rayTraceBlocks(
+            RayTraceResult rtr = rayStart.getWorld().rayTraceBlocks(
                     rayStart, ray.clone().normalize(), dist,
-                    org.bukkit.FluidCollisionMode.NEVER, true);
-            if (rtr != null && rtr.getHitPosition() != null) {
+                    FluidCollisionMode.NEVER, true);
+            if (rtr != null && rtr.getHitPosition() != null && rtr.getHitBlock() != null
+                    && rtr.getHitBlock().getType().isSolid() && !TempBlock.isTempBlock(rtr.getHitBlock())) {
                 idealPlayerDest = rtr.getHitPosition().toLocation(rayStart.getWorld())
-                        .subtract(ray.clone().normalize().multiply(0.3));
+                        .subtract(ray.clone().normalize().multiply(0.4));
             }
         }
 
         Location playerDest = idealPlayerDest;
-        playerDest.setYaw(initialYaw);
-        playerDest.setPitch(40.0f);
+        Vector lookDir = center.toVector().subtract(playerDest.toVector());
+        playerDest.setDirection(lookDir);
+
         player.teleport(playerDest);
         player.setVelocity(new Vector(0, 0, 0));
         player.getInventory().setHeldItemSlot(initialSlot);
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 40, 1, false, false));
 
-        for (Entity entity : GeneralMethods.getEntitiesAroundPoint(boulderLoc, radius + 0.5)) {
+        for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projectileLoc, radius + 0.5)) {
             if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                 DamageHandler.damageEntity(entity, damage, this);
                 Vector kb = rollDir.clone().multiply(knockback).setY(0.35);
@@ -361,8 +353,13 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
     }
 
     private void explodeAndFinish() {
+        for (TempBlock tb : activeTempBlocks) {
+            tb.revertBlock();
+        }
+        activeTempBlocks.clear();
+
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
-        Location finishLoc = boulderLoc.clone().add(0, 0.5, 0);
+        Location finishLoc = projectileLoc.clone().add(0, 0.5, 0);
         finishLoc.setYaw(initialYaw);
         finishLoc.setPitch(initialPitch);
         player.teleport(finishLoc);
@@ -378,18 +375,27 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         finishLoc.getWorld().playSound(finishLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.8f);
 
         bPlayer.addCooldown(this, cooldown);
-        SpecialTriggerManager.unregisterActiveSpecial(player);
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            SpecialTriggerManager.unregisterActiveSpecial(player);
+        }
         remove();
     }
 
     private void cancelAbility() {
+        for (TempBlock tb : activeTempBlocks) {
+            tb.revertBlock();
+        }
+        activeTempBlocks.clear();
+
         if (player != null) {
             player.removePotionEffect(PotionEffectType.INVISIBILITY);
         }
         if (bPlayer != null) {
             bPlayer.addCooldown(this, cooldown);
         }
-        SpecialTriggerManager.unregisterActiveSpecial(player);
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            SpecialTriggerManager.unregisterActiveSpecial(player);
+        }
         remove();
     }
 
@@ -409,7 +415,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
     @Override
     public Location getLocation() {
-        return boulderLoc != null ? boulderLoc : (player != null ? player.getLocation() : null);
+        return boulderLoc != null ? boulderLoc : player.getLocation();
     }
 
     @Override
@@ -424,7 +430,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -443,16 +449,16 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
     @Override
     public void stop() {
-        super.remove();
+        cancelAbility();
     }
 
     @Override
     public String getDescription() {
-        return "Pozwala na zebranie 4 punktów ziemi przed sobą podczas kucania, a następnie zamianę w toczący się głaz z odrzutem i obrażeniami.";
+        return "Gromadzi odłamki ziemne, aby utworzyć wielki toczący się głaz. Gracz podąża z tyłu głazu z widokiem góry.";
     }
 
     @Override
     public String getInstructions() {
-        return "Kucaj i aktywuj F/L aby zbierać punkty. Po zebraniu 4 punktów puść SHIFT aby przetoczyć głaz!";
+        return "Przytrzymaj SHIFT, najedź na 4 punkty kalibracji i naciśnij F/LPM, a następnie puść SHIFT!";
     }
 }

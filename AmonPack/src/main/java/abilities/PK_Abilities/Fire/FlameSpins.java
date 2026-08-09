@@ -6,7 +6,6 @@ import com.projectkorra.projectkorra.ability.FireAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
 import Plugin.AmonPackPlugin;
-import Plugin.Methods;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -19,237 +18,246 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 public class FlameSpins extends FireAbility implements AddonAbility {
-	private int state = 0;
-	private int slot;
-	private long startTime;
-	private long castTime;
-	private long lastPunchTime = 0;
-	private int clicksUsed = 0;
+    private int state = 0;
+    private int slot;
+    private long startTime;
+    private long lastPunchTime = 0;
+    private int clicksUsed = 0;
 
-	private long cooldown;
-	private long cooldownFirefly;
-	private int maxClicks;
-	private int maxClicksFirefly;
-	private int hoverTicks;
-	private int hoverTicksFirefly;
-	private double dashMultiplier;
-	private double dashYForce;
-	private double dashRange;
-	private double dashDamage;
-	private double projectileSpeed;
-	private int projectileRange;
-	private double projectileDamage;
-	private int projectileFireTicks;
+    private long cooldown;
+    private long cooldownFirefly;
+    private int maxClicks;
+    private int maxClicksFirefly;
+    private int hoverTicks;
+    private int hoverTicksFirefly;
+    private double dashMultiplier;
+    private double dashYForce;
+    private double dashRange;
+    private double dashDamage;
+    private double projectileSpeed;
+    private int projectileRange;
+    private double projectileDamage;
+    private int projectileFireTicks;
 
-	public FlameSpins(Player player) {
-		super(player);
-		
-		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.Cooldown", 6000L);
-		this.cooldownFirefly = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.CooldownFirefly", 3000L);
-		this.maxClicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicks", 2);
-		this.maxClicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicksFirefly", 3);
-		this.hoverTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicks", 50);
-		this.hoverTicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicksFirefly", 70);
-		this.dashMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashMultiplier", 1.35);
-		this.dashYForce = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashYForce", 0.85);
-		this.dashRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashRange", 3.5);
-		this.dashDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashDamage", 3.0);
-		this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileSpeed", 0.8);
-		this.projectileRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileRange", 40);
-		this.projectileDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileDamage", 4.0);
-		this.projectileFireTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileFireTicks", 50);
+    public FlameSpins(Player player) {
+        super(player);
 
-		if (bPlayer.isOnCooldown(this)) {
-			return;
-		}
-		if (!bPlayer.canBend(this)) {
-			return;
-		}
+        if (hasAbility(player, FlameSpins.class)) {
+            return;
+        }
+        if (bPlayer.isOnCooldown(this) || !bPlayer.canBend(this)) {
+            return;
+        }
 
-		this.slot = player.getInventory().getHeldItemSlot();
-		this.startTime = System.currentTimeMillis();
-		this.castTime = System.currentTimeMillis();
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.Cooldown", 6000L);
+        this.cooldownFirefly = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.CooldownFirefly", 3000L);
+        this.maxClicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicks", 2);
+        this.maxClicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicksFirefly", 3);
+        this.hoverTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicks", 50);
+        this.hoverTicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicksFirefly", 70);
+        this.dashMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashMultiplier", 1.35);
+        this.dashYForce = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashYForce", 0.85);
+        this.dashRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashRange", 3.5);
+        this.dashDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashDamage", 3.0);
+        this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileSpeed", 0.8);
+        this.projectileRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileRange", 40);
+        this.projectileDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileDamage", 4.0);
+        this.projectileFireTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileFireTicks", 50);
 
-		boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
-		if (isBlue) {
-			player.spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
-		} else {
-			ParticleEffect.FLAME.display(player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
-		}
-		player.spawnParticle(Particle.LAVA, player.getLocation().clone().add(0, 0.2, 0), 6, 0.3, 0.1, 0.3, 0);
-		player.getWorld().spawnParticle(org.bukkit.Particle.EXPLOSION, player.getLocation(), 1);
-		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f);
-		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 0.8f);
+        this.slot = player.getInventory().getHeldItemSlot();
+        this.startTime = System.currentTimeMillis();
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
-		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-		int ht = hasFirefly ? this.hoverTicksFirefly : this.hoverTicks;
-		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, ht, 0, false, false));
+        performShiftLaunch();
+        start();
+    }
 
-		Vector motion  = player.getVelocity().clone().setY(0).multiply(this.dashMultiplier);
-		Vector dash    = motion.clone();
-		dash.setY(this.dashYForce);
-		player.setVelocity(dash);
+    private void performShiftLaunch() {
+        boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+        if (isBlue) {
+            player.spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
+        } else {
+            ParticleEffect.FLAME.display(player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
+        }
+        player.spawnParticle(Particle.LAVA, player.getLocation().clone().add(0, 0.2, 0), 6, 0.3, 0.1, 0.3, 0);
+        player.getWorld().spawnParticle(org.bukkit.Particle.EXPLOSION, player.getLocation(), 1);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 0.8f);
 
-		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), this.dashRange)) {
-			if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-				DamageHandler.damageEntity(entity, this.dashDamage, this);
-			}
-		}
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
+        int ht = hasFirefly ? this.hoverTicksFirefly : this.hoverTicks;
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, ht, 0, false, false));
 
-		state = 1;
-		start();
-	}
+        Vector motion = player.getVelocity().clone().setY(0).multiply(this.dashMultiplier);
+        Vector dash = motion.clone();
+        dash.setY(this.dashYForce);
+        player.setVelocity(dash);
 
-	@Override
-	public void progress() {
-		if (player.isDead() || !player.isOnline()) {
-			remove();
-			return;
-		}
+        for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), this.dashRange)) {
+            if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+                DamageHandler.damageEntity(entity, this.dashDamage, this);
+            }
+        }
 
-		if (player.getInventory().getHeldItemSlot() != slot) {
-			finishSkill();
-			return;
-		}
+        this.state = 1;
+    }
 
-		if (System.currentTimeMillis() - castTime > 5000) {
-			finishSkill();
-			return;
-		}
-	}
+    @Override
+    public void progress() {
+        if (player == null || player.isDead() || !player.isOnline()) {
+            finishSkill();
+            return;
+        }
 
-	public void onLeftClick() {
-		onClick();
-	}
+        if (player.getInventory().getHeldItemSlot() != slot) {
+            finishSkill();
+            return;
+        }
 
-	public void onClick() {
-		if (state != 1) return;
+        if (System.currentTimeMillis() - startTime > 5000) {
+            finishSkill();
+            return;
+        }
+    }
 
-		long now = System.currentTimeMillis();
-		if (now - lastPunchTime < 250) {
-			return;
-		}
+    public void onLeftClick() {
+        onClick();
+    }
 
-		clicksUsed++;
-		lastPunchTime = now;
+    public void onClick() {
+        if (state != 1) {
+            return;
+        }
 
-		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 1.1f);
+        long now = System.currentTimeMillis();
+        if (now - lastPunchTime < 250) {
+            return;
+        }
 
-		Location projLoc = player.getEyeLocation().clone();
-		Vector projDir = player.getLocation().getDirection().normalize().multiply(this.projectileSpeed);
+        clicksUsed++;
+        lastPunchTime = now;
 
-		new BukkitRunnable() {
-			int ticks = 0;
-			double angle = 0;
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 1.1f);
 
-			@Override
-			public void run() {
-				ticks++;
-				if (ticks > FlameSpins.this.projectileRange || projLoc.getBlock().getType().isSolid()) {
-					cancel();
-					return;
-				}
+        Location projLoc = player.getEyeLocation().clone();
+        Vector projDir = player.getLocation().getDirection().normalize().multiply(this.projectileSpeed);
 
-				projDir.setY(projDir.getY() - 0.03);
-				projLoc.add(projDir);
+        new BukkitRunnable() {
+            int ticks = 0;
+            double angle = 0;
 
-				angle += 0.5;
-				double r = 0.6;
-				double x1 = r * Math.cos(angle);
-				double z1 = r * Math.sin(angle);
-				Location p1 = projLoc.clone().add(x1, 0, z1);
-				Location p2 = projLoc.clone().subtract(x1, 0, z1);
+            @Override
+            public void run() {
+                ticks++;
+                if (ticks > FlameSpins.this.projectileRange || projLoc.getBlock().getType().isSolid()) {
+                    cancel();
+                    return;
+                }
 
-				boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
-				if (isBlue) {
-					p1.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p1, 1, 0, 0, 0, 0);
-					p2.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p2, 1, 0, 0, 0, 0);
-				} else {
-					ParticleEffect.FLAME.display(p1, 1, 0, 0, 0, 0);
-					ParticleEffect.FLAME.display(p2, 1, 0, 0, 0, 0);
-				}
-				ParticleEffect.SMOKE_NORMAL.display(projLoc, 1, 0.1, 0.1, 0.1, 0.01);
+                projDir.setY(projDir.getY() - 0.03);
+                projLoc.add(projDir);
 
-				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projLoc, 1.2)) {
-					if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-						DamageHandler.damageEntity(entity, FlameSpins.this.projectileDamage, FlameSpins.this);
-						entity.setFireTicks(FlameSpins.this.projectileFireTicks);
-						cancel();
-						return;
-					}
-				}
-			}
-		}.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
+                angle += 0.5;
+                double r = 0.6;
+                double x1 = r * Math.cos(angle);
+                double z1 = r * Math.sin(angle);
+                Location p1 = projLoc.clone().add(x1, 0, z1);
+                Location p2 = projLoc.clone().subtract(x1, 0, z1);
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
-		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-		int maxClicks = hasFirefly ? this.maxClicksFirefly : this.maxClicks;
+                boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+                if (isBlue) {
+                    p1.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p1, 1, 0, 0, 0, 0);
+                    p2.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p2, 1, 0, 0, 0, 0);
+                } else {
+                    ParticleEffect.FLAME.display(p1, 1, 0, 0, 0, 0);
+                    ParticleEffect.FLAME.display(p2, 1, 0, 0, 0, 0);
+                }
+                ParticleEffect.SMOKE_NORMAL.display(projLoc, 1, 0.1, 0.1, 0.1, 0.01);
 
-		if (clicksUsed >= maxClicks) {
-			finishSkill();
-		}
-	}
+                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projLoc, 1.2)) {
+                    if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+                        DamageHandler.damageEntity(entity, FlameSpins.this.projectileDamage, FlameSpins.this);
+                        entity.setFireTicks(FlameSpins.this.projectileFireTicks);
+                        cancel();
+                        return;
+                    }
+                }
+            }
+        }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
-	private void finishSkill() {
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
-		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-		long cd = hasFirefly ? this.cooldownFirefly : this.cooldown;
-		bPlayer.addCooldown(this, cd);
-		remove();
-	}
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
+        int maxClicks = hasFirefly ? this.maxClicksFirefly : this.maxClicks;
 
-	@Override
-	public long getCooldown() {
-		return cooldown;
-	}
+        if (clicksUsed >= maxClicks) {
+            finishSkill();
+        }
+    }
 
-	@Override
-	public Location getLocation() {
-		return player.getLocation();
-	}
+    private void finishSkill() {
+        if (state == 2) {
+            return;
+        }
+        state = 2;
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
+        long cd = hasFirefly ? this.cooldownFirefly : this.cooldown;
+        bPlayer.addCooldown(this, cd);
+        remove();
+    }
 
-	@Override
-	public String getName() {
-		return "FlameSpins";
-	}
+    @Override
+    public long getCooldown() {
+        return cooldown;
+    }
 
-	@Override
-	public String getAuthor() {
-		return "AmonPack";
-	}
+    @Override
+    public Location getLocation() {
+        return player != null ? player.getLocation() : null;
+    }
 
-	@Override
-	public String getVersion() {
-		return "2.0";
-	}
+    @Override
+    public String getName() {
+        return "FlameSpins";
+    }
 
-	@Override
-	public boolean isHarmlessAbility() {
-		return false;
-	}
+    @Override
+    public String getAuthor() {
+        return "AmonPack";
+    }
 
-	@Override
-	public boolean isSneakAbility() {
-		return true;
-	}
+    @Override
+    public String getVersion() {
+        return "2.0";
+    }
 
-	@Override
-	public void load() {
-	}
+    @Override
+    public boolean isHarmlessAbility() {
+        return false;
+    }
 
-	@Override
-	public void stop() {
-		remove();
-	}
+    @Override
+    public boolean isSneakAbility() {
+        return true;
+    }
 
-	@Override
-	public String getDescription() {
-		return "Wystrzeliwuje ognistego dasha w powietrze z opadaniem i wystrzeliwaniem spirali ognia.";
-	}
+    @Override
+    public void load() {
+    }
 
-	@Override
-	public String getInstructions() {
-		return "Przytrzymaj Shift aby wyskoczyć, a następnie klikaj LPM w powietrzu!";
-	}
+    @Override
+    public void stop() {
+        finishSkill();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Wystrzeliwuje ognistego dasha w powietrze z opadaniem i możliwością wystrzeliwania ognistych pocisków LPM.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Naciśnij Shift aby wyskoczyć, a następnie klikaj LPM w powietrzu!";
+    }
 }

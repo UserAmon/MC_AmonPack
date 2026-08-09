@@ -51,7 +51,8 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
         this.maxLength = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.MaxRange", 7.0);
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Knockback", 0.6);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterWhip.Cooldown", 5000);
-        this.maxDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterWhip.DurationTicks", 100);
+        this.maxDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterWhip.DurationTicks",
+                100);
         this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.SourceRange", 15.0);
 
         if (AmonPackPlugin.ENABLE_SKILL_TREE) {
@@ -117,8 +118,8 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
         }
 
         boolean isCameraMoving = durationTicks <= 40;
-        if (durationTicks <= 40) {
-            currentLength = Math.min(maxLength, 0.3 + (((double) durationTicks / 40.0) * (maxLength - 0.3)));
+        if (durationTicks <= 20) {
+            currentLength = Math.min(maxLength, 0.1 + (((double) durationTicks / 20.0) * 4));
         } else if (lastCameraDir != null) {
             double angleDiff = Math.toDegrees(lastCameraDir.angle(targetCameraDir));
             if (Double.isNaN(angleDiff)) {
@@ -129,10 +130,10 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
             }
 
             if (angleDiff > 0.8) {
-                double lengthGain = angleDiff * 0.05;
+                double lengthGain = angleDiff * 0.02;
                 currentLength = Math.min(maxLength, currentLength + lengthGain);
             } else {
-                currentLength = Math.max(minLength, currentLength - 0.2);
+                currentLength = Math.max(minLength, currentLength - 0.1);
             }
         }
         lastCameraDir = targetCameraDir.clone();
@@ -178,8 +179,10 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
                             hitEntities.add(target);
                             DamageHandler.damageEntity(target, damage, this);
                             target.setVelocity(currentWhipDir.clone().multiply(knockback).setY(0.2));
-                            player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
-                            ParticleEffect.WATER_SPLASH.display(target.getLocation().add(0, 1, 0), 8, 0.15, 0.15, 0.15, 0.05);
+                            player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f,
+                                    1.3f);
+                            ParticleEffect.WATER_SPLASH.display(target.getLocation().add(0, 1, 0), 8, 0.15, 0.15, 0.15,
+                                    0.05);
                         }
                     }
                 }
