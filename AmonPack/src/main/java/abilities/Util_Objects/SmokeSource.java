@@ -77,7 +77,7 @@ public class SmokeSource {
                         Player p = (Player) entity;
                         com.projectkorra.projectkorra.BendingPlayer bp = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(p);
                         if (bp != null && bp.getAbilities().containsValue("SmokeBurst")) {
-                            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+                            RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName()) : null;
                             if (branch != null && branch.hasUpgrade("BOOrst")) {
                                 Abilities.PK_Abilities.Fire.SmokeBurst.explodeSmokeSource(p, location);
                                 SmokeAbility.DeleteSource(ThisSource);
@@ -144,7 +144,7 @@ public class SmokeSource {
         IsPulled = true;
         double dmg = 1.0;
         if (player != null) {
-            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+            RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
             if (branch != null && branch.hasUpgrade("Strategist")) {
                 dmg += 3.0;
             }

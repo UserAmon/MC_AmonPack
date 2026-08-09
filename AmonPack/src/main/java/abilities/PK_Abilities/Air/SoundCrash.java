@@ -73,7 +73,7 @@ public class SoundCrash extends SoundAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasEncore = (branch != null && branch.hasUpgrade("Encore"));
 		if (hasEncore) {
 			Vector targetDir = player.getEyeLocation().getDirection().normalize();

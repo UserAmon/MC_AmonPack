@@ -66,9 +66,14 @@ public class AmonPackPlugin extends JavaPlugin {
 	public FileConfiguration config;
 
 	public static boolean ENABLE_BENDING_ABILITIES = true;
-	public static boolean ENABLE_SKILL_TREE = true, ENABLE_DUNGEONS = true, ENABLE_RPG_GATHERING = true,
-			ENABLE_BOUNTIES = true, ENABLE_PARTY = true,
-			ENABLE_DATABASE = true, ENABLE_WORLD_GEN = true, ENABLE_ARMOR_EFFECTS = true;
+	public static boolean ENABLE_DATABASE = false;
+	public static boolean ENABLE_SKILL_TREE = ENABLE_DATABASE;
+	public static boolean ENABLE_DUNGEONS = ENABLE_DATABASE;
+	public static boolean ENABLE_RPG_GATHERING = ENABLE_DATABASE;
+	public static boolean ENABLE_BOUNTIES = ENABLE_DATABASE;
+	public static boolean ENABLE_PARTY = ENABLE_DATABASE;
+	public static boolean ENABLE_WORLD_GEN = ENABLE_DATABASE;
+	public static boolean ENABLE_ARMOR_EFFECTS = ENABLE_DATABASE;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -158,7 +163,8 @@ public class AmonPackPlugin extends JavaPlugin {
 			combatMenager = new CombatMenager();
 		}
 
-		// 4. Przeładowanie Drzewka Skilli (Levels_Bending) oraz Poziomów (PlayerLevelMenager)
+		// 4. Przeładowanie Drzewka Skilli (Levels_Bending) oraz Poziomów
+		// (PlayerLevelMenager)
 		if (ENABLE_SKILL_TREE) {
 			if (levelsBending != null) {
 				levelsBending.LoadData();
@@ -168,7 +174,8 @@ public class AmonPackPlugin extends JavaPlugin {
 				if (LevelConfig != null) {
 					try {
 						for (String key : LevelConfig.getStringList("AmonPack.Levels.Enabled")) {
-							PlayerLevelMenager.EnabledSkillTypes.add(RPG.Levels.Objects.LevelSkill.SkillType.valueOf(key));
+							PlayerLevelMenager.EnabledSkillTypes
+									.add(RPG.Levels.Objects.LevelSkill.SkillType.valueOf(key));
 						}
 					} catch (Exception e) {
 						getLogger().warning("Błąd podczas odświeżania EnabledSkillTypes: " + e.getMessage());
@@ -577,7 +584,8 @@ public class AmonPackPlugin extends JavaPlugin {
 					ExecuteQuery("ALTER TABLE " + table + " ADD COLUMN " + column + " TEXT;");
 				}
 			}
-		} catch (Exception ignored) {}
+		} catch (Exception ignored) {
+		}
 	}
 
 	public static void ExecuteQuery(String query) {

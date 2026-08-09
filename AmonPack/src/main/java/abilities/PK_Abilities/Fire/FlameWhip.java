@@ -8,7 +8,6 @@ import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.FireAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -41,8 +40,15 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
     public FlameWhip(Player player) {
         super(player);
 
-        if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
-            return;
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
+                return;
+            }
+            SpecialTriggerManager.registerActiveSpecial(player);
+        } else {
+            if (bPlayer.isOnCooldown(this) || !bPlayer.canBend(this)) {
+                return;
+            }
         }
 
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWhip.Damage", 4.0);
@@ -52,7 +58,6 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
         this.maxDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWhip.DurationTicks", 80);
         this.burnDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWhip.BurnDuration", 60);
 
-        SpecialTriggerManager.registerActiveSpecial(player);
         start();
     }
 
@@ -69,7 +74,9 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
             return;
         }
 
-        SpecialTriggerManager.applySoftCooldownToToolbar(player);
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            SpecialTriggerManager.applySoftCooldownToToolbar(player);
+        }
 
         Location eyeLoc = player.getEyeLocation();
         Vector targetCameraDir = eyeLoc.getDirection().clone().normalize();
@@ -80,12 +87,16 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
             currentWhipDir.add(targetCameraDir.clone().subtract(currentWhipDir).multiply(0.045)).normalize();
         }
 
+        boolean isCameraMoving = durationTicks <= 40;
         if (durationTicks <= 40) {
-            currentLength = Math.min(maxLength, 0.3 + (((double) durationTicks / 40.0) * (maxLength - 0.3)));
+            currentLength = maxLength * ((double) durationTicks / 120.0);
         } else if (lastCameraDir != null) {
             double angleDiff = Math.toDegrees(lastCameraDir.angle(targetCameraDir));
             if (Double.isNaN(angleDiff)) {
                 angleDiff = 0;
+            }
+            if (angleDiff > 0.4) {
+                isCameraMoving = true;
             }
 
             if (angleDiff > 0.8) {
@@ -110,8 +121,8 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
         Set<LivingEntity> hitEntities = new HashSet<>();
 
-        renderWhipBranch(leftHand, currentWhipDir, rightVector, -1, hitEntities);
-        renderWhipBranch(rightHand, currentWhipDir, rightVector, 1, hitEntities);
+        renderWhipBranch(leftHand, currentWhipDir, rightVector, -1, hitEntities, isCameraMoving);
+        renderWhipBranch(rightHand, currentWhipDir, rightVector, 1, hitEntities, isCameraMoving);
 
         if (durationTicks % 4 == 0) {
             eyeLoc.getWorld().playSound(eyeLoc, Sound.ITEM_FLINTANDSTEEL_USE, 0.8f, 1.2f);
@@ -119,8 +130,10 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
         }
     }
 
-    private void renderWhipBranch(Location handLoc, Vector whipDir, Vector rightVec, int sideMultiplier, Set<LivingEntity> hitEntities) {
-        boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+    private void renderWhipBranch(Location handLoc, Vector whipDir, Vector rightVec, int sideMultiplier,
+            Set<LivingEntity> hitEntities, boolean isCameraMoving) {
+        boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
         int segments = (int) Math.ceil(currentLength * 6.0);
         for (int i = 0; i <= segments; i++) {
             double progressRatio = (double) i / (double) segments;
@@ -136,7 +149,8 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
             if (i % 2 == 0) {
                 if (isBlue) {
-                    segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
+                    segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 1, 0.03, 0.03, 0.03,
+                            0.01);
                 } else {
                     ParticleEffect.FLAME.display(segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
                 }
@@ -157,22 +171,25 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
                 break;
             }
 
-            for (Entity entity : GeneralMethods.getEntitiesAroundPoint(segmentLoc, 1.3)) {
-                if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-                    LivingEntity target = (LivingEntity) entity;
-                    if (!hitEntities.contains(target)) {
-                        hitEntities.add(target);
-                        DamageHandler.damageEntity(target, damage, this);
-                        target.setFireTicks(burnDuration);
+            if (isCameraMoving) {
+                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(segmentLoc, 1.3)) {
+                    if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+                        LivingEntity target = (LivingEntity) entity;
+                        if (!hitEntities.contains(target)) {
+                            hitEntities.add(target);
+                            DamageHandler.damageEntity(target, damage, this);
+                            target.setFireTicks(burnDuration);
 
-                        Vector kb = whipDir.clone().multiply(knockback).setY(0.25);
-                        target.setVelocity(kb);
+                            Vector kb = whipDir.clone().multiply(knockback).setY(0.25);
+                            target.setVelocity(kb);
 
-                        segmentLoc.getWorld().playSound(segmentLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
-                        if (isBlue) {
-                            segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
-                        } else {
-                            ParticleEffect.FLAME.display(segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
+                            segmentLoc.getWorld().playSound(segmentLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
+                            if (isBlue) {
+                                segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 10, 0.3, 0.3,
+                                        0.3, 0.1);
+                            } else {
+                                ParticleEffect.FLAME.display(segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
+                            }
                         }
                     }
                 }
@@ -182,7 +199,9 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
     private void finish() {
         bPlayer.addCooldown(this, cooldown);
-        SpecialTriggerManager.unregisterActiveSpecial(player);
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            SpecialTriggerManager.unregisterActiveSpecial(player);
+        }
         remove();
     }
 
@@ -242,6 +261,6 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
     @Override
     public String getInstructions() {
-        return "Naciśnij F (SWAP), aby uderzyć ognistymi biczami!";
+        return "Naciśnij F (SWAP) lub kliknij LPM aby uderzyć ognistymi biczami!";
     }
 }

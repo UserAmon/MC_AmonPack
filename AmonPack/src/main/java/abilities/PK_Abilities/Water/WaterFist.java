@@ -186,7 +186,7 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasUppercut = (branch != null && branch.hasUpgrade("Uppercut"));
 		int currentMaxClicks = hasUppercut ? maxClicksWithUpgrade : maxClicks;
 		double currentAttackRange = hasUppercut ? attackRangeWithUpgrade : attackRange;

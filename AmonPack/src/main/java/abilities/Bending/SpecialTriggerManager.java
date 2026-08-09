@@ -123,7 +123,7 @@ public class SpecialTriggerManager {
             return false;
         }
 
-        PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         if (branch == null) {
             return false;
         }

@@ -82,11 +82,16 @@ AmonPack:
       SelfDamage: 1.0 #hearts lost per weaving milestone
       CompletionDamage: 2.5 #hearts dealt when ritual completes
       ImmobilizeDuration: 60 #ticks target stays immobilized
+      ChiBlockDuration: 4000 #ms chi blocking lasts on target player
 
     BloodArrow:
       Cooldown: 7000 #ms between ability uses
       ChargeTimePerLevel: 1000 #ms per charge level
       MaxChargeLevel: 3 #maximum charge levels
+      BaseDamage: 2.0 #base damage per arrow
+      DamageMultiplier: 1 #damage added per charge level
+      BaseRange: 20.0 #base range of arrow
+      RangeMultiplier: 10.0 #range added per charge level
       SelfDamage: 1.0 #hearts lost per charge level
       Speed: 1.2 #projectile speed multiplier
       CanTrack: true #if true, arrow tracks targets
@@ -107,8 +112,7 @@ AmonPack:
 
       Blossom:
         Cooldown: 6000 #ms between ability uses
-        ChargeTime: 2000 #ms to charge V-shape cone
-        Damage: 4.0 #hearts dealt by flower wave
+        Damage: 2.0 #hearts dealt by flower wave
         Range: 18.0 #blocks max wave range
         Speed: 0.6 #wave speed multiplier
 
@@ -126,6 +130,11 @@ AmonPack:
       Range: 20.0 #max blocks cyclone travels
       Speed: 0.75 #speed multiplier of cyclone
       HoldDuration: 3000 #ms enemies are trapped in vortex
+      StationaryDuration: 4000 #ms cyclone stays stationary at destination
+      RotateVictimCamera: true #if true, slowly rotates trapped victim camera
+      MaxHeight: 4.0 #blocks maximum vortex height
+      MaxWidth: 2.0 #blocks maximum vortex width
+      OwnerLaunchY: 0.75 #vertical uplift velocity when owner enters cyclone
 
     AirSteps:
       Cooldown: 6000 #ms between ability uses
@@ -186,8 +195,8 @@ AmonPack:
     GustShield:
       Cooldown: 6000 #ms between ability uses
       Duration: 2000 #ms shield remains active
-      Speed: 0.7 #movement speed while shielded
-      Range: 10.0 #blocks radius of shield
+      Speed: 0.7 #projectile speed
+      Range: 10.0 #range of projectile
       PushFactor: 1.0 #velocity when retaliating to hits
 
     SoundCrash:

@@ -31,7 +31,7 @@ public class Echo extends SoundAbility implements AddonAbility {
 		Location origin = GeneralMethods.getMainHandLocation(player).clone();
 		origin.setPitch(0);
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasDysonance = (branch != null && branch.hasUpgrade("Dysonance"));
 		int projectileCount = hasDysonance ? baseProjectileCount + 1 : baseProjectileCount;
 

@@ -54,7 +54,7 @@ public class EarthShift extends EarthAbility implements AddonAbility {
             return;
         }
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
         if (hasChunky) {
             this.range = 16.0;
@@ -128,7 +128,7 @@ public class EarthShift extends EarthAbility implements AddonAbility {
         bPlayer.addCooldown(this);
         player.playSound(player.getLocation(), Sound.ENTITY_EVOKER_CAST_SPELL, 1f, 0.5f);
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
         if (hasChunky) {
             EarthHammer.chunkyHaste.put(player.getUniqueId(), System.currentTimeMillis());

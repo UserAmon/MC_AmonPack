@@ -116,6 +116,12 @@ public class AbilitiesListener implements Listener {
 						new SmokeCamouflage(player);
 					} else if (boundAbility.equalsIgnoreCase("AirSteps")) {
 						new AirSteps(player);
+					} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && boundAbility.equalsIgnoreCase("BoulderRoll")) {
+						if (!CoreAbility.hasAbility(player, BoulderRoll.class)) {
+							new BoulderRoll(player);
+						}
+					} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && boundAbility.equalsIgnoreCase("WaterWhip")) {
+						new WaterWhip(player);
 					}
 				}
 			} else
@@ -252,6 +258,13 @@ public class AbilitiesListener implements Listener {
 						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SteelSwing.class).onClick();
 					} else {
 						new SteelSwing(player);
+					}
+				} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWhip")) {
+					new FlameWhip(player);
+				} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && bPlayer.getBoundAbilityName().equalsIgnoreCase("BoulderRoll")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, BoulderRoll.class)) {
+						BoulderRoll br = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, BoulderRoll.class);
+						br.onLeftClick();
 					}
 				}
 			}
@@ -416,6 +429,13 @@ public class AbilitiesListener implements Listener {
 				BoulderRoll br = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, BoulderRoll.class);
 				if (br != null && br.isRolling()) {
 					event.setCancelled(true);
+				}
+			}
+			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, GustShield.class)) {
+				GustShield gs = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, GustShield.class);
+				if (gs != null && gs.isShielding()) {
+					event.setCancelled(true);
+					gs.onHit();
 				}
 			}
 		}

@@ -70,24 +70,25 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 		this.startTime = System.currentTimeMillis();
 		this.castTime = System.currentTimeMillis();
 
-
-		// Flame particles burst at feet
-		ParticleEffect.FLAME.display(player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
+		boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+		if (isBlue) {
+			player.spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
+		} else {
+			ParticleEffect.FLAME.display(player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
+		}
 		player.spawnParticle(Particle.LAVA, player.getLocation().clone().add(0, 0.2, 0), 6, 0.3, 0.1, 0.3, 0);
 		player.getWorld().spawnParticle(org.bukkit.Particle.EXPLOSION, player.getLocation(), 1);
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f);
 		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 0.8f);
 
-		// Slow falling - 2.5 sekundy opadania (3.5 dla Firefly)
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
 		int ht = hasFirefly ? this.hoverTicksFirefly : this.hoverTicks;
 		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, ht, 0, false, false));
 
-		// Dash - poziome w 100% z ruchu gracza
 		Vector motion  = player.getVelocity().clone().setY(0).multiply(this.dashMultiplier);
 		Vector dash    = motion.clone();
-		dash.setY(this.dashYForce); // mocno w gore
+		dash.setY(this.dashYForce);
 		player.setVelocity(dash);
 
 		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), this.dashRange)) {
@@ -108,45 +109,25 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 		}
 
 		if (player.getInventory().getHeldItemSlot() != slot) {
-			bPlayer.addCooldown(this);
-			remove();
+			finishSkill();
 			return;
 		}
 
-		if (System.currentTimeMillis() - startTime > 10000) {
-			bPlayer.addCooldown(this);
-			remove();
+		if (System.currentTimeMillis() - castTime > 5000) {
+			finishSkill();
 			return;
-		}
-
-		if (state == 1) {
-			if (player.isOnGround() && System.currentTimeMillis() - castTime > 500) {
-				if (player.hasPotionEffect(PotionEffectType.SLOW_FALLING)) {
-					player.removePotionEffect(PotionEffectType.SLOW_FALLING);
-				}
-				bPlayer.addCooldown(this);
-				remove();
-				return;
-			}
-
-			Location feet = player.getLocation().clone().add(0, -0.4, 0);
-			Vector rightVec = player.getLocation().getDirection().crossProduct(new Vector(0, 1, 0)).normalize().multiply(0.25);
-			
-			Location rightFoot = feet.clone().add(rightVec);
-			Location leftFoot = feet.clone().subtract(rightVec);
-			
-			ParticleEffect.FLAME.display(rightFoot, 1, 0, 0, 0, 0);
-			ParticleEffect.FLAME.display(leftFoot, 1, 0, 0, 0, 0);
 		}
 	}
 
 	public void onLeftClick() {
-		if (state != 1) {
-			return;
-		}
+		onClick();
+	}
+
+	public void onClick() {
+		if (state != 1) return;
 
 		long now = System.currentTimeMillis();
-		if (now - lastPunchTime < 500) {
+		if (now - lastPunchTime < 250) {
 			return;
 		}
 
@@ -201,25 +182,26 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 			}
 		}.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
 		int maxClicks = hasFirefly ? this.maxClicksFirefly : this.maxClicks;
 
 		if (clicksUsed >= maxClicks) {
-			bPlayer.addCooldown(this);
-			remove();
+			finishSkill();
 		}
+	}
+
+	private void finishSkill() {
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
+		long cd = hasFirefly ? this.cooldownFirefly : this.cooldown;
+		bPlayer.addCooldown(this, cd);
+		remove();
 	}
 
 	@Override
 	public long getCooldown() {
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
-		boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-		if (hasFirefly) {
-			return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.CooldownFirefly", 3000L);
-		} else {
-			return AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.Cooldown", 6000L);
-		}
+		return cooldown;
 	}
 
 	@Override
@@ -239,7 +221,7 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 
 	@Override
 	public String getVersion() {
-		return "1.0";
+		return "2.0";
 	}
 
 	@Override
@@ -258,16 +240,16 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 
 	@Override
 	public void stop() {
-		super.remove();
+		remove();
 	}
 
 	@Override
 	public String getDescription() {
-		return "Initiates a flaming spin on shift, exploding at your feet and dashing you in the direction you look. While airborne, you can click LPM up to 2 times to throw spinning fire discs with gravity.";
+		return "Wystrzeliwuje ognistego dasha w powietrze z opadaniem i wystrzeliwaniem spirali ognia.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Sneak (Shift) to trigger the flaming spin dash, then left-click (LPM) while airborne to throw fire discs (max 2 charges, 1s internal cooldown).";
+		return "Przytrzymaj Shift aby wyskoczyć, a następnie klikaj LPM w powietrzu!";
 	}
 }

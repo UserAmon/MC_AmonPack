@@ -23,35 +23,57 @@ import java.util.Set;
 
 public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTriggerable {
 
+    private enum State {
+        CHARGING, EXTENDING
+    }
+
+    private State state;
     private int durationTicks = 0;
     private int maxDurationTicks = 100;
 
-    private double currentLength = 0.3; // Bardzo krótki start przy dłoni
+    private double currentLength = 0.3;
     private final double minLength = 1.0;
     private double maxLength;
     private double damage;
     private double knockback;
     private long cooldown;
+    private double sourceRange;
+    private Block sourceBlock;
 
     private Vector currentWhipDir = null;
     private Vector lastCameraDir = null;
-    private Location currentHandLoc = null; // Śledzenie lokalizacji z bezwładnością/opóźnieniem
+    private Location currentHandLoc = null;
 
     public WaterWhip(Player player) {
         super(player);
-
-        if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
-            return;
-        }
 
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Damage", 4.5);
         this.maxLength = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.MaxRange", 7.0);
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.Knockback", 0.6);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.WaterWhip.Cooldown", 5000);
         this.maxDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterWhip.DurationTicks", 100);
+        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterWhip.SourceRange", 15.0);
 
-        SpecialTriggerManager.registerActiveSpecial(player);
-        start();
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
+                return;
+            }
+            SpecialTriggerManager.registerActiveSpecial(player);
+            this.state = State.EXTENDING;
+            start();
+        } else {
+            if (bPlayer.isOnCooldown(this) || !bPlayer.canBend(this)) {
+                return;
+            }
+            Block water = WaterAbility.getWaterSourceBlock(player, sourceRange, true);
+            if (water != null) {
+                this.sourceBlock = water;
+                this.state = State.CHARGING;
+                start();
+            } else {
+                remove();
+            }
+        }
     }
 
     @Override
@@ -61,13 +83,29 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
             return;
         }
 
+        if (state == State.CHARGING) {
+            if (!player.isSneaking()) {
+                state = State.EXTENDING;
+                this.currentHandLoc = sourceBlock.getLocation().add(0.5, 1.0, 0.5);
+                player.getWorld().playSound(currentHandLoc, Sound.ITEM_TRIDENT_RIPTIDE_1, 1.0f, 1.2f);
+                return;
+            }
+
+            Location srcLoc = sourceBlock.getLocation().add(0.5, 1.0, 0.5);
+            ParticleEffect.WATER_SPLASH.display(srcLoc, 4, 0.2, 0.2, 0.2, 0.05);
+            ParticleEffect.WATER_DROP.display(srcLoc, 4, 0.2, 0.2, 0.2, 0.05);
+            return;
+        }
+
         durationTicks++;
         if (durationTicks >= maxDurationTicks) {
             finish();
             return;
         }
 
-        SpecialTriggerManager.applySoftCooldownToToolbar(player);
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            SpecialTriggerManager.applySoftCooldownToToolbar(player);
+        }
 
         Location eyeLoc = player.getEyeLocation();
         Vector targetCameraDir = eyeLoc.getDirection().clone().normalize();
@@ -75,11 +113,10 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
         if (currentWhipDir == null) {
             currentWhipDir = targetCameraDir.clone();
         } else {
-            // Zmniejszona 2-krotnie prędkość podążania za kamerą (LERP factor 0.045)
             currentWhipDir.add(targetCameraDir.clone().subtract(currentWhipDir).multiply(0.045)).normalize();
         }
 
-        // Wydłużenie rozciągania: 2 sekundy (40 ticków) na osiągnięcie pełnej długości od bardzo krótkiego przy dłoni
+        boolean isCameraMoving = durationTicks <= 40;
         if (durationTicks <= 40) {
             currentLength = Math.min(maxLength, 0.3 + (((double) durationTicks / 40.0) * (maxLength - 0.3)));
         } else if (lastCameraDir != null) {
@@ -87,8 +124,10 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
             if (Double.isNaN(angleDiff)) {
                 angleDiff = 0;
             }
+            if (angleDiff > 0.4) {
+                isCameraMoving = true;
+            }
 
-            // Spowolnione rozciąganie ruchem kamery
             if (angleDiff > 0.8) {
                 double lengthGain = angleDiff * 0.05;
                 currentLength = Math.min(maxLength, currentLength + lengthGain);
@@ -98,7 +137,6 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
         }
         lastCameraDir = targetCameraDir.clone();
 
-        // Bezwładność i spowolnienie podążania ręki/punktu startowego za ruchem gracza
         Location targetHand = getHandLocation();
         if (currentHandLoc == null) {
             currentHandLoc = targetHand.clone();
@@ -132,15 +170,17 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
                 new TempBlock(block, Material.WATER).setRevertTime(150);
             }
 
-            for (Entity entity : GeneralMethods.getEntitiesAroundPoint(segmentLoc, 1.2)) {
-                if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
-                    LivingEntity target = (LivingEntity) entity;
-                    if (!hitEntities.contains(target)) {
-                        hitEntities.add(target);
-                        DamageHandler.damageEntity(target, damage, this);
-                        target.setVelocity(currentWhipDir.clone().multiply(knockback).setY(0.2));
-                        player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
-                        ParticleEffect.WATER_SPLASH.display(target.getLocation().add(0, 1, 0), 8, 0.15, 0.15, 0.15, 0.05);
+            if (isCameraMoving) {
+                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(segmentLoc, 1.2)) {
+                    if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
+                        LivingEntity target = (LivingEntity) entity;
+                        if (!hitEntities.contains(target)) {
+                            hitEntities.add(target);
+                            DamageHandler.damageEntity(target, damage, this);
+                            target.setVelocity(currentWhipDir.clone().multiply(knockback).setY(0.2));
+                            player.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
+                            ParticleEffect.WATER_SPLASH.display(target.getLocation().add(0, 1, 0), 8, 0.15, 0.15, 0.15, 0.05);
+                        }
                     }
                 }
             }
@@ -159,7 +199,9 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
     }
 
     private void finish() {
-        SpecialTriggerManager.unregisterActiveSpecial(player);
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            SpecialTriggerManager.unregisterActiveSpecial(player);
+        }
         bPlayer.addCooldown(this);
         remove();
     }
@@ -191,7 +233,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -201,7 +243,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public boolean isSneakAbility() {
-        return false;
+        return true;
     }
 
     @Override
@@ -215,11 +257,11 @@ public class WaterWhip extends WaterAbility implements AddonAbility, SpecialTrig
 
     @Override
     public String getDescription() {
-        return "Bicz wodny podążający z opóźnieniem i bezwładnością za ruchem kamery i gracza (2s rozwijanie, falowanie góra/dół).";
+        return "Bicz wodny z obsługą trybu zwykłego (ze źródła wody) oraz trybu drzewka umiejętności (SWAP).";
     }
 
     @Override
     public String getInstructions() {
-        return "Naciśnij F (SWAP), aby aktywować wodny bicz!";
+        return "Przytrzymaj shift na wodzie i puść, lub naciśnij SWAP!";
     }
 }

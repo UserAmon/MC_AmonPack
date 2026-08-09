@@ -25,6 +25,11 @@ public class Cyclone extends AirAbility implements AddonAbility {
     private double range;
     private double speed;
     private long holdDuration;
+    private long stationaryDuration;
+    private boolean rotateVictimCamera;
+    private double maxHeight;
+    private double maxWidth;
+    private double ownerLaunchY;
 
     public Cyclone(Player player) {
         super(player);
@@ -38,6 +43,11 @@ public class Cyclone extends AirAbility implements AddonAbility {
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Cyclone.Range", 20.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Cyclone.Speed", 1.0);
         this.holdDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Cyclone.HoldDuration", 3000L);
+        this.stationaryDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Cyclone.StationaryDuration", 4000L);
+        this.rotateVictimCamera = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Air.Cyclone.RotateVictimCamera", true);
+        this.maxHeight = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Cyclone.MaxHeight", 4.0);
+        this.maxWidth = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Cyclone.MaxWidth", 2.0);
+        this.ownerLaunchY = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Cyclone.OwnerLaunchY", 0.75);
 
         bPlayer.addCooldown(this, cooldown);
         start();
@@ -59,6 +69,8 @@ public class Cyclone extends AirAbility implements AddonAbility {
             private int ticks = 0;
             private LivingEntity trappedTarget = null;
             private int trappedTicks = 0;
+            private boolean isStationary = false;
+            private int stationaryTicks = 0;
             private Random rand = new Random();
 
             @Override
@@ -68,7 +80,6 @@ public class Cyclone extends AirAbility implements AddonAbility {
                 if (trappedTarget != null) {
                     trappedTicks++;
                     if (!trappedTarget.isValid() || trappedTarget.isDead() || trappedTicks >= (holdDuration / 50)) {
-                        // Wyrzucenie celu i usunięcie cyklonu
                         Vector throwVec = new Vector((rand.nextDouble() - 0.5) * 0.8, 0.4, (rand.nextDouble() - 0.5) * 0.8);
                         trappedTarget.setVelocity(throwVec);
                         DamageHandler.damageEntity(trappedTarget, damage, Cyclone.this);
@@ -78,40 +89,51 @@ public class Cyclone extends AirAbility implements AddonAbility {
                         return;
                     }
 
-                    // Poruszanie i obracanie uwięzionego celu w powietrzu wewnątrz małego tornada
-                    Location vortexCenter = currLoc.clone().add(0, 1.5, 0);
+                    Location vortexCenter = currLoc.clone().add(0, maxHeight * 0.4, 0);
                     vortexCenter.add((rand.nextDouble() - 0.5) * 0.4, 0, (rand.nextDouble() - 0.5) * 0.4);
 
                     trappedTarget.teleport(vortexCenter);
-                    trappedTarget.setRotation(trappedTarget.getLocation().getYaw() + 25.0f, (float) (Math.sin(ticks * 0.5) * 20.0));
+                    if (rotateVictimCamera) {
+                        float newYaw = trappedTarget.getLocation().getYaw() - 5.0f;
+                        float newPitch = (float) (Math.sin(ticks * 0.5) * 15.0);
+                        trappedTarget.setRotation(newYaw, newPitch);
+                    }
                     trappedTarget.setVelocity(new Vector(0, 0.02, 0));
 
                     renderTornadoParticles(currLoc, ticks);
                     return;
                 }
 
-                traveled += speed;
-                currLoc.add(dir.clone().multiply(speed));
+                if (!isStationary) {
+                    traveled += speed;
+                    currLoc.add(dir.clone().multiply(speed));
 
-                // Śledzenie podłoża
-                org.bukkit.block.Block b = currLoc.getBlock();
-                if (b.getType().isSolid()) {
-                    currLoc.setY(currLoc.getY() + 1.0);
-                } else if (!b.getRelative(0, -1, 0).getType().isSolid() && b.getRelative(0, -2, 0).getType().isSolid()) {
-                    currLoc.setY(currLoc.getY() - 1.0);
+                    org.bukkit.block.Block b = currLoc.getBlock();
+                    if (b.getType().isSolid()) {
+                        currLoc.setY(currLoc.getY() + 1.0);
+                    } else if (!b.getRelative(0, -1, 0).getType().isSolid() && b.getRelative(0, -2, 0).getType().isSolid()) {
+                        currLoc.setY(currLoc.getY() - 1.0);
+                    }
+
+                    if (traveled >= range || currLoc.getBlock().getType().isSolid()) {
+                        isStationary = true;
+                    }
+                } else {
+                    stationaryTicks++;
+                    if (stationaryTicks >= (stationaryDuration / 50)) {
+                        remove();
+                        this.cancel();
+                        return;
+                    }
                 }
 
                 renderTornadoParticles(currLoc, ticks);
 
-                if (traveled >= range || currLoc.getBlock().getType().isSolid()) {
-                    remove();
-                    this.cancel();
-                    return;
-                }
-
-                // Sprawdzanie trafienia przeciwnika
-                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currLoc, 1.8)) {
-                    if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
+                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currLoc, maxWidth)) {
+                    if (entity.getUniqueId().equals(player.getUniqueId())) {
+                        player.setVelocity(new Vector(player.getVelocity().getX(), ownerLaunchY, player.getVelocity().getZ()));
+                        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WIND_CHARGE_WIND_BURST, 0.8f, 1.4f);
+                    } else if (entity instanceof LivingEntity && trappedTarget == null) {
                         trappedTarget = (LivingEntity) entity;
                         currLoc.getWorld().playSound(currLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 1.5f);
                         break;
@@ -122,14 +144,12 @@ public class Cyclone extends AirAbility implements AddonAbility {
     }
 
     private void renderTornadoParticles(Location baseLoc, int ticks) {
-        // Małe tornado: 3 pierścienie rosnące w górę (wysokość 3 bloki, szerokość do 1.5 bloku)
-        double[] ringHeights = {0.2, 1.2, 2.5};
-        double[] ringRadii = {0.5, 1.0, 1.5};
-
-        for (int r = 0; r < 3; r++) {
-            double height = ringHeights[r];
-            double radius = ringRadii[r];
-            int points = 8 + (r * 4);
+        int ringCount = 4;
+        for (int r = 0; r < ringCount; r++) {
+            double progressRatio = (double) r / (double) (ringCount - 1);
+            double height = progressRatio * maxHeight;
+            double radius = 0.3 + (progressRatio * (maxWidth - 0.3));
+            int points = 8 + (r * 3);
 
             for (int i = 0; i < points; i++) {
                 double angle = (ticks * 0.35) + (2 * Math.PI * i / points) + (r * 0.5);
@@ -140,7 +160,7 @@ public class Cyclone extends AirAbility implements AddonAbility {
                 ParticleEffect.CLOUD.display(pLoc, 1, 0.02, 0.02, 0.02, 0.01);
                 pLoc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.WHITE, 0.9f));
 
-                if (r == 2 && Math.random() < 0.2) {
+                if (r == ringCount - 1 && Math.random() < 0.2) {
                     ParticleEffect.SWEEP_ATTACK.display(pLoc, 1, 0, 0, 0, 0);
                 }
             }
@@ -177,7 +197,7 @@ public class Cyclone extends AirAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -201,7 +221,7 @@ public class Cyclone extends AirAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Wystrzeliwuje małe tornado (3m wysokości, 1.5m szerokości) poruszające się naprzód. Przechwytuje wroga, odrywa go od ziemi, trzyma w wirowym powietrzu i obraca w powietrzu.";
+        return "Wystrzeliwuje tornado zatrzymujące się po osiągnięciu dystansu, wybijające właściciela i przechwytujące wrogów.";
     }
 
     @Override

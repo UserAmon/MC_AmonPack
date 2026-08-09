@@ -1,9 +1,5 @@
 package Abilities.PK_Abilities.Air;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -13,7 +9,6 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.projectkorra.projectkorra.GeneralMethods;
@@ -36,6 +31,7 @@ public class GustShield extends AirAbility implements AddonAbility {
     private double speed;
     private double range;
     private double pushFactor;
+    private double damage;
 
     private Location shieldLoc;
     private Vector shieldDir;
@@ -47,6 +43,7 @@ public class GustShield extends AirAbility implements AddonAbility {
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.GustShield.Speed", 0.7);
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.GustShield.Range", 10.0);
         this.pushFactor = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.GustShield.PushFactor", 1.0);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.GustShield.Damage", 2.5);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -61,6 +58,10 @@ public class GustShield extends AirAbility implements AddonAbility {
         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 3, false, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 100, 1, false, false));
         start();
+    }
+
+    public boolean isShielding() {
+        return state == State.SHIELDING;
     }
 
     @Override
@@ -103,7 +104,7 @@ public class GustShield extends AirAbility implements AddonAbility {
                     if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                         Vector knockback = shieldDir.clone().multiply(pushFactor).setY(0.5);
                         entity.setVelocity(knockback);
-                        DamageHandler.damageEntity(entity, 2, this);
+                        DamageHandler.damageEntity(entity, damage, this);
                     }
                 }
                 if (shieldLoc.getBlock().getType().isSolid()
@@ -143,6 +144,9 @@ public class GustShield extends AirAbility implements AddonAbility {
     public void onHit() {
         if (state == State.SHIELDING) {
             state = State.LAUNCHED;
+            Location eye = player.getEyeLocation();
+            shieldDir = eye.getDirection().normalize();
+            shieldLoc = eye.clone().add(shieldDir.clone().multiply(1.5));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, false, false));
             player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1f, 2f);
             player.removePotionEffect(PotionEffectType.SLOWNESS);
@@ -182,7 +186,7 @@ public class GustShield extends AirAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -191,16 +195,16 @@ public class GustShield extends AirAbility implements AddonAbility {
 
     @Override
     public void stop() {
+        remove();
     }
 
     @Override
     public String getDescription() {
-        return "Surrounds you with a protective shield of swirling wind that blocks incoming attacks. Upon blocking instance of damage - retaliate!";
+        return "Tworzy tarczę z wiatru blokującą obrażenia. Po zablokowaniu ataku wystrzeliwuje ripostujący podmuch.";
     }
 
     @Override
     public String getInstructions() {
-        return "Tap sneak to toggle your gust shield.";
+        return "Naciśnij shift aby stworzyć tarczę z wiatru.";
     }
-
 }

@@ -1,8 +1,5 @@
 package Abilities.PK_Abilities.Water;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -19,8 +16,7 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.BloodAbility;
-import com.projectkorra.projectkorra.ability.ChiAbility;
-import com.projectkorra.projectkorra.chiblocking.util.ChiblockingManager;
+import com.projectkorra.projectkorra.util.DamageHandler;
 
 import Plugin.AmonPackPlugin;
 
@@ -44,6 +40,9 @@ public class BloodCall extends BloodAbility implements AddonAbility {
     private double completionDamage;
     private long cooldown;
     private int immobilizeDuration;
+    private long chiBlockDuration;
+    private boolean canKillUser;
+    private boolean canKillEnemy;
 
     private static final double FOLLOW_THRESHOLD = 0.97;
     private static final double ANGLE_STEP = 6.0;
@@ -53,11 +52,12 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         this.maxRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.Range", 25.0);
         this.maxDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodCall.Duration", 120);
         this.selfDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.SelfDamage", 1.0);
-        this.completionDamage = AmonPackPlugin.getAbilitiesConfig()
-                .getDouble("AmonPack.Water.BloodCall.CompletionDamage", 2.5);
+        this.completionDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodCall.CompletionDamage", 2.5);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodCall.Cooldown", 3000L);
-        this.immobilizeDuration = AmonPackPlugin.getAbilitiesConfig()
-                .getInt("AmonPack.Water.BloodCall.ImmobilizeDuration", 60);
+        this.immobilizeDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.BloodCall.ImmobilizeDuration", 60);
+        this.chiBlockDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.BloodCall.ChiBlockDuration", 4000L);
+        this.canKillUser = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Water.BloodCall.CanKillUser", false);
+        this.canKillEnemy = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Water.BloodCall.CanKillEnemy", true);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -129,15 +129,11 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
         if (!hurtAt50 && progress >= 0.5) {
             hurtAt50 = true;
-            double newHealth = Math.max(2.0, player.getHealth() - this.selfDamage);
-            player.setHealth(newHealth);
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.8f, 1.0f);
+            applySelfDamage();
         }
         if (!hurtAt75 && progress >= 0.75) {
             hurtAt75 = true;
-            double newHealth2 = Math.max(2.0, player.getHealth() - this.selfDamage);
-            player.setHealth(newHealth2);
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.8f, 1.0f);
+            applySelfDamage();
         }
 
         Vector toGuide = guide.toVector().subtract(player.getEyeLocation().toVector()).normalize();
@@ -157,6 +153,17 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         if (weaveAngle >= 360.0) {
             applyBloodLock();
             state = State.SUCCESS;
+        }
+    }
+
+    private void applySelfDamage() {
+        double minHp = canKillUser ? 0.0 : 1.0;
+        double newHealth = Math.max(minHp, player.getHealth() - this.selfDamage);
+        if (newHealth <= 0.0) {
+            DamageHandler.damageEntity(player, selfDamage, this);
+        } else {
+            player.setHealth(newHealth);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.8f, 1.0f);
         }
     }
 
@@ -235,14 +242,33 @@ public class BloodCall extends BloodAbility implements AddonAbility {
                 0,
                 new Particle.DustOptions(Color.fromRGB(160, 0, 0), 1.3f));
 
-        double targetNewHealth = Math.max(2.0, target.getHealth() - this.completionDamage);
-        target.setHealth(targetNewHealth);
-        target.addPotionEffect(
-                new PotionEffect(PotionEffectType.SLOWNESS, immobilizeDuration, 10, false, false, false));
-        target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (immobilizeDuration * 0.67), 1, false,
-                false, false));
-        target.addPotionEffect(
-                new PotionEffect(PotionEffectType.NAUSEA, (int) (immobilizeDuration * 1.33), 0, false, false, false));
+        if (canKillEnemy) {
+            DamageHandler.damageEntity(target, completionDamage, this);
+        } else {
+            double targetNewHealth = Math.max(1.0, target.getHealth() - this.completionDamage);
+            target.setHealth(targetNewHealth);
+        }
+
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, immobilizeDuration, 10, false, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, (int) (immobilizeDuration * 0.67), 1, false, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, (int) (immobilizeDuration * 1.33), 0, false, false, false));
+
+        if (target instanceof Player) {
+            Player targetPlayer = (Player) target;
+            BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(targetPlayer);
+            if (targetBPlayer != null) {
+                targetBPlayer.blockChi();
+                long chiBlockTicks = chiBlockDuration / 50L;
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (targetBPlayer.isChiBlocked()) {
+                            targetBPlayer.unblockChi();
+                        }
+                    }
+                }.runTaskLater(AmonPackPlugin.plugin, Math.max(1L, chiBlockTicks));
+            }
+        }
 
         new BukkitRunnable() {
             private int counter = 0;
@@ -290,7 +316,7 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -314,11 +340,11 @@ public class BloodCall extends BloodAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "A bloodbending ritual that binds a nearby opponent. Shift on an enemy, follow the blood particle loop, and trap them in place with bleeding dizziness.";
+        return "Spętuje krew przeciwnika, zadaje mu obrażenia, unieruchamia i blokuje jego chi.";
     }
 
     @Override
     public String getInstructions() {
-        return "Sneak while looking at an enemy to start BloodCall. Follow the moving blood particle around the victim until the ritual completes. Release sneak to cancel.";
+        return "Patrz na przeciwnika i podążaj wzrokiem za krążącym punktem krwi!";
     }
 }

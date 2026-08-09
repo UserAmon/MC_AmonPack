@@ -388,7 +388,9 @@ public class Listeners implements Listener {
     @EventHandler
     public void BlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
-        if (event.getItemInHand() != null && event.getItemInHand().getType() == Material.CHEST && event.getItemInHand().hasItemMeta() && event.getItemInHand().getItemMeta().getDisplayName().contains("Menu Umiejętności")) {
+        if (event.getItemInHand() != null && event.getItemInHand().getType() == Material.CHEST
+                && event.getItemInHand().hasItemMeta()
+                && event.getItemInHand().getItemMeta().getDisplayName().contains("Menu Umiejętności")) {
             event.setCancelled(true);
             return;
         }
@@ -500,14 +502,14 @@ public class Listeners implements Listener {
         }
 
         if (event.getEntity() instanceof Player p) {
-
             if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p,
                     Abilities.PK_Abilities.Air.GustShield.class)) {
-                Abilities.PK_Abilities.Air.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(
-                        p,
-                        Abilities.PK_Abilities.Air.GustShield.class);
-                event.setCancelled(true);
+                Abilities.PK_Abilities.Air.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility
+                        .getAbility(
+                                p,
+                                Abilities.PK_Abilities.Air.GustShield.class);
                 shield.onHit();
+                event.setCancelled(true);
             }
 
             double totalReduction = 0;
@@ -679,7 +681,8 @@ public class Listeners implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getInventory().getHolder() instanceof RPG.Dungeons.DungeonEntryGui) {
             event.setCancelled(true);
-            if (event.getCurrentItem() == null) return;
+            if (event.getCurrentItem() == null)
+                return;
             Player p = (Player) event.getWhoClicked();
             RPG.Dungeons.DungeonEntryGui gui = (RPG.Dungeons.DungeonEntryGui) event.getInventory().getHolder();
             boolean isLeftClick = event.isLeftClick();
@@ -856,7 +859,8 @@ public class Listeners implements Listener {
                         && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
                     PlayerLevelMenager.TryOpenPlayerLevel((Player) event.getWhoClicked());
                 }
-            } else if (event.getInventory().getHolder() instanceof RPG.Levels.BendingTree.Levels_Bending.DungeonSkillMenuHolder) {
+            } else if (event.getInventory()
+                    .getHolder() instanceof RPG.Levels.BendingTree.Levels_Bending.DungeonSkillMenuHolder) {
                 event.setCancelled(true);
                 if (event.getCurrentItem() != null && event.getCurrentItem().hasItemMeta()) {
                     if (event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
@@ -868,10 +872,12 @@ public class Listeners implements Listener {
                 }
             } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BindingAbilitiesMenu)) {
                 event.setCancelled(true);
-                if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta()) return;
+                if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta())
+                    return;
 
                 PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
-                String abilityName = Objects.requireNonNull(event.getClickedInventory().getItem(4).getItemMeta()).getDisplayName();
+                String abilityName = Objects.requireNonNull(event.getClickedInventory().getItem(4).getItemMeta())
+                        .getDisplayName();
                 int rawSlot = event.getRawSlot();
 
                 if (rawSlot == 0) {
@@ -881,7 +887,8 @@ public class Listeners implements Listener {
                             p.sendMessage(ChatColor.YELLOW + "Usunięto umiejętność ze slotu SWAP (F)!");
                         } else {
                             branch.setSwapAbility(abilityName);
-                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName + " do slotu SWAP (klawisz F)!");
+                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName
+                                    + " do slotu SWAP (klawisz F)!");
                         }
                     }
                     p.closeInventory();
@@ -893,7 +900,8 @@ public class Listeners implements Listener {
                             p.sendMessage(ChatColor.YELLOW + "Usunięto umiejętność ze slotu Osiągnięć (L)!");
                         } else {
                             branch.setDropAbility(abilityName);
-                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName + " do slotu Osiągnięć (klawisz L)!");
+                            p.sendMessage(ChatColor.GREEN + "Przypisano umiejętność " + abilityName
+                                    + " do slotu Osiągnięć (klawisz L)!");
                         }
                     }
                     p.closeInventory();
@@ -937,13 +945,14 @@ public class Listeners implements Listener {
                 }
 
                 Material clicked = event.getCurrentItem().getType();
-                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(p);
+                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer
+                        .getBendingPlayer(p);
 
                 if (clicked == Material.BARRIER) {
                     // Clear only paid (cost > 0) abilities via ClearAbilities.
                     // Free abilities (cost == 0) are preserved automatically.
-                    for (com.projectkorra.projectkorra.Element el : new com.projectkorra.projectkorra.Element[]{
-                            Element.AIR, Element.WATER, Element.FIRE, Element.EARTH}) {
+                    for (com.projectkorra.projectkorra.Element el : new com.projectkorra.projectkorra.Element[] {
+                            Element.AIR, Element.WATER, Element.FIRE, Element.EARTH }) {
                         RPG.Levels.BendingTree.ElementTree tree = AmonPackPlugin.levelsBending.GetElement(el);
                         if (tree != null) {
                             playersBranch.ClearAbilities(tree);
@@ -1316,7 +1325,8 @@ public class Listeners implements Listener {
      * false, false));
      * }}
      * 
-     * for (RPG.UnUsed.Menagerie.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
+     * for (RPG.UnUsed.Menagerie.Upgrades UPV:
+     * UpgradesMenager.MenagerieUpgradesList) {
      * if (upgrade.contains("SpiritOrbs_1_Dmg") && UPV.getType() ==
      * RPG.UnUsed.Menagerie.Upgrades.MenagerieUpgradeType.BUFF){
      * Random rand = new Random();
@@ -1503,7 +1513,8 @@ public class Listeners implements Listener {
      * List<String> upgrade = AmonPackPlugin.getPlayerUpgrades(p);
      * for (Menagerie mena:ListOfAllMenageries) {
      * if (mena.IsInMenagerie(event.getAbility().getPlayer().getLocation())){
-     * for (RPG.UnUsed.Menagerie.Upgrades UPV: UpgradesMenager.MenagerieUpgradesList) {
+     * for (RPG.UnUsed.Menagerie.Upgrades UPV:
+     * UpgradesMenager.MenagerieUpgradesList) {
      * if (upgrade.contains(UPV.getName()) &&
      * event.getAbility().getName().equalsIgnoreCase(UPV.getAbilityName())){
      * if (UPV.getType() ==

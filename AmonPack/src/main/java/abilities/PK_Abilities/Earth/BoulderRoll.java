@@ -66,12 +66,6 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             return;
         }
 
-        if (!player.isSneaking()) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§cTego ruchu można użyć tylko kucając!"));
-            return;
-        }
-
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.BoulderRoll.Cooldown", 8000L);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Damage", 5.0);
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Knockback", 1.2);
@@ -81,14 +75,30 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.BoulderRoll.Radius", 1.5);
         this.revertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.BoulderRoll.RevertTime", 10000L);
 
-        if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
-            return;
+        if (AmonPackPlugin.ENABLE_SKILL_TREE) {
+            if (!player.isSneaking()) {
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        TextComponent.fromLegacyText("§cTego ruchu można użyć tylko kucając!"));
+                return;
+            }
+
+            if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
+                return;
+            }
+            SpecialTriggerManager.registerActiveSpecial(player);
+        } else {
+            if (bPlayer.isOnCooldown(this) || !bPlayer.canBend(this)) {
+                return;
+            }
         }
 
         this.state = State.CHARGING;
-        SpecialTriggerManager.registerActiveSpecial(player);
         initTargetPoints();
         start();
+    }
+
+    public void onLeftClick() {
+        tryCollectPoint();
     }
 
     private void initTargetPoints() {
@@ -138,8 +148,6 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                 Location targetLoc = eyeLoc.clone().add(pointOffsets.get(i));
                 Vector toTarget = targetLoc.clone().subtract(eyeLoc).toVector().normalize();
                 double angle = Math.toDegrees(lookDir.angle(toTarget));
-
-                // Zwiększona precyzja - wymaga dokładniejszego patrzenia na punkt (kąt < 9.0°)
                 if (angle < 9.0 && angle < minAngle) {
                     minAngle = angle;
                     bestPoint = i;
@@ -240,7 +248,6 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
         distanceTraveled += speed;
         boulderLoc.add(rollDir.clone().multiply(speed));
 
-        // Sprawdzaj ukształtowanie terenu 1.5 bloku do przodu z pominięciem TempBlocków
         Location aheadLoc = boulderLoc.clone().add(rollDir.clone().multiply(1.5));
         Block aheadBlock = aheadLoc.getBlock();
         Block aheadBelow = aheadLoc.clone().subtract(0, 1, 0).getBlock();
@@ -260,9 +267,6 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             explodeAndFinish();
             return;
         }
-
-        // 1. Stwórz w środku kuli poruszającą się kulę dirtu i stone (tempbloki z czas
-        // revertTime 100ms / 50ms) w promieniu 1 od środka
         Location center = boulderLoc.clone().add(0, 0.5, 0);
         Random rand = new Random();
 
@@ -275,18 +279,16 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                         if (b.getType() == Material.AIR || isEarthbendable(player, b) || PlantAbility.isPlant(b)) {
                             Material mat = rand.nextBoolean() ? Material.DIRT : Material.STONE;
                             TempBlock tb = new TempBlock(b, mat);
-                            tb.setRevertTime(100L); // 100ms revert time dla efektu poruszającej się stałej kuli
+                            tb.setRevertTime(100L);
                         }
                     }
                 }
             }
         }
 
-        // 2. W obrębie okręgu o rozmiarze 3 (promień 1.5) rozproszone fallingblocki
-        // tworzące dynamiczny efekt toczącego się głazu
         if (tickCounter % 2 == 0) {
             for (int i = 0; i < 3; i++) {
-                double offsetX = (rand.nextDouble() - 0.5) * 3.0; // w obrębie okręgu/kuli o rozmiarze 3
+                double offsetX = (rand.nextDouble() - 0.5) * 3.0;
                 double offsetY = (rand.nextDouble() - 0.5) * 2.0 + 0.5;
                 double offsetZ = (rand.nextDouble() - 0.5) * 3.0;
                 Location spawnLoc = center.clone().add(offsetX, offsetY, offsetZ);
@@ -327,7 +329,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
 
         // Gracza przenieś 6 kratek w tył i 6 w górę za kulą + skieruj kamerę 40 stopni
         // w dół na kulę
-        Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(6.0)).add(0, 6.0, 0);
+        Location idealPlayerDest = boulderLoc.clone().subtract(rollDir.clone().multiply(10.0)).add(0, 10.0, 0);
         Location rayStart = boulderLoc.clone().add(0, 1.8, 0);
         Vector ray = idealPlayerDest.toVector().subtract(rayStart.toVector());
         double dist = ray.length();

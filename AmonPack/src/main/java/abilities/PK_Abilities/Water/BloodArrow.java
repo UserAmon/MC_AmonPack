@@ -19,8 +19,8 @@ import org.bukkit.util.Vector;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.BloodAbility;
+import com.projectkorra.projectkorra.util.DamageHandler;
 import Plugin.AmonPackPlugin;
-
 
 public class BloodArrow extends BloodAbility implements AddonAbility {
 
@@ -40,6 +40,12 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
     private boolean canTrack;
     private double trackRange;
     private double chainRange;
+    private double baseDamage;
+    private double damageMultiplier;
+    private double baseRange;
+    private double rangeMultiplier;
+    private boolean canKillUser;
+    private boolean canKillEnemy;
 
     public BloodArrow(Player player) {
         super(player);
@@ -51,6 +57,12 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
         this.canTrack = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Water.BloodArrow.CanTrack", true);
         this.trackRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.TrackRange", 5.0);
         this.chainRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.ChainRange", 7.0);
+        this.baseDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.BaseDamage", 3.0);
+        this.damageMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.DamageMultiplier", 1.5);
+        this.baseRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.BaseRange", 20.0);
+        this.rangeMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.BloodArrow.RangeMultiplier", 10.0);
+        this.canKillUser = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Water.BloodArrow.CanKillUser", false);
+        this.canKillEnemy = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Water.BloodArrow.CanKillEnemy", true);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -80,26 +92,37 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
             if (level != lastReportedLevel) {
                 lastReportedLevel = level;
                 if (level > 0) {
-                    double newHealth = Math.max(2.0, player.getHealth() - this.selfDamage);
-                    player.setHealth(newHealth);
-                    float pitch = 0.7f + (level * 0.2f);
-                    player.playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 0.8f, pitch);
-                    player.playSound(player.getLocation(), Sound.BLOCK_BONE_BLOCK_BREAK, 0.4f, pitch);
+                    double minHp = canKillUser ? 0.0 : 1.0;
+                    double newHealth = Math.max(minHp, player.getHealth() - this.selfDamage);
+                    if (newHealth <= 0.0) {
+                        DamageHandler.damageEntity(player, selfDamage, this);
+                    } else {
+                        player.setHealth(newHealth);
+                        float pitch = 0.7f + (level * 0.2f);
+                        player.playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 0.8f, pitch);
+                        player.playSound(player.getLocation(), Sound.BLOCK_BONE_BLOCK_BREAK, 0.4f, pitch);
+                    }
                 }
             }
 
-            String bar;
+            StringBuilder barBuilder = new StringBuilder();
             if (level == 0) {
-                bar = "§7[ §f░░░ §7] §7§lBLOOD WEAVE...";
-            } else if (level == 1) {
-                bar = "§c[ §4█§7░░ §c] §c§lLEVEL 1";
-            } else if (level == 2) {
-                bar = "§c[ §4██§7░ §c] §c§lLEVEL 2";
+                barBuilder.append("§7[ §f");
+                for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("░");
+                barBuilder.append(" §7] §7§lBLOOD WEAVE...");
+            } else if (level < maxChargeLevel) {
+                barBuilder.append("§c[ §4");
+                for (int k = 0; k < level; k++) barBuilder.append("█");
+                barBuilder.append("§7");
+                for (int k = 0; k < maxChargeLevel - level; k++) barBuilder.append("░");
+                barBuilder.append(" §c] §c§lLEVEL ").append(level);
             } else {
-                bar = "§4§l[ §c███ §4§l] §c§lMAX BLOOD ARROW";
+                barBuilder.append("§4§l[ §c");
+                for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("█");
+                barBuilder.append(" §4§l] §c§lMAX BLOOD ARROW");
             }
             player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText(bar));
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText(barBuilder.toString()));
 
             double radius = 0.6 + (level * 0.2);
             double angle = (System.currentTimeMillis() / 160.0) * (level + 1);
@@ -148,8 +171,8 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
         bPlayer.addCooldown(this);
         state = State.FIRING;
 
-        double damage = 3.0 + (level * 1.5);
-        double range = 20.0 + (level * 10.0);
+        double damage = baseDamage + (level * damageMultiplier);
+        double range = baseRange + (level * rangeMultiplier);
         int chains = 1 + level;
         double trackDist = trackRange + (level * 2.0);
         double chainDist = chainRange + (level * 2.0);
@@ -182,7 +205,7 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "2.0";
     }
 
     @Override
@@ -206,12 +229,12 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Collects your blood through charging and fires a homing blood arrow that chains between enemies.";
+        return "Gromadzi krew poprzez ładowanie i wystrzeliwuje naprowadzającą strzałę krwi łączącą cele.";
     }
 
     @Override
     public String getInstructions() {
-        return "Hold shift to charge BloodArrow. Release to fire. Higher charge increases range, damage, and chains.";
+        return "Przytrzymaj shift aby ładować BloodArrow. Puść aby wystrzelić!";
     }
 
     private class BloodArrowProjectile {
@@ -300,8 +323,16 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
                 }
 
                 hitEntities.add(target);
-                double newHp = Math.max(2.0, target.getHealth() - damage);
-                target.setHealth(newHp);
+
+                if (canKillEnemy) {
+                    DamageHandler.damageEntity(target, damage, ability);
+                } else {
+                    double targetNewHealth = Math.max(1.0, target.getHealth() - damage);
+                    if (targetNewHealth > 0.0) {
+                        target.setHealth(targetNewHealth);
+                    }
+                }
+
                 target.getWorld().playSound(target.getLocation(), Sound.ENTITY_BLAZE_HURT, 0.8f, 1.2f);
                 target.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getLocation().add(0, 1.0, 0), 6, 0.1, 0.5,
                         0.1, 0);

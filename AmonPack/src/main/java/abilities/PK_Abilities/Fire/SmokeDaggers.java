@@ -60,8 +60,7 @@ public class SmokeDaggers extends SmokeAbility implements AddonAbility {
 	public SmokeDaggers(Player player) {
 		super(player);
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending
-				.GetBranchByPlayerName(player.getName());
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasSteadyHand = (branch != null && branch.hasUpgrade("SteadyHand"));
 
 		if (hasSteadyHand) {

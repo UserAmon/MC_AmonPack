@@ -202,7 +202,7 @@ public class SandRupture extends SandAbility implements AddonAbility {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasEarthShater = (branch != null && branch.hasUpgrade("EarthShater"));
 
 		Material mat = targetBlock.getType();

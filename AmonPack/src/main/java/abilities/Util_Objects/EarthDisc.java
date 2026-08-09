@@ -123,7 +123,7 @@ public class EarthDisc {
                         return;
                     }
 
-                    RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+                    RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
                     boolean hasTrickshot = (branch != null && branch.hasUpgrade("Trickshot"));
                     if (hasTrickshot) {
                         damage = Math.min(damage + 0.5, baseDamage * 2.0);

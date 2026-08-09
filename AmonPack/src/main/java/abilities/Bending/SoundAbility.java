@@ -50,7 +50,7 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
     public static void HandleDamage(Player player, Entity entity, double i) {
         if (entity == null) return;
         if (player != null) {
-            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+            RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
             if (branch != null && branch.hasUpgrade("Encore")) {
                 i += 1.0;
             }
@@ -86,7 +86,7 @@ public abstract class SoundAbility extends AirAbility implements SubAbility {
                                     double decay = 0.5;
                                     Player applier = stackAppliers.get(entity);
                                     if (applier != null) {
-                                        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(applier.getName());
+                                        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(applier.getName()) : null;
                                         if (branch != null && branch.hasUpgrade("Dysonance")) {
                                             limit = 25.0;
                                             decay = 0.25;

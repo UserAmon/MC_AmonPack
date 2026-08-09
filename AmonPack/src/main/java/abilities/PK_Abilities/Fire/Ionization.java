@@ -134,7 +134,7 @@ public class Ionization extends LightningAbility implements AddonAbility {
         List<LightningBolt> bolts = new ArrayList<>();
         bolts.add(new LightningBolt(player, this, origin, direction, damage, range, bounces, true));
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         boolean hasStatic = (branch != null && branch.hasUpgrade("Static"));
 
         if (hasStatic) {

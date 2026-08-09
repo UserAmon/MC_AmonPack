@@ -64,7 +64,7 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
             return;
         }
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         boolean hasProbender = (branch != null && branch.hasUpgrade("Probender"));
         this.maxAmmo = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthDiscs.MaxAmmo", 2);
         if (hasProbender) {
