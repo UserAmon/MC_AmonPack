@@ -4,6 +4,7 @@ import Abilities.Bending.SpecialTriggerable;
 import Abilities.Bending.SpecialTriggerManager;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.IceAbility;
 import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
@@ -27,7 +28,7 @@ import org.bukkit.util.Vector;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTriggerable {
+public class Hoarfrost extends IceAbility implements AddonAbility, SpecialTriggerable {
 
     private int durationTicks = 0;
     private final int maxDurationTicks = 100;
@@ -60,7 +61,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
             return;
         }
 
-        this.damagePerSpear = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Hoarfrost.DamagePerSpear", 4.5);
+        this.damagePerSpear = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Hoarfrost.DamagePerSpear",
+                4.5);
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Hoarfrost.Knockback", 0.65);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Hoarfrost.Cooldown", 6000);
 
@@ -73,7 +75,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
     }
 
     public void tryAddStack() {
-        if (isFiring || stacks >= maxStacks) return;
+        if (isFiring || stacks >= maxStacks)
+            return;
 
         // 500ms cooldown na zebranie kolejnego stacka
         if (System.currentTimeMillis() - lastStackTime < 500L) {
@@ -97,7 +100,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
             return;
         }
 
-        if (isFiring) return;
+        if (isFiring)
+            return;
 
         durationTicks++;
         if (durationTicks >= maxDurationTicks) {
@@ -108,7 +112,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
         SpecialTriggerManager.applySoftCooldownToToolbar(player);
 
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                new TextComponent(ChatColor.AQUA + "✦ HOARFROST STACKI: " + ChatColor.WHITE + stacks + " / 3 " + ChatColor.YELLOW + "[SHIFT - Wystrzał]"));
+                new TextComponent(ChatColor.AQUA + "✦ HOARFROST STACKI: " + ChatColor.WHITE + stacks + " / 3 "
+                        + ChatColor.YELLOW + "[SHIFT - Wystrzał]"));
 
         // Orbitowanie włóczni lodu wokół gracza z duration 50ms
         displayOrbitingIceSpears();
@@ -143,7 +148,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
         Location eye = player.getEyeLocation();
         Vector baseDir = eye.getDirection().clone().normalize();
 
-        // Wystrzeliwanie długich na 3 bloki włóczni lodu (TempBlocki 100ms duration) z grawitacją
+        // Wystrzeliwanie długich na 3 bloki włóczni lodu (TempBlocki 100ms duration) z
+        // grawitacją
         for (int i = 0; i < stacks; i++) {
             double angleOffset = (i - (stacks - 1) / 2.0) * 0.35;
             Vector spreadDir = baseDir.clone().add(new Vector(angleOffset, 0.05, 0.0)).normalize().multiply(1.3);
@@ -188,7 +194,8 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
                                 hitEntities.add(target);
                                 DamageHandler.damageEntity(target, damagePerSpear, Hoarfrost.this);
                                 target.setVelocity(dir.clone().multiply(knockback).setY(0.25));
-                                target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1, false, false));
+                                target.addPotionEffect(
+                                        new PotionEffect(PotionEffectType.SLOWNESS, 40, 1, false, false));
                             }
                             explodeSpearHit(currLoc, dir);
                             this.cancel();
@@ -212,6 +219,7 @@ public class Hoarfrost extends WaterAbility implements AddonAbility, SpecialTrig
     private void pullWaterFromSource(Location sourceLoc) {
         new BukkitRunnable() {
             private Location current = sourceLoc.clone();
+
             @Override
             public void run() {
                 if (!player.isOnline() || current.distanceSquared(player.getLocation()) < 2.0) {

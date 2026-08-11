@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-public class Withering extends WaterAbility implements AddonAbility, SpecialTriggerable {
+public class Withering extends PlantAbility implements AddonAbility, SpecialTriggerable {
 
     private static class ThornSpike {
         Location startLoc;
@@ -46,21 +46,26 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
         }
 
         void displayAndHazard(Player caster, double damage, Withering ability) {
-            // Cząsteczki martwego kolca: ciemna zieleń, rosnący z kilkoma rozchodzeniami na boki
+            // Cząsteczki martwego kolca: ciemna zieleń, rosnący z kilkoma rozchodzeniami na
+            // boki
             Vector dirNorm = direction.clone().normalize();
             Vector sideVec = dirNorm.clone().crossProduct(new Vector(0, 1, 0));
-            if (sideVec.lengthSquared() < 0.01) sideVec = new Vector(1, 0, 0);
+            if (sideVec.lengthSquared() < 0.01)
+                sideVec = new Vector(1, 0, 0);
 
             for (double d = 0; d <= length; d += 0.3) {
                 Location spikePt = startLoc.clone().add(dirNorm.clone().multiply(d));
-                spikePt.getWorld().spawnParticle(Particle.DUST, spikePt, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(20, 70, 25), 1.2f));
+                spikePt.getWorld().spawnParticle(Particle.DUST, spikePt, 1, 0, 0, 0, 0,
+                        new Particle.DustOptions(Color.fromRGB(20, 70, 25), 1.2f));
 
                 // Rozchodzenie się na boki (gałązki kolca)
                 if (d > 0.6 && d < 2.0) {
                     Location branch1 = spikePt.clone().add(sideVec.clone().multiply(0.35));
                     Location branch2 = spikePt.clone().add(sideVec.clone().multiply(-0.35));
-                    branch1.getWorld().spawnParticle(Particle.DUST, branch1, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(25, 80, 30), 1.0f));
-                    branch2.getWorld().spawnParticle(Particle.DUST, branch2, 1, 0, 0, 0, 0, new Particle.DustOptions(Color.fromRGB(25, 80, 30), 1.0f));
+                    branch1.getWorld().spawnParticle(Particle.DUST, branch1, 1, 0, 0, 0, 0,
+                            new Particle.DustOptions(Color.fromRGB(25, 80, 30), 1.0f));
+                    branch2.getWorld().spawnParticle(Particle.DUST, branch2, 1, 0, 0, 0, 0,
+                            new Particle.DustOptions(Color.fromRGB(25, 80, 30), 1.0f));
                 }
             }
 
@@ -105,11 +110,13 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
         this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Withering.Radius", 8.0);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.Withering.Damage", 4.0);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Withering.Cooldown", 8000L);
-        this.revertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Withering.RevertTime", 10000L);
+        this.revertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.Withering.RevertTime",
+                10000L);
 
         Block targetBlock = player.getTargetBlockExact(18);
         if (targetBlock == null || !isPlantbendableGround(targetBlock)) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§cMusisz patrzeć na blok roślinny!"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§cMusisz patrzeć na blok roślinny!"));
             return;
         }
 
@@ -136,10 +143,12 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
     }
 
     private boolean isPlantbendableGround(Block b) {
-        if (b == null) return false;
+        if (b == null)
+            return false;
         Material m = b.getType();
         return m == Material.GRASS_BLOCK || m == Material.DIRT || m == Material.COARSE_DIRT || m == Material.PODZOL
-                || m == Material.MOSS_BLOCK || m == Material.FARMLAND || m.name().contains("LOG") || m.name().contains("WOOD")
+                || m == Material.MOSS_BLOCK || m == Material.FARMLAND || m.name().contains("LOG")
+                || m.name().contains("WOOD")
                 || WaterAbility.isPlantbendable(player, m, false) || PlantAbility.isPlant(b);
     }
 
@@ -153,13 +162,16 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
             public void run() {
                 phase1Ticks++;
                 SpecialTriggerManager.applySoftCooldownToToolbar(player);
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§8[Withering] Usychanie na bloku..."));
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        TextComponent.fromLegacyText("§8[Withering] Usychanie na bloku..."));
 
-                ParticleEffect.SMOKE_NORMAL.display(initialTargetBlock.getLocation().add(0.5, 1.0, 0.5), 3, 0.2, 0.2, 0.2, 0.02);
+                ParticleEffect.SMOKE_NORMAL.display(initialTargetBlock.getLocation().add(0.5, 1.0, 0.5), 3, 0.2, 0.2,
+                        0.2, 0.02);
                 ParticleEffect.ASH.display(initialTargetBlock.getLocation().add(0.5, 1.0, 0.5), 3, 0.2, 0.2, 0.2, 0.02);
 
                 if (phase1Ticks % 4 == 0) {
-                    initialTargetBlock.getWorld().playSound(initialTargetBlock.getLocation(), Sound.BLOCK_GRASS_BREAK, 0.8f, 0.5f);
+                    initialTargetBlock.getWorld().playSound(initialTargetBlock.getLocation(), Sound.BLOCK_GRASS_BREAK,
+                            0.8f, 0.5f);
                 }
 
                 if (phase1Ticks >= maxTicks) {
@@ -208,7 +220,8 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
                             if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
                                 LivingEntity target = (LivingEntity) entity;
                                 DamageHandler.damageEntity(target, damage / 3.0, Withering.this);
-                                target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 30, 2, false, false));
+                                target.addPotionEffect(
+                                        new PotionEffect(PotionEffectType.SLOWNESS, 30, 2, false, false));
                             }
                         }
                     }
@@ -228,13 +241,15 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
         Material m = b.getType();
         boolean isLog = m.name().contains("LOG") || m.name().contains("WOOD");
 
-        // pnie drzew mają 33% na stworzenie martwego kolca pionowo w bok (w losową stronę świata)
+        // pnie drzew mają 33% na stworzenie martwego kolca pionowo w bok (w losową
+        // stronę świata)
         if (isLog) {
             if (random.nextDouble() < 0.33) {
-                BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
+                BlockFace[] faces = { BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST };
                 BlockFace chosenFace = faces[random.nextInt(faces.length)];
                 Vector dirVec = new Vector(chosenFace.getModX(), 0, chosenFace.getModZ());
-                Location spikeStart = b.getLocation().add(0.5 + chosenFace.getModX() * 0.6, 0.5, 0.5 + chosenFace.getModZ() * 0.6);
+                Location spikeStart = b.getLocation().add(0.5 + chosenFace.getModX() * 0.6, 0.5,
+                        0.5 + chosenFace.getModZ() * 0.6);
                 activeThornSpikes.add(new ThornSpike(spikeStart, dirVec));
             }
             return;
@@ -248,10 +263,14 @@ public class Withering extends WaterAbility implements AddonAbility, SpecialTrig
         Block above = b.getRelative(0, 1, 0);
         Material abMat = above.getType();
 
-        // Sprawdzanie rodzaju kwiatów do tworzenia pionowych martwych kolców (Tall: 100%, Low: 33%)
-        boolean isTallPlant = abMat == Material.TALL_GRASS || abMat == Material.LARGE_FERN || abMat == Material.ROSE_BUSH
-                || abMat == Material.PITCHER_PLANT || abMat == Material.SUNFLOWER || abMat == Material.PEONY || abMat == Material.LILAC;
-        boolean isLowPlant = PlantAbility.isPlant(above) || abMat == Material.SHORT_GRASS || abMat == Material.FERN || abMat == Material.POPPY || abMat == Material.DANDELION;
+        // Sprawdzanie rodzaju kwiatów do tworzenia pionowych martwych kolców (Tall:
+        // 100%, Low: 33%)
+        boolean isTallPlant = abMat == Material.TALL_GRASS || abMat == Material.LARGE_FERN
+                || abMat == Material.ROSE_BUSH
+                || abMat == Material.PITCHER_PLANT || abMat == Material.SUNFLOWER || abMat == Material.PEONY
+                || abMat == Material.LILAC;
+        boolean isLowPlant = PlantAbility.isPlant(above) || abMat == Material.SHORT_GRASS || abMat == Material.FERN
+                || abMat == Material.POPPY || abMat == Material.DANDELION;
 
         if (isTallPlant || (isLowPlant && random.nextDouble() < 0.33)) {
             Location spikeStart = b.getLocation().add(0.5, 1.0, 0.5);

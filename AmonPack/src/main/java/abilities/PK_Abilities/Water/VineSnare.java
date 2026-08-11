@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class VineSnare extends WaterAbility implements AddonAbility, SpecialTriggerable {
+public class VineSnare extends PlantAbility implements AddonAbility, SpecialTriggerable {
 
     private enum State {
         PREVIEW,
@@ -65,11 +65,15 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.Cooldown", 9000L);
         this.range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Plant.VineSnare.Range", 20);
         this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Radius", 15.0);
-        this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.ChargeTime", 3000L);
+        this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.ChargeTime",
+                3000L);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.Damage", 3.0);
-        this.flowerRevertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Plant.VineSnare.FlowerRevertTime", 10000L);
-        this.projectileRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Plant.VineSnare.ProjectileRange", 15.0);
-        this.projectileCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Plant.VineSnare.ProjectileCount", 14);
+        this.flowerRevertTime = AmonPackPlugin.getAbilitiesConfig()
+                .getLong("AmonPack.Water.Plant.VineSnare.FlowerRevertTime", 10000L);
+        this.projectileRange = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Water.Plant.VineSnare.ProjectileRange", 15.0);
+        this.projectileCount = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Water.Plant.VineSnare.ProjectileCount", 14);
 
         if (bPlayer.isOnCooldown(this) || !bPlayer.canBendIgnoreBinds(this)) {
             return;
@@ -77,7 +81,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
         Block targetBlock = player.getTargetBlockExact(range);
         if (targetBlock == null || !isPlantbendableGround(targetBlock)) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§cMusisz patrzeć na ziemię roślinną!"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§cMusisz patrzeć na ziemię roślinną!"));
             return;
         }
 
@@ -89,7 +94,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
     }
 
     private boolean isPlantbendableGround(Block b) {
-        if (b == null) return false;
+        if (b == null)
+            return false;
         Material m = b.getType();
         return m == Material.GRASS_BLOCK || m == Material.DIRT || m == Material.COARSE_DIRT || m == Material.PODZOL
                 || m == Material.MOSS_BLOCK || m == Material.FARMLAND
@@ -105,10 +111,12 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
         ticksElapsed++;
 
-        // Cząsteczki BLOCK_CRACK rozproszone losowo po całym obszarze wnętrza koła (BEZ HAPPY VILLAGER)
+        // Cząsteczki BLOCK_CRACK rozproszone losowo po całym obszarze wnętrza koła (BEZ
+        // HAPPY VILLAGER)
         displayScatteredGreenParticles();
 
-        // Powolne i stopniowe terraformowanie oraz wyrastanie pojedynczych kwiatów w trakcie działania skilla
+        // Powolne i stopniowe terraformowanie oraz wyrastanie pojedynczych kwiatów w
+        // trakcie działania skilla
         if (ticksElapsed % 4 == 0) {
             terraformAndGradualFlowers();
         }
@@ -118,7 +126,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                 targetLoc.getWorld().playSound(targetLoc, Sound.BLOCK_GRASS_STEP, 0.7f, 0.8f);
             }
 
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§a[VineSnare] Pnącza się rozrastają..."));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§a[VineSnare] Pnącza się rozrastają..."));
 
             if (ticksElapsed >= (chargeTime / 50)) {
                 eruptVines();
@@ -132,7 +141,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                         double x = 0.6 * Math.cos(angle);
                         double z = 0.6 * Math.sin(angle);
                         Location pLoc = eLoc.clone().add(x, y, z);
-                        ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05, Material.JUNGLE_LEAVES.createBlockData());
+                        ParticleEffect.BLOCK_CRACK.display(pLoc, 2, 0.1, 0.1, 0.1, 0.05,
+                                Material.JUNGLE_LEAVES.createBlockData());
                     }
 
                     entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 10, false, false));
@@ -147,7 +157,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
             // Ściąganie wrogów do środka i W DÓŁ
             for (LivingEntity entity : trappedEntities) {
                 if (entity != null && !entity.isDead() && entity.isValid()) {
-                    Vector pull = targetLoc.clone().toVector().subtract(entity.getLocation().toVector()).normalize().multiply(0.65);
+                    Vector pull = targetLoc.clone().toVector().subtract(entity.getLocation().toVector()).normalize()
+                            .multiply(0.65);
                     pull.setY(-0.4);
                     entity.setVelocity(pull);
                 }
@@ -176,22 +187,27 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
     private void terraformAndGradualFlowers() {
         List<Block> area = GeneralMethods.getBlocksAroundPoint(targetLoc, (int) radius);
-        if (area.isEmpty()) return;
+        if (area.isEmpty())
+            return;
 
         Block randomGround = area.get(random.nextInt(area.size()));
         if (randomGround != null) {
             // Terraformowanie: stone -> dirt -> grass_block
-            if (randomGround.getType() == Material.STONE || randomGround.getType() == Material.COBBLESTONE || randomGround.getType() == Material.DEEPSLATE) {
+            if (randomGround.getType() == Material.STONE || randomGround.getType() == Material.COBBLESTONE
+                    || randomGround.getType() == Material.DEEPSLATE) {
                 new TempBlock(randomGround, Material.DIRT).setRevertTime(flowerRevertTime);
-            } else if (randomGround.getType() == Material.DIRT || randomGround.getType() == Material.COARSE_DIRT || randomGround.getType() == Material.PODZOL) {
+            } else if (randomGround.getType() == Material.DIRT || randomGround.getType() == Material.COARSE_DIRT
+                    || randomGround.getType() == Material.PODZOL) {
                 new TempBlock(randomGround, Material.GRASS_BLOCK).setRevertTime(flowerRevertTime);
             }
 
-            // BEZWZGLĘDNA ZASADA: Kwiaty mogą pojawić się TYLKO bezpośrednio na DIRT lub GRASS_BLOCK!
+            // BEZWZGLĘDNA ZASADA: Kwiaty mogą pojawić się TYLKO bezpośrednio na DIRT lub
+            // GRASS_BLOCK!
             if (randomGround.getType() == Material.GRASS_BLOCK || randomGround.getType() == Material.DIRT) {
                 Block above = randomGround.getRelative(0, 1, 0);
                 if (above.getY() <= centerY + 1.0 && above.getType() == Material.AIR && !TempBlock.isTempBlock(above)) {
-                    Material[] flowers = {Material.SHORT_GRASS, Material.POPPY, Material.DANDELION, Material.BLUE_ORCHID, Material.ALLIUM, Material.AZURE_BLUET};
+                    Material[] flowers = { Material.SHORT_GRASS, Material.POPPY, Material.DANDELION,
+                            Material.BLUE_ORCHID, Material.ALLIUM, Material.AZURE_BLUET };
                     Material chosen = flowers[random.nextInt(flowers.length)];
                     new TempBlock(above, chosen).setRevertTime(flowerRevertTime);
                 }
@@ -207,7 +223,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
 
         List<Vector> directions = new ArrayList<>();
 
-        // Wystrzał macki pnączy (zależny od opcji z konfigu: projectileCount i projectileRange)
+        // Wystrzał macki pnączy (zależny od opcji z konfigu: projectileCount i
+        // projectileRange)
         for (int p = 0; p < projectileCount; p++) {
             double angle = (Math.PI * 2 / projectileCount) * p;
             directions.add(new Vector(Math.cos(angle), 0.3 + (random.nextDouble() * 0.2), Math.sin(angle)).normalize());
@@ -241,7 +258,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                             LivingEntity le = (LivingEntity) entity;
                             if (!trappedEntities.contains(le)) {
                                 DamageHandler.damageEntity(le, damage, VineSnare.this);
-                                Vector pull = targetLoc.clone().toVector().subtract(le.getLocation().toVector()).normalize().multiply(0.8);
+                                Vector pull = targetLoc.clone().toVector().subtract(le.getLocation().toVector())
+                                        .normalize().multiply(0.8);
                                 pull.setY(-0.4);
                                 le.setVelocity(pull);
                                 trappedEntities.add(le);
@@ -280,7 +298,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
                 for (int i = 0; i < removeCount && !vineBlocks.isEmpty(); i++) {
                     TempBlock tb = vineBlocks.remove(vineBlocks.size() - 1);
                     if (tb != null) {
-                        ParticleEffect.BLOCK_CRACK.display(tb.getLocation(), 3, 0.1, 0.1, 0.1, 0.05, tb.getBlock().getBlockData());
+                        ParticleEffect.BLOCK_CRACK.display(tb.getLocation(), 3, 0.1, 0.1, 0.1, 0.05,
+                                tb.getBlock().getBlockData());
                         tb.revertBlock();
                     }
                 }
@@ -300,7 +319,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
             if (b.getType() == Material.GRASS_BLOCK || b.getType() == Material.DIRT) {
                 Block above = b.getRelative(0, 1, 0);
                 if (above.getY() <= centerY + 1.0 && above.getType() == Material.AIR && !TempBlock.isTempBlock(above)) {
-                    Material[] flowers = {Material.SHORT_GRASS, Material.POPPY, Material.DANDELION, Material.BLUE_ORCHID, Material.ALLIUM, Material.AZURE_BLUET, Material.FERN};
+                    Material[] flowers = { Material.SHORT_GRASS, Material.POPPY, Material.DANDELION,
+                            Material.BLUE_ORCHID, Material.ALLIUM, Material.AZURE_BLUET, Material.FERN };
                     Material chosen = flowers[random.nextInt(flowers.length)];
                     new TempBlock(above, chosen).setRevertTime(flowerRevertTime);
                 }
@@ -308,7 +328,8 @@ public class VineSnare extends WaterAbility implements AddonAbility, SpecialTrig
         }
 
         targetLoc.getWorld().playSound(targetLoc, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.2f);
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§a[VineSnare] Kwiaty zakwitły!"));
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                TextComponent.fromLegacyText("§a[VineSnare] Kwiaty zakwitły!"));
 
         cleanup();
     }

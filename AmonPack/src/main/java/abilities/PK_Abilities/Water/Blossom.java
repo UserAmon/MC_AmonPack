@@ -3,6 +3,7 @@ package Abilities.PK_Abilities.Water;
 import Plugin.AmonPackPlugin;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.PlantAbility;
 import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.ParticleEffect;
@@ -23,7 +24,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-public class Blossom extends WaterAbility implements AddonAbility {
+public class Blossom extends PlantAbility implements AddonAbility {
 
     private double damage;
     private double range;
@@ -51,7 +52,8 @@ public class Blossom extends WaterAbility implements AddonAbility {
     private void launchWave() {
         final Location origin = player.getLocation().clone();
         Vector initWaveDir = player.getLocation().getDirection().setY(0).normalize();
-        if (initWaveDir.lengthSquared() < 0.01) initWaveDir = new Vector(1, 0, 0);
+        if (initWaveDir.lengthSquared() < 0.01)
+            initWaveDir = new Vector(1, 0, 0);
         final Vector waveDir = initWaveDir;
         final Vector rightVec = waveDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
 
@@ -59,8 +61,8 @@ public class Blossom extends WaterAbility implements AddonAbility {
         player.getWorld().playSound(origin, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.2f);
 
         Material[] waveFlowers = {
-            Material.POPPY, Material.DANDELION, Material.BLUE_ORCHID,
-            Material.ALLIUM, Material.AZURE_BLUET, Material.SHORT_GRASS, Material.FERN, Material.PITCHER_PLANT
+                Material.POPPY, Material.DANDELION, Material.BLUE_ORCHID,
+                Material.ALLIUM, Material.AZURE_BLUET, Material.SHORT_GRASS, Material.FERN, Material.PITCHER_PLANT
         };
 
         new BukkitRunnable() {
@@ -88,9 +90,11 @@ public class Blossom extends WaterAbility implements AddonAbility {
                     Block wGround = getGroundBlock(waveSpot);
                     if (wGround != null) {
                         // Terraformowanie terenu: stone -> dirt, dirt -> grass_block
-                        if (wGround.getType() == Material.STONE || wGround.getType() == Material.COBBLESTONE || wGround.getType() == Material.DEEPSLATE) {
+                        if (wGround.getType() == Material.STONE || wGround.getType() == Material.COBBLESTONE
+                                || wGround.getType() == Material.DEEPSLATE) {
                             new TempBlock(wGround, Material.DIRT).setRevertTime(8000L);
-                        } else if (wGround.getType() == Material.DIRT || wGround.getType() == Material.COARSE_DIRT || wGround.getType() == Material.PODZOL) {
+                        } else if (wGround.getType() == Material.DIRT || wGround.getType() == Material.COARSE_DIRT
+                                || wGround.getType() == Material.PODZOL) {
                             new TempBlock(wGround, Material.GRASS_BLOCK).setRevertTime(8000L);
                         }
 
@@ -101,13 +105,16 @@ public class Blossom extends WaterAbility implements AddonAbility {
                         }
 
                         // Efekty cząsteczek na boki
-                        Location vineSpot = wAbove.getLocation().add(rightVec.clone().multiply(offset > 0 ? 1.5 : -1.5));
+                        Location vineSpot = wAbove.getLocation()
+                                .add(rightVec.clone().multiply(offset > 0 ? 1.5 : -1.5));
                         ParticleEffect.COMPOSTER.display(vineSpot, 3, 0.3, 0.3, 0.3, 0.05);
-                        ParticleEffect.BLOCK_CRACK.display(waveSpot, 3, 0.2, 0.2, 0.2, 0.05, Material.OAK_LEAVES.createBlockData());
+                        ParticleEffect.BLOCK_CRACK.display(waveSpot, 3, 0.2, 0.2, 0.2, 0.05,
+                                Material.OAK_LEAVES.createBlockData());
                     }
                 }
 
-                // Pozostawianie dzikich kwiatów i krzewów (WILDFLOWERS) na blokach trawy po przejściu fali
+                // Pozostawianie dzikich kwiatów i krzewów (WILDFLOWERS) na blokach trawy po
+                // przejściu fali
                 if (ground.getType() == Material.GRASS_BLOCK || ground.getType() == Material.DIRT) {
                     Block trailAbove = ground.getRelative(0, 1, 0);
                     if (trailAbove.getType() == Material.AIR && !TempBlock.isTempBlock(trailAbove)) {

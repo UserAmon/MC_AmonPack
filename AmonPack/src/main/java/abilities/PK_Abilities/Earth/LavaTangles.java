@@ -45,10 +45,10 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
             return;
         }
 
-        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.LavaTangles.Damage", 6.0);
-        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.LavaTangles.Cooldown", 8000);
-        this.maxStrikes = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.LavaTangles.MaxStrikes", 3);
-        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.LavaTangles.SourceRange", 15.0);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Lava.LavaTangles.Damage", 6.0);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Lava.LavaTangles.Cooldown", 8000);
+        this.maxStrikes = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Lava.LavaTangles.MaxStrikes", 3);
+        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Lava.LavaTangles.SourceRange", 15.0);
 
         Block target = player.getTargetBlockExact((int) sourceRange);
         if (target == null || !(target.getType() == Material.LAVA || isEarthbendable(target))) {

@@ -46,11 +46,11 @@ public class MoltenBlast extends LavaAbility implements AddonAbility {
             return;
         }
 
-        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.MoltenBlast.Damage", 8.0);
-        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.MoltenBlast.Cooldown", 6000);
-        this.maxChargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.MoltenBlast.ChargeTime", 1500);
-        this.shardsCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.MoltenBlast.ShardsCount", 6);
-        this.lavaPoolRadius = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.MoltenBlast.LavaPoolRadius", 2);
+        this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Lava.MoltenBlast.Damage", 8.0);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Lava.MoltenBlast.Cooldown", 6000);
+        this.maxChargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Lava.MoltenBlast.ChargeTime", 1500);
+        this.shardsCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Lava.MoltenBlast.ShardsCount", 6);
+        this.lavaPoolRadius = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.Lava.MoltenBlast.LavaPoolRadius", 2);
 
         this.state = State.CHARGING;
         this.chargeStartTime = System.currentTimeMillis();

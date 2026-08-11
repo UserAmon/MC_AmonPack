@@ -474,18 +474,19 @@ AmonPack:
       SourceRange: 15.0 #blocks max range to target water source
 
   Earth:
-    MoltenBlast:
-      Cooldown: 6000 #ms between ability uses
-      Damage: 8.0 #hearts dealt on direct hit
-      ChargeTime: 1500 #ms to reach full compression charge
-      ShardsCount: 6 #number of igniting shards spawned
-      LavaPoolRadius: 2 #radius of animated lava pool on impact
+    Lava:
+      MoltenBlast:
+        Cooldown: 6000 #ms between ability uses
+        Damage: 8.0 #hearts dealt on direct hit
+        ChargeTime: 1500 #ms to reach full compression charge
+        ShardsCount: 6 #number of igniting shards spawned
+        LavaPoolRadius: 2 #radius of animated lava pool on impact
 
-    LavaTangles:
-      Cooldown: 8000 #ms between ability uses
-      Damage: 6.0 #hearts dealt per strike
-      MaxStrikes: 3 #maximum strikes per activation
-      SourceRange: 15.0 #blocks max range to target lava source
+      LavaTangles:
+        Cooldown: 8000 #ms between ability uses
+        Damage: 6.0 #hearts dealt per strike
+        MaxStrikes: 3 #maximum strikes per activation
+        SourceRange: 15.0 #blocks max range to target lava source
 
   Elemental:
     Lightning:
