@@ -226,12 +226,17 @@ public class Commands implements CommandExecutor, TabCompleter {
             case "arenabuilding":
                 if (sender instanceof Player) {
                     Player player = (Player) sender;
-                    if (args.length > 0 && args[0].equalsIgnoreCase("On")) {
-                        AmonPackPlugin.BuildingOn();
-                        player.sendMessage(ChatColor.RED + "Można Budować");
+                    boolean enable = args.length > 0 && args[0].equalsIgnoreCase("On");
+                    org.bukkit.World playerWorld = player.getWorld();
+                    RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance() != null ? 
+                            RPG.Dungeons.DungeonManager.getInstance().getActiveInstance(player) : null;
+
+                    if (run != null) {
+                        run.setBuildingAllowed(enable);
+                        player.sendMessage(ChatColor.GREEN + "[Dungeons] Budowanie w lochu (" + playerWorld.getName() + ") zostało " + (enable ? "WŁĄCZONE" : "WYŁĄCZONE") + "!");
                     } else {
-                        AmonPackPlugin.BuildingOff();
-                        player.sendMessage(ChatColor.RED + "Nie Można Budować");
+                        if (enable) AmonPackPlugin.BuildingOn(); else AmonPackPlugin.BuildingOff();
+                        player.sendMessage(ChatColor.RED + "Budowanie na arenach: " + (enable ? "WŁĄCZONE" : "WYŁĄCZONE"));
                     }
                 } else {
                     sender.sendMessage("Tylko gracz może użyć tej komendy!");

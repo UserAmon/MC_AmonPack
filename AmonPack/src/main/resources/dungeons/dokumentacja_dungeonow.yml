@@ -803,3 +803,19 @@ rewards:
 #    - Wybrane ulepszenia są automatycznie przyznawane graczowi w momencie wejścia na jakikolwiek loch.
 #    - Konfiguracja ulepszeń, poziomów i slotów znajduje się w pliku `dung_build.yml`.
 #
+# =========================================================================
+# CZĘŚĆ IX: LOBBY DRUŻYNOWE I STREFY KOPANIA/BUDOWANIA W ENCOUNTERACH
+# =========================================================================
+# 1. System Matchmakingu Drużynowego (is-team: true)
+#    - is-team: true (Włącza tryb lobby drużynowego dla dungeona)
+#    - max-players: 4 (Maksymalna liczba graczy w instancji)
+#    - lobby-time: 60 (Czas odliczania lobby w sekundach)
+#    - Użycie komendy `/dungeons start <nazwa_dungeonu> <nick_gracza>` przenosi gracza do aktywnego lobby.
+#    - Podczas oczekiwania wyświetlane jest odliczanie na ekranie (Title).
+#    - Po upływie czasu lub osiągnięciu limitu graczy encounter rozpoczyna się automatycznie.
+#
+# 2. Strefy Kopania i Budowania (MINING_ZONE / BUILDING_ZONE)
+#    - Efekty `MINING_ZONE` i `BUILDING_ZONE` pozwalają graczom na kopanie/budowanie w obszarze (x1, y1, z1) do (x2, y2, z2) tak długo, jak encounter jest aktywny.
+#    - Wykopane przedmioty trafiają bezpośrednio do ekwipunku gracza (brak dropu na ziemi).
+#    - Opcja `given-tools`: Pozwala zdefiniować tymczasowe narzędzia (np. DIAMOND_PICKAXE), które są przyznawane graczowi przy wejściu do strefy i automatycznie zabierane po zakończeniu encountera.
+

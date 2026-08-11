@@ -40,6 +40,15 @@ public class DungeonInstance {
 
     private boolean isFinished = false;
     private boolean started = false;
+    private boolean buildingAllowed = false;
+
+    public boolean isBuildingAllowed() {
+        return buildingAllowed;
+    }
+
+    public void setBuildingAllowed(boolean buildingAllowed) {
+        this.buildingAllowed = buildingAllowed;
+    }
 
     private org.bukkit.boss.BossBar bossBar;
     private final Map<DungeonCondition, Integer> zoneCaptureCounters = new HashMap<>();
@@ -119,10 +128,13 @@ public class DungeonInstance {
     }
 
 
+    private final DungeonWorldManager.PreWarmedInstance preWarmedInstance;
+
     public DungeonInstance(Dungeon template, List<Player> party) {
         this.template = template;
         this.instanceId = UUID.randomUUID();
-        this.world = DungeonWorldManager.createDungeonWorld(template.getId());
+        this.preWarmedInstance = DungeonWorldManager.acquireInstance(template.getId());
+        this.world = preWarmedInstance != null ? preWarmedInstance.getWorld() : null;
 
         for (Player p : party) {
             this.players.add(p.getUniqueId());
@@ -140,14 +152,45 @@ public class DungeonInstance {
             return;
         }
 
-        broadcast(ChatColor.YELLOW + "[Dungeons] Generowanie i ładowanie terenu lochu... Proszę czekać!");
-
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && player.isOnline()) {
                 DungeonInventoryBackup.backupAndClearInventory(player, AmonPackPlugin.plugin);
             }
         }
+
+        if (preWarmedInstance != null && preWarmedInstance.getState() == DungeonWorldManager.InstanceState.READY) {
+            Vector spawn = template.getSpawnLocation();
+            Location spawnLoc = new Location(world, spawn.getX(), spawn.getY(), spawn.getZ());
+
+            for (UUID uuid : players) {
+                Player player = Bukkit.getPlayer(uuid);
+                if (player != null && player.isOnline()) {
+                    player.teleport(spawnLoc);
+                    player.setGameMode(GameMode.SURVIVAL);
+                    player.setHealth(20.0);
+                    player.setFoodLevel(20);
+
+                    DungeonPlayerStats stats = playerStatsMap.get(uuid);
+                    RPG.Dungeons.DungBuildManager.applyStartingUpgrades(player, stats, this);
+                    stats.applyStatsToPlayer(player);
+                }
+            }
+
+            for (DungeonPlatform platform : template.getPlatforms()) {
+                boolean met = checkPlatformRequirement(platform);
+                boolean shouldExist = met ^ platform.isInverted();
+                activePlatformsState.put(platform, shouldExist);
+                updatePlatformBlocksInWorld(platform, shouldExist, false);
+            }
+
+            executeActiveEncounterEffects();
+            started = true;
+            broadcast(ChatColor.GREEN + "[Dungeons] Witamy w dungeonie!");
+            return;
+        }
+
+        broadcast(ChatColor.YELLOW + "[Dungeons] Generowanie i ładowanie terenu lochu... Proszę czekać!");
 
         com.sk89q.worldedit.extent.clipboard.Clipboard clipboard = SchematicManager.readClipboard(template.getSchematicFile(), AmonPackPlugin.plugin);
         if (clipboard == null) {
@@ -217,6 +260,7 @@ public class DungeonInstance {
 
                 executeActiveEncounterEffects();
                 started = true;
+                broadcast(ChatColor.GREEN + "[Dungeons] Witamy w dungeonie!");
             });
         });
     }
@@ -2226,5 +2270,94 @@ public class DungeonInstance {
             future.complete(world.getChunkAt(cx, cz));
         });
         return future;
+    }
+
+    public boolean handleZoneBlockBreak(Player player, Block block) {
+        Encounter activeEnc = template.getEncounters().get(activeEncounterId);
+        if (activeEnc == null) return false;
+
+        for (DungeonEffect eff : activeEnc.getEffects()) {
+            if (eff.getType() == DungeonEffect.EffectType.MINING_ZONE) {
+                double minX = Math.min(eff.getX(), eff.getX2());
+                double maxX = Math.max(eff.getX(), eff.getX2());
+                double minY = Math.min(eff.getY(), eff.getY2());
+                double maxY = Math.max(eff.getY(), eff.getY2());
+                double minZ = Math.min(eff.getZ(), eff.getZ2());
+                double maxZ = Math.max(eff.getZ(), eff.getZ2());
+
+                Location loc = block.getLocation();
+                if (loc.getX() >= minX && loc.getX() <= maxX &&
+                    loc.getY() >= minY && loc.getY() <= maxY &&
+                    loc.getZ() >= minZ && loc.getZ() <= maxZ) {
+                    checkAndGiveZoneTools(player, eff);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean handleZoneBlockPlace(Player player, Block block) {
+        Encounter activeEnc = template.getEncounters().get(activeEncounterId);
+        if (activeEnc == null) return false;
+
+        for (DungeonEffect eff : activeEnc.getEffects()) {
+            if (eff.getType() == DungeonEffect.EffectType.BUILDING_ZONE) {
+                double minX = Math.min(eff.getX(), eff.getX2());
+                double maxX = Math.max(eff.getX(), eff.getX2());
+                double minY = Math.min(eff.getY(), eff.getY2());
+                double maxY = Math.max(eff.getY(), eff.getY2());
+                double minZ = Math.min(eff.getZ(), eff.getZ2());
+                double maxZ = Math.max(eff.getZ(), eff.getZ2());
+
+                Location loc = block.getLocation();
+                if (loc.getX() >= minX && loc.getX() <= maxX &&
+                    loc.getY() >= minY && loc.getY() <= maxY &&
+                    loc.getZ() >= minZ && loc.getZ() <= maxZ) {
+                    checkAndGiveZoneTools(player, eff);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void checkAndGiveZoneTools(Player player, DungeonEffect eff) {
+        if (eff.getGivenTools() == null || eff.getGivenTools().isEmpty()) return;
+        org.bukkit.NamespacedKey tKey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_temp_tool");
+
+        for (ItemStack tool : eff.getGivenTools()) {
+            if (tool == null) continue;
+            boolean hasTool = false;
+            for (ItemStack item : player.getInventory().getContents()) {
+                if (item != null && item.getType() == tool.getType()) {
+                    hasTool = true;
+                    break;
+                }
+            }
+            if (!hasTool) {
+                ItemStack given = tool.clone();
+                org.bukkit.inventory.meta.ItemMeta meta = given.getItemMeta();
+                if (meta != null) {
+                    meta.getPersistentDataContainer().set(tKey, org.bukkit.persistence.PersistentDataType.STRING, "true");
+                    given.setItemMeta(meta);
+                }
+                player.getInventory().addItem(given);
+                player.sendMessage(ChatColor.GREEN + "[Dungeons] Otrzymano narzędzie robocze: " + (meta != null && meta.hasDisplayName() ? meta.getDisplayName() : tool.getType().name()));
+            }
+        }
+    }
+
+    public void removeTemporaryTools(Player player) {
+        org.bukkit.NamespacedKey tKey = new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "dungeon_temp_tool");
+        for (int i = 0; i < player.getInventory().getSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack != null && stack.hasItemMeta()) {
+                if (stack.getItemMeta().getPersistentDataContainer().has(tKey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                    player.getInventory().setItem(i, null);
+                }
+            }
+        }
+        player.updateInventory();
     }
 }

@@ -37,7 +37,9 @@ public class DungeonEffect {
         DAMAGE,
         FORCE_FAIL,
         GIVE_ITEM,
-        SHIELD_REMOVE
+        SHIELD_REMOVE,
+        MINING_ZONE,
+        BUILDING_ZONE
     }
 
     private final EffectType type;
@@ -45,6 +47,7 @@ public class DungeonEffect {
     private String message;
 
     private double x, y, z;
+    private List<ItemStack> givenTools = new ArrayList<>();
     private List<Double> xList = new ArrayList<>();
     private List<Double> yList = new ArrayList<>();
     private List<Double> zList = new ArrayList<>();
@@ -506,6 +509,9 @@ public class DungeonEffect {
             this.z = zList.get(0);
         }
     }
+
+    public List<ItemStack> getGivenTools() { return givenTools; }
+    public void setGivenTools(List<ItemStack> givenTools) { this.givenTools = givenTools; }
 
     public Location getResolvedLocation(DungeonInstance instance) {
         return instance.getResolvedLocation(this);

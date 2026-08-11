@@ -116,6 +116,18 @@ public class AbilitiesListener implements Listener {
 						new SmokeCamouflage(player);
 					} else if (boundAbility.equalsIgnoreCase("AirSteps")) {
 						new AirSteps(player);
+					} else if (boundAbility.equalsIgnoreCase("MoltenBlast")) {
+						if (player.isSneaking() && !CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.MoltenBlast.class)) {
+							new Abilities.PK_Abilities.Earth.MoltenBlast(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("LavaTangles")) {
+						if (player.isSneaking() && !CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.LavaTangles.class)) {
+							new Abilities.PK_Abilities.Earth.LavaTangles(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("WaterTentacle")) {
+						if (player.isSneaking() && !CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class)) {
+							new Abilities.PK_Abilities.Water.WaterTentacle(player);
+						}
 					} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && boundAbility.equalsIgnoreCase("BoulderRoll")) {
 						if (!CoreAbility.hasAbility(player, BoulderRoll.class)) {
 							new BoulderRoll(player);
@@ -258,6 +270,14 @@ public class AbilitiesListener implements Listener {
 						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, SteelSwing.class).onClick();
 					} else {
 						new SteelSwing(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("LavaTangles")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.LavaTangles.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.LavaTangles.class).onClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterTentacle")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class).onClick();
 					}
 				} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWhip")) {
 					new FlameWhip(player);

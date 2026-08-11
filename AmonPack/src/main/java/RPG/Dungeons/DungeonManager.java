@@ -487,6 +487,7 @@ public class DungeonManager implements Listener {
                 e.printStackTrace();
             }
         }
+        DungeonWorldManager.initPools();
     }
 
     private DungeonEffect parseSingleEffect(Map<String, Object> map) {
@@ -2380,14 +2381,35 @@ public class DungeonManager implements Listener {
 
     @EventHandler
     public void onBlockBreak(org.bukkit.event.block.BlockBreakEvent event) {
-        if (activeInstances.containsKey(event.getBlock().getWorld())) {
+        DungeonInstance run = activeInstances.get(event.getBlock().getWorld());
+        if (run != null) {
+            if (run.isBuildingAllowed() || AmonPackPlugin.BuildingOnArenas) {
+                return;
+            }
+            if (run.handleZoneBlockBreak(event.getPlayer(), event.getBlock())) {
+                event.setDropItems(false);
+                for (ItemStack drop : event.getBlock().getDrops(event.getPlayer().getInventory().getItemInMainHand())) {
+                    java.util.Map<Integer, ItemStack> leftover = event.getPlayer().getInventory().addItem(drop);
+                    for (ItemStack rem : leftover.values()) {
+                        event.getBlock().getWorld().dropItemNaturally(event.getPlayer().getLocation(), rem);
+                    }
+                }
+                return;
+            }
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBlockPlace(org.bukkit.event.block.BlockPlaceEvent event) {
-        if (activeInstances.containsKey(event.getBlock().getWorld())) {
+        DungeonInstance run = activeInstances.get(event.getBlock().getWorld());
+        if (run != null) {
+            if (run.isBuildingAllowed() || AmonPackPlugin.BuildingOnArenas) {
+                return;
+            }
+            if (run.handleZoneBlockPlace(event.getPlayer(), event.getBlock())) {
+                return;
+            }
             event.setCancelled(true);
         }
     }

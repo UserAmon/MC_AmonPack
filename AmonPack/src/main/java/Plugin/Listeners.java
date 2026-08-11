@@ -484,6 +484,23 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof org.bukkit.entity.LightningStrike || event.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.LIGHTNING) {
+            org.bukkit.entity.Entity victim = event.getEntity();
+            org.bukkit.block.Block b = victim.getLocation().getBlock();
+            if (b.getType() == Material.WATER || b.isLiquid()) {
+                double waterLightningDmg = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Elemental.Lightning.WaterDamage", 10.0);
+                event.setDamage(waterLightningDmg);
+                for (org.bukkit.entity.Entity nearby : victim.getNearbyEntities(6.0, 6.0, 6.0)) {
+                    if (nearby instanceof org.bukkit.entity.LivingEntity le && nearby != victim) {
+                        if (nearby.getLocation().getBlock().getType() == Material.WATER || nearby.getLocation().getBlock().isLiquid()) {
+                            le.damage(waterLightningDmg);
+                            nearby.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, nearby.getLocation().add(0, 1.0, 0), 15, 0.3, 0.5, 0.3, 0.1);
+                        }
+                    }
+                }
+            }
+        }
+
         if (event.getEntity() instanceof Player victim) {
             if (event.getDamager() instanceof Player damager) {
                 if (RPG.Party.PartyManager.getInstance().shouldBlockDamage(damager, victim)) {
