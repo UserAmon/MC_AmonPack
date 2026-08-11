@@ -66,7 +66,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public FileConfiguration config;
 
 	public static boolean ENABLE_BENDING_ABILITIES = true;
-	public static boolean ENABLE_DATABASE = false;
+	public static boolean ENABLE_DATABASE = true;
 	public static boolean ENABLE_SKILL_TREE = ENABLE_DATABASE;
 	public static boolean ENABLE_DUNGEONS = ENABLE_DATABASE;
 	public static boolean ENABLE_RPG_GATHERING = ENABLE_DATABASE;
@@ -260,6 +260,7 @@ public class AmonPackPlugin extends JavaPlugin {
 				"Levels.yml",
 				"dungeons/dungeon_config.yml",
 				"dungeons/przykladowy_dungeon.yml",
+				"dungeons/lodowa_krypta.yml",
 				"dungeons/dokumentacja_dungeonow.yml"
 		};
 		for (String res : resourcesToSave) {
@@ -275,6 +276,7 @@ public class AmonPackPlugin extends JavaPlugin {
 				getLogger().warning("Nie udalo sie zapisac domyslnego zasobu: " + res + " - " + e.getMessage());
 			}
 		}
+		saveDefaultDungeonResources();
 
 		// --- 0.1 Wczytanie konfiguracji poziomów przed utworzeniem bazy SQL ---
 		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
@@ -823,6 +825,31 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 		}
 		return null;
+	}
+
+	private void saveDefaultDungeonResources() {
+		File dungeonsDir = new File(getDataFolder(), "dungeons");
+		if (!dungeonsDir.exists()) {
+			dungeonsDir.mkdirs();
+		}
+		try {
+			java.net.URL src = getFile().toURI().toURL();
+			java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(src.openStream());
+			java.util.zip.ZipEntry entry;
+			while ((entry = zip.getNextEntry()) != null) {
+				String name = entry.getName();
+				if (name.startsWith("dungeons/") && !entry.isDirectory() && (name.endsWith(".yml") || name.endsWith(".yaml"))) {
+					File target = new File(getDataFolder(), name);
+					if (!target.exists()) {
+						saveResource(name, false);
+						getLogger().info("[Dungeons] Zapisano domyślny plik lochu: " + name);
+					}
+				}
+			}
+			zip.close();
+		} catch (Exception e) {
+			getLogger().warning("Dynamiczne skanowanie folderu dungeons w JAR nie powiodło się: " + e.getMessage());
+		}
 	}
 
 }

@@ -39,6 +39,7 @@ public class DungeonInstance {
     private final Set<String> completedEncounters = new HashSet<>();
 
     private boolean isFinished = false;
+    private boolean started = false;
 
     private org.bukkit.boss.BossBar bossBar;
     private final Map<DungeonCondition, Integer> zoneCaptureCounters = new HashMap<>();
@@ -139,6 +140,8 @@ public class DungeonInstance {
             return;
         }
 
+        broadcast(ChatColor.YELLOW + "[Dungeons] Generowanie i ładowanie terenu lochu... Proszę czekać!");
+
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && player.isOnline()) {
@@ -146,45 +149,80 @@ public class DungeonInstance {
             }
         }
 
-        Vector paste = template.getPasteLocation();
-        boolean pasted = SchematicManager.pasteSchematic(world, template.getSchematicFile(), paste.getBlockX(),
-                paste.getBlockY(), paste.getBlockZ(), AmonPackPlugin.plugin);
-
-        if (!pasted) {
-            broadcast(ChatColor.RED + "[Dungeons] Blad krytyczny: Nie udalo sie wkleic schematu terenu!");
+        com.sk89q.worldedit.extent.clipboard.Clipboard clipboard = SchematicManager.readClipboard(template.getSchematicFile(), AmonPackPlugin.plugin);
+        if (clipboard == null) {
+            broadcast(ChatColor.RED + "[Dungeons] Błąd krytyczny: Plik schematic nie istnieje lub jest uszkodzony!");
             cleanup();
             return;
         }
 
-        Vector spawn = template.getSpawnLocation();
-        Location spawnLoc = new Location(world, spawn.getX(), spawn.getY(), spawn.getZ());
+        Vector paste = template.getPasteLocation();
+        int x = paste.getBlockX();
+        int y = paste.getBlockY();
+        int z = paste.getBlockZ();
 
-        for (UUID uuid : players) {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null && player.isOnline()) {
-                player.teleport(spawnLoc);
-                player.setGameMode(GameMode.SURVIVAL);
-                player.setHealth(20.0);
-                player.setFoodLevel(20);
+        com.sk89q.worldedit.math.BlockVector3 min = clipboard.getMinimumPoint();
+        com.sk89q.worldedit.math.BlockVector3 max = clipboard.getMaximumPoint();
+        com.sk89q.worldedit.math.BlockVector3 origin = clipboard.getOrigin();
 
-                DungeonPlayerStats stats = playerStatsMap.get(uuid);
-                RPG.Dungeons.DungBuildManager.applyStartingUpgrades(player, stats, this);
-                stats.applyStatsToPlayer(player);
+        int minX = x + (min.x() - origin.x());
+        int maxX = x + (max.x() - origin.x());
+        int minZ = z + (min.z() - origin.z());
+        int maxZ = z + (max.z() - origin.z());
+
+        int minChunkX = Math.min(minX, maxX) >> 4;
+        int maxChunkX = Math.max(minX, maxX) >> 4;
+        int minChunkZ = Math.min(minZ, maxZ) >> 4;
+        int maxChunkZ = Math.max(minZ, maxZ) >> 4;
+
+        List<java.util.concurrent.CompletableFuture<Chunk>> futures = new ArrayList<>();
+        for (int cx = minChunkX - 1; cx <= maxChunkX + 1; cx++) {
+            for (int cz = minChunkZ - 1; cz <= maxChunkZ + 1; cz++) {
+                futures.add(loadChunkAsync(world, cx, cz));
             }
         }
 
-        for (DungeonPlatform platform : template.getPlatforms()) {
-            boolean met = checkPlatformRequirement(platform);
-            boolean shouldExist = met ^ platform.isInverted();
-            activePlatformsState.put(platform, shouldExist);
-            updatePlatformBlocksInWorld(platform, shouldExist, false);
-        }
+        java.util.concurrent.CompletableFuture.allOf(futures.toArray(new java.util.concurrent.CompletableFuture[0])).thenRun(() -> {
+            Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+                boolean pasted = SchematicManager.pasteClipboard(world, clipboard, x, y, z);
+                if (!pasted) {
+                    broadcast(ChatColor.RED + "[Dungeons] Blad krytyczny: Nie udalo sie wkleic schematu terenu!");
+                    cleanup();
+                    return;
+                }
 
-        executeActiveEncounterEffects();
+                Vector spawn = template.getSpawnLocation();
+                Location spawnLoc = new Location(world, spawn.getX(), spawn.getY(), spawn.getZ());
+
+                for (UUID uuid : players) {
+                    Player player = Bukkit.getPlayer(uuid);
+                    if (player != null && player.isOnline()) {
+                        player.teleport(spawnLoc);
+                        player.setGameMode(GameMode.SURVIVAL);
+                        player.setHealth(20.0);
+                        player.setFoodLevel(20);
+
+                        DungeonPlayerStats stats = playerStatsMap.get(uuid);
+                        RPG.Dungeons.DungBuildManager.applyStartingUpgrades(player, stats, this);
+                        stats.applyStatsToPlayer(player);
+                    }
+                }
+
+                for (DungeonPlatform platform : template.getPlatforms()) {
+                    boolean met = checkPlatformRequirement(platform);
+                    boolean shouldExist = met ^ platform.isInverted();
+                    activePlatformsState.put(platform, shouldExist);
+                    updatePlatformBlocksInWorld(platform, shouldExist, false);
+                }
+
+                executeActiveEncounterEffects();
+                started = true;
+            });
+        });
     }
 
     public void update() {
-        if (isFinished)
+        if (!started || isFinished)
             return;
 
         for (Player p : getOnlinePlayers()) {
@@ -2171,5 +2209,22 @@ public class DungeonInstance {
                 }
             }
         }
+    }
+
+    private static java.util.concurrent.CompletableFuture<Chunk> loadChunkAsync(World world, int cx, int cz) {
+        try {
+            java.lang.reflect.Method method = world.getClass().getMethod("getChunkAtAsync", int.class, int.class);
+            Object obj = method.invoke(world, cx, cz);
+            if (obj instanceof java.util.concurrent.CompletableFuture) {
+                return (java.util.concurrent.CompletableFuture<Chunk>) obj;
+            }
+        } catch (Exception ignored) {
+        }
+
+        java.util.concurrent.CompletableFuture<Chunk> future = new java.util.concurrent.CompletableFuture<>();
+        Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+            future.complete(world.getChunkAt(cx, cz));
+        });
+        return future;
     }
 }

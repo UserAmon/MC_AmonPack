@@ -1,0 +1,91 @@
+name: "Atak Bandytów na Makapu"
+schematic: "Makapu.schem"
+paste-location:
+  x: 0
+  y: 50
+  z: 0
+spawn-location:
+  x: 0
+  y: 51
+  z: 0
+exit-location:
+  world: "world"
+  x: 0
+  y: 64
+  z: 0
+initial-encounter: "MakapuStart"
+
+items:
+  klucz_do_klatki:
+    material: "PRISMARINE_SHARD"
+    nazwa: "&6Klucz do klatki"
+    opis:
+      - "&7Uzyj aby otworzyc klatke"
+    typ: "key"
+rewards:
+  dungeon-xp: 500
+  money: 1000.0
+  commands:
+    - "give %player% diamond 67"
+  items:
+    item1:
+      material: "DIAMOND"
+      amount: 2
+      display-name: "&bDiamentowy Mroźny Kryształ"
+      lore:
+        - "&7Nagroda za ukończenie Lodowej Krypty."
+
+encounters:
+  MakapuStart:
+    description: "Komnata Wstępna - Bandyci"
+    title: "&bAtak Bandytów na Makapu &8- &fOczekiwanie na drużynę"
+    conditions:
+      - type: "ALL_PLAYERS_READY"
+    effects:
+      - type: "GIVE_READY_COMPASS"
+      - type: "SEND_MESSAGE"
+        message: "&b[Dungeon] &fStoisz przed wejściem do Makapu. Słychać w oddali okrzyki bandytów... i skowyt zwierząt."
+    next: "MakapuWave1"
+
+  MakapuWave1:
+    description: "Fala 1 - Bandyci"
+    title: "&bKomnata Mrozu &8- &fPokonaj Strażników"
+    conditions:
+      - type: "KILL_MOBS"
+        mob-name: "Bandyta"
+        amount: 4
+    effects:
+      - type: "SPAWN_MOB"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 6
+        level: 1
+        x: 10
+        y: 51
+        z: 10
+        range: 4.0
+      - type: "SEND_MESSAGE"
+        message: "&b[Dungeon] &fWrogowie wyłaniają się z lodowego cienia!"
+    next: "IceCryptBoss"
+
+  IceCryptBoss:
+    description: "Komnata Bossa - Władca Mrozu"
+    title: "&c&lLodowy Władca Ymir &8- &fStarcie Finałowe"
+    conditions:
+      - type: "KILL_MOBS"
+        mob-name: "Król Bumi"
+        amount: 1
+    effects:
+      - type: "SPAWN_MOB"
+        mob-name: "Bumi_earth_1"
+        amount: 1
+        level: 1
+        x: 0
+        y: 51
+        z: 0
+        range: 2.0
+      - type: "SEND_MESSAGE"
+        message: "&c[Dungeon] &lLodowy Władca Ymir przebudził się!"
+    oncomplete:
+      - type: "SEND_MESSAGE"
+        message: "&a[Dungeon] &fGratulacje! Lodowa Krypta została oczyszczona z mrozu!"
+      - type: "COMPLETE_DUNGEON"
