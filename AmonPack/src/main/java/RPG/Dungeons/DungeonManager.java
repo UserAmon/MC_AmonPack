@@ -240,6 +240,53 @@ public class DungeonManager implements Listener {
                                     switch (cType) {
                                         case ALL_PLAYERS_READY:
                                             cond = new DungeonCondition(DungeonCondition.ConditionType.ALL_PLAYERS_READY);
+                                            if (map.containsKey("x") && map.containsKey("y") && map.containsKey("z")) {
+                                                cond.setX(asDouble(map.get("x")));
+                                                cond.setY(asDouble(map.get("y")));
+                                                cond.setZ(asDouble(map.get("z")));
+                                                if (map.containsKey("yaw")) cond.setYaw((float) asDouble(map.get("yaw")));
+                                                if (map.containsKey("pitch")) cond.setPitch((float) asDouble(map.get("pitch")));
+                                                cond.setHasCoords(true);
+                                            }
+                                            if (map.containsKey("freeze")) {
+                                                cond.setFreezePlayers((Boolean) map.get("freeze"));
+                                            }
+                                            break;
+                                        case DYNAMIC_PATH:
+                                            cond = new DungeonCondition(DungeonCondition.ConditionType.DYNAMIC_PATH);
+                                            if (map.containsKey("min")) {
+                                                Map<String, Object> minMap = (Map<String, Object>) map.get("min");
+                                                cond.setMinX(asDouble(minMap.get("x")));
+                                                cond.setMinY(asDouble(minMap.get("y")));
+                                                cond.setMinZ(asDouble(minMap.get("z")));
+                                            } else {
+                                                cond.setMinX(asDouble(map.get("min-x")));
+                                                cond.setMinY(asDouble(map.get("min-y")));
+                                                cond.setMinZ(asDouble(map.get("min-z")));
+                                            }
+                                            if (map.containsKey("max")) {
+                                                Map<String, Object> maxMap = (Map<String, Object>) map.get("max");
+                                                cond.setMaxX(asDouble(maxMap.get("x")));
+                                                cond.setMaxY(asDouble(maxMap.get("y")));
+                                                cond.setMaxZ(asDouble(maxMap.get("z")));
+                                            } else {
+                                                cond.setMaxX(asDouble(map.get("max-x")));
+                                                cond.setMaxY(asDouble(map.get("max-y")));
+                                                cond.setMaxZ(asDouble(map.get("max-z")));
+                                            }
+                                            if (map.containsKey("reveal-x")) cond.setRevealX(asDouble(map.get("reveal-x")));
+                                            if (map.containsKey("reveal-y")) cond.setRevealY(asDouble(map.get("reveal-y")));
+                                            if (map.containsKey("reveal-z")) cond.setRevealZ(asDouble(map.get("reveal-z")));
+                                            if (map.containsKey("reveal-radius")) cond.setRevealRadius(asDouble(map.get("reveal-radius")));
+                                            if (map.containsKey("reshuffle-interval-seconds")) cond.setReshuffleIntervalSeconds(asInt(map.get("reshuffle-interval-seconds")));
+                                            if (map.containsKey("safe-block-material")) {
+                                                Material m = Material.getMaterial((String) map.get("safe-block-material"));
+                                                if (m != null) cond.setSafeBlockMaterial(m);
+                                            }
+                                            if (map.containsKey("crumble-block-material")) {
+                                                Material m = Material.getMaterial((String) map.get("crumble-block-material"));
+                                                if (m != null) cond.setCrumbleBlockMaterial(m);
+                                            }
                                             break;
                                         case PLAYER_ENTER_AREA:
                                             cond = new DungeonCondition(
@@ -265,6 +312,9 @@ public class DungeonManager implements Listener {
                                             );
                                             if (iMat == null && !itemMatStr.isEmpty()) {
                                                 cond.setCustomItemId(itemMatStr);
+                                            }
+                                            if (map.containsKey("radius")) {
+                                                cond.setRadius(asDouble(map.get("radius")));
                                             }
                                             cond.setRequiredItems(map.containsKey("required_items") ? (Boolean) map.get("required_items") : true);
                                             break;

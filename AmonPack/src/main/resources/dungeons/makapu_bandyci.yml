@@ -1,13 +1,13 @@
-name: "Atak Bandytów na Makapu"
+mname: "Atak Bandytów na Makapu"
 schematic: "Makapu.schem"
 paste-location:
   x: 0
   y: 50
   z: 0
 spawn-location:
-  x: 0
-  y: 51
-  z: 0
+  x: -0.5
+  y: 43
+  z: 27
 exit-location:
   world: "world"
   x: 0
@@ -22,6 +22,12 @@ items:
     opis:
       - "&7Uzyj aby otworzyc klatke"
     typ: "key"
+  klucz_do_klatki_rzucalny:
+    material: "IRON_CHAIN"
+    nazwa: "&6Klucz do Bramy &2&lMakapu"
+    opis:
+      - "&7Rzuc tym kluczem w punkt (1, 54, -6) aby otworzyc brame"
+    typ: "throwable"
 rewards:
   dungeon-xp: 500
   money: 1000.0
@@ -40,34 +46,228 @@ encounters:
     description: "Komnata Wstępna - Bandyci"
     title: "&bAtak Bandytów na Makapu &8- &fOczekiwanie na drużynę"
     conditions:
-      - type: "ALL_PLAYERS_READY"
+      - type: ALL_PLAYERS_READY
+        x: -0.8
+        y: 43
+        z: 25.5
+        yaw: -175
+        pitch: -20
+        freeze: true
     effects:
       - type: "GIVE_READY_COMPASS"
       - type: "SEND_MESSAGE"
         message: "&b[Dungeon] &fStoisz przed wejściem do Makapu. Słychać w oddali okrzyki bandytów... i skowyt zwierząt."
-    next: "MakapuWave1"
+    next: "MakapuStart_Opening"
 
-  MakapuWave1:
+  MakapuStart_Opening:
     description: "Fala 1 - Bandyci"
     title: "&bKomnata Mrozu &8- &fPokonaj Strażników"
     conditions:
-      - type: "KILL_MOBS"
+      - type: "DROP_ON_DEATH"
         mob-name: "Bandyta"
+        item: "klucz_do_klatki_rzucalny"
+        chance: 100.0
+      - type: "THROW_AT"
+        x: 1
+        y: 54
+        z: -6
+        radius: 5
+        item: "klucz_do_klatki_rzucalny"
         amount: 4
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &fBrama została otwarta!"
+          - type: "OPEN_DOOR"
+            x1: -4
+            y1: 58
+            z1: -7
+            x2: 6
+            y2: 50
+            z2: -7
     effects:
+      - type: "SPAWN_MOB"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 4
+        level: 1
+        x: 0
+        y: 50
+        z: 0
+        range: 4.0
+      - type: "SEND_MESSAGE"
+        message: "&b[Dungeon] &fWrogowie wyłaniają się z bramy!"
+    next: "random"
+    pool:
+      - "ENC_1_1"
+      - "ENC_1_2"
+      - "ENC_1_3"
+    req_clears: 2
+    enc_after_clears: "Makapu_Boss_1"
+####DOM 1 - ZONE PLUS MOBY
+  ENC_1_1:
+    title: "&cOdnajdź i uwolnij uwięzionego KonioStrusia!"
+    max_mobs: 5
+    conditions:
+      - type: "ZONE"
+        x: 65
+        y: 58
+        z: -26
+        radius: 4
+        time: 20
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6Klatka została otwarta!"
+          - type: "OPEN_DOOR"
+            x1: 68
+            y1: 63
+            z1: -29
+            x2: 68
+            y2: 58
+            z2: -25
+    effects:
+      - type: "SEND_MESSAGE"
+        message: "&e[Dungeon] &6W jednym z domów zaszyli się bandyci. Zamknieli w nim KonioStrusia, przejmij ich posterunek i uwolnij zwierze!"
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 2
+        level: 1
+        x: 51
+        y: 58
+        z: -26
+        range: 3
+        interval: 10
+      - type: "OPEN_DOOR"
+        x1: 49
+        y1: 62
+        z1: -34
+        x2: 46
+        y2: 57
+        z2: -34
+####DOM 2 - ŚCIEŻKA, MOBY i KLUCZ
+  ENC_1_2:
+    title: "&cOdnajdź i uwolnij uwięzionego &a&lKonioStrusia!"
+    conditions:
+      - type: "DROP_ON_DEATH"
+        mob-name: "Bandyta"
+        item: "klucz_do_klatki"
+        chance: 100.0
+      - type: DYNAMIC_PATH
+        min-x: 91
+        min-y: 48
+        min-z: -17
+        max-x: 83
+        max-y: 48
+        max-z: -33
+        reveal-x: 89
+        reveal-y: 51
+        reveal-z: -13
+        reveal-radius: 2
+        safe-block-material: CRACKED_DEEPSLATE_BRICKS
+        crumble-block-material: CRACKED_DEEPSLATE_BRICKS
+      - type: "INTERACT_BLOCK_WITH_ITEM"
+        x: 87
+        y: 49
+        z: -31
+        block-material: "IRON_CHAIN"
+        radius: 5
+        item-material: "klucz_do_klatki"
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6Klatka została otwarta!"
+          - type: "OPEN_DOOR"
+            x1: 84
+            y1: 52
+            z1: -34
+            x2: 90
+            y2: 49
+            z2: -34
+    effects:
+      - type: "SEND_MESSAGE"
+        message: "&e[Dungeon] &6W jednym z domów zaszyli się bandyci. Zamknieli w nim &2&lShirshu&e, przejmij ich posterunek i uwolnij zwierze!"
+      - type: "SPAWN_MOB"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 4
+        level: 1
+        x: 87
+        y: 59
+        z: -19
+        range: 2.0
       - type: "SPAWN_MOB"
         mob-name: "Bandyta_nonbender_1"
         amount: 6
         level: 1
-        x: 10
-        y: 51
-        z: 10
-        range: 4.0
+        x: 87
+        y: 38
+        z: -24
+        range: 3.0
+      - type: "OPEN_DOOR"
+        x1: 87
+        y1: 59
+        z1: -31
+        x2: 87
+        y2: 60
+        z2: -31
+####DOM 3 - PARKOUR I MOBY
+  ENC_1_3:
+    title: "&cOdnajdź i uwolnij uwięzionego &3&lKretoBorsuka!"
+    max_mobs: 6
+    conditions:
+      - type: "COLLECT_POINTS"
+        radius: 2.0
+        time: 120
+        points:
+          - "107,61,-8"
+          - "107,68,-19"
+          - "113,60,-16.5"
+          - "128,62,-13.5"
+          - "136,60,-8"
+          - "121,67,-25"
+          - "144,66,-12"
+          - "148,76,-22"
+          - "133,77,-28"
+        fail-effects:
+          - type: "DAMAGE"
+            amount: 2
+          - type: "KNOCKBACK"
+            x: 0.1
+            y: 0.6
+            z: 0.1
+          - type: "SEND_MESSAGE"
+            message: "&c&lCzas minął, punkty zostały zresetowane!"
+        success-effects:
+          - type: "SEND_MESSAGE"
+            message: "&aDoskonale! Wszystkie punkty cieni zostały zebrane na czas!"
+    effects:
       - type: "SEND_MESSAGE"
-        message: "&b[Dungeon] &fWrogowie wyłaniają się z lodowego cienia!"
-    next: "IceCryptBoss"
+        message: "&e[Dungeon] &6W jednym z domów zaszyli się bandyci. Zamknieli w nim KonioStrusia, przejmij ich posterunek i uwolnij zwierze!"
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 3
+        level: 1
+        x: 107
+        y: 60
+        z: -16
+        range: 3
+        interval: 20
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 3
+        level: 1
+        x: 134
+        y: 60
+        z: -13
+        range: 3
+        interval: 20
+      - type: "OPEN_DOOR"
+        x1: 49
+        y1: 62
+        z1: -34
+        x2: 46
+        y2: 57
+        z2: -34
 
-  IceCryptBoss:
+
+
+  Makapu_Boss_1:
     description: "Komnata Bossa - Władca Mrozu"
     title: "&c&lLodowy Władca Ymir &8- &fStarcie Finałowe"
     conditions:
@@ -75,17 +275,19 @@ encounters:
         mob-name: "Król Bumi"
         amount: 1
     effects:
+      - type: "TELEPORT_PLAYERS"
+        x: 104
+        y: 64
+        z: -100
       - type: "SPAWN_MOB"
         mob-name: "Bumi_earth_1"
         amount: 1
         level: 1
-        x: 0
-        y: 51
-        z: 0
-        range: 2.0
+        x: 95
+        y: 66
+        z: -142
+        range: 1
       - type: "SEND_MESSAGE"
-        message: "&c[Dungeon] &lLodowy Władca Ymir przebudził się!"
+        message: "&c&l[Dungeon] &2&lBumi&cpowraca by chronić swoje ziemie! &4A wy wyglądacie mu na bandytów..."
     oncomplete:
-      - type: "SEND_MESSAGE"
-        message: "&a[Dungeon] &fGratulacje! Lodowa Krypta została oczyszczona z mrozu!"
       - type: "COMPLETE_DUNGEON"

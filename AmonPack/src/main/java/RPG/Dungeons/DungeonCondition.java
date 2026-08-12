@@ -3,6 +3,7 @@ package RPG.Dungeons;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
@@ -22,12 +23,26 @@ public class DungeonCondition {
         PERIODIC_CHECK,
         LOOKING_AT,
         ALIVE,
-        COLLECT_POINTS
+        COLLECT_POINTS,
+        DYNAMIC_PATH
     }
 
     private final ConditionType type;
     
     private double x, y, z;
+    private float yaw = 0.0f;
+    private float pitch = 0.0f;
+    private boolean hasCoords = false;
+    private boolean freezePlayers = true;
+
+    private double minX, minY, minZ;
+    private double maxX, maxY, maxZ;
+    private double revealX, revealY, revealZ;
+    private double revealRadius;
+    private int reshuffleIntervalSeconds = 0;
+    private Material safeBlockMaterial = Material.STONE;
+    private Material crumbleBlockMaterial = Material.CRACKED_STONE_BRICKS;
+
     private List<Double> xList = new ArrayList<>();
     private List<Double> yList = new ArrayList<>();
     private List<Double> zList = new ArrayList<>();
@@ -184,6 +199,19 @@ public class DungeonCondition {
             case DROP_ON_DEATH:
                 return true;
 
+            case DYNAMIC_PATH:
+                int maxZBound = (int) Math.max(minZ, maxZ);
+                int maxXBound = (int) Math.max(minX, maxX);
+                for (Player p : instance.getOnlinePlayers()) {
+                    if (!instance.isPlayerSpectator(p)) {
+                        Block b = p.getLocation().getBlock();
+                        if (b.getZ() >= maxZBound || b.getX() >= maxXBound) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+
             case PERIODIC_CHECK:
                 return true;
 
@@ -234,7 +262,8 @@ public class DungeonCondition {
         if (type != ConditionType.INTERACT_BLOCK_WITH_ITEM) return false;
 
         Location targetLoc = getResolvedLocation(instance);
-        if (blockLoc.distanceSquared(targetLoc) > 1.5) return false;
+        double maxDistSq = (radius > 0.0) ? (radius * radius) : 1.5;
+        if (blockLoc.distanceSquared(targetLoc) > maxDistSq) return false;
 
         if (blockMaterial != null && clickedBlock != blockMaterial) return false;
 
@@ -468,6 +497,57 @@ public class DungeonCondition {
     public boolean isRequiredAllPlayers() {
         return requiredAllPlayers;
     }
+
+    public float getYaw() { return yaw; }
+    public void setYaw(float yaw) { this.yaw = yaw; }
+
+    public float getPitch() { return pitch; }
+    public void setPitch(float pitch) { this.pitch = pitch; }
+
+    public boolean hasCoords() { return hasCoords; }
+    public void setHasCoords(boolean hasCoords) { this.hasCoords = hasCoords; }
+
+    public boolean isFreezePlayers() { return freezePlayers; }
+    public void setFreezePlayers(boolean freezePlayers) { this.freezePlayers = freezePlayers; }
+
+    public double getMinX() { return minX; }
+    public void setMinX(double minX) { this.minX = minX; }
+
+    public double getMinY() { return minY; }
+    public void setMinY(double minY) { this.minY = minY; }
+
+    public double getMinZ() { return minZ; }
+    public void setMinZ(double minZ) { this.minZ = minZ; }
+
+    public double getMaxX() { return maxX; }
+    public void setMaxX(double maxX) { this.maxX = maxX; }
+
+    public double getMaxY() { return maxY; }
+    public void setMaxY(double maxY) { this.maxY = maxY; }
+
+    public double getMaxZ() { return maxZ; }
+    public void setMaxZ(double maxZ) { this.maxZ = maxZ; }
+
+    public double getRevealX() { return revealX; }
+    public void setRevealX(double revealX) { this.revealX = revealX; }
+
+    public double getRevealY() { return revealY; }
+    public void setRevealY(double revealY) { this.revealY = revealY; }
+
+    public double getRevealZ() { return revealZ; }
+    public void setRevealZ(double revealZ) { this.revealZ = revealZ; }
+
+    public double getRevealRadius() { return revealRadius; }
+    public void setRevealRadius(double revealRadius) { this.revealRadius = revealRadius; }
+
+    public int getReshuffleIntervalSeconds() { return reshuffleIntervalSeconds; }
+    public void setReshuffleIntervalSeconds(int reshuffleIntervalSeconds) { this.reshuffleIntervalSeconds = reshuffleIntervalSeconds; }
+
+    public Material getSafeBlockMaterial() { return safeBlockMaterial; }
+    public void setSafeBlockMaterial(Material safeBlockMaterial) { this.safeBlockMaterial = safeBlockMaterial; }
+
+    public Material getCrumbleBlockMaterial() { return crumbleBlockMaterial; }
+    public void setCrumbleBlockMaterial(Material crumbleBlockMaterial) { this.crumbleBlockMaterial = crumbleBlockMaterial; }
 
     public void setRequiredAllPlayers(boolean requiredAllPlayers) {
         this.requiredAllPlayers = requiredAllPlayers;

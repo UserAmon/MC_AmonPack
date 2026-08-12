@@ -1,5 +1,6 @@
 package RPG.Dungeons;
 
+import com.projectkorra.projectkorra.util.TempBlock;
 import RPG.Levels.Objects.LevelSkill;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
@@ -160,8 +161,7 @@ public class DungeonInstance {
         }
 
         if (preWarmedInstance != null && preWarmedInstance.getState() == DungeonWorldManager.InstanceState.READY) {
-            Vector spawn = template.getSpawnLocation();
-            Location spawnLoc = new Location(world, spawn.getX(), spawn.getY(), spawn.getZ());
+            Location spawnLoc = getEffectiveSpawnLocation();
 
             for (UUID uuid : players) {
                 Player player = Bukkit.getPlayer(uuid);
@@ -234,8 +234,7 @@ public class DungeonInstance {
                     return;
                 }
 
-                Vector spawn = template.getSpawnLocation();
-                Location spawnLoc = new Location(world, spawn.getX(), spawn.getY(), spawn.getZ());
+                Location spawnLoc = getEffectiveSpawnLocation();
 
                 for (UUID uuid : players) {
                     Player player = Bukkit.getPlayer(uuid);
@@ -575,6 +574,9 @@ public class DungeonInstance {
             }
 
             for (DungeonCondition condition : encounter.getConditions()) {
+                if (condition.getType() == DungeonCondition.ConditionType.DYNAMIC_PATH) {
+                    tickDynamicPath(condition);
+                }
                 if (condition.getType() == DungeonCondition.ConditionType.LOOKING_AT || condition.getType() == DungeonCondition.ConditionType.THROW_AT) {
                     Location circleLoc = getResolvedLocation(condition);
                     double cx = circleLoc.getX();
@@ -2359,5 +2361,169 @@ public class DungeonInstance {
             }
         }
         player.updateInventory();
+    }
+
+    private final Map<DungeonCondition, Set<Location>> dynamicPathSafeBlocks = new HashMap<>();
+    private final Map<DungeonCondition, Integer> dynamicPathReshuffleTimers = new HashMap<>();
+    private final Map<DungeonCondition, Set<UUID>> dynamicPathRevealedPlayers = new HashMap<>();
+
+    public Location getEffectiveSpawnLocation() {
+        Encounter active = getActiveEncounter();
+        if (active != null) {
+            for (DungeonCondition cond : active.getConditions()) {
+                if (cond.getType() == DungeonCondition.ConditionType.ALL_PLAYERS_READY && cond.hasCoords()) {
+                    return new Location(world, cond.getX(), cond.getY(), cond.getZ(), cond.getYaw(), cond.getPitch());
+                }
+            }
+        }
+        Vector spawn = template.getSpawnLocation();
+        return new Location(world, spawn.getX(), spawn.getY(), spawn.getZ());
+    }
+
+    private void tickDynamicPath(DungeonCondition cond) {
+        if (world == null) return;
+
+        Set<Location> safeBlocks = dynamicPathSafeBlocks.get(cond);
+        if (safeBlocks == null) {
+            safeBlocks = generateDynamicPath(cond, Collections.emptySet());
+            dynamicPathSafeBlocks.put(cond, safeBlocks);
+        }
+
+        if (cond.getReshuffleIntervalSeconds() > 0) {
+            int timer = dynamicPathReshuffleTimers.getOrDefault(cond, 0) + 1;
+            if (timer >= cond.getReshuffleIntervalSeconds() * 20) {
+                timer = 0;
+                Set<Location> mandatoryPlayerBlocks = new HashSet<>();
+                for (Player p : getOnlinePlayers()) {
+                    if (!isPlayerSpectator(p)) {
+                        Block bUnder = p.getLocation().getBlock();
+                        if (!isInsideBox(bUnder, cond)) {
+                            bUnder = p.getLocation().clone().subtract(0, 0.5, 0).getBlock();
+                        }
+                        if (isInsideBox(bUnder, cond)) {
+                            mandatoryPlayerBlocks.add(bUnder.getLocation());
+                        }
+                    }
+                }
+                safeBlocks = generateDynamicPath(cond, mandatoryPlayerBlocks);
+                dynamicPathSafeBlocks.put(cond, safeBlocks);
+            }
+            dynamicPathReshuffleTimers.put(cond, timer);
+        }
+
+        for (Player p : getOnlinePlayers()) {
+            if (!isPlayerSpectator(p)) {
+                Block blockUnder = p.getLocation().getBlock();
+                if (!isInsideBox(blockUnder, cond)) {
+                    blockUnder = p.getLocation().clone().subtract(0, 0.5, 0).getBlock();
+                }
+
+                if (isInsideBox(blockUnder, cond)) {
+                    if (!safeBlocks.contains(blockUnder.getLocation())) {
+                        if (blockUnder.getType() != Material.AIR && !TempBlock.isTempBlock(blockUnder)) {
+                            new TempBlock(blockUnder, Material.AIR.createBlockData(), 3000);
+                            blockUnder.getWorld().spawnParticle(Particle.BLOCK, blockUnder.getLocation().add(0.5, 0.5, 0.5), 15, 0.3, 0.3, 0.3, 0.1, cond.getCrumbleBlockMaterial().createBlockData());
+                            blockUnder.getWorld().playSound(blockUnder.getLocation(), Sound.BLOCK_STONE_BREAK, 1.0f, 0.8f);
+                        }
+                        p.setVelocity(new Vector(0, -1.8, 0));
+                    }
+                }
+            }
+        }
+
+        if (cond.getRevealRadius() > 0) {
+            Location revealCenter = new Location(world, cond.getRevealX(), cond.getRevealY(), cond.getRevealZ());
+            double radSq = cond.getRevealRadius() * cond.getRevealRadius();
+            Set<UUID> revealed = dynamicPathRevealedPlayers.computeIfAbsent(cond, k -> new HashSet<>());
+
+            for (Player p : getOnlinePlayers()) {
+                if (!isPlayerSpectator(p)) {
+                    boolean inRange = p.getLocation().distanceSquared(revealCenter) <= radSq;
+                    if (inRange) {
+                        for (Location sLoc : safeBlocks) {
+                            p.sendBlockChange(sLoc, Material.GLOWSTONE.createBlockData());
+                        }
+                        revealed.add(p.getUniqueId());
+                    } else if (revealed.contains(p.getUniqueId())) {
+                        for (Location sLoc : safeBlocks) {
+                            p.sendBlockChange(sLoc, sLoc.getBlock().getBlockData());
+                        }
+                        revealed.remove(p.getUniqueId());
+                    }
+                }
+            }
+        }
+    }
+
+    private Set<Location> generateDynamicPath(DungeonCondition cond, Set<Location> mandatoryBlocks) {
+        Set<Location> pathLocations = new HashSet<>();
+
+        int minX = (int) Math.min(cond.getMinX(), cond.getMaxX());
+        int maxX = (int) Math.max(cond.getMinX(), cond.getMaxX());
+        int minY = (int) Math.min(cond.getMinY(), cond.getMaxY());
+        int maxY = (int) Math.max(cond.getMinY(), cond.getMaxY());
+        int minZ = (int) Math.min(cond.getMinZ(), cond.getMaxZ());
+        int maxZ = (int) Math.max(cond.getMinZ(), cond.getMaxZ());
+
+        int y = minY;
+        Random rand = new Random();
+
+        int spanZ = maxZ - minZ;
+        int spanX = maxX - minX;
+
+        if (spanZ >= spanX) {
+            int curX = minX + (spanX > 0 ? rand.nextInt(spanX + 1) : 0);
+            for (int z = minZ; z <= maxZ; z++) {
+                pathLocations.add(new Location(world, curX, y, z));
+                if (rand.nextBoolean() && spanX > 0) {
+                    int shift = rand.nextBoolean() ? 1 : -1;
+                    curX = Math.max(minX, Math.min(maxX, curX + shift));
+                    pathLocations.add(new Location(world, curX, y, z));
+                }
+            }
+        } else {
+            int curZ = minZ + (spanZ > 0 ? rand.nextInt(spanZ + 1) : 0);
+            for (int x = minX; x <= maxX; x++) {
+                pathLocations.add(new Location(world, x, y, curZ));
+                if (rand.nextBoolean() && spanZ > 0) {
+                    int shift = rand.nextBoolean() ? 1 : -1;
+                    curZ = Math.max(minZ, Math.min(maxZ, curZ + shift));
+                    pathLocations.add(new Location(world, x, y, curZ));
+                }
+            }
+        }
+
+        for (Location mLoc : mandatoryBlocks) {
+            pathLocations.add(mLoc.getBlock().getLocation());
+        }
+
+        for (int bx = minX; bx <= maxX; bx++) {
+            for (int by = minY; by <= maxY; by++) {
+                for (int bz = minZ; bz <= maxZ; bz++) {
+                    Block b = world.getBlockAt(bx, by, bz);
+                    if (pathLocations.contains(b.getLocation())) {
+                        b.setType(cond.getSafeBlockMaterial());
+                    } else {
+                        b.setType(cond.getCrumbleBlockMaterial());
+                    }
+                }
+            }
+        }
+
+        return pathLocations;
+    }
+
+    private boolean isInsideBox(Block b, DungeonCondition cond) {
+        if (b == null) return false;
+        int x = b.getX();
+        int y = b.getY();
+        int z = b.getZ();
+        int minX = (int) Math.min(cond.getMinX(), cond.getMaxX());
+        int maxX = (int) Math.max(cond.getMinX(), cond.getMaxX());
+        int minY = (int) Math.min(cond.getMinY(), cond.getMaxY());
+        int maxY = (int) Math.max(cond.getMinY(), cond.getMaxY());
+        int minZ = (int) Math.min(cond.getMinZ(), cond.getMaxZ());
+        int maxZ = (int) Math.max(cond.getMinZ(), cond.getMaxZ());
+        return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
     }
 }

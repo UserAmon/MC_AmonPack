@@ -219,12 +219,13 @@ rewards:
 #
 # 4. INTERACT_BLOCK_WITH_ITEM
 #    Zaliczane przy kliknięciu PPM na określony blok za pomocą przedmiotu z rejestru.
-#    Parametry: x, y, z (Double), block-material (Material), item-material (ID przedmiotu z rejestru lub materiał Spigot), required_items (Opcjonalne, domyślnie true. Jeśli false, warunek zaliczy się przy samym kliknięciu, bez potrzeby posiadania/trzymania przedmiotu, Boolean)
+#    Parametry: x, y, z (Double), radius (Opcjonalny promień w blokach od centrum, Double), block-material (Material), item-material (ID przedmiotu z rejestru lub materiał Spigot), required_items (Opcjonalne, domyślnie true. Jeśli false, warunek zaliczy się przy samym kliknięciu, bez potrzeby posiadania/trzymania przedmiotu, Boolean)
 #    Przykład:
 #      - type: "INTERACT_BLOCK_WITH_ITEM"
 #        x: 5.0
 #        y: 62.0
 #        z: 10.0
+#        radius: 3.5
 #        block-material: "IRON_DOOR"
 #        item-material: "cien_klucz"
 #        required_items: false
@@ -804,18 +805,46 @@ rewards:
 #    - Konfiguracja ulepszeń, poziomów i slotów znajduje się w pliku `dung_build.yml`.
 #
 # =========================================================================
-# CZĘŚĆ IX: LOBBY DRUŻYNOWE I STREFY KOPANIA/BUDOWANIA W ENCOUNTERACH
+# CZĘŚĆ X: KORDY ZAMROŻENIA ALL_PLAYERS_READY ORAZ WARUNEK DYNAMIC_PATH (LABIRYNT ŚCIEŻKI)
 # =========================================================================
-# 1. System Matchmakingu Drużynowego (is-team: true)
-#    - is-team: true (Włącza tryb lobby drużynowego dla dungeona)
-#    - max-players: 4 (Maksymalna liczba graczy w instancji)
-#    - lobby-time: 60 (Czas odliczania lobby w sekundach)
-#    - Użycie komendy `/dungeons start <nazwa_dungeonu> <nick_gracza>` przenosi gracza do aktywnego lobby.
-#    - Podczas oczekiwania wyświetlane jest odliczanie na ekranie (Title).
-#    - Po upływie czasu lub osiągnięciu limitu graczy encounter rozpoczyna się automatycznie.
+# 1. Kordy i Zamrożenie w Warunku ALL_PLAYERS_READY
+#    Warunek `ALL_PLAYERS_READY` umożliwia zdefiniowanie dokładnych kordów spawn/oczekiwania oraz zamrożenia graczy:
+#    - x, y, z: Kordy przeteleportowania gracza przy wejściu do lobby/odliczania.
+#    - yaw, pitch: Kąt patrzenia kamery gracza.
+#    - freeze: true (Gracze nie mogą się poruszać z tych kordów ani obracać kamerą, dopóki wszyscy nie zaakceptują / odliczanie się nie skończy).
+#    Przykład YAML:
+#      conditions:
+#        - type: ALL_PLAYERS_READY
+#          x: 10.5
+#          y: 65.0
+#          z: 20.5
+#          yaw: 90.0
+#          pitch: 0.0
+#          freeze: true
 #
-# 2. Strefy Kopania i Budowania (MINING_ZONE / BUILDING_ZONE)
-#    - Efekty `MINING_ZONE` i `BUILDING_ZONE` pozwalają graczom na kopanie/budowanie w obszarze (x1, y1, z1) do (x2, y2, z2) tak długo, jak encounter jest aktywny.
-#    - Wykopane przedmioty trafiają bezpośrednio do ekwipunku gracza (brak dropu na ziemi).
-#    - Opcja `given-tools`: Pozwala zdefiniować tymczasowe narzędzia (np. DIAMOND_PICKAXE), które są przyznawane graczowi przy wejściu do strefy i automatycznie zabierane po zakończeniu encountera.
+# 2. Warunek/Zdarzenie DYNAMIC_PATH (Dynamiczny Labirynt Ścieżki)
+#    Nowy warunek/mechanika `DYNAMIC_PATH` generuje losową, połączoną bezpieczną ścieżkę w obszarze bloków:
+#    - min: {x: 10, y: 64, z: 10} / max: {x: 20, y: 64, z: 30} (Obszar bloków labiryntu)
+#    - safe-block-material: STONE (Materiał bezpiecznej ścieżki)
+#    - crumble-block-material: CRACKED_STONE_BRICKS (Materiał bloków pułapek)
+#    - Kary za błędny krok: Stanięcie na bloku spoza bezpiecznej ścieżki natychmiast go rozpada (TempBlock AIR) i ściąga gracza siłą w dół (wielkość wektora w dół).
+#    - reveal-x, reveal-y, reveal-z, reveal-radius: Kiedy gracz stanie w podanym promieniu od podanych kordów, TYLKO TEMU GRACZOWI podświetla się bezpieczna ścieżka (GLOWSTONE/SEA_LANTERN).
+#    - reshuffle-interval-seconds: Opcjonalna funkcja zmiany ścieżki co X sekund (np. 10s). Jeśli gracz stoi na jakimś bloku ścieżki w momencie zmiany, blok ten ZOSTANIE ZACHOWANY w nowo wygenerowanej ścieżce!
+#    Przykład YAML:
+#      conditions:
+#        - type: DYNAMIC_PATH
+#          min-x: 10
+#          min-y: 64
+#          min-z: 10
+#          max-x: 20
+#          max-y: 64
+#          max-z: 30
+#          reveal-x: 15.5
+#          reveal-y: 64.0
+#          reveal-z: 8.5
+#          reveal-radius: 3.0
+#          safe-block-material: STONE
+#          crumble-block-material: CRACKED_STONE_BRICKS
+#          reshuffle-interval-seconds: 10
+
 
