@@ -129,10 +129,6 @@ public class AbilitiesListener implements Listener {
 						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.EarthSpear.class)) {
 							new Abilities.PK_Abilities.Earth.EarthSpear(player);
 						}
-					} else if (boundAbility.equalsIgnoreCase("HydroVortex")) {
-						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class)) {
-							new Abilities.PK_Abilities.Water.HydroVortex(player);
-						}
 					} else if (boundAbility.equalsIgnoreCase("Coil")) {
 						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Fire.Coil.class)) {
 							new Abilities.PK_Abilities.Fire.Coil(player);
@@ -291,10 +287,6 @@ public class AbilitiesListener implements Listener {
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterTentacle")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class)) {
 						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class).onClick();
-					}
-				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("HydroVortex")) {
-					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class)) {
-						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class).onClick();
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Harmony")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Air.Harmony.class)) {
@@ -501,19 +493,6 @@ public class AbilitiesListener implements Listener {
 				boolean executed = SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP);
 				if (executed) {
 					event.setCancelled(true);
-				}
-			}
-		}
-	}
-
-	@EventHandler
-	public void onRightClick(org.bukkit.event.player.PlayerInteractEvent event) {
-		if (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_AIR || event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
-			Player player = event.getPlayer();
-			BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-			if (bPlayer != null && bPlayer.getBoundAbilityName() != null && bPlayer.getBoundAbilityName().equalsIgnoreCase("HydroVortex")) {
-				if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class)) {
-					com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class).onRightClick();
 				}
 			}
 		}

@@ -35,6 +35,9 @@ public class Burrow extends EarthAbility implements AddonAbility {
     private double travelSpeed;
     private long cooldown;
 
+    private float startYaw;
+    private float startPitch;
+
     private double ringAngle = 0;
     private final List<LivingEntity> detectedTargets = new ArrayList<>();
     private final List<TempBlock> tempBlocks = new ArrayList<>();
@@ -52,6 +55,9 @@ public class Burrow extends EarthAbility implements AddonAbility {
         this.duration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Burrow.Duration", 4000);
         this.travelSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.Burrow.TravelSpeed", 0.6);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.Burrow.Cooldown", 8000);
+
+        this.startYaw = player.getLocation().getYaw();
+        this.startPitch = player.getLocation().getPitch();
 
         this.state = State.CHARGING;
         this.startTime = System.currentTimeMillis();
@@ -81,6 +87,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
 
             renderChargeRings(elapsed);
             scanTargets();
+        } else if (state == State.TRAVELING) {
+            player.setNoDamageTicks(60);
         }
     }
 
@@ -198,9 +206,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
         Location current = startLoc.clone();
         for (int i = 0; i <= steps; i++) {
             Block b = current.getBlock();
-            // Check that block or block below is solid/earthbendable (allowing slopes/elevation changes)
             if (!isEarthbendable(b) && !isEarthbendable(b.getRelative(org.bukkit.block.BlockFace.DOWN)) && !isEarthbendable(b.getRelative(org.bukkit.block.BlockFace.UP))) {
-                return null; // Connection broken by air/water gap!
+                return null; // Connection broken!
             }
             path.add(current.clone());
             current.add(dir);
@@ -212,7 +219,7 @@ public class Burrow extends EarthAbility implements AddonAbility {
         state = State.TRAVELING;
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GRAVEL_BREAK, 1.2f, 0.6f);
 
-        // Apply blindness effect during tunnel travel
+        // Apply blindness during tunnel travel
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 100, 0, false, false));
 
         bPlayer.addCooldown(this, cooldown);
@@ -228,11 +235,15 @@ public class Burrow extends EarthAbility implements AddonAbility {
                     return;
                 }
 
-                Location surfaceLoc = path.get(index);
-                // Move player 4 blocks underground (Y - 4)
-                Location undergroundLoc = surfaceLoc.clone().add(0, -4.0, 0);
-                Block b = undergroundLoc.getBlock();
+                player.setNoDamageTicks(60);
 
+                Location surfaceLoc = path.get(index);
+                // Teleport player 4 blocks underground with preserved look direction
+                Location undergroundLoc = surfaceLoc.clone().add(0, -4.0, 0);
+                undergroundLoc.setYaw(startYaw);
+                undergroundLoc.setPitch(startPitch);
+
+                Block b = undergroundLoc.getBlock();
                 if (isEarthbendable(b) || b.getType().isSolid()) {
                     tempBlocks.add(new TempBlock(b, Material.AIR.createBlockData(), 3000));
                 }
@@ -251,6 +262,9 @@ public class Burrow extends EarthAbility implements AddonAbility {
     private void emergePlayer(Location targetLoc) {
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         Location exitLoc = targetLoc.clone().add(0, 1.5, 0);
+        exitLoc.setYaw(startYaw);
+        exitLoc.setPitch(startPitch);
+
         player.teleport(exitLoc);
         player.setVelocity(new Vector(0, 0.5, 0));
 
@@ -316,7 +330,7 @@ public class Burrow extends EarthAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.2";
+        return "1.3";
     }
 
     @Override
