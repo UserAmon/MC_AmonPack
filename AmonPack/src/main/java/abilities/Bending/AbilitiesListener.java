@@ -47,14 +47,15 @@ public class AbilitiesListener implements Listener {
 
 	@EventHandler
 	public void onShift(PlayerToggleSneakEvent event) {
+		if (!event.isSneaking()) return;
 		Player player = event.getPlayer();
 		if (SpecialTriggerManager.isSpecialActive(player)) {
 			return;
 		}
 		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-		if (bPlayer.getBoundAbility() != null) {
+		if (bPlayer != null && bPlayer.getBoundAbility() != null) {
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
-				if (!event.isCancelled() || bPlayer != null) {
+				if (!event.isCancelled()) {
 					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 					String boundAbility = bPlayer.getBoundAbilityName();
 					if (boundAbility.equalsIgnoreCase("SandBreath")) {
@@ -83,9 +84,7 @@ public class AbilitiesListener implements Listener {
 					} else if (boundAbility.equalsIgnoreCase("EarthDiscs")) {
 						new EarthDiscs(player);
 					} else if (boundAbility.equalsIgnoreCase("DiscHurl")) {
-						if (!player.isSneaking()) {
-							new DiscHurl(player);
-						}
+						new DiscHurl(player);
 					} else if (boundAbility.equalsIgnoreCase("WaterFist")) {
 						if (!CoreAbility.hasAbility(player, WaterFist.class)) {
 							new WaterFist(player);
@@ -102,11 +101,9 @@ public class AbilitiesListener implements Listener {
 						if (!com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSplit.class)) {
 							new FlameSplit(player);
 						}
-					}
-					 else if (boundAbility.equalsIgnoreCase("BloodArrow")) {
+					} else if (boundAbility.equalsIgnoreCase("BloodArrow")) {
 						new BloodArrow(player);
-					}
-					 else if (boundAbility.equalsIgnoreCase("BloodCall")) {
+					} else if (boundAbility.equalsIgnoreCase("BloodCall")) {
 						new BloodCall(player);
 					} else if (boundAbility.equalsIgnoreCase("SmokeBurst")) {
 						new SmokeBurst(player, true);
@@ -117,16 +114,32 @@ public class AbilitiesListener implements Listener {
 					} else if (boundAbility.equalsIgnoreCase("AirSteps")) {
 						new AirSteps(player);
 					} else if (boundAbility.equalsIgnoreCase("MoltenBlast")) {
-						if (player.isSneaking() && !CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.MoltenBlast.class)) {
+						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.MoltenBlast.class)) {
 							new Abilities.PK_Abilities.Earth.MoltenBlast(player);
 						}
 					} else if (boundAbility.equalsIgnoreCase("LavaTangles")) {
-						if (player.isSneaking() && !CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.LavaTangles.class)) {
+						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.LavaTangles.class)) {
 							new Abilities.PK_Abilities.Earth.LavaTangles(player);
 						}
 					} else if (boundAbility.equalsIgnoreCase("WaterTentacle")) {
-						if (player.isSneaking() && !CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class)) {
+						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class)) {
 							new Abilities.PK_Abilities.Water.WaterTentacle(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("EarthSpear")) {
+						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.EarthSpear.class)) {
+							new Abilities.PK_Abilities.Earth.EarthSpear(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("HydroVortex")) {
+						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class)) {
+							new Abilities.PK_Abilities.Water.HydroVortex(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("Coil")) {
+						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Fire.Coil.class)) {
+							new Abilities.PK_Abilities.Fire.Coil(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("Burrow")) {
+						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.Burrow.class)) {
+							new Abilities.PK_Abilities.Earth.Burrow(player);
 						}
 					} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && boundAbility.equalsIgnoreCase("BoulderRoll")) {
 						if (!CoreAbility.hasAbility(player, BoulderRoll.class)) {
@@ -278,6 +291,22 @@ public class AbilitiesListener implements Listener {
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterTentacle")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class)) {
 						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Water.WaterTentacle.class).onClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("HydroVortex")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class).onClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Harmony")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Air.Harmony.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Air.Harmony.class).onLeftClick();
+					} else {
+						new Abilities.PK_Abilities.Air.Harmony(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Resonance")) {
+					new Abilities.PK_Abilities.Air.Resonance(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Burrow")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.Burrow.class)) {
+						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.Burrow.class).onClick();
 					}
 				} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWhip")) {
 					new FlameWhip(player);
@@ -472,6 +501,19 @@ public class AbilitiesListener implements Listener {
 				boolean executed = SpecialTriggerManager.executeSpecialAbility(player, swapAbi, SpecialTriggerable.TriggerType.SWAP);
 				if (executed) {
 					event.setCancelled(true);
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onRightClick(org.bukkit.event.player.PlayerInteractEvent event) {
+		if (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_AIR || event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) {
+			Player player = event.getPlayer();
+			BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
+			if (bPlayer != null && bPlayer.getBoundAbilityName() != null && bPlayer.getBoundAbilityName().equalsIgnoreCase("HydroVortex")) {
+				if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class)) {
+					com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Water.HydroVortex.class).onRightClick();
 				}
 			}
 		}

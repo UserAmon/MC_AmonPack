@@ -14,29 +14,30 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class WaterTentacle extends WaterAbility implements AddonAbility {
 
-    private Block originBlock;
-    private Location originLoc;
+    private enum State { GROWING, READY, STRIKING }
+
+    private State state;
     private double damage;
     private long cooldown;
     private int maxStrikes;
-    private int strikesUsed = 0;
     private double sourceRange;
 
-    private boolean isStriking = false;
-    private long lastTempBlockRefresh = 0;
-    private TempBlock originTempBlock;
-    private double tentacleAngle = 0;
+    private Block originBlock;
+    private Location originLoc;
+    private int currentHeight = 0;
+    private final int targetHeight = 4;
+    private long growStartTime;
+
+    private int remainingStrikes;
+    private final List<TempBlock> columnTempBlocks = new ArrayList<>();
+    private final Set<UUID> hitEntities = new HashSet<>();
 
     public WaterTentacle(Player player) {
         super(player);
@@ -50,17 +51,20 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
         this.maxStrikes = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterTentacle.MaxStrikes", 3);
         this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterTentacle.SourceRange", 15.0);
 
-        Block target = player.getTargetBlockExact((int) sourceRange);
+        Block target = player.getTargetBlockExact((int) sourceRange, org.bukkit.FluidCollisionMode.ALWAYS);
         if (target == null || !(target.getType() == Material.WATER || isWaterbendable(target))) {
-            return;
+            if (player.getLocation().getBlock().getType() == Material.WATER) {
+                target = player.getLocation().getBlock();
+            } else {
+                return;
+            }
         }
 
         this.originBlock = target;
         this.originLoc = target.getLocation().add(0.5, 0.5, 0.5);
-
-        if (!TempBlock.isTempBlock(originBlock)) {
-            this.originTempBlock = new TempBlock(originBlock, Material.WATER.createBlockData(), 100);
-        }
+        this.remainingStrikes = maxStrikes;
+        this.state = State.GROWING;
+        this.growStartTime = System.currentTimeMillis();
 
         start();
     }
@@ -68,122 +72,121 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
     @Override
     public void progress() {
         if (player == null || !player.isOnline() || player.isDead()) {
+            revertColumn();
             remove();
             return;
         }
 
-        if (!player.isSneaking()) {
-            finishSkill();
-            return;
-        }
-
-        long now = System.currentTimeMillis();
-        if (now - lastTempBlockRefresh >= 80) {
-            lastTempBlockRefresh = now;
-            if (originBlock != null && !TempBlock.isTempBlock(originBlock)) {
-                this.originTempBlock = new TempBlock(originBlock, Material.WATER.createBlockData(), 100);
+        if (state == State.GROWING) {
+            if (!player.isSneaking()) {
+                revertColumn();
+                remove();
+                return;
             }
-        }
 
-        if (!isStriking) {
-            renderWrithingTentacle();
-        }
-    }
+            long elapsed = System.currentTimeMillis() - growStartTime;
+            int desiredHeight = Math.min(targetHeight, (int) ((elapsed / 2000.0) * targetHeight) + 1);
 
-    private void renderWrithingTentacle() {
-        tentacleAngle += 0.2;
-        int heightPoints = 14;
-        double maxHeight = 3.5;
-
-        for (int i = 0; i < heightPoints; i++) {
-            double progress = (double) i / heightPoints;
-            double currentY = progress * maxHeight;
-            double radius = 0.3 * Math.sin(progress * Math.PI);
-
-            double offsetX = Math.cos(tentacleAngle + (progress * 3)) * radius;
-            double offsetZ = Math.sin(tentacleAngle + (progress * 3)) * radius;
-
-            Location pt = originLoc.clone().add(offsetX, currentY, offsetZ);
-            pt.getWorld().spawnParticle(Particle.BUBBLE, pt, 2, 0.05, 0.05, 0.05, 0.02);
-            pt.getWorld().spawnParticle(Particle.SPLASH, pt, 3, 0.04, 0.04, 0.04, 0.01);
-            if (i % 3 == 0) {
-                pt.getWorld().spawnParticle(Particle.FALLING_WATER, pt, 1, 0.02, 0.02, 0.02, 0.0);
+            if (desiredHeight > currentHeight) {
+                currentHeight = desiredHeight;
+                Block b = originBlock.getRelative(org.bukkit.block.BlockFace.UP, currentHeight);
+                if (b.getType() == Material.AIR) {
+                    columnTempBlocks.add(new TempBlock(b, Material.WATER.createBlockData(), 300));
+                    b.getWorld().playSound(b.getLocation(), Sound.ITEM_BUCKET_EMPTY, 0.5f, 1.2f);
+                }
             }
+
+            // Maintain TempBlocks during growth
+            for (int h = 1; h <= currentHeight; h++) {
+                Block b = originBlock.getRelative(org.bukkit.block.BlockFace.UP, h);
+                if (b.getType() == Material.AIR) {
+                    columnTempBlocks.add(new TempBlock(b, Material.WATER.createBlockData(), 300));
+                }
+            }
+
+            if (elapsed >= 2000) {
+                state = State.READY;
+                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.6f);
+            }
+        } else if (state == State.READY) {
+            if (!player.isSneaking()) {
+                revertColumn();
+                remove();
+                return;
+            }
+
+            // Maintain column
+            for (int h = 1; h <= targetHeight; h++) {
+                Block b = originBlock.getRelative(org.bukkit.block.BlockFace.UP, h);
+                if (b.getType() == Material.AIR) {
+                    columnTempBlocks.add(new TempBlock(b, Material.WATER.createBlockData(), 300));
+                }
+            }
+            originLoc.getWorld().spawnParticle(Particle.SPLASH, originLoc.clone().add(0, targetHeight, 0), 2, 0.1, 0.1, 0.1, 0.01);
         }
     }
 
     public void onClick() {
-        if (isStriking || strikesUsed >= maxStrikes) {
+        if (state != State.READY || remainingStrikes <= 0) {
             return;
         }
 
-        Block targetBlock = player.getTargetBlockExact(20);
-        if (targetBlock == null) return;
+        state = State.STRIKING;
+        remainingStrikes--;
+        hitEntities.clear();
 
-        strikesUsed++;
-        isStriking = true;
-        Location targetLoc = targetBlock.getLocation().add(0.5, 1.0, 0.5);
-
-        player.getWorld().playSound(originLoc, Sound.ENTITY_PLAYER_SPLASH, 1.0f, 1.2f);
+        Location topLoc = originLoc.clone().add(0, targetHeight, 0);
+        Location targetLoc = player.getTargetBlockExact(20) != null ? player.getTargetBlockExact(20).getLocation().add(0.5, 1, 0.5) : player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(15));
+        Vector strikeDir = targetLoc.toVector().subtract(topLoc.toVector()).normalize();
 
         new BukkitRunnable() {
-            private int frame = 0;
-            private final int totalFrames = 30; // ~1.5s strike + ~1.5s retract = 3s
-            private final Set<UUID> hitSet = new HashSet<>();
+            private Location cur = topLoc.clone();
+            private int step = 0;
+            private final List<TempBlock> strikeTempBlocks = new ArrayList<>();
 
             @Override
             public void run() {
-                frame++;
-                if (frame > totalFrames || player == null || !player.isOnline()) {
-                    isStriking = false;
-                    if (strikesUsed >= maxStrikes) {
-                        finishSkill();
+                step++;
+                if (step > 15 || player == null || !player.isOnline()) {
+                    for (TempBlock tb : strikeTempBlocks) tb.revertBlock();
+                    state = State.READY;
+                    if (remainingStrikes <= 0) {
+                        bPlayer.addCooldown(WaterTentacle.this, cooldown);
+                        revertColumn();
+                        remove();
                     }
                     cancel();
                     return;
                 }
 
-                double t;
-                if (frame <= 12) {
-                    t = (double) frame / 12.0; // Strike out
-                } else {
-                    t = 1.0 - ((double) (frame - 12) / 18.0); // Retract back
+                cur.add(strikeDir);
+                Block b = cur.getBlock();
+                if (b.getType() == Material.AIR) {
+                    strikeTempBlocks.add(new TempBlock(b, Material.WATER.createBlockData(), 200));
                 }
 
-                Location currentTip = originLoc.clone().add(targetLoc.clone().subtract(originLoc).toVector().multiply(t));
-                currentTip.add(0, Math.sin(t * Math.PI) * 2.0, 0);
-
-                int points = 12;
-                for (int i = 0; i <= points; i++) {
-                    double p = (double) i / points;
-                    Location segment = originLoc.clone().add(currentTip.clone().subtract(originLoc).toVector().multiply(p));
-                    segment.getWorld().spawnParticle(Particle.BUBBLE, segment, 3, 0.1, 0.1, 0.1, 0.02);
-                    segment.getWorld().spawnParticle(Particle.SPLASH, segment, 4, 0.08, 0.08, 0.08, 0.03);
-                }
-
-                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentTip, 1.8)) {
-                    if (entity instanceof LivingEntity le && entity.getEntityId() != player.getEntityId() && !hitSet.contains(entity.getUniqueId())) {
-                        hitSet.add(entity.getUniqueId());
+                for (Entity e : GeneralMethods.getEntitiesAroundPoint(cur, 1.5)) {
+                    if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId() && !hitEntities.contains(e.getUniqueId())) {
+                        hitEntities.add(e.getUniqueId());
                         DamageHandler.damageEntity(le, damage, WaterTentacle.this);
-                        le.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 0));
                     }
                 }
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
     }
 
-    private void finishSkill() {
-        if (bPlayer != null) {
-            bPlayer.addCooldown(this, cooldown);
+    private void revertColumn() {
+        for (TempBlock tb : new ArrayList<>(columnTempBlocks)) {
+            if (tb != null) {
+                tb.revertBlock();
+            }
         }
-        remove();
+        columnTempBlocks.clear();
     }
 
     @Override
     public void remove() {
-        if (originTempBlock != null) {
-            originTempBlock.revertBlock();
-        }
+        revertColumn();
         super.remove();
     }
 
@@ -194,7 +197,7 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
 
     @Override
     public Location getLocation() {
-        return originLoc != null ? originLoc : (player != null ? player.getLocation() : null);
+        return originLoc;
     }
 
     @Override
@@ -219,7 +222,7 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.1";
+        return "1.2";
     }
 
     @Override

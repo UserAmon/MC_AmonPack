@@ -473,7 +473,76 @@ AmonPack:
       MaxStrikes: 3 #maximum strikes per activation
       SourceRange: 15.0 #blocks max range to target water source
 
+    HydroVortex:
+      ScanRadius: 10.0 #blocks radius to scan for water/grass
+      MaxRingSize: 2.5 #blocks max radius of orbiting rings
+      ChargeRate: 1000 #ms per ring level
+      Cooldown: 8000 #ms between ability uses
+      Uses: 10 #total clicks/shots allowed per activation
+      ComboWindow: 3000 #ms window to trigger 3-shot combo
+      FreezeDuration: 3000 #ms target is frozen in ice
+      BarrierDuration: 2000 #ms barrier stays active
+      BarrierCostPercent: 50 #percentage of remaining uses consumed
+      StreamDamage: 4.0 #hearts dealt per standard stream
+      ComboDamage: 7.0 #hearts dealt on 3-shot combo hit
+
+  Fire:
+    Coil:
+      MaxRings: 3 #maximum lightning rings charged
+      ChargeIntervalPerRing: 1000 #ms to charge each ring
+      ProjectileSpeed: 1.1 #projectile movement speed
+      RandomnessFactor: 0.25 #random direction drift
+      LightningVisualInterval: 6 #ticks between visual strikes
+      SmokeRadius: 5.0 #blocks detection radius for Smoke Source
+      AoEDamage: 8.0 #hearts dealt on Smoke Source electrification explosion
+      AoEKnockback: 1.2 #velocity multiplier for explosion
+      DamagePerProjectile: 4.5 #hearts dealt per lightning projectile
+      Cooldown: 8000 #ms between ability uses
+
+  Air:
+    Sound:
+      Harmony:
+        RhythmInterval: 1000 #ms between rhythm beats
+        InputWindow: 500 #ms timing input window for LPM
+        SelfPenaltyStacks: 4.0 #sound stacks applied to self on miss
+        SlowDuration: 60 #ticks slowness lasts on miss
+        NauseaDuration: 100 #ticks nausea lasts on miss
+        ProjectileSpeed: 1.2 #sound projectile speed
+        StackCountPerHit: 3.0 #sound stacks applied per target hit
+        Damage: 3.0 #hearts dealt per projectile hit
+        Cooldown: 7000 #ms between ability uses
+
+      Resonance:
+        ZoneDuration: 10.0 #seconds sound zone persists
+        TickInterval: 10 #ticks between sound stack pulses
+        StackCountPerTick: 1.0 #sound stacks applied per pulse
+        TriggerAoERadius: 6.0 #blocks AoE radius when triggered
+        TriggerDamage: 8.0 #hearts dealt on resonance explosion
+        AcousticsBonusMultiplier: 2.0 #radius multiplier with Acoustics
+        Cooldown: 5000 #ms between ability uses
+
   Earth:
+    EarthSpear:
+      ChargeTimePerLevel: 800 #ms per charge level (3 levels max)
+      DamageLevel1: 4.0 #hearts dealt at level 1
+      DamageLevel2: 7.0 #hearts dealt at level 2
+      DamageLevel3: 10.0 #hearts dealt at level 3
+      KnockbackLevel1: 0.8 #knockback strength at level 1
+      KnockbackLevel2: 1.4 #knockback strength at level 2
+      KnockbackLevel3: 2.0 #knockback strength at level 3
+      FragmentCountLevel1: 3 #fragments spawned on impact level 1
+      FragmentCountLevel2: 5 #fragments spawned on impact level 2
+      FragmentCountLevel3: 8 #fragments spawned on impact level 3
+      Cooldown: 6000 #ms between ability uses
+
+    Burrow:
+      ChargeTime: 1500 #ms required to charge burrow
+      Radius: 6.0 #blocks radius for area burrow
+      BurrowDepth: 2 #blocks depth targets are buried
+      Duration: 4000 #ms targets stay buried
+      TravelSpeed: 0.6 #blocks per tick during tunnel travel
+      Cooldown: 8000 #ms between ability uses
+
     Lava:
       MoltenBlast:
         Cooldown: 6000 #ms between ability uses
