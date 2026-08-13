@@ -238,6 +238,24 @@ AmonPack:
       PushWithoutStacks: 0.8 #if enemy has no sound_stacks, how strong will it push them
       PushWithStacks: 1.2 #if enemy already has sound_stacks, how strong will it push them
 
+    BassDrop:
+      Cooldown: 8000 #ms between ability uses
+      DelaySeconds: 3.0 #seconds before the bass projectile appears
+      Height: 20.0 #blocks above the clicked block where the projectile starts
+      ProjectileSpeed: 1.0 #blocks per tick while falling
+      ProjectileMinRingRadius: 0.35 #ring radius at the top of the fall
+      ProjectileMaxRingRadius: 3.8 #ring radius near the impact
+      ShockwaveRadius: 8.0 #maximum horizontal radius of the impact wave
+      ShockwaveSpeed: 0.65 #blocks per tick of the horizontal wave
+      Damage: 1.5 #hearts dealt to each target hit by the wave
+      Stacks: 6.0 #sound stacks applied to each target hit by the wave
+      Knockback: 0.65 #horizontal push strength
+      VerticalKnockback: 0.2 #vertical push strength
+      CameraShakeDurationTicks: 60 #3 seconds of camera movement
+      CameraShakeIntervalTicks: 3 #ticks between random camera offsets
+      CameraShakeYaw: 8.0 #maximum random side-to-side yaw offset in degrees
+      CameraShakePitch: 1.5 #maximum random vertical camera offset in degrees
+
     Resonance:
       Cooldown: 3000 #ms between ability uses
       Damage: 1.0 #hearts per pulse wave hit

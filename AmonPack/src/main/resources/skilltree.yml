@@ -441,6 +441,15 @@ AmonPack:
         Place: 0
         ReqAbilities:
           - Resonance
+      BassDrop:
+        Cost: 30
+        Place: 1
+        ReqAbilities:
+           - Resonance
+        Description:
+           - "&7Po &e3 sekundach &7nad kliknietym blokiem pojawia sie"
+           - "&7spadajacy pocisk basowy. Uderzenie wysyla szeroka"
+           - "&7fale dzwiekowa, naklada stacki i trzesie kamera graczy."
       Encore:
         Cost: 50
         Place: 2

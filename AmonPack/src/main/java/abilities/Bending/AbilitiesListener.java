@@ -702,4 +702,26 @@ public class AbilitiesListener implements Listener {
 			}
 		}
 	}
+
+	@EventHandler
+	public void onBassDropBlockClick(org.bukkit.event.player.PlayerInteractEvent event) {
+		if (event.isCancelled() || event.getAction() != org.bukkit.event.block.Action.LEFT_CLICK_BLOCK
+				|| event.getClickedBlock() == null) {
+			return;
+		}
+
+		Player player = event.getPlayer();
+		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
+		if (bPlayer == null || bPlayer.getBoundAbilityName() == null
+				|| !bPlayer.getBoundAbilityName().equalsIgnoreCase("BassDrop")) {
+			return;
+		}
+		if (bPlayer.isOnCooldown("BassDrop") || bPlayer.getBoundAbility() == null
+				|| !bPlayer.canBend(bPlayer.getBoundAbility())) {
+			return;
+		}
+
+		new BassDrop(player, event.getClickedBlock());
+		event.setCancelled(true);
+	}
 }
