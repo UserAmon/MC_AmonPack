@@ -112,6 +112,11 @@ public class FlameSplit extends FireAbility implements AddonAbility {
             return;
         }
 
+        if (FirelordStanceManager.isActive(player)) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eFlameSplit"));
+        }
+
         switch (state) {
             case CHARGING:
                 ticksCharging++;
@@ -144,6 +149,7 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void drawRotatingDiscs() {
+        boolean isFirelord = FirelordStanceManager.isActive(player);
         boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
                 || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
 
@@ -161,8 +167,13 @@ public class FlameSplit extends FireAbility implements AddonAbility {
             double angle = angleRad + Math.toRadians(i * 180.0);
             Vector offset = curRight.clone().multiply(radius * Math.sin(angle))
                     .add(new Vector(0, radius * Math.cos(angle), 0));
-            Particle particle = (isBlue && i == 0) ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
-            player.getWorld().spawnParticle(particle, centerLoc.clone().add(offset), 1, 0, 0, 0, 0);
+
+            if (isFirelord) {
+                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, centerLoc.clone().add(offset), 2, 0.02, 0.02, 0.02, 0.05);
+            } else {
+                Particle particle = (isBlue && i == 0) ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+                player.getWorld().spawnParticle(particle, centerLoc.clone().add(offset), 1, 0, 0, 0, 0);
+            }
         }
 
         if (ticksCharging % 5 == 0) {
@@ -171,7 +182,11 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void triggerRelease() {
-        bPlayer.addCooldown(this);
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+        long actualCooldown = isFirelord ? (long) (cooldown * stance.getCooldownMultiplier()) : cooldown;
+
+        bPlayer.addCooldown(this, actualCooldown);
         this.state = State.EXTENDING;
         this.startLoc = player.getLocation().clone();
         this.forward = player.getLocation().getDirection().setY(0).normalize();
@@ -184,12 +199,16 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void drawExtendingLines() {
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+        double actualRange = isFirelord ? range * stance.getRangeMultiplier() : range;
+
         boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
                 || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
         Particle leftParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
         Particle rightParticle = Particle.FLAME;
 
-        double currentLen = (ticksExtending / 7.0) * range;
+        double currentLen = (ticksExtending / 7.0) * actualRange;
         for (double d = 0; d <= currentLen; d += 0.5) {
             Location leftLoc = startLoc.clone().add(forward.clone().multiply(d)).add(right.clone().multiply(-0.3));
             Location rightLoc = startLoc.clone().add(forward.clone().multiply(d)).add(right.clone().multiply(0.3));
@@ -197,10 +216,18 @@ public class FlameSplit extends FireAbility implements AddonAbility {
             rightLoc.setY(getGroundY(rightLoc) + 1.0);
 
             if (!leftLoc.getBlock().getType().isSolid()) {
-                player.getWorld().spawnParticle(leftParticle, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                if (isFirelord) {
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, leftLoc, 2, 0.05, 0.05, 0.05, 0.05);
+                } else {
+                    player.getWorld().spawnParticle(leftParticle, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                }
             }
             if (!rightLoc.getBlock().getType().isSolid()) {
-                player.getWorld().spawnParticle(rightParticle, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                if (isFirelord) {
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, rightLoc, 2, 0.05, 0.05, 0.05, 0.05);
+                } else {
+                    player.getWorld().spawnParticle(rightParticle, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                }
             }
         }
 
@@ -218,6 +245,11 @@ public class FlameSplit extends FireAbility implements AddonAbility {
     }
 
     private void drawSweepingLines() {
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+        double actualRange = isFirelord ? range * stance.getRangeMultiplier() : range;
+        double actualDamage = isFirelord ? damage * stance.getDamageMultiplier() : damage;
+
         boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
                 || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
         Particle leftParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
@@ -225,7 +257,7 @@ public class FlameSplit extends FireAbility implements AddonAbility {
 
         double sweepProgress = ticksSweeping / 15.0;
         double yOffset = 1.0 + (0.75 * sweepProgress);
-        for (double d = 0; d <= range; d += 0.5) {
+        for (double d = 0; d <= actualRange; d += 0.5) {
             double currentSideOffset = 0.3 + (d * 0.65) * sweepProgress;
             Location leftLoc = startLoc.clone().add(forward.clone().multiply(d))
                     .add(right.clone().multiply(-currentSideOffset));
@@ -235,17 +267,25 @@ public class FlameSplit extends FireAbility implements AddonAbility {
             rightLoc.setY(getGroundY(rightLoc) + yOffset);
 
             if (!leftLoc.getBlock().getType().isSolid()) {
-                player.getWorld().spawnParticle(leftParticle, leftLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                if (isFirelord) {
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, leftLoc, 3, 0.1, 0.1, 0.1, 0.05);
+                } else {
+                    player.getWorld().spawnParticle(leftParticle, leftLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                }
                 player.getWorld().spawnParticle(Particle.SMOKE, leftLoc, 1, 0.05, 0.05, 0.05, 0.01);
                 Vector leftPushDir = right.clone().multiply(-1.0);
-                checkDamageAtLocation(leftLoc, leftPushDir);
+                checkDamageAtLocation(leftLoc, leftPushDir, actualDamage);
             }
 
             if (!rightLoc.getBlock().getType().isSolid()) {
-                player.getWorld().spawnParticle(rightParticle, rightLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                if (isFirelord) {
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, rightLoc, 3, 0.1, 0.1, 0.1, 0.05);
+                } else {
+                    player.getWorld().spawnParticle(rightParticle, rightLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                }
                 player.getWorld().spawnParticle(Particle.SMOKE, rightLoc, 1, 0.05, 0.05, 0.05, 0.01);
                 Vector rightPushDir = right.clone();
-                checkDamageAtLocation(rightLoc, rightPushDir);
+                checkDamageAtLocation(rightLoc, rightPushDir, actualDamage);
             }
         }
 
@@ -254,13 +294,13 @@ public class FlameSplit extends FireAbility implements AddonAbility {
         }
     }
 
-    private void checkDamageAtLocation(Location loc, Vector knockbackDir) {
+    private void checkDamageAtLocation(Location loc, Vector knockbackDir, double currentDamage) {
         for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1)) {
             if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                 LivingEntity target = (LivingEntity) entity;
                 if (!hitEntities.contains(target)) {
                     hitEntities.add(target);
-                    DamageHandler.damageEntity(target, damage, this);
+                    DamageHandler.damageEntity(target, currentDamage, this);
                     target.setFireTicks(fireTicks);
                     target.setVelocity(knockbackDir.clone().normalize().multiply(knockback).setY(0.25));
                 }

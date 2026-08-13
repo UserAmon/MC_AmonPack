@@ -167,7 +167,16 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 			if (healingTicks % this.healingInterval == 0) {
 				double maxH = player.getMaxHealth();
 				if (player.getHealth() < maxH) {
-					double newH = Math.min(maxH, player.getHealth() + this.healingAmount);
+					boolean isVeinFlow = VeinFlowManager.isActive(player);
+					VeinFlow stance = VeinFlowManager.getStance(player);
+					double actualHeal = isVeinFlow && stance != null ? healingAmount * stance.getHealingMultiplier() : healingAmount;
+
+					if (isVeinFlow) {
+						player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+								net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c🩸 VeinFlow — §4CalmTide"));
+					}
+
+					double newH = Math.min(maxH, player.getHealth() + actualHeal);
 					totalHealed += (newH - player.getHealth());
 					player.setHealth(newH);
 					player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.4f, 1.3f);

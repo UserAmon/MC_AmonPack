@@ -69,6 +69,11 @@ public class Coil extends FireAbility implements AddonAbility {
             return;
         }
 
+        if (FirelordStanceManager.isActive(player)) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eCoil"));
+        }
+
         if (state == State.CHARGING) {
             if (!player.isSneaking()) {
                 fire();
@@ -89,10 +94,11 @@ public class Coil extends FireAbility implements AddonAbility {
     private void renderTideLockStyleSlowRings() {
         ringAngle += 0.08; // Slower rotation like TideLock
         Location center = player.getLocation().add(0, 1.0, 0);
+        boolean isFirelord = FirelordStanceManager.isActive(player);
 
         for (int r = 0; r < ringCount; r++) {
             double radius = 1.4 + (r * 0.5);
-            double yOffset = (r - 1) * 0.4;
+            double yOffset = (r - 1) * 0.2;
 
             int points = 16;
             for (int i = 0; i < points; i++) {
@@ -101,9 +107,14 @@ public class Coil extends FireAbility implements AddonAbility {
                 double z = Math.sin(angle) * radius;
                 Location pt = center.clone().add(x, yOffset + Math.sin(angle) * 0.2, z);
 
-                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pt, 1, 0.01, 0.01, 0.01, 0.01);
-                if (i % 4 == 0) {
-                    player.getWorld().spawnParticle(Particle.FIREWORK, pt, 1, 0.01, 0.01, 0.01, 0.01);
+                if (isFirelord) {
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pt, 2, 0.02, 0.02, 0.02, 0.05);
+                    player.getWorld().spawnParticle(Particle.DUST, pt, 1, 0, 0, 0, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(180, 220, 255), 1.0f));
+                } else {
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pt, 1, 0.01, 0.01, 0.01, 0.01);
+                    if (i % 4 == 0) {
+                        player.getWorld().spawnParticle(Particle.FIREWORK, pt, 1, 0.01, 0.01, 0.01, 0.01);
+                    }
                 }
             }
         }
@@ -116,78 +127,74 @@ public class Coil extends FireAbility implements AddonAbility {
 
         player.getWorld().playSound(eye, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 0.8f, 1.6f);
 
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+
+        double actualSpeed = isFirelord ? projectileSpeed * stance.getSpeedMultiplier() : projectileSpeed;
+        double actualDamage = isFirelord ? damagePerProjectile * stance.getDamageMultiplier() : damagePerProjectile;
+        double actualSmokeRadius = isFirelord ? smokeRadius * stance.getRangeMultiplier() : smokeRadius;
+        long actualCooldown = isFirelord ? (long) (cooldown * stance.getCooldownMultiplier()) : cooldown;
+
         for (int r = 0; r < ringCount; r++) {
             Vector spreadDir = baseDir.clone().add(new Vector(
                     (Math.random() - 0.5) * 0.8,
                     0.02,
                     (Math.random() - 0.5) * 0.8
-            )).normalize().multiply(projectileSpeed);
+            )).normalize().multiply(actualSpeed);
 
-            spawnGroundLightningProjectile(eye.clone(), spreadDir);
+            spawnGroundLightningProjectile(eye.clone(), spreadDir, actualDamage, actualSmokeRadius);
         }
 
-        bPlayer.addCooldown(this, cooldown);
+        bPlayer.addCooldown(this, actualCooldown);
         remove();
     }
 
-    private void spawnGroundLightningProjectile(Location startLoc, Vector initialVel) {
+    private void spawnGroundLightningProjectile(Location startLoc, Vector initialVel, double currentDamage, double currentSmokeRadius) {
+        Abilities.Util_Objects.LightningBolt bolt = new Abilities.Util_Objects.LightningBolt(
+                player, this, startLoc, initialVel.normalize(), currentDamage, 25.0, 0, false
+        );
+
         new BukkitRunnable() {
-            private Location loc = startLoc.clone();
-            private Vector vel = initialVel.clone();
             private int ticks = 0;
-            private final Set<UUID> hitSet = new HashSet<>();
 
             @Override
             public void run() {
                 ticks++;
-                if (ticks > 50 || player == null || !player.isOnline()) {
+                if (ticks > 50 || player == null || !player.isOnline() || bolt.isDead()) {
                     cancel();
                     return;
                 }
 
-                // Higher randomness / drift along ground
-                vel.add(new Vector(
-                        (Math.random() - 0.5) * randomnessFactor,
-                        -0.02,
-                        (Math.random() - 0.5) * randomnessFactor
-                )).setY(Math.max(-0.15, Math.min(0.08, vel.getY())));
-
-                loc.add(vel);
-
-                loc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc, 6, 0.25, 0.25, 0.25, 0.06);
-                loc.getWorld().spawnParticle(Particle.FIREWORK, loc, 2, 0.15, 0.15, 0.15, 0.02);
+                Location currentLoc = bolt.getLocation();
 
                 if (ticks % lightningVisualInterval == 0) {
-                    loc.getWorld().strikeLightningEffect(loc);
+                    currentLoc.getWorld().strikeLightningEffect(currentLoc);
                 }
 
                 // Smoke Source Interaction Check
-                SmokeSource nearSource = SmokeAbility.UseSmokeSource(player, smokeRadius);
-                if (nearSource != null || checkSmokeSourcesNear(loc)) {
-                    triggerSmokeElectrification(loc);
+                SmokeSource nearSource = SmokeAbility.UseSmokeSource(player, currentSmokeRadius);
+                if (nearSource != null || checkSmokeSourcesNear(currentLoc, currentSmokeRadius)) {
+                    triggerSmokeElectrification(currentLoc, currentSmokeRadius);
                     cancel();
                     return;
                 }
 
-                for (Entity e : GeneralMethods.getEntitiesAroundPoint(loc, 1.6)) {
-                    if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId() && !hitSet.contains(e.getUniqueId())) {
-                        hitSet.add(e.getUniqueId());
-                        DamageHandler.damageEntity(le, damagePerProjectile, Coil.this);
-                        le.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, le.getLocation().add(0, 1, 0), 12, 0.3, 0.5, 0.3, 0.1);
-                        cancel();
-                        return;
+                List<Abilities.Util_Objects.LightningBolt> branches = bolt.progress();
+                if (branches != null && !branches.isEmpty()) {
+                    for (Abilities.Util_Objects.LightningBolt b : branches) {
+                        b.progress();
                     }
                 }
 
-                if (loc.getBlock().getType().isSolid()) {
+                if (currentLoc.getBlock().getType().isSolid()) {
                     cancel();
                 }
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
     }
 
-    private boolean checkSmokeSourcesNear(Location targetLoc) {
-        SmokeSource source = SmokeAbility.UseSmokeSource(player, smokeRadius);
+    private boolean checkSmokeSourcesNear(Location targetLoc, double currentSmokeRadius) {
+        SmokeSource source = SmokeAbility.UseSmokeSource(player, currentSmokeRadius);
         if (source != null) {
             SmokeAbility.DeleteSource(source);
             return true;
@@ -195,7 +202,7 @@ public class Coil extends FireAbility implements AddonAbility {
         return false;
     }
 
-    private void triggerSmokeElectrification(Location loc) {
+    private void triggerSmokeElectrification(Location loc, double currentSmokeRadius) {
         loc.getWorld().playSound(loc, Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.2f, 0.8f);
         loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.2f);
 
@@ -207,9 +214,13 @@ public class Coil extends FireAbility implements AddonAbility {
         loc.getWorld().spawnParticle(Particle.LARGE_SMOKE, loc, 30, 1.5, 1.5, 1.5, 0.1);
         loc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc, 40, 2.0, 2.0, 2.0, 0.2);
 
-        for (Entity e : GeneralMethods.getEntitiesAroundPoint(loc, smokeRadius)) {
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+        double actualAoEDamage = isFirelord ? aoeDamage * stance.getDamageMultiplier() : aoeDamage;
+
+        for (Entity e : GeneralMethods.getEntitiesAroundPoint(loc, currentSmokeRadius)) {
             if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId()) {
-                DamageHandler.damageEntity(le, aoeDamage, this);
+                DamageHandler.damageEntity(le, actualAoEDamage, this);
                 Vector push = le.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(aoeKnockback).setY(0.4);
                 le.setVelocity(push);
             }

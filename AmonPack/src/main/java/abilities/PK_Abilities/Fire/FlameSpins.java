@@ -115,6 +115,11 @@ public class FlameSpins extends FireAbility implements AddonAbility {
             return;
         }
 
+        if (FirelordStanceManager.isActive(player)) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eFlameSpins"));
+        }
+
         if (System.currentTimeMillis() - startTime > 5000) {
             finishSkill();
             return;
@@ -140,8 +145,15 @@ public class FlameSpins extends FireAbility implements AddonAbility {
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 1.1f);
 
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+
+        double actualSpeed = isFirelord ? projectileSpeed * stance.getSpeedMultiplier() : projectileSpeed;
+        double actualDamage = isFirelord ? projectileDamage * stance.getDamageMultiplier() : projectileDamage;
+        int actualRange = isFirelord ? (int) (projectileRange * stance.getRangeMultiplier()) : projectileRange;
+
         Location projLoc = player.getEyeLocation().clone();
-        Vector projDir = player.getLocation().getDirection().normalize().multiply(this.projectileSpeed);
+        Vector projDir = player.getLocation().getDirection().normalize().multiply(actualSpeed);
 
         new BukkitRunnable() {
             int ticks = 0;
@@ -150,7 +162,7 @@ public class FlameSpins extends FireAbility implements AddonAbility {
             @Override
             public void run() {
                 ticks++;
-                if (ticks > FlameSpins.this.projectileRange || projLoc.getBlock().getType().isSolid()) {
+                if (ticks > actualRange || projLoc.getBlock().getType().isSolid()) {
                     cancel();
                     return;
                 }
@@ -165,19 +177,26 @@ public class FlameSpins extends FireAbility implements AddonAbility {
                 Location p1 = projLoc.clone().add(x1, 0, z1);
                 Location p2 = projLoc.clone().subtract(x1, 0, z1);
 
-                boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
-                if (isBlue) {
-                    p1.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p1, 1, 0, 0, 0, 0);
-                    p2.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p2, 1, 0, 0, 0, 0);
+                if (isFirelord) {
+                    p1.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, p1, 2, 0.05, 0.05, 0.05, 0.05);
+                    p2.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, p2, 2, 0.05, 0.05, 0.05, 0.05);
+                    Particle.DustOptions dust = new Particle.DustOptions(org.bukkit.Color.fromRGB(180, 220, 255), 0.8f);
+                    projLoc.getWorld().spawnParticle(Particle.DUST, projLoc, 2, 0.1, 0.1, 0.1, 0, dust);
                 } else {
-                    ParticleEffect.FLAME.display(p1, 1, 0, 0, 0, 0);
-                    ParticleEffect.FLAME.display(p2, 1, 0, 0, 0, 0);
+                    boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+                    if (isBlue) {
+                        p1.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p1, 1, 0, 0, 0, 0);
+                        p2.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p2, 1, 0, 0, 0, 0);
+                    } else {
+                        ParticleEffect.FLAME.display(p1, 1, 0, 0, 0, 0);
+                        ParticleEffect.FLAME.display(p2, 1, 0, 0, 0, 0);
+                    }
+                    ParticleEffect.SMOKE_NORMAL.display(projLoc, 1, 0.1, 0.1, 0.1, 0.01);
                 }
-                ParticleEffect.SMOKE_NORMAL.display(projLoc, 1, 0.1, 0.1, 0.1, 0.01);
 
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projLoc, 1.2)) {
                     if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-                        DamageHandler.damageEntity(entity, FlameSpins.this.projectileDamage, FlameSpins.this);
+                        DamageHandler.damageEntity(entity, actualDamage, FlameSpins.this);
                         entity.setFireTicks(FlameSpins.this.projectileFireTicks);
                         cancel();
                         return;
@@ -203,6 +222,12 @@ public class FlameSpins extends FireAbility implements AddonAbility {
         RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
         long cd = hasFirefly ? this.cooldownFirefly : this.cooldown;
+
+        if (FirelordStanceManager.isActive(player)) {
+            FirelordStance stance = FirelordStanceManager.getStance(player);
+            cd = (long) (cd * stance.getCooldownMultiplier());
+        }
+
         bPlayer.addCooldown(this, cd);
         remove();
     }

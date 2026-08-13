@@ -136,19 +136,43 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
         hitEntities.clear();
 
         Location topLoc = originLoc.clone().add(0, targetHeight, 0);
-        Location targetLoc = player.getTargetBlockExact(20) != null ? player.getTargetBlockExact(20).getLocation().add(0.5, 1, 0.5) : player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(15));
+        Location targetLoc = player.getTargetBlockExact(20) != null 
+                ? player.getTargetBlockExact(20).getLocation().add(0.5, 1, 0.5) 
+                : player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(15));
+        
         Vector strikeDir = targetLoc.toVector().subtract(topLoc.toVector()).normalize();
+        if (strikeDir.lengthSquared() < 0.001) {
+            strikeDir = player.getEyeLocation().getDirection().normalize();
+        }
+        
+        Vector rightVec = strikeDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+        if (rightVec.lengthSquared() < 0.001) {
+            rightVec = new Vector(1, 0, 0);
+        }
+        Vector upVec = rightVec.clone().crossProduct(strikeDir).normalize();
+
+        final Vector finalStrikeDir = strikeDir;
+        final Vector finalRight = rightVec;
+        final Vector finalUp = upVec;
+
+        double maxReach = Math.min(16.0, topLoc.distance(targetLoc));
 
         new BukkitRunnable() {
-            private Location cur = topLoc.clone();
-            private int step = 0;
+            private int tick = 0;
+            private final int totalTicks = 12; // Fast extension and return
             private final List<TempBlock> strikeTempBlocks = new ArrayList<>();
 
             @Override
             public void run() {
-                step++;
-                if (step > 15 || player == null || !player.isOnline()) {
-                    for (TempBlock tb : strikeTempBlocks) tb.revertBlock();
+                tick++;
+                
+                // Revert previous tick temp blocks
+                for (TempBlock tb : strikeTempBlocks) {
+                    tb.revertBlock();
+                }
+                strikeTempBlocks.clear();
+
+                if (tick > totalTicks || player == null || !player.isOnline()) {
                     state = State.READY;
                     if (remainingStrikes <= 0) {
                         bPlayer.addCooldown(WaterTentacle.this, cooldown);
@@ -159,16 +183,58 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
                     return;
                 }
 
-                cur.add(strikeDir);
-                Block b = cur.getBlock();
-                if (b.getType() == Material.AIR) {
-                    strikeTempBlocks.add(new TempBlock(b, Material.WATER.createBlockData(), 200));
-                }
+                // Calculate extension distance (peaks at 50% progress, returns by 100%)
+                double progressRatio = (double) tick / (double) totalTicks;
+                double extensionRatio = Math.sin(progressRatio * Math.PI); // 0 -> 1 -> 0 smooth bell curve
+                double currentDist = maxReach * extensionRatio;
 
-                for (Entity e : GeneralMethods.getEntitiesAroundPoint(cur, 1.5)) {
-                    if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId() && !hitEntities.contains(e.getUniqueId())) {
-                        hitEntities.add(e.getUniqueId());
-                        DamageHandler.damageEntity(le, damage, WaterTentacle.this);
+                topLoc.getWorld().playSound(topLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
+                topLoc.getWorld().playSound(topLoc, Sound.ITEM_BUCKET_EMPTY, 0.6f, 1.5f);
+
+                // Render writhing tentacle along current length
+                int segments = (int) Math.max(3, Math.ceil(currentDist * 1.5));
+                for (int i = 0; i <= segments; i++) {
+                    double segRatio = (double) i / (double) segments;
+                    double dist = segRatio * currentDist;
+
+                    // Sinusoidal writhing wave displacement
+                    double waveAngle = (segRatio * Math.PI * 2.5) + (tick * 0.6);
+                    double waveAmplitude = Math.sin(segRatio * Math.PI) * 0.7;
+                    double sideOffset = Math.sin(waveAngle) * waveAmplitude;
+                    double upOffset = Math.cos(waveAngle) * waveAmplitude * 0.5;
+
+                    Location segLoc = topLoc.clone()
+                            .add(finalStrikeDir.clone().multiply(dist))
+                            .add(finalRight.clone().multiply(sideOffset))
+                            .add(finalUp.clone().multiply(upOffset));
+
+                    // Particles along tentacle body
+                    segLoc.getWorld().spawnParticle(Particle.WATER_DROP, segLoc, 3, 0.1, 0.1, 0.1, 0.05);
+                    segLoc.getWorld().spawnParticle(Particle.SPLASH, segLoc, 2, 0.08, 0.08, 0.08, 0.02);
+
+                    if (i == segments) {
+                        segLoc.getWorld().spawnParticle(Particle.WATER_WAKE, segLoc, 6, 0.2, 0.2, 0.2, 0.1);
+                    }
+
+                    // Water TempBlocks at tip and middle nodes
+                    if (i % 2 == 0 || i == segments) {
+                        Block b = segLoc.getBlock();
+                        if (b.getType() == Material.AIR) {
+                            strikeTempBlocks.add(new TempBlock(b, Material.WATER.createBlockData(), 100));
+                        }
+                    }
+
+                    // Hit detection on extension phase
+                    if (progressRatio <= 0.6) {
+                        for (Entity e : GeneralMethods.getEntitiesAroundPoint(segLoc, 1.4)) {
+                            if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId() && !hitEntities.contains(e.getUniqueId())) {
+                                hitEntities.add(e.getUniqueId());
+                                DamageHandler.damageEntity(le, damage, WaterTentacle.this);
+                                Vector push = finalStrikeDir.clone().multiply(0.8).setY(0.3);
+                                le.setVelocity(push);
+                                segLoc.getWorld().playSound(segLoc, Sound.ENTITY_GENERIC_SPLASH, 1.0f, 1.2f);
+                            }
+                        }
                     }
                 }
             }
