@@ -25,6 +25,26 @@ AmonPack:
         Radius: 2 #blocks radius of spike area
         FreezeDuration: 3000 #ms enemies are frozen after hit
 
+      FrostGrip:
+        Cooldown: 7000 #ms between ability uses
+        Damage: 4.5 #hearts dealt on hit
+        SourceRange: 15.0 #max distance to absorb water/ice block
+        SlowDuration: 60 #ticks slowness lasts on target
+        SlowAmplifier: 2 #slowness potion level
+        NoJumpDurationTicks: 60 #ticks target is pulled down blocking jumps
+
+    VeinFlow:
+      Cooldown: 30000 #ms between ability uses
+      Duration: 15 #seconds stance lasts
+      DetectionDistance: 15.0 #blocks radius to scan enemies for blood trail & attack buffs
+      StunChance: 0.35 #chance on hit to stun enemy and add cooldown
+      StunDurationMs: 1500 #ms target's movement and camera are locked
+      AddedCooldownMs: 4000 #ms added to target's selected ability on hit
+      Boost:
+        ChargeTimeMultiplier: 0.6 #multiplier for blood ability charge times
+        DamageMultiplier: 1.5 #damage multiplier for blood abilities
+        HealingMultiplier: 1.5 #healing multiplier for CalmTide
+
     CalmTide:
       Cooldown: 8000 #ms between ability uses
       Range: 15 #source range
@@ -97,6 +117,16 @@ AmonPack:
       CanTrack: true #if true, arrow tracks targets
       TrackRange: 5.0 #blocks range to track targets
       ChainRange: 7.0 #blocks range to chain to nearby enemies
+
+    Circulation:
+      Cooldown: 12000 #ms between ability uses
+      Range: 15.0 #blocks max detection range
+      ChargeTime: 1500 #ms required to charge shift
+      WalkDurationTicks: 80 #ticks target is forced to walk like an NPC/bot
+
+    HeartReading:
+      Cooldown: 12000 #ms between ability uses
+      CopyDurationMs: 10000 #ms copied ability remains available
 
     Plant:
       VineSnare:
@@ -499,6 +529,31 @@ AmonPack:
       DamagePerProjectile: 4.5 #hearts dealt per lightning projectile
       Cooldown: 8000 #ms between ability uses
 
+    FirelordStance:
+      Cooldown: 30000 #ms between ability uses
+      Duration: 15 #seconds stance lasts
+      BroadcastRadius: 50.0 #blocks radius for server broadcast message
+      SpeedAmplifier: 1 #speed potion level (1 = Speed II)
+      BoltBurst:
+        Directions: 8 #number of lightning bolts fired on fall impact
+        Damage: 3.0 #hearts dealt per bolt
+        Range: 12.0 #blocks range per bolt
+        Bounces: 2 #wall bounces per bolt
+      Boost:
+        CooldownMultiplier: 0.6 #cooldown reduction multiplier for fire/lightning skills
+        RangeMultiplier: 1.4 #range multiplier for fire/lightning skills
+        DamageMultiplier: 1.5 #damage multiplier for fire/lightning skills
+        SpeedMultiplier: 1.3 #speed multiplier for fire/lightning skills
+
+    ArcBlast:
+      Cooldown: 8000 #ms between ability uses
+      Damage: 4.5 #base hearts dealt per bolt
+      Range: 30.0 #blocks max flight range
+      Speed: 1.2 #projectile movement speed
+      ChainCount: 3 #maximum targets chained
+      ChainRange: 6.0 #blocks range to chain to nearby targets
+      WaterExtraDamage: 4.0 #extra hearts dealt if target is in water
+
   Air:
     Sound:
       Harmony:
@@ -570,3 +625,54 @@ AmonPack:
       SlowPower: 3 #slowness level
       SlowDuration: 40 #ticks slowness lasts
       AffectUser: false #if true, effects apply to caster
+
+  Chi:
+    DaggerTrick:
+      Cooldown: 5000 #ms between ability uses
+      BackwardForce: 1.2 #velocity multiplier for backward leap
+      UpForce: 0.6 #vertical velocity for backward leap
+      MaxArrowClicks: 3 #maximum clicks allowed in air
+      ArrowCount: 3 #arrows launched per click
+      ArrowRange: 25 #max range of arrows
+      ArrowDamage: 2.5 #hearts per arrow hit
+      ArrowSpeed: 1.0 #arrow speed multiplier
+
+    PoisonKnife:
+      Cooldown: 8000 #ms between ability uses
+      Damage: 3.0 #hearts dealt on knife hit
+      PoisonDuration: 100 #ticks poison lasts
+      PoisonAmplifier: 1 #poison effect level
+      BlindnessDuration: 60 #ticks blindness lasts
+      ChiBlockDuration: 4000 #ms chi blocking lasts on target
+
+    PulseBreak:
+      Cooldown: 10000 #ms between ability uses
+      Damage: 3.0 #hearts dealt on impact
+      Knockback: 0.8 #knockback multiplier
+      AbilitiesToCooldownCount: 2 #number of random bound abilities affected
+      AddedCooldownMs: 5000 #ms added to existing cooldown of each target ability
+
+    Feintstep:
+      ChargeTime: 1500 #ms to charge shift
+      Duration: 10000 #ms stance lasts
+      Cooldown: 12000 #ms cooldown after stance ends
+      MaxDodges: 3 #maximum damage instances dodged
+      SpeedAmplifier: 1 #speed potion amplifier (Speed II)
+      JumpAmplifier: 1 #jump boost potion amplifier (Jump Boost II)
+      DashForce: 1.2 #evasive dash velocity
+
+    PointBlank:
+      Cooldown: 12000 #ms between ability uses
+      Duration: 8000 #ms stance window remains active
+      Range: 8.0 #max distance to target enemy
+      ChargeTime: 2500 #ms for target ring to complete
+      HeavyDamage: 8.0 #hearts dealt on precision hit
+      ChiBlockDuration: 5000 #ms chi blocking applied on precision hit
+
+    QuickPalms:
+      Cooldown: 8000 #ms between ability uses
+      Range: 6.0 #max distance to enemy for shift stance
+      StanceDuration: 5000 #ms shift stance lasts
+      InitialDamage: 2.5 #hearts dealt on first strike
+      PointCount: 3 #number of target points generated on victim
+      StrikeDamage: 2.0 #hearts dealt per target point hit

@@ -1,14 +1,23 @@
 package Abilities.Bending;
 
 import Abilities.PK_Abilities.Air.*;
+import Abilities.PK_Abilities.Chi.*;
 import Abilities.PK_Abilities.Earth.*;
 import Abilities.PK_Abilities.Fire.*;
 import Abilities.PK_Abilities.Water.*;
 import Abilities.Util_Objects.EarthDisc;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 
 import com.projectkorra.projectkorra.BendingPlayer;
@@ -133,6 +142,29 @@ public class AbilitiesListener implements Listener {
 						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Fire.Coil.class)) {
 							new Abilities.PK_Abilities.Fire.Coil(player);
 						}
+					} else if (boundAbility.equalsIgnoreCase("FirelordStance")) {
+						new FirelordStance(player);
+					} else if (boundAbility.equalsIgnoreCase("DaggerTrick")) {
+						if (!CoreAbility.hasAbility(player, DaggerTrick.class)) {
+							new DaggerTrick(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("Feintstep")) {
+						new Feintstep(player);
+					} else if (boundAbility.equalsIgnoreCase("ArcBlast")) {
+						new ArcBlast(player);
+					} else if (boundAbility.equalsIgnoreCase("FrostGrip")) {
+						new FrostGrip(player);
+					} else if (boundAbility.equalsIgnoreCase("VeinFlow")) {
+						new VeinFlow(player);
+					} else if (boundAbility.equalsIgnoreCase("QuickPalms")) {
+						new QuickPalms(player);
+					} else if (boundAbility.equalsIgnoreCase("Circulation")) {
+						new Circulation(player);
+					} else if (boundAbility.equalsIgnoreCase("HeartReading")) {
+						if (CoreAbility.hasAbility(player, HeartReading.class)) {
+							HeartReading hr = CoreAbility.getAbility(player, HeartReading.class);
+							hr.onUseSlot();
+						}
 					} else if (boundAbility.equalsIgnoreCase("Burrow")) {
 						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.Burrow.class)) {
 							new Abilities.PK_Abilities.Earth.Burrow(player);
@@ -232,6 +264,25 @@ public class AbilitiesListener implements Listener {
 						FlameSpins fs = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
 								FlameSpins.class);
 						fs.onLeftClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("DaggerTrick")) {
+					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, DaggerTrick.class)) {
+						DaggerTrick dt = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
+								DaggerTrick.class);
+						dt.onLeftClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FirelordStance")) {
+					new FirelordStance(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("PointBlank")) {
+					if (!CoreAbility.hasAbility(player, PointBlank.class)) {
+						new PointBlank(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("VeinFlow")) {
+					new VeinFlow(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("HeartReading")) {
+					if (CoreAbility.hasAbility(player, HeartReading.class)) {
+						HeartReading hr = CoreAbility.getAbility(player, HeartReading.class);
+						hr.onUseSlot();
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AerialPush")) {
 					new AerialPush(player);
@@ -459,6 +510,31 @@ public class AbilitiesListener implements Listener {
 	public void onEntityDamage(org.bukkit.event.entity.EntityDamageEvent event) {
 		if (event.getEntity() instanceof Player) {
 			Player player = (Player) event.getEntity();
+			if (CoreAbility.hasAbility(player, Feintstep.class)) {
+				Feintstep fs = CoreAbility.getAbility(player, Feintstep.class);
+				if (fs != null && fs.isStanceActive()) {
+					event.setCancelled(true);
+					org.bukkit.entity.Entity damager = (event instanceof EntityDamageByEntityEvent edbe) ? edbe.getDamager() : null;
+					fs.onDodge(damager);
+					return;
+				}
+			}
+			if (CoreAbility.hasAbility(player, QuickPalms.class)) {
+				QuickPalms qp = CoreAbility.getAbility(player, QuickPalms.class);
+				if (qp != null && qp.isShiftStanceActive()) {
+					event.setCancelled(true);
+					org.bukkit.entity.Entity damager = (event instanceof EntityDamageByEntityEvent edbe) ? edbe.getDamager() : null;
+					qp.onDodgeDamage(damager);
+					return;
+				}
+			}
+			if (event.getCause() == DamageCause.FALL && FirelordStanceManager.isActive(player)) {
+				event.setCancelled(true);
+				FirelordStance stance = FirelordStanceManager.getStance(player);
+				if (stance != null) {
+					stance.triggerBoltBurst();
+				}
+			}
 			if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSplit.class)) {
 				FlameSplit fs = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, FlameSplit.class);
 				if (fs != null && fs.isParrying()) {
@@ -480,6 +556,131 @@ public class AbilitiesListener implements Listener {
 				}
 			}
 		}
+	}
+
+	@EventHandler
+	public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+		if (event.getDamager() instanceof Player attacker) {
+			BendingPlayer bAttacker = BendingPlayer.getBendingPlayer(attacker);
+
+			// PulseBreak melee attack handler
+			if (bAttacker != null && "PulseBreak".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+				if (!bAttacker.isOnCooldown("PulseBreak")) {
+					if (event.getEntity() instanceof LivingEntity victim) {
+						PulseBreak pb = new PulseBreak(attacker);
+						pb.onHitEntity(victim);
+					}
+				}
+			}
+
+			// QuickPalms melee attack handler
+			if (bAttacker != null && "QuickPalms".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+				if (!bAttacker.isOnCooldown("QuickPalms")) {
+					if (event.getEntity() instanceof LivingEntity victim) {
+						QuickPalms qp = CoreAbility.getAbility(attacker, QuickPalms.class);
+						if (qp == null) {
+							qp = new QuickPalms(attacker);
+						}
+						qp.onHitEntity(victim);
+					}
+				}
+			}
+
+			// HeartReading melee attack handler
+			if (bAttacker != null && "HeartReading".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+				if (!bAttacker.isOnCooldown("HeartReading")) {
+					if (event.getEntity() instanceof LivingEntity victim) {
+						HeartReading hr = CoreAbility.getAbility(attacker, HeartReading.class);
+						if (hr == null) {
+							hr = new HeartReading(attacker);
+						}
+						hr.onHitEntity(victim);
+					}
+				}
+			}
+
+			// PointBlank precision attack handler
+			if (CoreAbility.hasAbility(attacker, PointBlank.class)) {
+				PointBlank pb = CoreAbility.getAbility(attacker, PointBlank.class);
+				if (pb != null && event.getEntity() instanceof LivingEntity victim) {
+					pb.onHitTarget(victim);
+				}
+			}
+
+			// VeinFlow stance attack handler
+			if (VeinFlowManager.isActive(attacker)) {
+				VeinFlow stance = VeinFlowManager.getStance(attacker);
+				if (stance != null && event.getEntity() instanceof LivingEntity victim) {
+					stance.tryApplyAttackBuffs(victim);
+				}
+			}
+
+			// PoisonKnife attack handler
+			ItemStack held = attacker.getInventory().getItemInMainHand();
+			if (held != null && held.getType() == Material.WOODEN_SWORD) {
+				if (PoisonKnife.isPoisonKnife(held)) {
+					event.setCancelled(true);
+					if (event.getEntity() instanceof LivingEntity victim) {
+						PoisonKnife pk = CoreAbility.getAbility(attacker, PoisonKnife.class);
+						if (pk == null) {
+							pk = new PoisonKnife(attacker);
+						}
+						pk.onHitEntity(victim);
+					}
+				} else {
+					event.setCancelled(true);
+					PoisonKnife.purgeUnregisteredKnives(attacker);
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onItemHeld(PlayerItemHeldEvent event) {
+		Player player = event.getPlayer();
+		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
+		if (bPlayer == null) return;
+
+		String previousAbi = bPlayer.getAbilities().get(event.getPreviousSlot() + 1);
+		String nextAbi = bPlayer.getAbilities().get(event.getNewSlot() + 1);
+
+		if ("PoisonKnife".equalsIgnoreCase(nextAbi)) {
+			if (!bPlayer.isOnCooldown("PoisonKnife") && !CoreAbility.hasAbility(player, PoisonKnife.class)) {
+				new PoisonKnife(player);
+			}
+		}
+
+		if ("PoisonKnife".equalsIgnoreCase(previousAbi)) {
+			PoisonKnife.purgeUnregisteredKnives(player);
+		}
+	}
+
+	@EventHandler
+	public void onDropItem(PlayerDropItemEvent event) {
+		if (PoisonKnife.isPoisonKnife(event.getItemDrop().getItemStack())) {
+			event.getItemDrop().remove();
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent event) {
+		if (PoisonKnife.isPoisonKnife(event.getCurrentItem()) || PoisonKnife.isPoisonKnife(event.getCursor())) {
+			event.setCancelled(true);
+			if (event.getWhoClicked() instanceof Player p) {
+				PoisonKnife.purgeUnregisteredKnives(p);
+			}
+		}
+	}
+
+	@EventHandler
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		PoisonKnife.purgeUnregisteredKnives(event.getPlayer());
+	}
+
+	@EventHandler
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		event.getDrops().removeIf(PoisonKnife::isPoisonKnife);
 	}
 
 	@EventHandler

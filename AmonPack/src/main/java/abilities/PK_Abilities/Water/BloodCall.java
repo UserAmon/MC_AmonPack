@@ -139,12 +139,20 @@ public class BloodCall extends BloodAbility implements AddonAbility {
         Vector toGuide = guide.toVector().subtract(player.getEyeLocation().toVector()).normalize();
         double dot = player.getEyeLocation().getDirection().normalize().dot(toGuide);
 
+        boolean isVeinFlow = VeinFlowManager.isActive(player);
+        if (isVeinFlow) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c🩸 VeinFlow — §4BloodCall"));
+        }
+
+        double step = isVeinFlow ? ANGLE_STEP * 1.5 : ANGLE_STEP;
+
         if (dot > FOLLOW_THRESHOLD) {
-            weaveAngle += ANGLE_STEP;
+            weaveAngle += step;
             if ((int) weaveAngle % 30 == 0) {
                 player.getWorld().playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.3f, 1.3f);
             }
-        } else {
+        } else if (!isVeinFlow) {
             player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
                     new net.md_5.bungee.api.chat.TextComponent(
                             "" + org.bukkit.ChatColor.DARK_RED + "Skup się na krążącej krwi"));

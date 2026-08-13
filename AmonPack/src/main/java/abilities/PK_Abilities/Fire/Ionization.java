@@ -81,6 +81,11 @@ public class Ionization extends LightningAbility implements AddonAbility {
             return;
         }
 
+        if (FirelordStanceManager.isActive(player)) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eIonization"));
+        }
+
         switch (state) {
             case CHARGING:
                 if (System.currentTimeMillis() - startTime >= chargeTime) {
@@ -131,8 +136,15 @@ public class Ionization extends LightningAbility implements AddonAbility {
         Location origin = player.getEyeLocation().clone().add(0, 0.5, 0);
         Vector direction = player.getLocation().getDirection();
 
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+
+        double actualDamage = isFirelord ? damage * stance.getDamageMultiplier() : damage;
+        double actualRange = isFirelord ? range * stance.getRangeMultiplier() : range;
+        long actualCooldown = isFirelord ? (long) (cooldown * stance.getCooldownMultiplier()) : cooldown;
+
         List<LightningBolt> bolts = new ArrayList<>();
-        bolts.add(new LightningBolt(player, this, origin, direction, damage, range, bounces, true));
+        bolts.add(new LightningBolt(player, this, origin, direction, actualDamage, actualRange, bounces, true));
 
         RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         boolean hasStatic = (branch != null && branch.hasUpgrade("Static"));
@@ -140,8 +152,8 @@ public class Ionization extends LightningAbility implements AddonAbility {
         if (hasStatic) {
             Vector leftDir = rotateY(direction, 20);
             Vector rightDir = rotateY(direction, -20);
-            bolts.add(new LightningBolt(player, this, origin, leftDir, damage * 0.5, range * 0.7, Math.max(1, bounces - 2), false));
-            bolts.add(new LightningBolt(player, this, origin, rightDir, damage * 0.5, range * 0.7, Math.max(1, bounces - 2), false));
+            bolts.add(new LightningBolt(player, this, origin, leftDir, actualDamage * 0.5, actualRange * 0.7, Math.max(1, bounces - 2), false));
+            bolts.add(new LightningBolt(player, this, origin, rightDir, actualDamage * 0.5, actualRange * 0.7, Math.max(1, bounces - 2), false));
         }
 
         new BukkitRunnable() {
@@ -163,7 +175,7 @@ public class Ionization extends LightningAbility implements AddonAbility {
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
-        bPlayer.addCooldown(this, cooldown);
+        bPlayer.addCooldown(this, actualCooldown);
         remove();
     }
 

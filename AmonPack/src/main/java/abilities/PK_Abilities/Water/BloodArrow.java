@@ -105,24 +105,29 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
                 }
             }
 
-            StringBuilder barBuilder = new StringBuilder();
-            if (level == 0) {
-                barBuilder.append("§7[ §f");
-                for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("░");
-                barBuilder.append(" §7] §7§lBLOOD WEAVE...");
-            } else if (level < maxChargeLevel) {
-                barBuilder.append("§c[ §4");
-                for (int k = 0; k < level; k++) barBuilder.append("█");
-                barBuilder.append("§7");
-                for (int k = 0; k < maxChargeLevel - level; k++) barBuilder.append("░");
-                barBuilder.append(" §c] §c§lLEVEL ").append(level);
+            if (VeinFlowManager.isActive(player)) {
+                player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c🩸 VeinFlow — §4BloodArrow"));
             } else {
-                barBuilder.append("§4§l[ §c");
-                for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("█");
-                barBuilder.append(" §4§l] §c§lMAX BLOOD ARROW");
+                StringBuilder barBuilder = new StringBuilder();
+                if (level == 0) {
+                    barBuilder.append("§7[ §f");
+                    for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("░");
+                    barBuilder.append(" §7] §7§lBLOOD WEAVE...");
+                } else if (level < maxChargeLevel) {
+                    barBuilder.append("§c[ §4");
+                    for (int k = 0; k < level; k++) barBuilder.append("█");
+                    barBuilder.append("§7");
+                    for (int k = 0; k < maxChargeLevel - level; k++) barBuilder.append("░");
+                    barBuilder.append(" §c] §c§lLEVEL ").append(level);
+                } else {
+                    barBuilder.append("§4§l[ §c");
+                    for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("█");
+                    barBuilder.append(" §4§l] §c§lMAX BLOOD ARROW");
+                }
+                player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText(barBuilder.toString()));
             }
-            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText(barBuilder.toString()));
 
             double radius = 0.6 + (level * 0.2);
             double angle = (System.currentTimeMillis() / 160.0) * (level + 1);
@@ -168,11 +173,18 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
             return;
         }
 
-        bPlayer.addCooldown(this);
+        boolean isVeinFlow = VeinFlowManager.isActive(player);
+        VeinFlow stance = VeinFlowManager.getStance(player);
+        long actualCd = isVeinFlow ? (long) (cooldown * 0.6) : cooldown;
+
+        bPlayer.addCooldown(this, actualCd);
         state = State.FIRING;
 
         double damage = baseDamage + (level * damageMultiplier);
         double range = baseRange + (level * rangeMultiplier);
+        if (isVeinFlow && stance != null) {
+            damage *= stance.getDamageMultiplier();
+        }
         int chains = 1 + level;
         double trackDist = trackRange + (level * 2.0);
         double chainDist = chainRange + (level * 2.0);

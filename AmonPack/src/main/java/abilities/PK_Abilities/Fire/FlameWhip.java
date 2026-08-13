@@ -68,6 +68,11 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
             return;
         }
 
+        if (FirelordStanceManager.isActive(player)) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eFlameWhip"));
+        }
+
         durationTicks++;
         if (durationTicks >= maxDurationTicks) {
             finish();
@@ -77,6 +82,10 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
         if (AmonPackPlugin.ENABLE_SKILL_TREE) {
             SpecialTriggerManager.applySoftCooldownToToolbar(player);
         }
+
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+        double actualMaxLength = isFirelord ? maxLength * stance.getRangeMultiplier() : maxLength;
 
         Location eyeLoc = player.getEyeLocation();
         Vector targetCameraDir = eyeLoc.getDirection().clone().normalize();
@@ -89,7 +98,7 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
         boolean isCameraMoving = durationTicks <= 40;
         if (durationTicks <= 20) {
-            currentLength = maxLength * ((double) durationTicks / 80.0);
+            currentLength = actualMaxLength * ((double) durationTicks / 80.0);
         } else if (lastCameraDir != null) {
             double angleDiff = Math.toDegrees(lastCameraDir.angle(targetCameraDir));
             if (Double.isNaN(angleDiff)) {
@@ -101,7 +110,7 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
             if (angleDiff > 0.8) {
                 double lengthGain = angleDiff * 0.02;
-                currentLength = Math.min(maxLength, currentLength + lengthGain);
+                currentLength = Math.min(actualMaxLength, currentLength + lengthGain);
             } else {
                 currentLength = Math.max(minLength, currentLength - 0.1);
             }
@@ -132,6 +141,11 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
 
     private void renderWhipBranch(Location handLoc, Vector whipDir, Vector rightVec, int sideMultiplier,
             Set<LivingEntity> hitEntities, boolean isCameraMoving) {
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+        double actualMaxLength = isFirelord ? maxLength * stance.getRangeMultiplier() : maxLength;
+        double actualDamage = isFirelord ? damage * stance.getDamageMultiplier() : damage;
+
         boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
                 || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
         int segments = (int) Math.ceil(currentLength * 6.0);
@@ -139,7 +153,7 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
             double progressRatio = (double) i / (double) segments;
             double dist = progressRatio * currentLength;
 
-            double waveOffset = Math.sin(progressRatio * Math.PI) * 0.3 * sideMultiplier * (currentLength / maxLength);
+            double waveOffset = Math.sin(progressRatio * Math.PI) * 0.3 * sideMultiplier * (currentLength / actualMaxLength);
             double verticalWave = Math.sin(progressRatio * Math.PI * 3.0 + (durationTicks * 0.4)) * 0.5;
 
             Location segmentLoc = handLoc.clone()
@@ -148,9 +162,10 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
                     .add(0, verticalWave, 0);
 
             if (i % 2 == 0) {
-                if (isBlue) {
-                    segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 1, 0.03, 0.03, 0.03,
-                            0.01);
+                if (isFirelord) {
+                    segmentLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, segmentLoc, 2, 0.03, 0.03, 0.03, 0.05);
+                } else if (isBlue) {
+                    segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
                 } else {
                     ParticleEffect.FLAME.display(segmentLoc, 1, 0.03, 0.03, 0.03, 0.01);
                 }
@@ -159,7 +174,9 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
                 ParticleEffect.SMOKE_NORMAL.display(segmentLoc, 1, 0.02, 0.02, 0.02, 0.01);
             }
             if (i == segments) {
-                if (isBlue) {
+                if (isFirelord) {
+                    segmentLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, segmentLoc, 5, 0.1, 0.1, 0.1, 0.1);
+                } else if (isBlue) {
                     segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 3, 0.1, 0.1, 0.1, 0.05);
                 } else {
                     ParticleEffect.LAVA.display(segmentLoc, 2, 0.1, 0.1, 0.1, 0.05);
@@ -177,16 +194,17 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
                         LivingEntity target = (LivingEntity) entity;
                         if (!hitEntities.contains(target)) {
                             hitEntities.add(target);
-                            DamageHandler.damageEntity(target, damage, this);
+                            DamageHandler.damageEntity(target, actualDamage, this);
                             target.setFireTicks(burnDuration);
 
                             Vector kb = whipDir.clone().multiply(knockback).setY(0.25);
                             target.setVelocity(kb);
 
                             segmentLoc.getWorld().playSound(segmentLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.3f);
-                            if (isBlue) {
-                                segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 10, 0.3, 0.3,
-                                        0.3, 0.1);
+                            if (isFirelord) {
+                                segmentLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, segmentLoc, 15, 0.3, 0.3, 0.3, 0.2);
+                            } else if (isBlue) {
+                                segmentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
                             } else {
                                 ParticleEffect.FLAME.display(segmentLoc, 10, 0.3, 0.3, 0.3, 0.1);
                             }
@@ -198,7 +216,11 @@ public class FlameWhip extends FireAbility implements AddonAbility, SpecialTrigg
     }
 
     private void finish() {
-        bPlayer.addCooldown(this, cooldown);
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        FirelordStance stance = FirelordStanceManager.getStance(player);
+        long actualCooldown = isFirelord ? (long) (cooldown * stance.getCooldownMultiplier()) : cooldown;
+
+        bPlayer.addCooldown(this, actualCooldown);
         if (AmonPackPlugin.ENABLE_SKILL_TREE) {
             SpecialTriggerManager.unregisterActiveSpecial(player);
         }
