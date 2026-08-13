@@ -1,12 +1,12 @@
 mname: "Atak Bandytów na Makapu"
-schematic: "Makapu.schem"
+schematic: "MakapuLapis.schem"
 paste-location:
   x: 0
   y: 50
   z: 0
 spawn-location:
   x: -0.5
-  y: 43
+  y: 45
   z: 27
 exit-location:
   world: "world"
@@ -14,7 +14,6 @@ exit-location:
   y: 64
   z: 0
 initial-encounter: "MakapuStart"
-
 items:
   klucz_do_klatki:
     material: "PRISMARINE_SHARD"
@@ -32,15 +31,14 @@ rewards:
   dungeon-xp: 500
   money: 1000.0
   commands:
-    - "give %player% diamond 67"
+    - "give %player% diamond 60"
   items:
     item1:
-      material: "DIAMOND"
+      material: "EMERALD"
       amount: 2
       display-name: "&bDiamentowy Mroźny Kryształ"
       lore:
         - "&7Nagroda za ukończenie Lodowej Krypty."
-
 encounters:
   MakapuStart:
     description: "Komnata Wstępna - Bandyci"
@@ -48,7 +46,7 @@ encounters:
     conditions:
       - type: ALL_PLAYERS_READY
         x: -0.8
-        y: 43
+        y: 45
         z: 25.5
         yaw: -175
         pitch: -20
@@ -109,7 +107,7 @@ encounters:
     conditions:
       - type: "ZONE"
         x: 65
-        y: 58
+        y: 59
         z: -26
         radius: 4
         time: 20
@@ -131,7 +129,7 @@ encounters:
         amount: 2
         level: 1
         x: 51
-        y: 58
+        y: 59
         z: -26
         range: 3
         interval: 10
@@ -144,7 +142,7 @@ encounters:
         z2: -34
 ####DOM 2 - ŚCIEŻKA, MOBY i KLUCZ
   ENC_1_2:
-    title: "&cOdnajdź i uwolnij uwięzionego &a&lKonioStrusia!"
+    title: "&cOdnajdź i uwolnij uwięzionego &a&lShirshu!"
     conditions:
       - type: "DROP_ON_DEATH"
         mob-name: "Bandyta"
@@ -238,13 +236,13 @@ encounters:
             message: "&aDoskonale! Wszystkie punkty cieni zostały zebrane na czas!"
     effects:
       - type: "SEND_MESSAGE"
-        message: "&e[Dungeon] &6W jednym z domów zaszyli się bandyci. Zamknieli w nim KonioStrusia, przejmij ich posterunek i uwolnij zwierze!"
+        message: "&e[Dungeon] &6W jednym z domów zaszyli się bandyci. Zamknieli w nim KretoBorsuka, przejmij ich posterunek i uwolnij zwierze!"
       - type: "SPAWN_UNTIL"
         mob-name: "Bandyta_nonbender_1"
         amount: 3
         level: 1
         x: 107
-        y: 60
+        y: 61
         z: -16
         range: 3
         interval: 20
@@ -253,20 +251,17 @@ encounters:
         amount: 3
         level: 1
         x: 134
-        y: 60
+        y: 61
         z: -13
         range: 3
         interval: 20
       - type: "OPEN_DOOR"
-        x1: 49
-        y1: 62
-        z1: -34
-        x2: 46
-        y2: 57
-        z2: -34
-
-
-
+        x1: 107
+        y1: 61
+        z1: -33
+        x2: 107
+        y2: 62
+        z2: -33
   Makapu_Boss_1:
     description: "Komnata Bossa - Władca Mrozu"
     title: "&c&lLodowy Władca Ymir &8- &fStarcie Finałowe"
