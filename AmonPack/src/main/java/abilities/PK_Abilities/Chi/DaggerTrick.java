@@ -127,7 +127,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
     private boolean isGrounded() {
         Location loc = player.getLocation();
-        return loc.getBlock().add(0, -0.1, 0).getType().isSolid() || player.isOnGround();
+        return loc.clone().add(0, -0.1, 0).getBlock().getType().isSolid() || player.isOnGround();
     }
 
     public void onLeftClick() {

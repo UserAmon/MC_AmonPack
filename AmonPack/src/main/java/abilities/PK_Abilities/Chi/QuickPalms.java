@@ -204,7 +204,7 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
     }
 
     private void apply1SecChiBlockAndSlow(LivingEntity victim) {
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20, 1, false, false));
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 1, false, false));
 
         if (victim instanceof Player targetPlayer) {
             BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(targetPlayer);

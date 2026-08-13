@@ -5,8 +5,10 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.ChiAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -17,6 +19,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class PoisonKnife extends ChiAbility implements AddonAbility {
 
@@ -143,13 +146,23 @@ public class PoisonKnife extends ChiAbility implements AddonAbility {
         victim.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisonDuration, poisonAmplifier, false, false));
         victim.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blindnessDuration, 0, false, false));
 
-        BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(victim);
-        if (targetBPlayer != null) {
-            targetBPlayer.blockChi(chiBlockDuration);
+        if (victim instanceof Player targetPlayer) {
+            BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(targetPlayer);
+            if (targetBPlayer != null) {
+                targetBPlayer.blockChi();
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (targetBPlayer.isChiBlocked()) {
+                            targetBPlayer.unblockChi();
+                        }
+                    }
+                }.runTaskLater(AmonPackPlugin.plugin, Math.max(1L, chiBlockDuration / 50L));
+            }
         }
 
         victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.2f);
-        victim.getWorld().spawnParticle(org.bukkit.Particle.ITEM_CRACK, victim.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.1, new ItemStack(Material.SLIME_BALL));
+        victim.getWorld().spawnParticle(Particle.CRIT, victim.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2, 0.1);
 
         removeWithCooldown();
     }

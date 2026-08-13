@@ -188,7 +188,7 @@ public class FrostGrip extends IceAbility implements AddonAbility {
 
     private void applyFreezeEffects(LivingEntity target) {
         DamageHandler.damageEntity(target, damage, this);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slowDuration, slowAmplifier, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowDuration, slowAmplifier, false, false));
 
         target.getWorld().playSound(target.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 0.8f);
         target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation().add(0, 0.5, 0), 20, 0.4, 0.4, 0.4, 0.1, new ItemStack(Material.SNOWBALL));
@@ -205,7 +205,7 @@ public class FrostGrip extends IceAbility implements AddonAbility {
                     return;
                 }
 
-                if (target.getLocation().getBlock().add(0, -0.1, 0).getType() == Material.AIR || target.getVelocity().getY() > 0) {
+                if (target.getLocation().add(0, -0.1, 0).getBlock().getType() == Material.AIR || target.getVelocity().getY() > 0) {
                     Vector v = target.getVelocity();
                     v.setY(-0.5);
                     target.setVelocity(v);

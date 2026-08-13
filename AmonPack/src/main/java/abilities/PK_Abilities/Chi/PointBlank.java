@@ -13,6 +13,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class PointBlank extends ChiAbility implements AddonAbility {
 
@@ -154,9 +155,19 @@ public class PointBlank extends ChiAbility implements AddonAbility {
 
         DamageHandler.damageEntity(victim, heavyDamage, this);
 
-        BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(victim);
-        if (targetBPlayer != null) {
-            targetBPlayer.blockChi(chiBlockDuration);
+        if (victim instanceof Player targetPlayer) {
+            BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(targetPlayer);
+            if (targetBPlayer != null) {
+                targetBPlayer.blockChi();
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (targetBPlayer.isChiBlocked()) {
+                            targetBPlayer.unblockChi();
+                        }
+                    }
+                }.runTaskLater(AmonPackPlugin.plugin, Math.max(1L, chiBlockDuration / 50L));
+            }
         }
 
         Location hitLoc = victim.getLocation().add(0, 1.2, 0);
