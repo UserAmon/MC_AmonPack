@@ -53,16 +53,15 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
         loadConfig();
 
+        this.startTime = System.currentTimeMillis();
         if (player.isSneaking()) {
-            LivingEntity enemy = findNearestEnemy(player, range);
-            if (enemy == null) {
-                return;
-            }
             this.mode = Mode.SHIFT_STANCE;
-            this.startTime = System.currentTimeMillis();
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.4f);
-            start();
+        } else {
+            this.mode = Mode.NONE;
         }
+
+        start();
     }
 
     private void loadConfig() {
@@ -143,10 +142,13 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
     public void onDodgeDamage(Entity damager) {
         if (mode != Mode.SHIFT_STANCE) return;
 
-        if (damager != null) {
-            Location behind = damager.getLocation().subtract(damager.getLocation().getDirection().normalize().multiply(1.5));
-            behind.setDirection(damager.getLocation().getDirection());
+        if (damager instanceof LivingEntity target) {
+            Location behind = target.getLocation().subtract(target.getLocation().getDirection().normalize().multiply(1.5));
+            behind.setDirection(target.getLocation().getDirection());
             player.teleport(behind);
+
+            DamageHandler.damageEntity(target, initialDamage, this);
+            apply1SecChiBlockAndSlow(target);
 
             player.getWorld().playSound(behind, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 1.8f);
             player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, behind.clone().add(0, 1.0, 0), 2, 0.2, 0.2, 0.2, 0);

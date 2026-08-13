@@ -5,6 +5,7 @@ import Abilities.Util_Objects.SmokeSource;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.FireAbility;
+import com.projectkorra.projectkorra.ability.LightningAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
@@ -18,9 +19,11 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-public class Coil extends FireAbility implements AddonAbility {
+public class Coil extends LightningAbility implements AddonAbility {
 
-    private enum State { CHARGING, FIRED }
+    private enum State {
+        CHARGING, FIRED
+    }
 
     private State state;
     private long startTime;
@@ -46,14 +49,18 @@ public class Coil extends FireAbility implements AddonAbility {
         }
 
         this.maxRings = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Coil.MaxRings", 3);
-        this.chargeIntervalPerRing = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Coil.ChargeIntervalPerRing", 1000);
+        this.chargeIntervalPerRing = AmonPackPlugin.getAbilitiesConfig()
+                .getLong("AmonPack.Fire.Coil.ChargeIntervalPerRing", 1000);
         this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.ProjectileSpeed", 0.7);
-        this.randomnessFactor = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.RandomnessFactor", 0.45);
-        this.lightningVisualInterval = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.Coil.LightningVisualInterval", 6);
+        this.randomnessFactor = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.RandomnessFactor",
+                0.45);
+        this.lightningVisualInterval = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Fire.Coil.LightningVisualInterval", 6);
         this.smokeRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.SmokeRadius", 5.0);
         this.aoeDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.AoEDamage", 8.0);
         this.aoeKnockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.AoEKnockback", 1.2);
-        this.damagePerProjectile = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.DamagePerProjectile", 4.5);
+        this.damagePerProjectile = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.Coil.DamagePerProjectile", 4.5);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Coil.Cooldown", 8000);
 
         this.state = State.CHARGING;
@@ -86,7 +93,8 @@ public class Coil extends FireAbility implements AddonAbility {
             renderTideLockStyleSlowRings();
 
             if (elapsed % 600 < 50) {
-                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_COPPER_BREAK, 0.4f, 1.0f + (ringCount * 0.2f));
+                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_COPPER_BREAK, 0.4f,
+                        1.0f + (ringCount * 0.2f));
             }
         }
     }
@@ -109,7 +117,8 @@ public class Coil extends FireAbility implements AddonAbility {
 
                 if (isFirelord) {
                     player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pt, 2, 0.02, 0.02, 0.02, 0.05);
-                    player.getWorld().spawnParticle(Particle.DUST, pt, 1, 0, 0, 0, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(180, 220, 255), 1.0f));
+                    player.getWorld().spawnParticle(Particle.DUST, pt, 1, 0, 0, 0, 0,
+                            new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(180, 220, 255), 1.0f));
                 } else {
                     player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pt, 1, 0.01, 0.01, 0.01, 0.01);
                     if (i % 4 == 0) {
@@ -139,8 +148,7 @@ public class Coil extends FireAbility implements AddonAbility {
             Vector spreadDir = baseDir.clone().add(new Vector(
                     (Math.random() - 0.5) * 0.8,
                     0.02,
-                    (Math.random() - 0.5) * 0.8
-            )).normalize().multiply(actualSpeed);
+                    (Math.random() - 0.5) * 0.8)).normalize().multiply(actualSpeed);
 
             spawnGroundLightningProjectile(eye.clone(), spreadDir, actualDamage, actualSmokeRadius);
         }
@@ -149,10 +157,10 @@ public class Coil extends FireAbility implements AddonAbility {
         remove();
     }
 
-    private void spawnGroundLightningProjectile(Location startLoc, Vector initialVel, double currentDamage, double currentSmokeRadius) {
+    private void spawnGroundLightningProjectile(Location startLoc, Vector initialVel, double currentDamage,
+            double currentSmokeRadius) {
         Abilities.Util_Objects.LightningBolt bolt = new Abilities.Util_Objects.LightningBolt(
-                player, this, startLoc, initialVel.normalize(), currentDamage, 25.0, 0, false
-        );
+                player, this, startLoc, initialVel.normalize(), currentDamage, 25.0, 0, false);
 
         new BukkitRunnable() {
             private int ticks = 0;
@@ -221,7 +229,8 @@ public class Coil extends FireAbility implements AddonAbility {
         for (Entity e : GeneralMethods.getEntitiesAroundPoint(loc, currentSmokeRadius)) {
             if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId()) {
                 DamageHandler.damageEntity(le, actualAoEDamage, this);
-                Vector push = le.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(aoeKnockback).setY(0.4);
+                Vector push = le.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(aoeKnockback)
+                        .setY(0.4);
                 le.setVelocity(push);
             }
         }

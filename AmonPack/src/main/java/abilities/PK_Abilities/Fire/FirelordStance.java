@@ -4,12 +4,14 @@ import Abilities.Util_Objects.LightningBolt;
 import Plugin.AmonPackPlugin;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.FireAbility;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -39,6 +41,7 @@ public class FirelordStance extends FireAbility implements AddonAbility {
     private long startTime;
     private Random random = new Random();
     private boolean alive = true;
+    private BossBar bossBar;
 
     public FirelordStance(Player player) {
         super(player);
@@ -58,6 +61,10 @@ public class FirelordStance extends FireAbility implements AddonAbility {
         loadConfig();
 
         this.startTime = System.currentTimeMillis();
+        this.bossBar = Bukkit.createBossBar("§6⚡ FIRELORD STANCE ⚡", BarColor.YELLOW, BarStyle.SOLID);
+        this.bossBar.addPlayer(player);
+        this.bossBar.setVisible(true);
+
         FirelordStanceManager.registerStance(player, this);
 
         onActivateVisualsAndBroadcast();
@@ -125,9 +132,10 @@ public class FirelordStance extends FireAbility implements AddonAbility {
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 10, speedAmplifier, false, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 10, 0, false, false));
 
-        long remainingSec = Math.max(0, (durationMs - elapsed) / 1000L);
-        String actionBar = "§6⚡ §eFIRELORD STANCE §6⚡ §7[§e" + remainingSec + "s§7]";
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionBar));
+        if (bossBar != null) {
+            double pct = 1.0 - ((double) elapsed / durationMs);
+            bossBar.setProgress(Math.max(0.0, Math.min(1.0, pct)));
+        }
     }
 
     public void triggerBoltBurst() {
@@ -191,6 +199,10 @@ public class FirelordStance extends FireAbility implements AddonAbility {
     public void remove() {
         if (!alive) return;
         alive = false;
+        if (bossBar != null) {
+            bossBar.removeAll();
+            bossBar.setVisible(false);
+        }
         FirelordStanceManager.unregisterStance(player);
         bPlayer.addCooldown(this, cooldown);
         super.remove();

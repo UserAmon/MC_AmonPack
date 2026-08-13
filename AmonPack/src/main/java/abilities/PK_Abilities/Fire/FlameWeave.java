@@ -280,8 +280,9 @@ public class FlameWeave extends FireAbility implements AddonAbility {
                         (random.nextDouble() - 0.5) * 0.1)).normalize();
             }
 
+            boolean isFirelord = FirelordStanceManager.isActive(player);
             boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
-            Particle flameParticle = isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
+            Particle flameParticle = isFirelord ? Particle.ELECTRIC_SPARK : (isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME);
             Material fireMat = isBlue ? Material.SOUL_FIRE : Material.FIRE;
 
             Vector velocity = dir.clone().multiply(speed);

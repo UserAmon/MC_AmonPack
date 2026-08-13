@@ -119,15 +119,15 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
             }
         }
 
-        // Check ground landing after jump
-        if (launched && player.getFallDistance() > 0.2 && isGrounded()) {
+        // Check ground landing after jump (cooldown is strictly applied on landing)
+        if (launched && isGrounded()) {
             finishSkill();
         }
     }
 
     private boolean isGrounded() {
         Location loc = player.getLocation();
-        return loc.clone().add(0, -0.1, 0).getBlock().getType().isSolid() || player.isOnGround();
+        return (player.getFallDistance() > 0.05 || player.getVelocity().getY() < 0) && (loc.clone().add(0, -0.1, 0).getBlock().getType().isSolid() || player.isOnGround());
     }
 
     public void onLeftClick() {
@@ -157,10 +157,6 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
             Location startLoc = eye.clone();
             projectiles.add(new AbilityProjectile(dir, startLoc, startLoc.clone(), particles, 1));
-        }
-
-        if (clicksUsed >= maxArrowClicks && projectiles.isEmpty()) {
-            finishSkill();
         }
     }
 

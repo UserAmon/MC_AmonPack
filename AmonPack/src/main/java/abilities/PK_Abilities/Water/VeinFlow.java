@@ -5,12 +5,14 @@ import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.BloodAbility;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -35,6 +37,7 @@ public class VeinFlow extends BloodAbility implements AddonAbility {
     private long startTime;
     private boolean alive = true;
     private Random random = new Random();
+    private BossBar bossBar;
 
     public VeinFlow(Player player) {
         super(player);
@@ -54,6 +57,10 @@ public class VeinFlow extends BloodAbility implements AddonAbility {
         loadConfig();
 
         this.startTime = System.currentTimeMillis();
+        this.bossBar = Bukkit.createBossBar("§c🩸 VEIN FLOW STANCE 🩸", BarColor.RED, BarStyle.SOLID);
+        this.bossBar.addPlayer(player);
+        this.bossBar.setVisible(true);
+
         VeinFlowManager.registerStance(player, this);
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1.2f, 0.6f);
@@ -88,48 +95,36 @@ public class VeinFlow extends BloodAbility implements AddonAbility {
             return;
         }
 
-        // Red particles near face (offset forward so it does NOT block FPV view!)
-        Location faceLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(0.4)).add(0, -0.1, 0);
+        // Feet blood particles (low at feet level so vision is clear)
+        Location feet = player.getLocation().add(0, 0.05, 0);
         Particle.DustOptions darkRed = new Particle.DustOptions(Color.fromRGB(150, 0, 0), 0.7f);
-        player.getWorld().spawnParticle(Particle.DUST, faceLoc, 2, 0.1, 0.05, 0.1, 0, darkRed);
+        player.getWorld().spawnParticle(Particle.DUST, feet, 3, 0.2, 0.02, 0.2, 0, darkRed);
 
-        // Feet blood particles
-        Location feet = player.getLocation().add(0, 0.1, 0);
-        player.getWorld().spawnParticle(Particle.DUST, feet, 3, 0.2, 0.05, 0.2, 0, darkRed);
-
-        // Render ground blood trail to closest enemies
+        // Render ground blood trail to all enemies in range
         renderGroundBloodTrail();
 
-        long remainingSec = Math.max(0, (durationMs - elapsed) / 1000L);
-        String actionBar = "§c🩸 §4VEIN FLOW STANCE §c🩸 §7[§c" + remainingSec + "s§7]";
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionBar));
+        if (bossBar != null) {
+            double pct = 1.0 - ((double) elapsed / durationMs);
+            bossBar.setProgress(Math.max(0.0, Math.min(1.0, pct)));
+        }
     }
 
     private void renderGroundBloodTrail() {
-        LivingEntity closest = null;
-        double minDistance = detectionDistance;
+        Location start = player.getLocation();
+        Particle.DustOptions trailRed = new Particle.DustOptions(Color.fromRGB(180, 0, 0), 0.8f);
+
         for (Entity e : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), detectionDistance)) {
             if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId()) {
-                double dist = player.getLocation().distance(le.getLocation());
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    closest = le;
-                }
-            }
-        }
-
-        if (closest != null) {
-            Location start = player.getLocation().add(0, 0.1, 0);
-            Location target = closest.getLocation().add(0, 0.1, 0);
-            Vector dir = target.toVector().subtract(start.toVector()).setY(0);
-            double dist = dir.length();
-            if (dist > 0.5) {
-                dir.normalize();
-                Particle.DustOptions trailRed = new Particle.DustOptions(Color.fromRGB(180, 0, 0), 0.9f);
-                for (double d = 0.5; d < dist; d += 0.8) {
-                    Location pt = start.clone().add(dir.clone().multiply(d));
-                    pt.setY(pt.getBlock().getY() + 1.05);
-                    player.spawnParticle(Particle.DUST, pt, 1, 0.05, 0, 0.05, 0, trailRed);
+                Location target = le.getLocation();
+                Vector dir = target.toVector().subtract(start.toVector()).setY(0);
+                double dist = dir.length();
+                if (dist > 0.5) {
+                    dir.normalize();
+                    for (double d = 0.5; d < dist; d += 0.8) {
+                        Location pt = start.clone().add(dir.clone().multiply(d));
+                        pt.setY(pt.getBlock().getY() + 0.05);
+                        player.getWorld().spawnParticle(Particle.DUST, pt, 1, 0.02, 0, 0.02, 0, trailRed);
+                    }
                 }
             }
         }
@@ -212,6 +207,10 @@ public class VeinFlow extends BloodAbility implements AddonAbility {
     public void remove() {
         if (!alive) return;
         alive = false;
+        if (bossBar != null) {
+            bossBar.removeAll();
+            bossBar.setVisible(false);
+        }
         VeinFlowManager.unregisterStance(player);
         bPlayer.addCooldown(this, cooldown);
         super.remove();

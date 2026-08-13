@@ -189,11 +189,21 @@ public class FrostGrip extends IceAbility implements AddonAbility {
     private void applyFreezeEffects(LivingEntity target) {
         DamageHandler.damageEntity(target, damage, this);
         target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowDuration, slowAmplifier, false, false));
+        // Jump lock effect (JUMP_BOOST level 200 completely disables spacebar jump in Minecraft)
+        target.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, noJumpDurationTicks, 200, false, false));
 
-        target.getWorld().playSound(target.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 0.8f);
-        target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation().add(0, 0.5, 0), 20, 0.4, 0.4, 0.4, 0.1, new ItemStack(Material.SNOWBALL));
+        target.getWorld().playSound(target.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.2f, 0.8f);
+        target.getWorld().playSound(target.getLocation(), Sound.BLOCK_SNOW_BREAK, 1.5f, 0.6f);
+        target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation().add(0, 0.5, 0), 25, 0.4, 0.4, 0.4, 0.1, new ItemStack(Material.SNOWBALL));
+        target.getWorld().spawnParticle(Particle.BLOCK, target.getLocation().add(0, 0.2, 0), 30, 0.5, 0.2, 0.5, 0.1, Material.ICE.createBlockData());
 
-        // No-Jump Effect: Pull down when in air/jumping
+        // Freeze feet with TempBlock ICE
+        Block feetBlock = target.getLocation().getBlock();
+        if (feetBlock.getType() == Material.AIR) {
+            new TempBlock(feetBlock, Material.ICE.createBlockData(), noJumpDurationTicks * 50L);
+        }
+
+        // Continuous no-jump velocity clamp & ice particle aura
         new BukkitRunnable() {
             private int t = 0;
 
@@ -211,7 +221,8 @@ public class FrostGrip extends IceAbility implements AddonAbility {
                     target.setVelocity(v);
                 }
 
-                target.getWorld().spawnParticle(Particle.SNOWFLAKE, target.getLocation().add(0, 0.1, 0), 2, 0.3, 0.05, 0.3, 0.01);
+                target.getWorld().spawnParticle(Particle.SNOWFLAKE, target.getLocation().add(0, 0.2, 0), 5, 0.3, 0.2, 0.3, 0.02);
+                target.getWorld().spawnParticle(Particle.BLOCK, target.getLocation().add(0, 0.1, 0), 3, 0.2, 0.1, 0.2, 0.01, Material.ICE.createBlockData());
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
 

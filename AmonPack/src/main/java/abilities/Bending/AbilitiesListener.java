@@ -169,6 +169,14 @@ public class AbilitiesListener implements Listener {
 						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.Burrow.class)) {
 							new Abilities.PK_Abilities.Earth.Burrow(player);
 						}
+					} else if (boundAbility.equalsIgnoreCase("PoisonKnife")) {
+						if (!CoreAbility.hasAbility(player, PoisonKnife.class)) {
+							new PoisonKnife(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("FlameWhip")) {
+						if (!CoreAbility.hasAbility(player, FlameWhip.class)) {
+							new FlameWhip(player);
+						}
 					} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && boundAbility.equalsIgnoreCase("BoulderRoll")) {
 						if (!CoreAbility.hasAbility(player, BoulderRoll.class)) {
 							new BoulderRoll(player);
@@ -351,8 +359,10 @@ public class AbilitiesListener implements Listener {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.Burrow.class)) {
 						com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.Burrow.class).onClick();
 					}
-				} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWhip")) {
-					new FlameWhip(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FlameWhip")) {
+					if (!CoreAbility.hasAbility(player, FlameWhip.class)) {
+						new FlameWhip(player);
+					}
 				} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && bPlayer.getBoundAbilityName().equalsIgnoreCase("BoulderRoll")) {
 					if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, BoulderRoll.class)) {
 						BoulderRoll br = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player, BoulderRoll.class);
@@ -643,12 +653,6 @@ public class AbilitiesListener implements Listener {
 
 		String previousAbi = bPlayer.getAbilities().get(event.getPreviousSlot() + 1);
 		String nextAbi = bPlayer.getAbilities().get(event.getNewSlot() + 1);
-
-		if ("PoisonKnife".equalsIgnoreCase(nextAbi)) {
-			if (!bPlayer.isOnCooldown("PoisonKnife") && !CoreAbility.hasAbility(player, PoisonKnife.class)) {
-				new PoisonKnife(player);
-			}
-		}
 
 		if ("PoisonKnife".equalsIgnoreCase(previousAbi)) {
 			PoisonKnife.purgeUnregisteredKnives(player);
