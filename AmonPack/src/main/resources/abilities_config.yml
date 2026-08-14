@@ -33,6 +33,18 @@ AmonPack:
         SlowAmplifier: 2 #slowness potion level
         NoJumpDurationTicks: 60 #ticks target is pulled down blocking jumps
 
+    WaterStrike:
+      Cooldown: 6000 #ms between ability uses
+      Damage: 5.0 #hearts dealt per projectile hit
+      Range: 30.0 #blocks max projectile range
+      Speed: 1.2 #projectile speed multiplier
+      SourceRange: 10.0 #blocks range to water/ice source block
+      MultiSourceRange: 12.0 #blocks range for TriOrbit upgrade 3-block scan
+      SplitCount: 5 #number of mini-projectiles spawned on block/wall collision
+      SplitRange: 8.0 #max distance of split projectiles
+      SplitDamage: 2.0 #hearts dealt per split projectile
+      SlowDuration: 40 #ticks slowness II lasts on target
+
     VeinFlow:
       Cooldown: 30000 #ms between ability uses
       Duration: 15 #seconds stance lasts
@@ -268,6 +280,17 @@ AmonPack:
       SecondaryMaxRadius: 6.0 #blocks radius of secondary pulses
 
   Earth:
+    EarthStrike:
+      Cooldown: 6000 #ms between ability uses
+      Damage: 5.0 #hearts dealt per projectile hit
+      Range: 30.0 #blocks max projectile range
+      Speed: 1.2 #projectile speed multiplier
+      SourceRange: 10.0 #blocks range to earth source block
+      MultiSourceRange: 12.0 #blocks range for TriOrbit upgrade 3-block scan
+      SplitCount: 5 #number of mini-projectiles spawned on block/wall collision
+      SplitRange: 8.0 #max distance of split projectiles
+      SplitDamage: 2.0 #hearts dealt per split projectile
+
     EarthHammer:
       Cooldown: 7000 #ms between ability uses
       Damage: 1 #hearts dealt on impact
@@ -572,7 +595,26 @@ AmonPack:
       ChainRange: 6.0 #blocks range to chain to nearby targets
       WaterExtraDamage: 4.0 #extra hearts dealt if target is in water
 
+    FireSwirl:
+      Cooldown: 5000 #ms between ability uses
+      Damage: 3.5 #hearts dealt per projectile hit
+      Range: 20.0 #blocks max projectile travel range
+      Speed: 0.9 #projectile speed multiplier
+      FireTicks: 60 #ticks target is ignited
+      MultiWindow: 3000 #ms window to cast subsequent multi-shots
+      MinShotIntervalMs: 500 #ms minimum interval between consecutive multi-shots
+
   Air:
+    AirSwirl:
+      Cooldown: 5000 #ms between ability uses
+      Damage: 3.5 #hearts dealt per projectile hit
+      Range: 20.0 #blocks max projectile travel range
+      Speed: 0.9 #projectile speed multiplier
+      AirKnockback: 1.5 #knockback force multiplier
+      WallDamage: 3.0 #additional hearts dealt on wall collision with Master upgrade
+      MultiWindow: 3000 #ms window to cast subsequent multi-shots
+      MinShotIntervalMs: 500 #ms minimum interval between consecutive multi-shots
+
     Sound:
       Harmony:
         RhythmInterval: 1000 #ms between rhythm beats

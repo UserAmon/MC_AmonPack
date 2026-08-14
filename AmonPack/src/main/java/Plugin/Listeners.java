@@ -1090,7 +1090,38 @@ public class Listeners implements Listener {
                         if (playersBranch.GetPoints(element) >= STA.getCost()) {
                             if (new HashSet<>(playersBranch.getUnlockedAbilities())
                                     .containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().size() == 0) {
+
+                                boolean isBlockedByOther = false;
+                                for (SkillTree_Ability other : SelectedElement.getAbilities()) {
+                                    if (playersBranch.getUnlockedAbilities().contains(other.getName())) {
+                                        if (other.getLockAbilities() != null && other.getLockAbilities().contains(STA.getName())) {
+                                            isBlockedByOther = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (isBlockedByOther) {
+                                    p.sendMessage(ChatColor.RED + "Nie możesz odblokować tego ruchu — został zablokowany przez inny odblokowany skill!");
+                                    return;
+                                }
+
                                 playersBranch.UnlockAbility(STA.getElement(), STA.getCost(), STA.getName());
+
+                                if (STA.getLockAbilities() != null && !STA.getLockAbilities().isEmpty()) {
+                                    for (String lockedName : STA.getLockAbilities()) {
+                                        if (playersBranch.getUnlockedAbilities().contains(lockedName)) {
+                                            playersBranch.LockAndRemoveAbility(lockedName);
+                                            for (int i = 0; i <= 9; i++) {
+                                                if (bPlayer.getAbilities().containsKey(i) && lockedName.equalsIgnoreCase(bPlayer.getAbilities().get(i))) {
+                                                    com.projectkorra.projectkorra.board.BendingBoardManager.getBoard(p).ifPresent(board -> board.clearSlot(i));
+                                                    bPlayer.getAbilities().remove(i);
+                                                }
+                                            }
+                                            p.sendMessage(ChatColor.DARK_RED + "Skill " + lockedName + " został zablokowany przez odblokowanie " + STA.getName() + "!");
+                                        }
+                                    }
+                                }
+
                                 AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,
                                         playersBranch.getCurrentPage());
                             }

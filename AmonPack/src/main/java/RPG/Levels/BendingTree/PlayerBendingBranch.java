@@ -248,4 +248,13 @@ public class PlayerBendingBranch {
     public boolean hasUpgrade(String upgradeName) {
         return UnlockedAbilities.contains(upgradeName);
     }
+    public void LockAndRemoveAbility(String abilityName) {
+        if (UnlockedAbilities != null && UnlockedAbilities.remove(abilityName)) {
+            try {
+                SaveInDatabaes();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

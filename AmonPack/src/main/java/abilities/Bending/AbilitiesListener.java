@@ -56,8 +56,16 @@ public class AbilitiesListener implements Listener {
 
 	@EventHandler
 	public void onShift(PlayerToggleSneakEvent event) {
-		if (!event.isSneaking()) return;
 		Player player = event.getPlayer();
+		if (!event.isSneaking()) {
+			if (CoreAbility.hasAbility(player, EarthStrike.class)) {
+				CoreAbility.getAbility(player, EarthStrike.class).onShiftRelease();
+			}
+			if (CoreAbility.hasAbility(player, WaterStrike.class)) {
+				CoreAbility.getAbility(player, WaterStrike.class).onShiftRelease();
+			}
+			return;
+		}
 		if (SpecialTriggerManager.isSpecialActive(player)) {
 			return;
 		}
@@ -67,7 +75,15 @@ public class AbilitiesListener implements Listener {
 				if (!event.isCancelled()) {
 					CheckEarthHealthBoost(player, bPlayer.getBoundAbility());
 					String boundAbility = bPlayer.getBoundAbilityName();
-					if (boundAbility.equalsIgnoreCase("SandBreath")) {
+					if (boundAbility.equalsIgnoreCase("EarthStrike")) {
+						if (!CoreAbility.hasAbility(player, EarthStrike.class)) {
+							new EarthStrike(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("WaterStrike")) {
+						if (!CoreAbility.hasAbility(player, WaterStrike.class)) {
+							new WaterStrike(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("SandBreath")) {
 						new SandBreath(player);
 					} else if (boundAbility.equalsIgnoreCase("Acoustics")) {
 						new Acoustics(player);
@@ -278,6 +294,18 @@ public class AbilitiesListener implements Listener {
 						DaggerTrick dt = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(player,
 								DaggerTrick.class);
 						dt.onLeftClick();
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FireSwirl")) {
+					if (CoreAbility.hasAbility(player, FireSwirl.class)) {
+						CoreAbility.getAbility(player, FireSwirl.class).onClick();
+					} else {
+						new FireSwirl(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirSwirl")) {
+					if (CoreAbility.hasAbility(player, AirSwirl.class)) {
+						CoreAbility.getAbility(player, AirSwirl.class).onClick();
+					} else {
+						new AirSwirl(player);
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FirelordStance")) {
 					new FirelordStance(player);

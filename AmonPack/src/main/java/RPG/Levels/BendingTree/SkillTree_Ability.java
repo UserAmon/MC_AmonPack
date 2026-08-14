@@ -13,6 +13,7 @@ public class SkillTree_Ability {
     boolean def;
     boolean IsUpgrade=false;
     boolean isSpecialBindAbility=false;
+    List<String> lockAbilities = new java.util.ArrayList<>();
 
     public SkillTree_Ability(Element element, String name, int cost, List<String> listOfPreAbility, int place, boolean aDefault) {
         this.element = element;
@@ -58,5 +59,11 @@ public class SkillTree_Ability {
     }
     public void setSpecialBindAbility(boolean specialBindAbility) {
         isSpecialBindAbility = specialBindAbility;
+    }
+    public List<String> getLockAbilities() {
+        return lockAbilities != null ? lockAbilities : new java.util.ArrayList<>();
+    }
+    public void setLockAbilities(List<String> lockAbilities) {
+        this.lockAbilities = lockAbilities != null ? lockAbilities : new java.util.ArrayList<>();
     }
 }

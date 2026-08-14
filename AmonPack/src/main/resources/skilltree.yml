@@ -141,6 +141,41 @@ AmonPack:
         Description:
           - "&7Jeśli masz przypisaną umiejętność &eSmokeBurst &7na dowolnym slocie,"
           - "&7dotknięcie źródła dymu &eSmokeSource &7powoduje jego &enatychmiastowy wybuch&7."
+      FireSwirl:
+        Cost: 5
+        Place: 30
+        ReqAbilities:
+          - FireBlast
+        Description:
+          - "&7Wystrzeliwuje pocisk ognia lecący w rosnącej spirali."
+          - "&7Trafienie podpala przeciwnika na &e3 sekundy&7."
+      FireSwirlMulti:
+        Cost: 15
+        Place: 32
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - FireSwirl
+        Description:
+          - "&7Dodaje &edrugie użycie LPM&7."
+          - "&7Brak strzału w ciągu &e3s&7 nakłada cooldown."
+      FireSwirlDouble:
+        Cost: 20
+        Place: 33
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - FireSwirlMulti
+        Description:
+          - "&7Dodaje &etrzecie użycie LPM&7."
+          - "&ePociski przeszywają wrogów&7."
+      FireSwirlMaster:
+        Cost: 25
+        Place: 34
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - FireSwirlDouble
+        Description:
+          - "&ePodpalenie trwa dwukrotnie dłużej&7 (&e6 sekund&7)."
+          - "&7Pociski w locie &elekko podążają za kamerą&7."
     Earth:
       PathDecoration:
         - 12
@@ -248,6 +283,41 @@ AmonPack:
           - "&7Najeźdź precyzyjnie kamerą na punkty i wciskaj F, aby je zbierać."
           - "&7Po zebraniu 4 punktów puść SHIFT, aby przetoczyć głaz."
           - "&e[Ruch Specjalny - SWAP (F)]"
+      EarthStrike:
+        Cost: 5
+        Place: 3
+        ReqAbilities: []
+        Description:
+          - "&7Przytrzymaj SHIFT na bloku ziemi, aby unieść go"
+          - "&7przed kamerę. Puszczenie SHIFT wystrzeliwuje pocisk."
+      EarthStrikeSplit:
+        Cost: 15
+        Place: 12
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthStrike
+        Description:
+          - "&7Po uderzeniu w ścianę pocisk &erozpada się&7"
+          - "&7na 5 odłamków odrzucających wrogów."
+      EarthStrikeTriOrbit:
+        Cost: 20
+        Place: 2
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthStrike
+        Description:
+          - "&7Pochłania &e3 bloki ziemi&7 orbitujące pionowo."
+          - "&7Wystrzeliwuje &e3 pociski naraz&7."
+      EarthStrikePiercing:
+        Cost: 25
+        Place: 1
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthStrikeSplit
+        Description:
+          - "&ePociski przeszywają wrogów&7."
+          - "&7W locie pociski &elekko podążają za kamerą&7."
+          - "&7Rozpad następuje wyłącznie przy uderzeniu w blok."
     Water:
       PathDecoration:
         - 38
@@ -393,8 +463,43 @@ AmonPack:
         Cost: 50
         Place: 2
         ReqAbilities:
-        - TideLock
-        - PhaseChange
+          - TideLock
+          - PhaseChange
+      WaterStrike:
+        Cost: 5
+        Place: 12
+        ReqAbilities: []
+        Description:
+          - "&7Przytrzymaj SHIFT na wodzie lub lodzie, aby unieść"
+          - "&7blok przed kamerę. Puszczenie SHIFT wystrzeliwuje pocisk."
+      WaterStrikeSplit:
+        Cost: 15
+        Place: 13
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - WaterStrike
+        Description:
+          - "&7Po uderzeniu w ścianę pocisk &erozpada się&7"
+          - "&7na 5 odłamków spowalniających wrogów."
+      WaterStrikeTriOrbit:
+        Cost: 20
+        Place: 14
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - WaterStrike
+        Description:
+          - "&7Pochłania &e3 bloki wody/lodu&7 orbitujące pionowo."
+          - "&7Wystrzeliwuje &e3 pociski naraz&7."
+      WaterStrikePiercing:
+        Cost: 25
+        Place: 21
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - WaterStrikeSplit
+        Description:
+          - "&ePociski przeszywają wrogów&7."
+          - "&7W locie pociski &elekko podążają za kamerą&7."
+          - "&7Rozpad następuje wyłącznie przy uderzeniu w blok."
     Air:
       PathDecoration:
         - 39
@@ -480,3 +585,42 @@ AmonPack:
           - "&7Wystrzeliwuje małe tornado poruszające się naprzód."
           - "&7Przechwytuje wroga, odrywa go od ziemi, trzyma"
           - "&7i obraca w wirowym powietrzu."
+      AirSwirl:
+        Cost: 5
+        Place: 30
+        ReqAbilities: []
+        LockAbilities:
+          - AirSwipe
+        Description:
+          - "&7Wystrzeliwuje pocisk powietrzny w rosnącej spirali."
+          - "&7Trafienie odrzuca przeciwnika."
+          - "&c[Odblokowanie zablokuje AirSwipe!]"
+      AirSwirlMulti:
+        Cost: 15
+        Place: 31
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - AirSwirl
+        Description:
+          - "&7Dodaje &edrugie użycie LPM&7."
+          - "&7Brak strzału w ciągu &e3s&7 nakłada cooldown."
+      AirSwirlDouble:
+        Cost: 20
+        Place: 32
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - AirSwirlMulti
+        Description:
+          - "&7Dodaje &etrzecie użycie LPM&7."
+          - "&ePociski przeszywają wrogów&7."
+      AirSwirlMaster:
+        Cost: 25
+        Place: 33
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - AirSwirlDouble
+        Description:
+          - "&eOdrzucenie zwiększone o 60%&7."
+          - "&7Uderzenie wroga w ścianę zadaje &edodatkowe obrażenia&7."
+          - "&7Pociski w locie &elekko podążają za kamerą&7."
+

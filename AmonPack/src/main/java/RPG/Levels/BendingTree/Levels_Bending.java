@@ -97,11 +97,15 @@ public class Levels_Bending {
                 ItemStack item = FastEasyStack(material,STA.getName());
                 ItemMeta meta = item.getItemMeta();
                 int modelid;
+                List<String> locks = STA.getLockAbilities();
                 if ((playersBranch.getUnlockedAbilities().contains(STA.getName())|| playersBranch.getTemporaryAbilities().contains(STA.getName()) || STA.isdef())){
                     modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Green");
 
                     List<String> modifiedList = new ArrayList<>();
                     modifiedList.add(ChatColor.GREEN + "ODBLOKOWANO");
+                    if (locks != null && !locks.isEmpty()) {
+                        modifiedList.add(ChatColor.DARK_RED + "✖ Zablokowano: " + String.join(", ", locks));
+                    }
                     List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
                     if (desc != null && !desc.isEmpty()) {
                         for (String line : desc) {
@@ -110,26 +114,51 @@ public class Levels_Bending {
                     }
                     meta.setLore(modifiedList);
                 } else if (playersBranch.GetPoints(element) >= STA.getCost() && (new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().isEmpty())) {
-                    modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Orange");
-
-                    List<String> modifiedList = new ArrayList<>(Collections.singleton("Koszt: " + STA.getCost()));
-                    for (String st:STA.getListOfPreAbility()) {
-                        modifiedList.add("Wymagane: "+st);
-                    }
-                    List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
-                    if (desc != null && !desc.isEmpty()) {
-                        for (String line : desc) {
-                            modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
+                    boolean blockedByOther = false;
+                    for (SkillTree_Ability other : SelectedElement.getAbilities()) {
+                        if (playersBranch.getUnlockedAbilities().contains(other.getName()) && other.getLockAbilities() != null && other.getLockAbilities().contains(STA.getName())) {
+                            blockedByOther = true;
+                            break;
                         }
                     }
-                    meta.setLore(modifiedList);
+                    if (blockedByOther) {
+                        modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Red");
+                        List<String> modifiedList = new ArrayList<>();
+                        modifiedList.add(ChatColor.RED + "✖ ZABLOKOWANE PRZEZ INNY SKILL");
+                        List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
+                        if (desc != null && !desc.isEmpty()) {
+                            for (String line : desc) {
+                                modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
+                            }
+                        }
+                        meta.setLore(modifiedList);
+                    } else {
+                        modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Orange");
 
+                        List<String> modifiedList = new ArrayList<>(Collections.singleton("Koszt: " + STA.getCost()));
+                        for (String st:STA.getListOfPreAbility()) {
+                            modifiedList.add("Wymagane: "+st);
+                        }
+                        if (locks != null && !locks.isEmpty()) {
+                            modifiedList.add(ChatColor.RED + "⚠ Zablokuje: " + String.join(", ", locks));
+                        }
+                        List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
+                        if (desc != null && !desc.isEmpty()) {
+                            for (String line : desc) {
+                                modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
+                            }
+                        }
+                        meta.setLore(modifiedList);
+                    }
                 }else{
                     modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Red");
 
                     List<String> modifiedList = new ArrayList<>(Collections.singleton("Koszt: " + STA.getCost()));
                     for (String st:STA.getListOfPreAbility()) {
                         modifiedList.add("Wymagane: "+st);
+                    }
+                    if (locks != null && !locks.isEmpty()) {
+                        modifiedList.add(ChatColor.RED + "⚠ Zablokuje: " + String.join(", ", locks));
                     }
                     List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
                     if (desc != null && !desc.isEmpty()) {
@@ -247,6 +276,10 @@ public class Levels_Bending {
                 }
                 if(SkillTreeConfig.getBoolean("AmonPack.Tree."+Element+"."+Ability+".IsSpecialBindAbility")){
                     AbilityObject.setSpecialBindAbility(true);
+                }
+                List<String> lockList = SkillTreeConfig.getStringList("AmonPack.Tree."+Element+"."+Ability+".LockAbilities");
+                if (lockList != null && !lockList.isEmpty()) {
+                    AbilityObject.setLockAbilities(lockList);
                 }
                 ElementAbilities.add(AbilityObject);
                 if (MaxPlace < Place){
