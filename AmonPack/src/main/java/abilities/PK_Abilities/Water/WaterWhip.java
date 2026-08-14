@@ -72,7 +72,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility {
         loadConfigAndUpgrades();
 
         Block water = WaterAbility.getWaterSourceBlock(player, sourceRange, true);
-        if (water != null && (WaterAbility.isWaterbendable(player, water) || WaterAbility.isIcebendable(player, water))) {
+        if (water != null && (isWaterbendable(water) || isIcebendable(water))) {
             this.sourceBlock = water;
             this.sourceLoc = water.getLocation().add(0.5, 0.5, 0.5);
             this.waterHeadLoc = sourceLoc.clone();
@@ -124,8 +124,8 @@ public class WaterWhip extends WaterAbility implements AddonAbility {
                     return;
                 }
 
-                player.getWorld().spawnParticle(Particle.WATER_SPLASH, sourceLoc, 6, 0.25, 0.25, 0.25, 0.05);
-                player.getWorld().spawnParticle(Particle.WATER_WAKE, sourceLoc, 2, 0.15, 0.15, 0.15, 0.02);
+                player.getWorld().spawnParticle(Particle.SPLASH, sourceLoc, 6, 0.25, 0.25, 0.25, 0.05);
+                player.getWorld().spawnParticle(Particle.FALLING_WATER, sourceLoc, 2, 0.15, 0.15, 0.15, 0.02);
                 break;
 
             case PULLING_SOURCE:
@@ -208,8 +208,8 @@ public class WaterWhip extends WaterAbility implements AddonAbility {
             double sinOffset = Math.sin(distAlong * 0.8 + strikeTick * 0.4) * 0.35 * (distAlong / length);
             Location pt = start.clone().add(forwardDir.clone().multiply(distAlong)).add(right.clone().multiply(sinOffset));
 
-            start.getWorld().spawnParticle(Particle.WATER_SPLASH, pt, 2, 0.05, 0.05, 0.05, 0.02);
-            start.getWorld().spawnParticle(Particle.WATER_WAKE, pt, 1, 0.02, 0.02, 0.02, 0.01);
+            start.getWorld().spawnParticle(Particle.SPLASH, pt, 2, 0.05, 0.05, 0.05, 0.02);
+            start.getWorld().spawnParticle(Particle.FALLING_WATER, pt, 1, 0.02, 0.02, 0.02, 0.01);
 
             if (forward) {
                 for (Entity entity : GeneralMethods.getEntitiesAroundPoint(pt, 1.2)) {
@@ -260,7 +260,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility {
             double wave = Math.sin(distAlong * 0.9 + activeHeldTicks * 0.3) * 0.3;
             Location pt = hand.clone().add(currentHeldWhipDir.clone().multiply(distAlong)).add(right.clone().multiply(wave));
 
-            hand.getWorld().spawnParticle(Particle.WATER_SPLASH, pt, 2, 0.05, 0.05, 0.05, 0.02);
+            hand.getWorld().spawnParticle(Particle.SPLASH, pt, 2, 0.05, 0.05, 0.05, 0.02);
 
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(pt, 1.1)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
@@ -276,7 +276,7 @@ public class WaterWhip extends WaterAbility implements AddonAbility {
         Vector diff = end.toVector().subtract(start.toVector());
         for (int i = 0; i <= steps; i++) {
             Location p = start.clone().add(diff.clone().multiply((double) i / steps));
-            p.getWorld().spawnParticle(Particle.WATER_SPLASH, p, 3, 0.1, 0.1, 0.1, 0.02);
+            p.getWorld().spawnParticle(Particle.SPLASH, p, 3, 0.1, 0.1, 0.1, 0.02);
             p.getWorld().spawnParticle(Particle.DRIPPING_WATER, p, 1, 0.05, 0.05, 0.05, 0.0);
         }
     }

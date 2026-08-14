@@ -165,7 +165,7 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                 updateFacingWithInertia();
                 riseTick++;
                 renderWall(Math.min(1.0, (double) riseTick / maxRiseTicks));
-                player.getWorld().spawnParticle(Particle.BLOCK_CRACK, currentCenter, 8, 1.0, 0.5, 1.0, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 8, 1.0, 0.5, 1.0, 0.05, wallMaterial.createBlockData());
 
                 if (riseTick >= maxRiseTicks) {
                     state = State.HOLDING;
@@ -188,7 +188,7 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                 renderWall(1.0);
 
                 if (Math.random() < 0.25) {
-                    player.getWorld().spawnParticle(Particle.BLOCK_CRACK, currentCenter, 4, 1.0, 0.8, 1.0, 0.02, wallMaterial.createBlockData());
+                    player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 4, 1.0, 0.8, 1.0, 0.02, wallMaterial.createBlockData());
                 }
                 break;
 
@@ -203,7 +203,7 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
 
                 renderWall(1.0);
                 pushAndDamageEnemiesInFront();
-                player.getWorld().spawnParticle(Particle.BLOCK_CRACK, currentCenter, 10, 1.2, 0.8, 1.2, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 10, 1.2, 0.8, 1.2, 0.05, wallMaterial.createBlockData());
 
                 if (launchDistTraveled >= launchMaxRange || isObstructed()) {
                     crumble();
@@ -293,7 +293,7 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
         cleanWall();
 
         player.getWorld().playSound(currentCenter, Sound.BLOCK_STONE_BREAK, 1.2f, 0.8f);
-        player.getWorld().spawnParticle(Particle.BLOCK_CRACK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1, wallMaterial.createBlockData());
+        player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1, wallMaterial.createBlockData());
         Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(110, 80, 50), 1.3f);
         player.getWorld().spawnParticle(Particle.DUST, currentCenter, 15, 1.5, 1.0, 1.5, 0, dust);
 
@@ -337,7 +337,7 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                     ticks++;
                     if (fb.isDead() || !fb.isValid() || fb.isOnGround() || ticks > 30) {
                         if (fb.isValid()) {
-                            fb.getWorld().spawnParticle(Particle.BLOCK_CRACK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05, wallMaterial.createBlockData());
+                            fb.getWorld().spawnParticle(Particle.BLOCK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05, wallMaterial.createBlockData());
                             fb.remove();
                         }
                         this.cancel();

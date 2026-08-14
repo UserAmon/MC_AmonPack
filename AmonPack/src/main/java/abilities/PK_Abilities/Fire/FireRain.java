@@ -212,7 +212,7 @@ public class FireRain extends FireAbility implements AddonAbility {
             dead = true;
 
             loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.1f);
-            loc.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, loc, 2, 0.2, 0.2, 0.2, 0.0);
+            loc.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, loc, 2, 0.2, 0.2, 0.2, 0.0);
             loc.getWorld().spawnParticle(Particle.FLAME, loc, 35, radius * 0.6, 0.5, radius * 0.6, 0.08);
             loc.getWorld().spawnParticle(Particle.LAVA, loc, 8, radius * 0.4, 0.4, radius * 0.4, 0.0);
 

@@ -91,7 +91,7 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
         this.currentCenter = initialGround;
 
         Block groundBlock = initialGround.getBlock().getRelative(BlockFace.DOWN);
-        if (WaterAbility.isIcebendable(player, groundBlock)) {
+        if (isIcebendable(groundBlock)) {
             this.wallMaterial = groundBlock.getType() == Material.PACKED_ICE || groundBlock.getType() == Material.BLUE_ICE ? groundBlock.getType() : Material.ICE;
         } else {
             this.wallMaterial = Material.ICE;
@@ -139,7 +139,7 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
         Location target = origin.clone().add(direction.clone().normalize().multiply(dist));
         for (int y = 4; y >= -5; y--) {
             Block b = target.clone().add(0, y, 0).getBlock();
-            if (b.getType().isSolid() || WaterAbility.isWaterbendable(player, b) || WaterAbility.isIcebendable(player, b)) {
+            if (b.getType().isSolid() || isWaterbendable(b) || isIcebendable(b)) {
                 return b.getLocation().add(0.5, 1.0, 0.5);
             }
         }
@@ -164,8 +164,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
                 updateFacingWithInertia();
                 riseTick++;
                 renderWall(Math.min(1.0, (double) riseTick / maxRiseTicks));
-                player.getWorld().spawnParticle(Particle.BLOCK_CRACK, currentCenter, 8, 1.0, 0.5, 1.0, 0.05, wallMaterial.createBlockData());
-                player.getWorld().spawnParticle(Particle.WATER_SPLASH, currentCenter, 6, 0.8, 0.4, 0.8, 0.05);
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 8, 1.0, 0.5, 1.0, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.SPLASH, currentCenter, 6, 0.8, 0.4, 0.8, 0.05);
 
                 if (riseTick >= maxRiseTicks) {
                     state = State.HOLDING;
@@ -203,7 +203,7 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
 
                 renderWall(1.0);
                 pushAndDamageEnemiesInFront();
-                player.getWorld().spawnParticle(Particle.BLOCK_CRACK, currentCenter, 10, 1.2, 0.8, 1.2, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 10, 1.2, 0.8, 1.2, 0.05, wallMaterial.createBlockData());
                 player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter, 8, 1.0, 0.5, 1.0, 0.05);
 
                 if (launchDistTraveled >= launchMaxRange || isObstructed()) {
@@ -295,8 +295,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
         cleanWall();
 
         player.getWorld().playSound(currentCenter, Sound.BLOCK_GLASS_BREAK, 1.2f, 0.8f);
-        player.getWorld().spawnParticle(Particle.BLOCK_CRACK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1, wallMaterial.createBlockData());
-        player.getWorld().spawnParticle(Particle.WATER_SPLASH, currentCenter, 20, 1.5, 1.0, 1.5, 0.1);
+        player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1, wallMaterial.createBlockData());
+        player.getWorld().spawnParticle(Particle.SPLASH, currentCenter, 20, 1.5, 1.0, 1.5, 0.1);
 
         for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentCenter, crumbleRadius)) {
             if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
@@ -339,7 +339,7 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
                     ticks++;
                     if (fb.isDead() || !fb.isValid() || fb.isOnGround() || ticks > 30) {
                         if (fb.isValid()) {
-                            fb.getWorld().spawnParticle(Particle.BLOCK_CRACK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05, wallMaterial.createBlockData());
+                            fb.getWorld().spawnParticle(Particle.BLOCK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05, wallMaterial.createBlockData());
                             fb.remove();
                         }
                         this.cancel();
