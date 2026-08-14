@@ -158,7 +158,7 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
                     floatingTempBlocks.add(tb);
                 }
 
-                player.getWorld().spawnParticle(Particle.BLOCK_CRACK, current, 3, 0.15, 0.15, 0.15, 0.02, sourceMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.BLOCK, current, 3, 0.15, 0.15, 0.15, 0.02, sourceMaterial.createBlockData());
             }
 
         } else if (state == State.FIRING) {
@@ -283,7 +283,7 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
                 currentTempBlock.setRevertTime(150);
             }
 
-            loc.getWorld().spawnParticle(Particle.BLOCK_CRACK, loc, isMini ? 2 : 4, 0.15, 0.15, 0.15, 0.02, sourceMaterial.createBlockData());
+            loc.getWorld().spawnParticle(Particle.BLOCK, loc, isMini ? 2 : 4, 0.15, 0.15, 0.15, 0.02, sourceMaterial.createBlockData());
             Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(120, 85, 50), isMini ? 0.7f : 1.1f);
             loc.getWorld().spawnParticle(Particle.DUST, loc, 1, 0, 0, 0, 0, dust);
 
@@ -317,7 +317,7 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
                 currentTempBlock = null;
             }
 
-            loc.getWorld().spawnParticle(Particle.BLOCK_CRACK, loc, 12, 0.3, 0.3, 0.3, 0.05, sourceMaterial.createBlockData());
+            loc.getWorld().spawnParticle(Particle.BLOCK, loc, 12, 0.3, 0.3, 0.3, 0.05, sourceMaterial.createBlockData());
             loc.getWorld().playSound(loc, Sound.BLOCK_STONE_BREAK, 1.0f, 0.8f);
 
             if (triggerSplit && hasSplitShot && !isMini) {

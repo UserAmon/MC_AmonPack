@@ -68,7 +68,7 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
         List<Block> candidates = new ArrayList<>();
         for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), hasTriOrbit ? multiSourceRange : sourceRange)) {
             if (b.getLocation().distance(player.getLocation()) >= 1.5
-                    && (WaterAbility.isWaterbendable(player, b) || WaterAbility.isIcebendable(player, b))) {
+                    && (isWaterbendable(b) || isIcebendable(b))) {
                 candidates.add(b);
             }
         }
@@ -160,7 +160,7 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
                     floatingTempBlocks.add(tb);
                 }
 
-                player.getWorld().spawnParticle(Particle.WATER_SPLASH, current, 4, 0.15, 0.15, 0.15, 0.05);
+                player.getWorld().spawnParticle(Particle.SPLASH, current, 4, 0.15, 0.15, 0.15, 0.05);
                 player.getWorld().spawnParticle(Particle.DRIPPING_WATER, current, 2, 0.1, 0.1, 0.1, 0.0);
             }
 
@@ -205,7 +205,7 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
                 projectiles.add(new WaterStrikeProjectile(spawnLoc, shotDir, false));
             }
 
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_SPLASH, 1.2f, 1.2f);
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1.2f, 0.6f);
             bPlayer.addCooldown(this);
         }
     }
@@ -286,8 +286,8 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
                 currentTempBlock.setRevertTime(150);
             }
 
-            loc.getWorld().spawnParticle(Particle.WATER_SPLASH, loc, isMini ? 3 : 6, 0.15, 0.15, 0.15, 0.05);
-            loc.getWorld().spawnParticle(Particle.WATER_WAKE, loc, isMini ? 1 : 2, 0.1, 0.1, 0.1, 0.02);
+            loc.getWorld().spawnParticle(Particle.SPLASH, loc, isMini ? 3 : 6, 0.15, 0.15, 0.15, 0.05);
+            loc.getWorld().spawnParticle(Particle.FALLING_WATER, loc, isMini ? 1 : 2, 0.1, 0.1, 0.1, 0.02);
             Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(40, 150, 240), isMini ? 0.7f : 1.1f);
             loc.getWorld().spawnParticle(Particle.DUST, loc, 1, 0, 0, 0, 0, dust);
 
@@ -320,7 +320,7 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
                 currentTempBlock = null;
             }
 
-            loc.getWorld().spawnParticle(Particle.WATER_SPLASH, loc, 18, 0.3, 0.3, 0.3, 0.1);
+            loc.getWorld().spawnParticle(Particle.SPLASH, loc, 18, 0.3, 0.3, 0.3, 0.1);
             loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_SPLASH, 1.0f, 1.0f);
 
             if (triggerSplit && hasSplitShot && !isMini) {

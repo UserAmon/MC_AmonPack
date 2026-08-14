@@ -208,7 +208,7 @@ public class AirSwirl extends AirAbility implements AddonAbility {
             }
 
             currentPos.getWorld().spawnParticle(Particle.CLOUD, currentPos, 2, 0.05, 0.05, 0.05, 0.01);
-            currentPos.getWorld().spawnParticle(Particle.SPELL_WITCH, currentPos, 1, 0.02, 0.02, 0.02, 0.0);
+            currentPos.getWorld().spawnParticle(Particle.WITCH, currentPos, 1, 0.02, 0.02, 0.02, 0.0);
             Particle.DustOptions whiteDust = new Particle.DustOptions(Color.fromRGB(225, 240, 255), 0.8f);
             currentPos.getWorld().spawnParticle(Particle.DUST, currentPos, 1, 0, 0, 0, 0, whiteDust);
 
@@ -256,7 +256,7 @@ public class AirSwirl extends AirAbility implements AddonAbility {
                         }
                     }
                 }
-            }.runTaskTimer(AmonPackPlugin.getInstance(), 2L, 2L);
+            }.runTaskTimer(AmonPackPlugin.plugin, 2L, 2L);
         }
 
         private void destroy() {

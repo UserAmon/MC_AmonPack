@@ -1112,9 +1112,10 @@ public class Listeners implements Listener {
                                         if (playersBranch.getUnlockedAbilities().contains(lockedName)) {
                                             playersBranch.LockAndRemoveAbility(lockedName);
                                             for (int i = 0; i <= 9; i++) {
-                                                if (bPlayer.getAbilities().containsKey(i) && lockedName.equalsIgnoreCase(bPlayer.getAbilities().get(i))) {
-                                                    com.projectkorra.projectkorra.board.BendingBoardManager.getBoard(p).ifPresent(board -> board.clearSlot(i));
-                                                    bPlayer.getAbilities().remove(i);
+                                                final int slot = i;
+                                                if (bPlayer.getAbilities().containsKey(slot) && lockedName.equalsIgnoreCase(bPlayer.getAbilities().get(slot))) {
+                                                    com.projectkorra.projectkorra.board.BendingBoardManager.getBoard(p).ifPresent(board -> board.clearSlot(slot));
+                                                    bPlayer.getAbilities().remove(slot);
                                                 }
                                             }
                                             p.sendMessage(ChatColor.DARK_RED + "Skill " + lockedName + " został zablokowany przez odblokowanie " + STA.getName() + "!");
