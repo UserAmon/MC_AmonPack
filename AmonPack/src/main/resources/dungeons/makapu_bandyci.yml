@@ -27,6 +27,12 @@ items:
     opis:
       - "&7Rzuc tym kluczem w punkt (1, 54, -6) aby otworzyc brame"
     typ: "throwable"
+  esencja_bandytów:
+    material: "RED_DYE"
+    nazwa: "&4Esencja Bandytów"
+    opis:
+      - "&7Rzuc tym chronionego &4&ltarczą&7 wroga, a zadasz jej obrażenia!"
+    typ: "throwable"
 rewards:
   dungeon-xp: 500
   money: 1000.0
@@ -99,8 +105,8 @@ encounters:
       - "ENC_1_2"
       - "ENC_1_3"
     req_clears: 2
-    enc_after_clears: "Makapu_Boss_1"
-####DOM 1 - ZONE PLUS MOBY
+    enc_after_clears: "Checkpoint_1"
+####Strefa 1 - DOM 1 - ZONE PLUS MOBY
   ENC_1_1:
     title: "&cOdnajdź i uwolnij uwięzionego KonioStrusia!"
     max_mobs: 5
@@ -140,7 +146,7 @@ encounters:
         x2: 46
         y2: 57
         z2: -34
-####DOM 2 - ŚCIEŻKA, MOBY i KLUCZ
+####Strefa 1 - DOM 2 - ŚCIEŻKA, MOBY i KLUCZ
   ENC_1_2:
     title: "&cOdnajdź i uwolnij uwięzionego &a&lShirshu!"
     conditions:
@@ -155,6 +161,12 @@ encounters:
         max-x: 83
         max-y: 48
         max-z: -33
+        start-x: 91
+        start-y: 48
+        start-z: -17
+        end-x: 83
+        end-y: 48
+        end-z: -33
         reveal-x: 89
         reveal-y: 51
         reveal-z: -13
@@ -163,8 +175,8 @@ encounters:
         crumble-block-material: CRACKED_DEEPSLATE_BRICKS
       - type: "INTERACT_BLOCK_WITH_ITEM"
         x: 87
-        y: 49
-        z: -31
+        y: 51
+        z: -34
         block-material: "IRON_CHAIN"
         radius: 5
         item-material: "klucz_do_klatki"
@@ -199,12 +211,12 @@ encounters:
         range: 3.0
       - type: "OPEN_DOOR"
         x1: 87
-        y1: 59
+        y1: 61
         z1: -31
         x2: 87
         y2: 60
         z2: -31
-####DOM 3 - PARKOUR I MOBY
+####Strefa 1 - DOM 3 - PARKOUR I MOBY
   ENC_1_3:
     title: "&cOdnajdź i uwolnij uwięzionego &3&lKretoBorsuka!"
     max_mobs: 6
@@ -262,6 +274,244 @@ encounters:
         x2: 107
         y2: 62
         z2: -33
+#####Strefa 2 - CHECKPOINT
+  Checkpoint_1:
+    title: "&cOdnajdź i uwolnij uwięzionego &3&lKretoBorsuka!"
+    conditions:
+      - type: "PLAYER_ENTER_AREA"
+        x: 107
+        y: 61
+        z: -33
+        radius: 60
+        required_all_players: false
+    next: "random"
+    pool_lists:
+      - ["ENC2_1"]
+      - ["ENC2_2_1", "ENC2_2_2"]
+    enc_after_clears: "Makapu_Boss_1"
+#######Strefa 2 - Bar - Shielded Boss throwable
+  ENC2_1:
+    description: "Pokonaj osłoniętego Bandytę"
+    title: "&dBandyta z &4&losłoną&8- &fTrafienia: $ActNumber$/$ReqNumber$"
+    max_mobs: 4
+    conditions:
+      - type: "DROP_ON_DEATH"
+        mob-name: "Bandyta"
+        item: "esencja_bandytów"
+        chance: 50.0
+      - type: "SHIELDED"
+        mob-name: "Bandyta_nonbender_1"
+        mob-display-name: "Bandyta"
+        item: "esencja_bandytów"
+        amount: 4
+        shield-type: "throw"
+        x: [87, 87]
+        y: [67, 66]
+        z: [-92, -71]
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a&l[Dungeon] &4&lTarcza Bossa została zniszczona!"
+    effects:
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 2
+        level: 1
+        x: 92
+        y: 67
+        z: -84
+        range: 4
+        interval: 10
+      - type: "SEND_MESSAGE"
+        message: "&a[Dungeon] &fUważaj! Pojawił się chroniony Bandyta. Podnieś esencje z pokonanych bandytów, rzuć nimi i zniszcz jego tarczę!"
+#######Strefa 2 - Spa - Zbierz ładunki, podłóż strefą
+  ENC2_2_1:
+    description: "Zbierz ładunki"
+    title: "&dZnajdź w Łaźni wszystkie ładunki wybuchowe i podłóż je aby wykurzyć Bandytów!"
+    max_mobs: 15
+    conditions:
+      - type: "INTERACT_BLOCK_WITH_ITEM"
+        x: 136
+        y: 61
+        z: -93
+        block-material: "TNT"
+        radius: 1
+        required_items: false
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6$Player$Podniósł ładunek wybuchowy!"
+          - type: "OPEN_DOOR"
+            x1: 136
+            y1: 61
+            z1: -93
+            x2: 136
+            y2: 61
+            z2: -93
+      - type: "INTERACT_BLOCK_WITH_ITEM"
+        x: 131
+        y: 68
+        z: -87
+        block-material: "TNT"
+        radius: 1
+        required_items: false
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6$Player$Podniósł ładunek wybuchowy!"
+          - type: "OPEN_DOOR"
+            x1: 131
+            y1: 68
+            z1: -87
+            x2: 131
+            y2: 68
+            z2: -87
+      - type: "INTERACT_BLOCK_WITH_ITEM"
+        x: 136
+        y: 69
+        z: -75
+        block-material: "TNT"
+        radius: 1
+        required_items: false
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6$Player$Podniósł ładunek wybuchowy!"
+          - type: "OPEN_DOOR"
+            x1: 136
+            y1: 69
+            z1: -75
+            x2: 136
+            y2: 69
+            z2: -75
+      - type: "INTERACT_BLOCK_WITH_ITEM"
+        x: 136
+        y: 68
+        z: -37
+        block-material: "TNT"
+        radius: 1
+        required_items: false
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6$Player$Podniósł ładunek wybuchowy!"
+          - type: "OPEN_DOOR"
+            x1: 136
+            y1: 68
+            z1: -37
+            x2: 136
+            y2: 68
+            z2: -37
+      - type: "INTERACT_BLOCK_WITH_ITEM"
+        x: 135
+        y: 61
+        z: -36
+        block-material: "TNT"
+        radius: 1
+        required_items: false
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6$Player$Podniósł ładunek wybuchowy!"
+          - type: "OPEN_DOOR"
+            x1: 135
+            y1: 61
+            z1: -36
+            x2: 135
+            y2: 61
+            z2: -36
+    effects:
+      - type: "OPEN_DOOR"
+        x1: 127
+        y1: 62
+        z1: -41
+        x2: 127
+        y2: 61
+        z2: -40
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 2
+        level: 1
+        x: 134
+        y: 69
+        z: -48
+        range: 2
+        interval: 10
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 2
+        level: 1
+        x: 134
+        y: 69
+        z: -72
+        range: 2
+        interval: 10
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 2
+        level: 1
+        x: 134
+        y: 63
+        z: -48
+        range: 2
+        interval: 10
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 2
+        level: 1
+        x: 134
+        y: 63
+        z: -72
+        range: 2
+        interval: 10
+      - type: "SEND_MESSAGE"
+        message: "&a[Dungeon] &fW pobliskiej Łaźni - Bandyci założyli swój posterunek. Odnadjdź ładunki wybuchowe aby ich wykurzyć!"
+        next: "ENC2_2_2"
+  ENC2_2_2:
+    title: "&cPodłóż ładunki!"
+    max_mobs: 8
+    conditions:
+      - type: "ZONE"
+        x: 128
+        y: 71
+        z: -61
+        radius: 5
+        time: 45
+        oncomplete:
+          - type: "SEND_MESSAGE"
+            message: "&a[Dungeon] &6Bum!"
+          - type: "OPEN_DOOR"
+            x1: 126
+            y1: 70
+            z1: -61
+            x2: 127
+            y2: 69
+            z2: -63
+    effects:
+      - type: "SEND_MESSAGE"
+        message: "&e[Dungeon] &6Na górnym piętrze Łaźni - załóż przy oknie ładunki!"
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 3
+        level: 1
+        x: 134
+        y: 70
+        z: -52
+        range: 1
+        interval: 10
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 3
+        level: 1
+        x: 134
+        y: 70
+        z: -70
+        range: 1
+        interval: 10
+      - type: "SPAWN_UNTIL"
+        mob-name: "Bandyta_nonbender_1"
+        amount: 3
+        level: 1
+        x: 138
+        y: 77
+        z: -57
+        range: 1
+        interval: 10
+##Strefa 3 - Boss
   Makapu_Boss_1:
     description: "Komnata Bossa - Władca Mrozu"
     title: "&c&lLodowy Władca Ymir &8- &fStarcie Finałowe"

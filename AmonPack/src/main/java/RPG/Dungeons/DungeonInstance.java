@@ -2442,6 +2442,7 @@ public class DungeonInstance {
                     if (inRange) {
                         for (Location sLoc : safeBlocks) {
                             p.sendBlockChange(sLoc, Material.GLOWSTONE.createBlockData());
+                            p.spawnParticle(Particle.END_ROD, sLoc.clone().add(0.5, 1.05, 0.5), 1, 0, 0, 0, 0);
                         }
                         revealed.add(p.getUniqueId());
                     } else if (revealed.contains(p.getUniqueId())) {
@@ -2455,6 +2456,14 @@ public class DungeonInstance {
         }
     }
 
+    private static class BlockVector2D {
+        final int x, z;
+        BlockVector2D(int x, int z) {
+            this.x = x;
+            this.z = z;
+        }
+    }
+
     private Set<Location> generateDynamicPath(DungeonCondition cond, Set<Location> mandatoryBlocks) {
         Set<Location> pathLocations = new HashSet<>();
 
@@ -2465,32 +2474,20 @@ public class DungeonInstance {
         int minZ = (int) Math.min(cond.getMinZ(), cond.getMaxZ());
         int maxZ = (int) Math.max(cond.getMinZ(), cond.getMaxZ());
 
-        int y = minY;
-        Random rand = new Random();
+        Location startLoc = cond.getResolvedStartLocation(this);
+        Location endLoc = cond.getResolvedEndLocation(this);
 
-        int spanZ = maxZ - minZ;
-        int spanX = maxX - minX;
+        int startX = (int) Math.max(minX, Math.min(maxX, startLoc.getBlockX()));
+        int startZ = (int) Math.max(minZ, Math.min(maxZ, startLoc.getBlockZ()));
+        int endX = (int) Math.max(minX, Math.min(maxX, endLoc.getBlockX()));
+        int endZ = (int) Math.max(minZ, Math.min(maxZ, endLoc.getBlockZ()));
+        int floorY = minY;
 
-        if (spanZ >= spanX) {
-            int curX = minX + (spanX > 0 ? rand.nextInt(spanX + 1) : 0);
-            for (int z = minZ; z <= maxZ; z++) {
-                pathLocations.add(new Location(world, curX, y, z));
-                if (rand.nextBoolean() && spanX > 0) {
-                    int shift = rand.nextBoolean() ? 1 : -1;
-                    curX = Math.max(minX, Math.min(maxX, curX + shift));
-                    pathLocations.add(new Location(world, curX, y, z));
-                }
-            }
-        } else {
-            int curZ = minZ + (spanZ > 0 ? rand.nextInt(spanZ + 1) : 0);
-            for (int x = minX; x <= maxX; x++) {
-                pathLocations.add(new Location(world, x, y, curZ));
-                if (rand.nextBoolean() && spanZ > 0) {
-                    int shift = rand.nextBoolean() ? 1 : -1;
-                    curZ = Math.max(minZ, Math.min(maxZ, curZ + shift));
-                    pathLocations.add(new Location(world, x, y, curZ));
-                }
-            }
+        Bukkit.getLogger().info("[Dungeon Debug] DYNAMIC_PATH: Generating path from (" + startX + "," + floorY + "," + startZ + ") to (" + endX + "," + floorY + "," + endZ + ") within bounds [" + minX + ".." + maxX + ", " + minZ + ".." + maxZ + "]");
+
+        List<BlockVector2D> path2d = createRandomPath2D(startX, startZ, endX, endZ, minX, maxX, minZ, maxZ);
+        for (BlockVector2D bv : path2d) {
+            pathLocations.add(new Location(world, bv.x, floorY, bv.z));
         }
 
         for (Location mLoc : mandatoryBlocks) {
@@ -2510,7 +2507,72 @@ public class DungeonInstance {
             }
         }
 
+        Bukkit.getLogger().info("[Dungeon Debug] DYNAMIC_PATH: Generated " + pathLocations.size() + " safe path blocks.");
         return pathLocations;
+    }
+
+    private List<BlockVector2D> createRandomPath2D(int startX, int startZ, int endX, int endZ, int minX, int maxX, int minZ, int maxZ) {
+        List<BlockVector2D> path = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        Random rand = new Random();
+
+        int curX = startX;
+        int curZ = startZ;
+        path.add(new BlockVector2D(curX, curZ));
+        visited.add(curX + "," + curZ);
+
+        int maxSteps = (maxX - minX + 1) * (maxZ - minZ + 1);
+        int steps = 0;
+
+        while ((curX != endX || curZ != endZ) && steps < maxSteps) {
+            steps++;
+            List<BlockVector2D> candidates = new ArrayList<>();
+            int[][] dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+
+            for (int[] d : dirs) {
+                int nx = curX + d[0];
+                int nz = curZ + d[1];
+                if (nx >= minX && nx <= maxX && nz >= minZ && nz <= maxZ) {
+                    if (!visited.contains(nx + "," + nz)) {
+                        int distCurrent = Math.abs(curX - endX) + Math.abs(curZ - endZ);
+                        int distNext = Math.abs(nx - endX) + Math.abs(nz - endZ);
+                        if (distNext <= distCurrent || rand.nextDouble() < 0.35) {
+                            candidates.add(new BlockVector2D(nx, nz));
+                        }
+                    }
+                }
+            }
+
+            if (candidates.isEmpty()) {
+                int dx = Integer.compare(endX, curX);
+                int dz = Integer.compare(endZ, curZ);
+                if (dx != 0 && (dz == 0 || rand.nextBoolean())) {
+                    curX += dx;
+                } else if (dz != 0) {
+                    curZ += dz;
+                }
+            } else {
+                BlockVector2D next = candidates.get(rand.nextInt(candidates.size()));
+                curX = next.x;
+                curZ = next.z;
+            }
+
+            path.add(new BlockVector2D(curX, curZ));
+            visited.add(curX + "," + curZ);
+        }
+
+        if (curX != endX || curZ != endZ) {
+            while (curX != endX) {
+                curX += Integer.compare(endX, curX);
+                path.add(new BlockVector2D(curX, curZ));
+            }
+            while (curZ != endZ) {
+                curZ += Integer.compare(endZ, curZ);
+                path.add(new BlockVector2D(curX, curZ));
+            }
+        }
+
+        return path;
     }
 
     private boolean isInsideBox(Block b, DungeonCondition cond) {

@@ -823,28 +823,35 @@ rewards:
 #          freeze: true
 #
 # 2. Warunek/Zdarzenie DYNAMIC_PATH (Dynamiczny Labirynt Ścieżki)
-#    Nowy warunek/mechanika `DYNAMIC_PATH` generuje losową, połączoną bezpieczną ścieżkę w obszarze bloków:
-#    - min: {x: 10, y: 64, z: 10} / max: {x: 20, y: 64, z: 30} (Obszar bloków labiryntu)
-#    - safe-block-material: STONE (Materiał bezpiecznej ścieżki)
-#    - crumble-block-material: CRACKED_STONE_BRICKS (Materiał bloków pułapek)
-#    - Kary za błędny krok: Stanięcie na bloku spoza bezpiecznej ścieżki natychmiast go rozpada (TempBlock AIR) i ściąga gracza siłą w dół (wielkość wektora w dół).
-#    - reveal-x, reveal-y, reveal-z, reveal-radius: Kiedy gracz stanie w podanym promieniu od podanych kordów, TYLKO TEMU GRACZOWI podświetla się bezpieczna ścieżka (GLOWSTONE/SEA_LANTERN).
-#    - reshuffle-interval-seconds: Opcjonalna funkcja zmiany ścieżki co X sekund (np. 10s). Jeśli gracz stoi na jakimś bloku ścieżki w momencie zmiany, blok ten ZOSTANIE ZACHOWANY w nowo wygenerowanej ścieżce!
+#    Mechanika `DYNAMIC_PATH` generuje losową, 1-blokową połączoną bezpieczną ścieżkę w obszarze bloków od `start` do `end`:
+#    - min: {x: 10, y: 64, z: 10} / max: {x: 20, y: 64, z: 30} (Obszar podłogi)
+#    - start-x, start-y, start-z / end-x, end-y, end-z: Punkty startowe i końcowe ścieżki.
+#    - safe-block-material: CRACKED_DEEPSLATE_BRICKS (Materiał bezpiecznej ścieżki)
+#    - crumble-block-material: CRACKED_DEEPSLATE_BRICKS (Materiał fałszywych bloków)
+#    - Kary za błędny krok: Stanięcie na blok poza ścieżką rozpada go (TempBlock AIR z efektami) i siłą ciągnie gracza w dół aż dotknie pierwszego bloku podłoża.
+#    - reveal-x, reveal-y, reveal-z, reveal-radius: Stanięcie w strefie reveal podświetla bezpieczną ścieżkę partiklami (END_ROD/GLOW) TYLKO GRACZOWI stojącemu w strefie.
+#    - reshuffle-interval-seconds: Opcjonalna zmiana ścieżki co X sekund (zachowuje pozycje graczy).
 #    Przykład YAML:
 #      conditions:
 #        - type: DYNAMIC_PATH
-#          min-x: 10
-#          min-y: 64
-#          min-z: 10
-#          max-x: 20
-#          max-y: 64
-#          max-z: 30
-#          reveal-x: 15.5
-#          reveal-y: 64.0
-#          reveal-z: 8.5
-#          reveal-radius: 3.0
-#          safe-block-material: STONE
-#          crumble-block-material: CRACKED_STONE_BRICKS
+#          min-x: 91
+#          min-y: 48
+#          min-z: -17
+#          max-x: 83
+#          max-y: 48
+#          max-z: -33
+#          start-x: 91
+#          start-y: 48
+#          start-z: -17
+#          end-x: 83
+#          end-y: 48
+#          end-z: -33
+#          reveal-x: 89
+#          reveal-y: 51
+#          reveal-z: -13
+#          reveal-radius: 2
+#          safe-block-material: CRACKED_DEEPSLATE_BRICKS
+#          crumble-block-material: CRACKED_DEEPSLATE_BRICKS
 #          reshuffle-interval-seconds: 10
 
 

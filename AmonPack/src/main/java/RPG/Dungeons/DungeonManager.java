@@ -274,17 +274,41 @@ public class DungeonManager implements Listener {
                                                 cond.setMaxY(asDouble(map.get("max-y")));
                                                 cond.setMaxZ(asDouble(map.get("max-z")));
                                             }
+                                            if (map.containsKey("start")) {
+                                                Map<String, Object> sMap = (Map<String, Object>) map.get("start");
+                                                cond.setStartX(asDouble(sMap.get("x")));
+                                                cond.setStartY(asDouble(sMap.get("y")));
+                                                cond.setStartZ(asDouble(sMap.get("z")));
+                                                cond.setHasStartLoc(true);
+                                            } else if (map.containsKey("start-x")) {
+                                                cond.setStartX(asDouble(map.get("start-x")));
+                                                cond.setStartY(asDouble(map.get("start-y")));
+                                                cond.setStartZ(asDouble(map.get("start-z")));
+                                                cond.setHasStartLoc(true);
+                                            }
+                                            if (map.containsKey("end")) {
+                                                Map<String, Object> eMap = (Map<String, Object>) map.get("end");
+                                                cond.setEndX(asDouble(eMap.get("x")));
+                                                cond.setEndY(asDouble(eMap.get("y")));
+                                                cond.setEndZ(asDouble(eMap.get("z")));
+                                                cond.setHasEndLoc(true);
+                                            } else if (map.containsKey("end-x")) {
+                                                cond.setEndX(asDouble(map.get("end-x")));
+                                                cond.setEndY(asDouble(map.get("end-y")));
+                                                cond.setEndZ(asDouble(map.get("end-z")));
+                                                cond.setHasEndLoc(true);
+                                            }
                                             if (map.containsKey("reveal-x")) cond.setRevealX(asDouble(map.get("reveal-x")));
                                             if (map.containsKey("reveal-y")) cond.setRevealY(asDouble(map.get("reveal-y")));
                                             if (map.containsKey("reveal-z")) cond.setRevealZ(asDouble(map.get("reveal-z")));
                                             if (map.containsKey("reveal-radius")) cond.setRevealRadius(asDouble(map.get("reveal-radius")));
                                             if (map.containsKey("reshuffle-interval-seconds")) cond.setReshuffleIntervalSeconds(asInt(map.get("reshuffle-interval-seconds")));
                                             if (map.containsKey("safe-block-material")) {
-                                                Material m = Material.getMaterial((String) map.get("safe-block-material"));
+                                                Material m = DungeonCondition.parseMaterial((String) map.get("safe-block-material"));
                                                 if (m != null) cond.setSafeBlockMaterial(m);
                                             }
                                             if (map.containsKey("crumble-block-material")) {
-                                                Material m = Material.getMaterial((String) map.get("crumble-block-material"));
+                                                Material m = DungeonCondition.parseMaterial((String) map.get("crumble-block-material"));
                                                 if (m != null) cond.setCrumbleBlockMaterial(m);
                                             }
                                             break;
@@ -303,9 +327,10 @@ public class DungeonManager implements Listener {
                                             }
                                             break;
                                         case INTERACT_BLOCK_WITH_ITEM:
-                                            Material bMat = Material.getMaterial((String) map.getOrDefault("block-material", ""));
+                                            String bMatStr = (String) map.getOrDefault("block-material", "");
+                                            Material bMat = DungeonCondition.parseMaterial(bMatStr);
                                             String itemMatStr = (String) map.getOrDefault("item-material", "");
-                                            Material iMat = Material.getMaterial(itemMatStr);
+                                            Material iMat = DungeonCondition.parseMaterial(itemMatStr);
                                             cond = new DungeonCondition(
                                                 asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")),
                                                 bMat, iMat, (String) map.get("item-display-name")
@@ -1407,7 +1432,7 @@ public class DungeonManager implements Listener {
                 for (DungeonCondition condition : encounter.getConditions()) {
                     if (condition.getType() == DungeonCondition.ConditionType.INTERACT_BLOCK_WITH_ITEM) {
                         if (condition.isMetInteract(block.getLocation(), block.getType(), item, run)) {
-                            if (item != null && item.getAmount() > 0) {
+                            if (item != null && item.getAmount() > 0 && condition.isRequiredItems()) {
                                 int newAmt = item.getAmount() - 1;
                                 if (newAmt > 0) {
                                     item.setAmount(newAmt);
@@ -1416,8 +1441,12 @@ public class DungeonManager implements Listener {
                                 }
                             }
                             
-                            run.transitionToNext();
+                            for (DungeonEffect effect : condition.getOnCompleteEffects()) {
+                                effect.execute(run);
+                            }
+
                             event.setCancelled(true);
+                            run.transitionToNext();
                             return;
                         }
                     }

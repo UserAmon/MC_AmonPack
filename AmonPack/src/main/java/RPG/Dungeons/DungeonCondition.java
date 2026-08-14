@@ -37,11 +37,16 @@ public class DungeonCondition {
 
     private double minX, minY, minZ;
     private double maxX, maxY, maxZ;
+    private double startX, startY, startZ;
+    private boolean hasStartLoc = false;
+    private double endX, endY, endZ;
+    private boolean hasEndLoc = false;
     private double revealX, revealY, revealZ;
     private double revealRadius;
     private int reshuffleIntervalSeconds = 0;
     private Material safeBlockMaterial = Material.STONE;
     private Material crumbleBlockMaterial = Material.CRACKED_STONE_BRICKS;
+    private boolean interactedMet = false;
 
     private List<Double> xList = new ArrayList<>();
     private List<Double> yList = new ArrayList<>();
@@ -69,6 +74,27 @@ public class DungeonCondition {
     private boolean requiredAllPlayers = false;
     private boolean requiredItems = true;
     private List<Location> points = new ArrayList<>();
+
+    public static Material parseMaterial(String input) {
+        if (input == null || input.trim().isEmpty()) return null;
+        String clean = input.trim().toUpperCase().replace(" ", "_");
+        Material mat = Material.getMaterial(clean);
+        if (mat != null) return mat;
+
+        if (clean.equals("IRON_CHAIN") || clean.equals("CHAINS") || clean.equals("CHAIN")) {
+            mat = Material.getMaterial("CHAIN");
+            if (mat != null) return mat;
+        }
+        if (clean.equals("IRON_DOORS") || clean.equals("IRON_DOOR")) {
+            mat = Material.getMaterial("IRON_DOOR");
+            if (mat != null) return mat;
+        }
+        if (clean.equals("WOOD_DOOR") || clean.equals("WOODEN_DOOR") || clean.equals("OAK_DOOR")) {
+            mat = Material.getMaterial("OAK_DOOR");
+            if (mat != null) return mat;
+        }
+        return null;
+    }
 
     public List<Location> getPoints() {
         return points;
@@ -142,6 +168,26 @@ public class DungeonCondition {
         this.chance = chance;
     }
 
+    public Location getResolvedStartLocation(DungeonInstance instance) {
+        if (hasStartLoc) {
+            return new Location(instance.getWorld(), startX, startY, startZ);
+        }
+        double sx = Math.min(minX, maxX);
+        double sy = minY;
+        double sz = Math.min(minZ, maxZ);
+        return new Location(instance.getWorld(), sx, sy, sz);
+    }
+
+    public Location getResolvedEndLocation(DungeonInstance instance) {
+        if (hasEndLoc) {
+            return new Location(instance.getWorld(), endX, endY, endZ);
+        }
+        double ex = Math.max(minX, maxX);
+        double ey = minY;
+        double ez = Math.max(minZ, maxZ);
+        return new Location(instance.getWorld(), ex, ey, ez);
+    }
+
     public boolean isMet(DungeonInstance instance) {
         switch (type) {
             case ALL_PLAYERS_READY:
@@ -199,18 +245,20 @@ public class DungeonCondition {
             case DROP_ON_DEATH:
                 return true;
 
-            case DYNAMIC_PATH:
-                int maxZBound = (int) Math.max(minZ, maxZ);
-                int maxXBound = (int) Math.max(minX, maxX);
+            case DYNAMIC_PATH: {
+                Location targetEnd = getResolvedEndLocation(instance);
                 for (Player p : instance.getOnlinePlayers()) {
                     if (!instance.isPlayerSpectator(p)) {
-                        Block b = p.getLocation().getBlock();
-                        if (b.getZ() >= maxZBound || b.getX() >= maxXBound) {
+                        if (p.getLocation().distanceSquared(targetEnd) <= 2.25) { // within 1.5 blocks of endLoc
                             return true;
                         }
                     }
                 }
                 return false;
+            }
+
+            case INTERACT_BLOCK_WITH_ITEM:
+                return this.interactedMet;
 
             case PERIODIC_CHECK:
                 return true;
@@ -262,35 +310,85 @@ public class DungeonCondition {
         if (type != ConditionType.INTERACT_BLOCK_WITH_ITEM) return false;
 
         Location targetLoc = getResolvedLocation(instance);
+        double distSq = blockLoc.distanceSquared(targetLoc);
         double maxDistSq = (radius > 0.0) ? (radius * radius) : 1.5;
-        if (blockLoc.distanceSquared(targetLoc) > maxDistSq) return false;
 
-        if (blockMaterial != null && clickedBlock != blockMaterial) return false;
+        org.bukkit.Bukkit.getLogger().info("[Dungeon Debug] INTERACT_BLOCK_WITH_ITEM check triggered:");
+        org.bukkit.Bukkit.getLogger().info("  Target Loc: (" + targetLoc.getX() + ", " + targetLoc.getY() + ", " + targetLoc.getZ() + ") | Clicked Loc: (" + blockLoc.getX() + ", " + blockLoc.getY() + ", " + blockLoc.getZ() + ")");
+        org.bukkit.Bukkit.getLogger().info("  Distance: " + String.format("%.2f", Math.sqrt(distSq)) + " blocks (Max Allowed Radius: " + (radius > 0.0 ? radius : 1.22) + ")");
+
+        if (distSq > maxDistSq) {
+            org.bukkit.Bukkit.getLogger().warning("[Dungeon Debug] INTERACT FAILED: Distance check failed! (" + String.format("%.2f", Math.sqrt(distSq)) + " > " + String.format("%.2f", Math.sqrt(maxDistSq)) + ")");
+            return false;
+        }
+
+        if (blockMaterial != null && clickedBlock != blockMaterial) {
+            org.bukkit.Bukkit.getLogger().warning("[Dungeon Debug] INTERACT FAILED: Block Material mismatch! Clicked '" + clickedBlock + "' vs Target '" + blockMaterial + "'");
+            return false;
+        }
 
         if (requiredItems) {
+            boolean itemMatched = false;
+            String heldItemName = (heldItem != null && heldItem.hasItemMeta() && heldItem.getItemMeta().getDisplayName() != null) 
+                ? ChatColor.stripColor(heldItem.getItemMeta().getDisplayName()) : "";
+            String heldItemTypeStr = (heldItem != null) ? heldItem.getType().name() : "AIR";
+
             if (itemMaterial != null) {
-                if (heldItem == null || heldItem.getType() != itemMaterial) return false;
-                
-                if (itemDisplayName != null) {
-                    if (!heldItem.hasItemMeta() || heldItem.getItemMeta().getDisplayName() == null) return false;
-                    
-                    String cleanMetaName = ChatColor.stripColor(heldItem.getItemMeta().getDisplayName());
-                    String cleanTargetName = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', itemDisplayName));
-                    
-                    if (!cleanMetaName.equalsIgnoreCase(cleanTargetName)) return false;
+                if (heldItem != null && heldItem.getType() == itemMaterial) {
+                    if (itemDisplayName == null) {
+                        itemMatched = true;
+                    } else {
+                        String cleanTarget = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', itemDisplayName));
+                        if (heldItemName.equalsIgnoreCase(cleanTarget)) {
+                            itemMatched = true;
+                        }
+                    }
                 }
-            } else if (customItemId != null) {
-                if (heldItem == null) return false;
-                org.bukkit.persistence.PersistentDataContainer pdc = heldItem.getItemMeta().getPersistentDataContainer();
-                org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_item_id");
-                if (!pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) return false;
-                String itemId = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
-                if (!customItemId.equalsIgnoreCase(itemId)) return false;
-            } else {
-                if (heldItem != null && !heldItem.getType().isAir()) return false;
+            }
+            
+            if (!itemMatched && customItemId != null && !customItemId.isEmpty()) {
+                if (heldItem != null && !heldItem.getType().isAir()) {
+                    // Check PDC
+                    if (heldItem.hasItemMeta()) {
+                        org.bukkit.persistence.PersistentDataContainer pdc = heldItem.getItemMeta().getPersistentDataContainer();
+                        org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(Plugin.AmonPackPlugin.plugin, "dungeon_item_id");
+                        if (pdc.has(key, org.bukkit.persistence.PersistentDataType.STRING)) {
+                            String itemId = pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
+                            if (customItemId.equalsIgnoreCase(itemId)) {
+                                itemMatched = true;
+                            }
+                        }
+                    }
+
+                    // Check Display Name
+                    if (!itemMatched && !heldItemName.isEmpty()) {
+                        String cleanTarget = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', customItemId));
+                        if (heldItemName.equalsIgnoreCase(cleanTarget)) {
+                            itemMatched = true;
+                        }
+                    }
+
+                    // Check Item Type Name
+                    if (!itemMatched && heldItemTypeStr.equalsIgnoreCase(customItemId)) {
+                        itemMatched = true;
+                    }
+                }
+            }
+
+            if (!itemMatched && itemMaterial == null && (customItemId == null || customItemId.isEmpty())) {
+                if (heldItem == null || heldItem.getType().isAir()) {
+                    itemMatched = true;
+                }
+            }
+
+            if (!itemMatched) {
+                org.bukkit.Bukkit.getLogger().warning("[Dungeon Debug] INTERACT FAILED: Item mismatch! Held: " + heldItemTypeStr + " ('" + heldItemName + "') vs Target ItemMaterial: " + itemMaterial + " / CustomId: '" + customItemId + "'");
+                return false;
             }
         }
 
+        org.bukkit.Bukkit.getLogger().info("[Dungeon Debug] INTERACT SUCCESS! All conditions matched for INTERACT_BLOCK_WITH_ITEM.");
+        this.interactedMet = true;
         return true;
     }
 
@@ -527,6 +625,30 @@ public class DungeonCondition {
 
     public double getMaxZ() { return maxZ; }
     public void setMaxZ(double maxZ) { this.maxZ = maxZ; }
+
+    public double getStartX() { return startX; }
+    public void setStartX(double startX) { this.startX = startX; }
+
+    public double getStartY() { return startY; }
+    public void setStartY(double startY) { this.startY = startY; }
+
+    public double getStartZ() { return startZ; }
+    public void setStartZ(double startZ) { this.startZ = startZ; }
+
+    public boolean hasStartLoc() { return hasStartLoc; }
+    public void setHasStartLoc(boolean hasStartLoc) { this.hasStartLoc = hasStartLoc; }
+
+    public double getEndX() { return endX; }
+    public void setEndX(double endX) { this.endX = endX; }
+
+    public double getEndY() { return endY; }
+    public void setEndY(double endY) { this.endY = endY; }
+
+    public double getEndZ() { return endZ; }
+    public void setEndZ(double endZ) { this.endZ = endZ; }
+
+    public boolean hasEndLoc() { return hasEndLoc; }
+    public void setHasEndLoc(boolean hasEndLoc) { this.hasEndLoc = hasEndLoc; }
 
     public double getRevealX() { return revealX; }
     public void setRevealX(double revealX) { this.revealX = revealX; }
