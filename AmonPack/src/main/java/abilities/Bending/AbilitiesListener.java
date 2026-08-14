@@ -64,6 +64,12 @@ public class AbilitiesListener implements Listener {
 			if (CoreAbility.hasAbility(player, WaterStrike.class)) {
 				CoreAbility.getAbility(player, WaterStrike.class).onShiftRelease();
 			}
+			if (CoreAbility.hasAbility(player, EarthBarricade.class)) {
+				CoreAbility.getAbility(player, EarthBarricade.class).onShiftRelease();
+			}
+			if (CoreAbility.hasAbility(player, IceBarricade.class)) {
+				CoreAbility.getAbility(player, IceBarricade.class).onShiftRelease();
+			}
 			return;
 		}
 		if (SpecialTriggerManager.isSpecialActive(player)) {
@@ -82,6 +88,18 @@ public class AbilitiesListener implements Listener {
 					} else if (boundAbility.equalsIgnoreCase("WaterStrike")) {
 						if (!CoreAbility.hasAbility(player, WaterStrike.class)) {
 							new WaterStrike(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("EarthBarricade") || boundAbility.equalsIgnoreCase("Baricade")) {
+						if (!CoreAbility.hasAbility(player, EarthBarricade.class)) {
+							new EarthBarricade(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("IceBarricade")) {
+						if (!CoreAbility.hasAbility(player, IceBarricade.class)) {
+							new IceBarricade(player);
+						}
+					} else if (boundAbility.equalsIgnoreCase("AirVolley")) {
+						if (!CoreAbility.hasAbility(player, AirVolley.class)) {
+							new AirVolley(player);
 						}
 					} else if (boundAbility.equalsIgnoreCase("SandBreath")) {
 						new SandBreath(player);
@@ -120,8 +138,6 @@ public class AbilitiesListener implements Listener {
 						new AirPressure(player);
 					} else if (boundAbility.equalsIgnoreCase("EarthHammer")) {
 						new EarthHammer(player);
-					} else if (boundAbility.equalsIgnoreCase("Baricade")) {
-						new Baricade(player);
 					} else if (boundAbility.equalsIgnoreCase("FlameSplit")) {
 						if (!com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(player, FlameSplit.class)) {
 							new FlameSplit(player);
@@ -197,8 +213,6 @@ public class AbilitiesListener implements Listener {
 						if (!CoreAbility.hasAbility(player, BoulderRoll.class)) {
 							new BoulderRoll(player);
 						}
-					} else if (!AmonPackPlugin.ENABLE_SKILL_TREE && boundAbility.equalsIgnoreCase("WaterWhip")) {
-						new WaterWhip(player);
 					}
 				}
 			} else
@@ -306,6 +320,18 @@ public class AbilitiesListener implements Listener {
 						CoreAbility.getAbility(player, AirSwirl.class).onClick();
 					} else {
 						new AirSwirl(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("WaterWhip")) {
+					if (CoreAbility.hasAbility(player, WaterWhip.class)) {
+						CoreAbility.getAbility(player, WaterWhip.class).onClick();
+					} else {
+						new WaterWhip(player);
+					}
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FireRain")) {
+					if (CoreAbility.hasAbility(player, FireRain.class)) {
+						CoreAbility.getAbility(player, FireRain.class).onClick();
+					} else {
+						new FireRain(player);
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FirelordStance")) {
 					new FirelordStance(player);

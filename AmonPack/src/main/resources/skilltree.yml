@@ -176,6 +176,41 @@ AmonPack:
         Description:
           - "&ePodpalenie trwa dwukrotnie dłużej&7 (&e6 sekund&7)."
           - "&7Pociski w locie &elekko podążają za kamerą&7."
+      FireRain:
+        Cost: 10
+        Place: 43
+        ReqAbilities:
+          - FireBlast
+        Description:
+          - "&7Wystrzeliwuje pocisk ognia wysoko w górę po łuku."
+          - "&7Pocisk idealnie trafia we wskazany blok i wybucha."
+      FireRainWide:
+        Cost: 15
+        Place: 44
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - FireRain
+        Description:
+          - "&7Zwiększa obszar wybuchu o &e80%&7."
+          - "&7Podpala bloki podłoża w obszarze trafienia."
+      DoubleTheFun:
+        Cost: 20
+        Place: 45
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - FireRain
+        Description:
+          - "&7Pozwala na &edrugie użycie FireRain&7"
+          - "&7w ciągu &e3 sekund&7 przed nałożeniem cooldownu."
+      FireRainInferno:
+        Cost: 25
+        Place: 47
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - DoubleTheFun
+        Description:
+          - "&7Każde użycie wystrzeliwuje &e2 pociski ognia&7."
+          - "&7Pociski uderzają symetrycznie z obu stron celu."
     Earth:
       PathDecoration:
         - 12
@@ -318,6 +353,40 @@ AmonPack:
           - "&ePociski przeszywają wrogów&7."
           - "&7W locie pociski &elekko podążają za kamerą&7."
           - "&7Rozpad następuje wyłącznie przy uderzeniu w blok."
+      EarthBarricade:
+        Cost: 5
+        Place: 43
+        ReqAbilities: []
+        Description:
+          - "&7Przytrzymaj SHIFT, aby wznieść ścianę ziemi."
+          - "&7Ściana podąża za obrotem kamery z bezwładnością."
+          - "&7Po zakończeniu czasu ściana &erozpada się z AoE&7."
+      EarthWallSize:
+        Cost: 15
+        Place: 44
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthBarricade
+        Description:
+          - "&7Zwiększa wysokość, szerokość oraz grubość ściany."
+      EarthWallShatter:
+        Cost: 20
+        Place: 45
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthBarricade
+        Description:
+          - "&7Przy rozpadzie generuje &eodłamki FallingBlock&7"
+          - "&7wyrzucane w przód i we wszystkich kierunkach."
+      EarthWallLaunch:
+        Cost: 25
+        Place: 46
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - EarthWallSize
+        Description:
+          - "&7Puszczenie SHIFT przed końcem czasu wysyła ścianę"
+          - "&7naprzód jako falę ziemi porywającą wrogów!"
     Water:
       PathDecoration:
         - 38
@@ -387,15 +456,40 @@ AmonPack:
         ReqAbilities:
         - BloodBending
       WaterWhip:
-        Cost: 20
+        Cost: 10
         Place: 23
-        IsSpecialBindAbility: true
         ReqAbilities:
           - WaterFist
         Description:
-          - "&7Wystrzeliwuje bicz wodny podążający za ścieżką"
-          - "&7obrotu kamery z odrzutem i obrażeniami."
-          - "&e[Ruch Specjalny - SWAP (F)]"
+          - "&71. LPM: Zaznacza źródło wody."
+          - "&72. LPM: Wystrzeliwuje falujący bicz wodny."
+      WaterWhipLong:
+        Cost: 15
+        Place: 24
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - WaterWhip
+        Description:
+          - "&7Zwiększa zasięg bicza o &e8 bloków&7."
+          - "&eBicz przeszywa wielu wrogów naraz&7."
+      WaterWhipPull:
+        Cost: 20
+        Place: 27
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - WaterWhipLong
+        Description:
+          - "&7Bicz przyciąga trafionych wrogów do gracza."
+          - "&7Przeciąga wszystkich złapanych wrogów przy powrocie."
+      WaterWhipExtend:
+        Cost: 25
+        Place: 28
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - WaterWhipPull
+        Description:
+          - "&7Po uderzeniu bicz wraca i &epozostaje w dłoni na 5s&7."
+          - "&7W tym stanie możesz aktywnie sterować biczem kamerą."
       Hoarfrost:
         Cost: 25
         Place: 25
@@ -500,6 +594,38 @@ AmonPack:
           - "&ePociski przeszywają wrogów&7."
           - "&7W locie pociski &elekko podążają za kamerą&7."
           - "&7Rozpad następuje wyłącznie przy uderzeniu w blok."
+      IceBarricade:
+        Cost: 5
+        Place: 43
+        ReqAbilities: []
+        Description:
+          - "&7Przytrzymaj SHIFT na wodzie/lodzie, aby wznieść lodową ścianę."
+          - "&7Ściana podąża za obrotem kamery z bezwładnością."
+          - "&7Rozpad nakłada &eSlowness II&7 na pobliskich wrogów."
+      IceWallSize:
+        Cost: 15
+        Place: 44
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - IceBarricade
+        Description:
+          - "&7Zwiększa wysokość, szerokość oraz grubość lodowej ściany."
+      IceWallShatter:
+        Cost: 20
+        Place: 45
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - IceBarricade
+        Description:
+          - "&7Przy rozpadzie generuje &eodłamki lodu FallingBlock&7."
+      IceWallLaunch:
+        Cost: 25
+        Place: 46
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - IceWallSize
+        Description:
+          - "&7Puszczenie SHIFT wysyła lodową ścianę jak lodowiec naprzód!"
     Air:
       PathDecoration:
         - 39
@@ -623,4 +749,38 @@ AmonPack:
           - "&eOdrzucenie zwiększone o 60%&7."
           - "&7Uderzenie wroga w ścianę zadaje &edodatkowe obrażenia&7."
           - "&7Pociski w locie &elekko podążają za kamerą&7."
+      AirVolley:
+        Cost: 10
+        Place: 43
+        ReqAbilities: []
+        Description:
+          - "&7Ładuj SHIFT przez 2s, aby stworzyć 360° pierścień."
+          - "&7Po naładowaniu automatycznie strzela serią pocisków."
+      AirVolleyBarrage:
+        Cost: 15
+        Place: 44
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - AirVolley
+        Description:
+          - "&7Zwiększa liczbę segmentów i pocisków salwy do &e10&7."
+      AirVolleyHarmonics:
+        Cost: 20
+        Place: 45
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - AirVolley
+        Description:
+          - "&7Co &edrugi wystrzał &7staje się strzałem Soundbendingu."
+          - "&7Nakłada stacki dźwięku oraz &eSlowness&7."
+      AirVolleyPrecision:
+        Cost: 25
+        Place: 46
+        IsAbilityUpgrade: true
+        ReqAbilities:
+          - AirVolleyHarmonics
+        Description:
+          - "&e100% trafień &7salwy natychmiast rozpoczyna"
+          - "&7nowe ładowanie &ebez cooldownu&7!"
+
 
