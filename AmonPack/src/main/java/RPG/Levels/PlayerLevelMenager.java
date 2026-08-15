@@ -93,25 +93,38 @@ public class PlayerLevelMenager {
     }
 
     public static void OpenSkillDetails(LevelSkill skill, Player p) {
+        if (skill == null || skill.getType() == null || p == null) return;
         Inventory inv = Bukkit.createInventory(SkillDetails, SkillDetails.getSize(), SkillDetails.getTitle());
         for (int i = 0; i < inv.getSize(); i++) {
             inv.setItem(i, GuiBlank());
         }
         FileConfiguration config = AmonPackPlugin.getLevelConfig();
+        if (config == null) return;
         String Path = "AmonPack.Levels." + skill.getType().toString();
+        org.bukkit.configuration.ConfigurationSection sec = config.getConfigurationSection(Path);
+        if (sec == null) {
+            p.openInventory(inv);
+            return;
+        }
         int ActualLevel = 0;
         int totallvl = (int) skill.getExpPoints();
-        for (String key : config.getConfigurationSection(Path).getKeys(false)) {
+        for (String key : sec.getKeys(false)) {
             if (key.startsWith("Level")) {
                 String newpath = Path + "." + key;
                 ItemStack Item;
                 ItemMeta LockedItemMeta;
                 int MaxLvL = config.getInt(newpath + ".ReqExp");
-                int lvl = Integer.parseInt(key.replace("Level_", ""));
-                if (totallvl >= MaxLvL) {
+                int lvl = 0;
+                try {
+                    lvl = Integer.parseInt(key.replace("Level_", ""));
+                } catch (NumberFormatException ignored) {}
+                if (MaxLvL > 0 && totallvl >= MaxLvL) {
                     ActualLevel = lvl;
                     totallvl = totallvl - MaxLvL;
-                    Item = new ItemStack(Material.valueOf(config.getString(Path + ".Details.UnLockedItem")));
+                    String unLockedMatStr = config.getString(Path + ".Details.UnLockedItem", "DIRT");
+                    Material unLockedMat = Material.getMaterial(unLockedMatStr);
+                    if (unLockedMat == null) unLockedMat = Material.DIRT;
+                    Item = new ItemStack(unLockedMat);
                     LockedItemMeta = Item.getItemMeta();
                     if (config.getInt(Path + ".Details.UnLockedItemModelData") != 0) {
                         LockedItemMeta.setCustomModelData(config.getInt(Path + ".Details.UnLockedItemModelData"));
@@ -123,34 +136,39 @@ public class PlayerLevelMenager {
                     } else {
                         Lore.add(ChatColor.GREEN + "Nagroda dostepna");
                     }
-                    for (String Rewards : config.getConfigurationSection(newpath).getKeys(false)) {
-                        if (Rewards.startsWith("Reward")) {
-                            String reward = config.getString(Path + "." + key + "." + Rewards);
-                            if (Rewards.endsWith("Lore")) {
-                                for (String line : reward.split("%break%")) {
-                                    Lore.add(line);
-                                }
-                            } else {
-                                if (reward.startsWith("command:")) {
-                                    if (reward.contains("money add")) {
-                                        reward = reward.replace("command:money add %player%", "");
-                                        Lore.add(ChatColor.GOLD + "+" + reward + "¥");
+                    org.bukkit.configuration.ConfigurationSection rewSec = config.getConfigurationSection(newpath);
+                    if (rewSec != null) {
+                        for (String Rewards : rewSec.getKeys(false)) {
+                            if (Rewards.startsWith("Reward")) {
+                                String reward = config.getString(Path + "." + key + "." + Rewards, "");
+                                if (Rewards.endsWith("Lore")) {
+                                    for (String line : reward.split("%break%")) {
+                                        Lore.add(line);
                                     }
-                                }
-                                if (reward.startsWith("skillupgrade:")) {
-                                    reward = reward.replace("skillupgrade:", "");
-                                    Lore.add(ChatColor.AQUA + "+" + reward + " do poziomu umiejętności dziedziny");
-                                }
-                                if (reward.startsWith("SkillPoints:")) {
-                                    reward = reward.replace("SkillPoints:", "");
-                                    Lore.add(ChatColor.LIGHT_PURPLE + "+" + reward + " Punktów Drzewka Magii");
+                                } else {
+                                    if (reward.startsWith("command:")) {
+                                        if (reward.contains("money add")) {
+                                            reward = reward.replace("command:money add %player%", "");
+                                            Lore.add(ChatColor.GOLD + "+" + reward + "¥");
+                                        }
+                                    }
+                                    if (reward.startsWith("skillupgrade:")) {
+                                        reward = reward.replace("skillupgrade:", "");
+                                        Lore.add(ChatColor.AQUA + "+" + reward + " do poziomu umiejętności dziedziny");
+                                    }
+                                    if (reward.startsWith("SkillPoints:")) {
+                                        reward = reward.replace("SkillPoints:", "");
+                                    }
                                 }
                             }
                         }
                     }
                     LockedItemMeta.setLore(Lore);
                 } else {
-                    Item = new ItemStack(Material.valueOf(config.getString(Path + ".Details.LockedItem")));
+                    String lockedMatStr = config.getString(Path + ".Details.LockedItem", "STONE");
+                    Material lockedMat = Material.getMaterial(lockedMatStr);
+                    if (lockedMat == null) lockedMat = Material.STONE;
+                    Item = new ItemStack(lockedMat);
                     LockedItemMeta = Item.getItemMeta();
                     if (config.getInt(Path + ".Details.LockedItemModelData") != 0) {
                         LockedItemMeta.setCustomModelData(config.getInt(Path + ".Details.LockedItemModelData"));
@@ -160,27 +178,22 @@ public class PlayerLevelMenager {
                     if (lvl == ActualLevel + 1) {
                         Lore.add(ChatColor.LIGHT_PURPLE + "Doświadczenie: " + (totallvl + "/" + MaxLvL));
                     }
-                    for (String Rewards : config.getConfigurationSection(newpath).getKeys(false)) {
-                        if (Rewards.startsWith("Reward")) {
-                            String reward = config.getString(Path + "." + key + "." + Rewards);
-                            if (Rewards.endsWith("Lore")) {
-                                for (String line : reward.split("%break%")) {
-                                    Lore.add(line);
-                                }
-                            } else {
-                                if (reward.startsWith("command:")) {
-                                    if (reward.contains("economy give")) {
-                                        reward = reward.replace("command:economy give %player%", "");
-                                        Lore.add(ChatColor.GOLD + "+" + reward + "¥");
+                    org.bukkit.configuration.ConfigurationSection rewSec = config.getConfigurationSection(newpath);
+                    if (rewSec != null) {
+                        for (String Rewards : rewSec.getKeys(false)) {
+                            if (Rewards.startsWith("Reward")) {
+                                String reward = config.getString(Path + "." + key + "." + Rewards, "");
+                                if (Rewards.endsWith("Lore")) {
+                                    for (String line : reward.split("%break%")) {
+                                        Lore.add(line);
                                     }
-                                }
-                                if (reward.startsWith("skillupgrade:")) {
-                                    reward = reward.replace("skillupgrade:", "");
-                                    Lore.add(ChatColor.AQUA + "Zwiększenie poziomu umiejętności dziedziny");
-                                }
-                                if (reward.startsWith("SkillPoints:")) {
-                                    reward = reward.replace("SkillPoints:", "");
-                                    Lore.add(ChatColor.LIGHT_PURPLE + "+" + reward + " Punktów Drzewka Magii");
+                                } else {
+                                    if (reward.startsWith("command:")) {
+                                        if (reward.contains("economy give")) {
+                                            reward = reward.replace("command:economy give %player%", "");
+                                            Lore.add(ChatColor.GOLD + "+" + reward + "¥");
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -194,13 +207,16 @@ public class PlayerLevelMenager {
         String npath = Path + ".Gui";
         ItemStack pl = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta plmeta = pl.getItemMeta();
-        plmeta.setDisplayName(config.getString(npath + ".SkillDisplay") + ": " + ActualLevel);
+        String skillDisplay = config.getString(npath + ".SkillDisplay", "Poziom");
+        plmeta.setDisplayName(skillDisplay + ": " + ActualLevel);
         List<String> Lore = new ArrayList<>();
         Lore.add(ChatColor.LIGHT_PURPLE + "Obecne doświadczenie: " + totallvl);
         String BuffSkillLore = config.getString(npath + ".BuffSkilllore");
-        BuffSkillLore = BuffSkillLore.replace("%chance%", skill.getUpgradePercent() + "%");
-        for (String line : BuffSkillLore.split("%break%")) {
-            Lore.add(ChatColor.GRAY + line);
+        if (BuffSkillLore != null) {
+            BuffSkillLore = BuffSkillLore.replace("%chance%", skill.getUpgradePercent() + "%");
+            for (String line : BuffSkillLore.split("%break%")) {
+                Lore.add(ChatColor.GRAY + line);
+            }
         }
         plmeta.setLore(Lore);
         pl.setItemMeta(plmeta);
@@ -210,44 +226,56 @@ public class PlayerLevelMenager {
     }
 
     private static void OpenPlayerLevelWindow(PlayerLevel level) {
+        if (level == null) return;
         TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(Holder1,
                 Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amonpack:first_gui"));
         Inventory inv = inventory.getInternal();
-        /*
-         * for (int i = 0; i < inv.getSize(); i++) {
-         * inv.setItem(i,GuiBlank());
-         * }
-         */
+
         FileConfiguration config = AmonPackPlugin.getLevelConfig();
         if (config == null || config.getConfigurationSection("AmonPack.Levels") == null) {
             System.out.println("[AmonPack] Blad: Konfiguracja Levels.yml nie zostala zaladowana lub brakuje sekcji AmonPack.Levels!");
             return;
         }
         try {
-            for (String key : config.getConfigurationSection("AmonPack.Levels").getKeys(false)) {
-                if (!key.startsWith("Enabled")) {
-                    if (!key.startsWith("Mastery")) {
-                        LevelSkill skill = level.getPlayerSkills().stream()
-                                .filter(sk -> sk.getType().toString().equalsIgnoreCase(key)).findFirst().get();
-                        String Path = "AmonPack.Levels." + skill.getType().toString();
-                        int place = config.getInt(Path + ".Gui.Place");
-                        String title = config.getString(Path + ".Gui.Title");
-                        ItemStack Item1 = new ItemStack(Material.valueOf(config.getString(Path + ".Gui.Item")));
-                        ItemMeta Item1Meta = Item1.getItemMeta();
-                        Item1Meta.setDisplayName(title);
-                        Item1.setItemMeta(Item1Meta);
-                        inv.setItem(place, Item1);
-                    } else {
-                        String Path = "AmonPack.Levels." + key;
-                        int place = config.getInt(Path + ".Gui.Place");
-                        int ModelData = config.getInt(Path + ".Gui.ModelData");
-                        String title = config.getString(Path + ".Gui.Title");
-                        ItemStack Item1 = new ItemStack(Material.PAPER);
-                        ItemMeta Item1Meta = Item1.getItemMeta();
-                        Item1Meta.setCustomModelData(ModelData);
-                        Item1Meta.setDisplayName(title);
-                        Item1.setItemMeta(Item1Meta);
-                        inv.setItem(place, Item1);
+            org.bukkit.configuration.ConfigurationSection levelsSec = config.getConfigurationSection("AmonPack.Levels");
+            if (levelsSec != null) {
+                for (String key : levelsSec.getKeys(false)) {
+                    if (!key.startsWith("Enabled")) {
+                        if (!key.startsWith("Mastery")) {
+                            LevelSkill skill = level.getPlayerSkills().stream()
+                                    .filter(sk -> sk.getType().toString().equalsIgnoreCase(key)).findFirst().orElse(null);
+                            if (skill == null) {
+                                try {
+                                    LevelSkill.SkillType st = LevelSkill.SkillType.valueOf(key);
+                                    skill = new LevelSkill(0, st, new ArrayList<>(), 0);
+                                    level.getPlayerSkills().add(skill);
+                                } catch (IllegalArgumentException ignored) {
+                                    continue;
+                                }
+                            }
+                            String Path = "AmonPack.Levels." + skill.getType().toString();
+                            int place = config.getInt(Path + ".Gui.Place");
+                            String title = config.getString(Path + ".Gui.Title", key);
+                            String itemMatStr = config.getString(Path + ".Gui.Item", "BOOK");
+                            Material mat = Material.getMaterial(itemMatStr);
+                            if (mat == null) mat = Material.BOOK;
+                            ItemStack Item1 = new ItemStack(mat);
+                            ItemMeta Item1Meta = Item1.getItemMeta();
+                            Item1Meta.setDisplayName(title);
+                            Item1.setItemMeta(Item1Meta);
+                            inv.setItem(place, Item1);
+                        } else {
+                            String Path = "AmonPack.Levels." + key;
+                            int place = config.getInt(Path + ".Gui.Place");
+                            int ModelData = config.getInt(Path + ".Gui.ModelData");
+                            String title = config.getString(Path + ".Gui.Title", key);
+                            ItemStack Item1 = new ItemStack(Material.PAPER);
+                            ItemMeta Item1Meta = Item1.getItemMeta();
+                            Item1Meta.setCustomModelData(ModelData);
+                            Item1Meta.setDisplayName(title);
+                            Item1.setItemMeta(Item1Meta);
+                            inv.setItem(place, Item1);
+                        }
                     }
                 }
             }
@@ -256,44 +284,58 @@ public class PlayerLevelMenager {
             System.out.println("error open2  " + e.getLocalizedMessage());
             System.out.println("error open3  " + e);
         }
-        inventory.showInventory(Bukkit.getPlayer(level.getPlayerName()));
+        Player p = Bukkit.getPlayer(level.getPlayerName());
+        if (p != null) {
+            inventory.showInventory(p);
+        }
     }
 
     public static void ClaimReward(LevelSkill.SkillType Type, Player player, String title) {
         try {
+            if (player == null || Type == null) return;
             PlayerLevel Level = AllPlayerLevels.stream()
-                    .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst().get();
+                    .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst().orElse(null);
+            if (Level == null) return;
             LevelSkill skill = Level.getPlayerSkills().stream().filter(sk -> sk.getType().equals(Type)).findFirst()
-                    .get();
+                    .orElse(null);
+            if (skill == null) return;
             FileConfiguration config = AmonPackPlugin.getLevelConfig();
+            if (config == null) return;
             String Path = "AmonPack.Levels." + skill.getType().toString();
-            for (String key : config.getConfigurationSection(Path).getKeys(false)) {
-                String lvl = key.replace("Level_", "");// 1
+            org.bukkit.configuration.ConfigurationSection sec = config.getConfigurationSection(Path);
+            if (sec == null) return;
+            for (String key : sec.getKeys(false)) {
+                String lvl = key.replace("Level_", "");
                 title = title.replaceAll("\\D+", "");
                 if (lvl.equalsIgnoreCase(title)) {
-                    if (Integer.parseInt(lvl) <= ReturnUnlocked(skill)) {
-                        if (!skill.getUsedRewards().contains(Integer.parseInt(lvl))) {
-                            for (String Rewards : config.getConfigurationSection(Path + "." + key).getKeys(false)) {
-                                if (Rewards.startsWith("Reward")) {
-                                    String reward = config.getString(Path + "." + key + "." + Rewards);
-                                    if (reward.startsWith("command:")) {
-                                        reward = reward.replace("command:", "");
-                                        reward = reward.replace("%player%", player.getName());
-                                        Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
-                                        example.executeCommand(reward);
-                                    }
-                                    if (reward.startsWith("skillupgrade:")) {
-                                        reward = reward.replace("skillupgrade:", "");
-                                        skill.setUpgradePercent(skill.getUpgradePercent() + Double.parseDouble(reward));
-                                    }
-                                    if (reward.startsWith("SkillPoints:")) {
-                                        reward = reward.replace("SkillPoints:", "");
-                                        // BendingGuiMenu.getPlayerSkillTreeByName(player).AddSkillPoints(Integer.parseInt(reward));
+                    int lvlNum = 0;
+                    try {
+                        lvlNum = Integer.parseInt(lvl);
+                    } catch (NumberFormatException ignored) {}
+                    if (lvlNum <= ReturnUnlocked(skill)) {
+                        if (!skill.getUsedRewards().contains(lvlNum)) {
+                            org.bukkit.configuration.ConfigurationSection rewSec = config.getConfigurationSection(Path + "." + key);
+                            if (rewSec != null) {
+                                for (String Rewards : rewSec.getKeys(false)) {
+                                    if (Rewards.startsWith("Reward")) {
+                                        String reward = config.getString(Path + "." + key + "." + Rewards);
+                                        if (reward != null && reward.startsWith("command:")) {
+                                            reward = reward.replace("command:", "");
+                                            reward = reward.replace("%player%", player.getName());
+                                            Commands.ExecuteCommandExample example = new Commands.ExecuteCommandExample();
+                                            example.executeCommand(reward);
+                                        }
+                                        if (reward != null && reward.startsWith("skillupgrade:")) {
+                                            reward = reward.replace("skillupgrade:", "");
+                                            try {
+                                                skill.setUpgradePercent(skill.getUpgradePercent() + Double.parseDouble(reward));
+                                            } catch (NumberFormatException ignored) {}
+                                        }
                                     }
                                 }
                             }
                             List<Integer> usedreward = skill.getUsedRewards();
-                            usedreward.add(Integer.valueOf(lvl));
+                            usedreward.add(Integer.valueOf(lvlNum));
                             skill.setUsedRewards(usedreward);
                             OpenSkillDetails(skill, player);
                         }
@@ -307,6 +349,7 @@ public class PlayerLevelMenager {
     }
 
     public static int GetSkillByPlayer(LevelSkill.SkillType type, Player player) {
+        if (player == null || type == null) return 0;
         PlayerLevel Level = AllPlayerLevels.stream()
                 .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName())).findFirst().orElse(null);
         if (Level == null)
@@ -319,17 +362,23 @@ public class PlayerLevelMenager {
     }
 
     public static int ReturnUnlocked(LevelSkill skill) {
+        if (skill == null || skill.getType() == null) return 0;
         FileConfiguration config = AmonPackPlugin.getLevelConfig();
+        if (config == null) return 0;
         String Path = "AmonPack.Levels." + skill.getType().toString();
+        org.bukkit.configuration.ConfigurationSection sec = config.getConfigurationSection(Path);
+        if (sec == null) return 0;
         int totallvl = (int) skill.getExpPoints();
         int lvl = 0;
-        for (String key : config.getConfigurationSection(Path).getKeys(false)) {
+        for (String key : sec.getKeys(false)) {
             if (key.startsWith("Level")) {
                 String newpath = Path + "." + key;
                 int MaxLvL = config.getInt(newpath + ".ReqExp");
-                if (totallvl >= MaxLvL) {
+                if (MaxLvL > 0 && totallvl >= MaxLvL) {
                     totallvl = totallvl - MaxLvL;
-                    lvl = Integer.parseInt(key.replace("Level_", ""));
+                    try {
+                        lvl = Integer.parseInt(key.replace("Level_", ""));
+                    } catch (NumberFormatException ignored) {}
                 } else {
                     break;
                 }
@@ -340,6 +389,7 @@ public class PlayerLevelMenager {
 
     public void AddPoints(LevelSkill.SkillType Type, Player player, int points) {
         try {
+            if (player == null || Type == null) return;
             PlayerLevel Level = AllPlayerLevels.stream()
                     .filter(lvl -> lvl.getPlayerName().equalsIgnoreCase(player.getName()))
                     .findFirst().orElse(null);
@@ -359,22 +409,34 @@ public class PlayerLevelMenager {
                 Level.getPlayerSkills().add(skill);
             }
             FileConfiguration config = AmonPackPlugin.getLevelConfig();
+            if (config == null) {
+                skill.setExpPoints(skill.getExpPoints() + points);
+                return;
+            }
             String path = "AmonPack.Levels." + skill.getType().toString();
+            org.bukkit.configuration.ConfigurationSection sec = config.getConfigurationSection(path);
+            if (sec == null) {
+                skill.setExpPoints(skill.getExpPoints() + points);
+                return;
+            }
             int actualLevel = 0;
             int neededExp = 0;
             int totalExpBefore = (int) skill.getExpPoints();
             int expPool = totalExpBefore;
-            for (String key : config.getConfigurationSection(path).getKeys(false)) {
+            for (String key : sec.getKeys(false)) {
                 if (!key.startsWith("Level"))
                     continue;
                 String levelPath = path + "." + key;
                 int reqExp = config.getInt(levelPath + ".ReqExp");
-                int level = Integer.parseInt(key.replace("Level_", ""));
-                if (expPool >= reqExp) {
+                int level = 0;
+                try {
+                    level = Integer.parseInt(key.replace("Level_", ""));
+                } catch (NumberFormatException ignored) {}
+                if (reqExp > 0 && expPool >= reqExp) {
                     actualLevel = level;
                     expPool -= reqExp;
                 } else {
-                    if (expPool + points >= reqExp) {
+                    if (reqExp > 0 && expPool + points >= reqExp) {
                         player.sendTitle(
                                 ChatColor.GREEN + "Osiągnąłeś poziom " + (actualLevel + 1) + " " + skill.getType()
                                         + "!",
@@ -388,47 +450,40 @@ public class PlayerLevelMenager {
             skill.setExpPoints(skill.getExpPoints() + points);
             
             try {
-                Connection conn = AmonPackPlugin.mysqllite().getConnection();
-                if (conn != null) {
-                    try (Statement stmt = conn.createStatement();
-                         ResultSet rs = stmt.executeQuery("select * from Level" + skill.getType().toString() + " where Player='" + player.getName() + "'")) {
-                        String usedRewardsStr = skill.getUsedRewards().stream()
-                                .map(String::valueOf)
-                                .collect(Collectors.joining(","));
-                        if (!rs.next()) {
-                            ExecuteQuery("INSERT INTO Level" + skill.getType().toString()
-                                    + " (Player,GeneralLevel,UsedRewards,UpgradePercent)" +
-                                    " VALUES ('" + player.getName() + "'," + skill.getExpPoints() + ",'" + usedRewardsStr + "'"
-                                    + "," + skill.getUpgradePercent() + ")");
-                        } else {
-                            ExecuteQuery("UPDATE Level" + skill.getType().toString() + " SET GeneralLevel = '"
-                                    + skill.getExpPoints() + "' WHERE Player = '" + player.getName() + "'");
+                if (AmonPackPlugin.ENABLE_DATABASE && AmonPackPlugin.mysqllite() != null) {
+                    Connection conn = AmonPackPlugin.mysqllite().getConnection();
+                    if (conn != null) {
+                        try (Statement stmt = conn.createStatement();
+                             ResultSet rs = stmt.executeQuery("select * from Level" + skill.getType().toString() + " where Player='" + player.getName() + "'")) {
+                            String usedRewardsStr = skill.getUsedRewards().stream()
+                                    .map(String::valueOf)
+                                    .collect(Collectors.joining(","));
+                            if (!rs.next()) {
+                                ExecuteQuery("INSERT INTO Level" + skill.getType().toString()
+                                        + " (Player,GeneralLevel,UsedRewards,UpgradePercent)" +
+                                        " VALUES ('" + player.getName() + "'," + skill.getExpPoints() + ",'" + usedRewardsStr + "'"
+                                        + "," + skill.getUpgradePercent() + ")");
+                            } else {
+                                ExecuteQuery("UPDATE Level" + skill.getType().toString() + " SET GeneralLevel = '"
+                                        + skill.getExpPoints() + "' WHERE Player = '" + player.getName() + "'");
+                            }
                         }
                     }
                 }
-            } catch (SQLException dbEx) {
-                System.out.println("Error saving player level to database: " + dbEx.getMessage());
+            } catch (Exception e) {
+                System.out.println("Error In Database Player Saving Level Points: " + e.getMessage());
             }
 
-            int newTotalExp = totalExpBefore + points;
-            if (points > 1 || newTotalExp % 5 == 0) {
-                double progress = (double) (expPool + points) / neededExp;
-                ChatColor color;
-                if (progress < 0.33) {
-                    color = ChatColor.RED;
-                } else if (progress < 0.66) {
-                    color = ChatColor.GOLD;
-                } else {
-                    color = ChatColor.GREEN;
-                }
-                String icon = getSkillIcon(Type);
-                String skillName = Type.toString().substring(0, 1) + Type.toString().substring(1).toLowerCase();
-                String msg = ChatColor.DARK_GRAY + "[" +
-                        ChatColor.AQUA + icon + " " + ChatColor.BOLD + skillName +
-                        ChatColor.DARK_GRAY + "] " +
-                        color + (expPool + points) +
+            if (neededExp > 0) {
+                int expGained = (int) skill.getExpPoints() - totalExpBefore;
+                String msg = ChatColor.GOLD + "+" + points + " EXP " +
+                        ChatColor.YELLOW + "(" + skill.getType() + ") " +
+                        ChatColor.AQUA + "Poziom: " + actualLevel + " " +
+                        ChatColor.GRAY + "[" +
+                        ChatColor.GREEN + expPool +
                         ChatColor.GRAY + "/" +
-                        ChatColor.GREEN + neededExp;
+                        ChatColor.GREEN + neededExp +
+                        ChatColor.GRAY + "]";
 
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(msg));
             }
@@ -438,22 +493,24 @@ public class PlayerLevelMenager {
     }
 
     public static LevelSkill.SkillType GetSkillTypeByMaterial(Material mat) {
-        for (String key : AmonPackPlugin.getLevelConfig().getConfigurationSection("AmonPack.Levels").getKeys(false)) {
+        if (mat == null) return null;
+        FileConfiguration config = AmonPackPlugin.getLevelConfig();
+        if (config == null) return null;
+        org.bukkit.configuration.ConfigurationSection sec = config.getConfigurationSection("AmonPack.Levels");
+        if (sec == null) return null;
+        for (String key : sec.getKeys(false)) {
             if (!key.startsWith("Mastery") && !key.startsWith("Enabled")) {
                 String Path = "AmonPack.Levels." + key;
-                Material foundmat = Material.valueOf(AmonPackPlugin.getLevelConfig().getString(Path + ".Gui.Item"));
-                Material foundmat2 = Material
-                        .valueOf(AmonPackPlugin.getLevelConfig().getString(Path + ".Details.LockedItem"));
-                Material foundmat3 = Material
-                        .valueOf(AmonPackPlugin.getLevelConfig().getString(Path + ".Details.UnLockedItem"));
-                if (foundmat == mat) {
-                    return LevelSkill.SkillType.valueOf(key);
-                }
-                if (foundmat2 == mat) {
-                    return LevelSkill.SkillType.valueOf(key);
-                }
-                if (foundmat3 == mat) {
-                    return LevelSkill.SkillType.valueOf(key);
+                String item1 = config.getString(Path + ".Gui.Item");
+                String item2 = config.getString(Path + ".Details.LockedItem");
+                String item3 = config.getString(Path + ".Details.UnLockedItem");
+                Material foundmat = item1 != null ? Material.getMaterial(item1) : null;
+                Material foundmat2 = item2 != null ? Material.getMaterial(item2) : null;
+                Material foundmat3 = item3 != null ? Material.getMaterial(item3) : null;
+                if (foundmat == mat || foundmat2 == mat || foundmat3 == mat) {
+                    try {
+                        return LevelSkill.SkillType.valueOf(key);
+                    } catch (IllegalArgumentException ignored) {}
                 }
             }
         }
@@ -461,10 +518,14 @@ public class PlayerLevelMenager {
     }
 
     public static Element GetElementByPlace(int place) {
-        for (String key : AmonPackPlugin.getLevelConfig().getConfigurationSection("AmonPack.Levels").getKeys(false)) {
+        FileConfiguration config = AmonPackPlugin.getLevelConfig();
+        if (config == null) return null;
+        org.bukkit.configuration.ConfigurationSection sec = config.getConfigurationSection("AmonPack.Levels");
+        if (sec == null) return null;
+        for (String key : sec.getKeys(false)) {
             if (key.startsWith("Mastery")) {
                 String Path = "AmonPack.Levels." + key;
-                int placeinconfig = AmonPackPlugin.getLevelConfig().getInt(Path + ".Gui.Place");
+                int placeinconfig = config.getInt(Path + ".Gui.Place");
                 if (place == placeinconfig) {
                     return Element.getElement(key.replace("Mastery", ""));
                 }

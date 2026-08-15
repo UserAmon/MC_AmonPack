@@ -371,14 +371,16 @@ rewards:
 #             message: "&aBoss poległ! Skalne drzwi do skarbca zostały otwarte!"
 #
 # 12. COLLECT_POINTS
-#     Czasowy warunek zbierania koordynatów. Zmusza graczy do zebrania wszystkich punktów w wyznaczonym promieniu
-#     przed upływem limitu czasu. Odliczanie rozpoczyna się od pierwszego zebranego punktu.
+#     Czasowy warunek zbierania koordynatów. Cząsteczki są ZAWSZE idealnie wyśrodkowane na wskazanym bloku.
+#     Tworzą one pionowy, wznoszący się w niebo efekt BEACONA (kolumnę światła i błysków) oraz świecący okrąg
+#     na podłożu wyznaczający strefę zebrania. Zmusza graczy do wejścia w zasięg wszystkich punktów przed upływem
+#     limitu czasu. Odliczanie rozpoczyna się od pierwszego zebranego punktu.
 #     W przypadku przekroczenia czasu, cały postęp się zeruje, a wtyczka wyzwala fail-effects, wymagając ponownej próby.
 #     Zaliczenie wszystkich punktów wyzwala success-effects oraz pozwala ukończyć warunek.
 #     Parametry: 
-#       - radius (Double - odległość gracza od bloku, by go zebrać, np. 3.0)
+#       - radius (Double - odległość gracza od centrum bloku, by go zebrać, np. 3.0)
 #       - time (Sekundy na ukończenie próby, Integer, np. 60)
-#       - points (Lista Stringów w formacie 'x,y,z')
+#       - points (Lista Stringów 'x,y,z' lub lista map z kluczami x, y, z)
 #       - fail-effects (Efekty przy porażce czasowej)
 #       - success-effects (Efekty przy pełnym zebraniu wszystkich punktów)
 #     Przykład:
@@ -642,6 +644,30 @@ rewards:
 #      ENC_TRANSITION:
 #        description: "Przejściowy korytarz"
 #        leave_mobs: true
+#
+# 5. Nawigacja i Ścieżka do Celu Etapu (guide-x, guide-y, guide-z, guide-radius):
+#    Każdy etap (Encounter) może posiadać opcjonalne koordynaty celu: guide-x, guide-y, guide-z oraz guide-radius.
+#    Działa to tak: jeśli gracz znajduje się w odległości równej lub większej niż 'guide-radius' od wskazanego punktu,
+#    na ziemi bezpośrednio przed graczem pojawia się dynamiczny ślad świecących cząsteczek, które prowadzą go prosto
+#    do wskazanego celu. Gdy gracz wejdzie w wyznaczony radius, cząsteczki nawigacyjne przestają się wyświetlać.
+#    Obsługiwane formaty w konfiguracji etapu:
+#      * guide-x: 100, guide-y: 64, guide-z: 200, guide-radius: 5
+#      * target-x: 100, target-y: 64, target-z: 200, target-radius: 5
+#      * x: 100, y: 64, z: 200, radius: 5
+#      * guide: { x: 100, y: 64, z: 200, radius: 5 }
+#    Przykład:
+#      ENC_GATE:
+#        title: "&6Udaj się do Bramy Cieni"
+#        guide-x: 87.0
+#        guide-y: 51.0
+#        guide-z: -34.0
+#        guide-radius: 4.0
+#        conditions:
+#          - type: "INTERACT_BLOCK_WITH_ITEM"
+#            x: 87
+#            y: 51
+#            z: -34
+#            block-material: "IRON_CHAIN"
 #
 # ENC1:
 #   description: "Start lochu - Przygotowanie"

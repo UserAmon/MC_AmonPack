@@ -18,8 +18,17 @@ public class Encounter {
     private final List<DungeonPlatform> platforms;
     private final int maxMobs;
     private final boolean leaveMobs;
+    private final Double guideX;
+    private final Double guideY;
+    private final Double guideZ;
+    private final double guideRadius;
+    private final boolean hasGuide;
 
     public Encounter(String id, String description, List<DungeonCondition> conditions, List<DungeonEffect> effects, List<String> nextEncounters, List<String> exclude, int reqClears, String encAfterClears, String title, List<String> pool, List<List<String>> poolLists, List<DungeonPlatform> platforms, int maxMobs, boolean leaveMobs) {
+        this(id, description, conditions, effects, nextEncounters, exclude, reqClears, encAfterClears, title, pool, poolLists, platforms, maxMobs, leaveMobs, null, null, null, 5.0, false);
+    }
+
+    public Encounter(String id, String description, List<DungeonCondition> conditions, List<DungeonEffect> effects, List<String> nextEncounters, List<String> exclude, int reqClears, String encAfterClears, String title, List<String> pool, List<List<String>> poolLists, List<DungeonPlatform> platforms, int maxMobs, boolean leaveMobs, Double guideX, Double guideY, Double guideZ, double guideRadius, boolean hasGuide) {
         this.id = id;
         this.description = description;
         this.conditions = conditions != null ? conditions : new ArrayList<>();
@@ -34,6 +43,11 @@ public class Encounter {
         this.platforms = platforms != null ? platforms : new ArrayList<>();
         this.maxMobs = maxMobs;
         this.leaveMobs = leaveMobs;
+        this.guideX = guideX;
+        this.guideY = guideY;
+        this.guideZ = guideZ;
+        this.guideRadius = guideRadius;
+        this.hasGuide = hasGuide;
     }
 
     public String getId() {
@@ -90,6 +104,26 @@ public class Encounter {
 
     public boolean isLeaveMobs() {
         return leaveMobs;
+    }
+
+    public Double getGuideX() {
+        return guideX;
+    }
+
+    public Double getGuideY() {
+        return guideY;
+    }
+
+    public Double getGuideZ() {
+        return guideZ;
+    }
+
+    public double getGuideRadius() {
+        return guideRadius;
+    }
+
+    public boolean hasGuide() {
+        return hasGuide;
     }
 }
 

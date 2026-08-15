@@ -284,6 +284,25 @@ public class AmonPackPlugin extends JavaPlugin {
 			saveResource("Levels.yml", false);
 		}
 		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
+		try {
+			java.io.InputStream defLevelsStream = getResource("Levels.yml");
+			if (defLevelsStream != null) {
+				java.io.Reader defReader = new java.io.InputStreamReader(defLevelsStream, java.nio.charset.StandardCharsets.UTF_8);
+				YamlConfiguration defLevels = YamlConfiguration.loadConfiguration(defReader);
+				LevelConfig.setDefaults(defLevels);
+				if (!LevelConfig.contains("AmonPack.Levels.DUNGEON")) {
+					if (defLevels.contains("AmonPack.Levels.DUNGEON")) {
+						LevelConfig.set("AmonPack.Levels.DUNGEON", defLevels.get("AmonPack.Levels.DUNGEON"));
+					}
+					List<String> enabled = LevelConfig.getStringList("AmonPack.Levels.Enabled");
+					if (!enabled.contains("DUNGEON")) {
+						enabled.add("DUNGEON");
+						LevelConfig.set("AmonPack.Levels.Enabled", enabled);
+					}
+					LevelConfig.save(LevelConfigFile);
+				}
+			}
+		} catch (Exception ignored) {}
 
 		// --- 2. BAZA DANYCH SQLITE ---
 		if (ENABLE_DATABASE) {

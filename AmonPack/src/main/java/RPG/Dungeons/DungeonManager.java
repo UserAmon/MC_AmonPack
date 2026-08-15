@@ -415,8 +415,14 @@ public class DungeonManager implements Listener {
                                                             double px = Double.parseDouble(parts[0].trim());
                                                             double py = Double.parseDouble(parts[1].trim());
                                                             double pz = Double.parseDouble(parts[2].trim());
-                                                            pts.add(new Location(null, px, py, pz));
+                                                            pts.add(new Location(null, Math.floor(px) + 0.5, Math.floor(py), Math.floor(pz) + 0.5));
                                                         }
+                                                    } else if (pObj instanceof Map) {
+                                                        Map<String, Object> pMap = (Map<String, Object>) pObj;
+                                                        double px = asDouble(pMap.get("x"));
+                                                        double py = asDouble(pMap.get("y"));
+                                                        double pz = asDouble(pMap.get("z"));
+                                                        pts.add(new Location(null, Math.floor(px) + 0.5, Math.floor(py), Math.floor(pz) + 0.5));
                                                     }
                                                 }
                                             }
@@ -428,20 +434,35 @@ public class DungeonManager implements Listener {
                                         if (map.containsKey("y")) cond.setYList(asDoubleList(map.get("y")));
                                         if (map.containsKey("z")) cond.setZList(asDoubleList(map.get("z")));
                                         List<DungeonEffect> onComp = new ArrayList<>();
-                                        List<?> rawOnComp = (List<?>) map.get("oncomplete");
-                                        if (rawOnComp != null) {
-                                            for (Object rawObj : rawOnComp) {
-                                                if (rawObj instanceof Map) {
-                                                    DungeonEffect eff = parseSingleEffect((Map<String, Object>) rawObj);
-                                                    if (eff != null) {
-                                                        onComp.add(eff);
-                                                    }
-                                                }
+                                        List<Map<?, ?>> onCompList = (List<Map<?, ?>>) map.get("oncomplete");
+                                        if (onCompList != null) {
+                                            for (Map<?, ?> rawEff : onCompList) {
+                                                DungeonEffect eff = parseSingleEffect((Map<String, Object>) rawEff);
+                                                if (eff != null) onComp.add(eff);
                                             }
                                         }
                                         cond.setOnCompleteEffects(onComp);
-                                        cond.setFailEffects(failEffs);
-                                        cond.setSuccessEffects(successEffs);
+
+                                        List<DungeonEffect> succEff = new ArrayList<>();
+                                        List<Map<?, ?>> succList = (List<Map<?, ?>>) map.get("success");
+                                        if (succList != null) {
+                                            for (Map<?, ?> rawEff : succList) {
+                                                DungeonEffect eff = parseSingleEffect((Map<String, Object>) rawEff);
+                                                if (eff != null) succEff.add(eff);
+                                            }
+                                        }
+                                        cond.setSuccessEffects(succEff);
+
+                                        List<DungeonEffect> failEff = new ArrayList<>();
+                                        List<Map<?, ?>> failList = (List<Map<?, ?>>) map.get("fail");
+                                        if (failList != null) {
+                                            for (Map<?, ?> rawEff : failList) {
+                                                DungeonEffect eff = parseSingleEffect((Map<String, Object>) rawEff);
+                                                if (eff != null) failEff.add(eff);
+                                            }
+                                        }
+                                        cond.setFailEffects(failEff);
+
                                         conditions.add(cond);
                                     }
                                 }
@@ -472,25 +493,13 @@ public class DungeonManager implements Listener {
                         int reqClears = config.getInt(path + ".req_clears", 0);
                         String encAfterClears = config.getString(path + ".enc_after_clears", "");
                         String etitle = config.getString(path + ".title", "");
-                        List<String> epool = config.getStringList(path + ".pool");
-                        int maxMobs = config.getInt(path + ".max_mobs", 0);
-                        boolean leaveMobs = config.getBoolean(path + ".leave_mobs", false) || config.getBoolean(path + ".leaveMobs", false);
-
+                        List<String> pool = config.getStringList(path + ".pool");
+                        List<String> epool = new ArrayList<>();
                         List<List<String>> epoolLists = new ArrayList<>();
-                        List<?> rawPoolLists = config.getList(path + ".pool_lists");
-                        if (rawPoolLists != null) {
-                            for (Object entry : rawPoolLists) {
-                                if (entry instanceof List) {
-                                    List<String> inner = new ArrayList<>();
-                                    for (Object item : (List<?>) entry) {
-                                        if (item != null) {
-                                            inner.add(item.toString().trim());
-                                        }
-                                    }
-                                    if (!inner.isEmpty()) {
-                                        epoolLists.add(inner);
-                                    }
-                                } else if (entry instanceof String) {
+                        if (pool != null) {
+                            for (Object entry : pool) {
+                                if (entry instanceof String) {
+                                    epool.add((String) entry);
                                     List<String> inner = new ArrayList<>();
                                     for (String part : ((String) entry).split(",")) {
                                         String trimmed = part.trim();
@@ -498,12 +507,12 @@ public class DungeonManager implements Listener {
                                             inner.add(trimmed);
                                         }
                                     }
-                                    if (!inner.isEmpty()) {
-                                        epoolLists.add(inner);
-                                    }
+                                    if (!inner.isEmpty()) epoolLists.add(inner);
                                 }
                             }
                         }
+                        int maxMobs = config.getInt(path + ".max_mobs", 0);
+                        boolean leaveMobs = config.getBoolean(path + ".leave_mobs", false) || config.getBoolean(path + ".leaveMobs", false);
 
                         List<DungeonPlatform> platforms = new ArrayList<>();
                         List<Map<?, ?>> platList = config.getMapList(path + ".platforms");
@@ -526,7 +535,57 @@ public class DungeonManager implements Listener {
                             }
                         }
 
-                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next, exclude, reqClears, encAfterClears, etitle, epool, epoolLists, platforms, maxMobs, leaveMobs));
+                        Double guideX = null;
+                        Double guideY = null;
+                        Double guideZ = null;
+                        double guideRadius = 5.0;
+                        boolean hasGuide = false;
+
+                        if (config.contains(path + ".guide") && config.isConfigurationSection(path + ".guide")) {
+                            guideX = asDouble(config.get(path + ".guide.x"));
+                            guideY = asDouble(config.get(path + ".guide.y"));
+                            guideZ = asDouble(config.get(path + ".guide.z"));
+                            guideRadius = config.getDouble(path + ".guide.radius", 5.0);
+                            hasGuide = true;
+                        } else if (config.contains(path + ".target") && config.isConfigurationSection(path + ".target")) {
+                            guideX = asDouble(config.get(path + ".target.x"));
+                            guideY = asDouble(config.get(path + ".target.y"));
+                            guideZ = asDouble(config.get(path + ".target.z"));
+                            guideRadius = config.getDouble(path + ".target.radius", 5.0);
+                            hasGuide = true;
+                        } else if (config.contains(path + ".objective") && config.isConfigurationSection(path + ".objective")) {
+                            guideX = asDouble(config.get(path + ".objective.x"));
+                            guideY = asDouble(config.get(path + ".objective.y"));
+                            guideZ = asDouble(config.get(path + ".objective.z"));
+                            guideRadius = config.getDouble(path + ".objective.radius", 5.0);
+                            hasGuide = true;
+                        } else if (config.contains(path + ".guide-x")) {
+                            guideX = asDouble(config.get(path + ".guide-x"));
+                            guideY = asDouble(config.get(path + ".guide-y"));
+                            guideZ = asDouble(config.get(path + ".guide-z"));
+                            guideRadius = config.getDouble(path + ".guide-radius", 5.0);
+                            hasGuide = true;
+                        } else if (config.contains(path + ".target-x")) {
+                            guideX = asDouble(config.get(path + ".target-x"));
+                            guideY = asDouble(config.get(path + ".target-y"));
+                            guideZ = asDouble(config.get(path + ".target-z"));
+                            guideRadius = config.getDouble(path + ".target-radius", 5.0);
+                            hasGuide = true;
+                        } else if (config.contains(path + ".objective-x")) {
+                            guideX = asDouble(config.get(path + ".objective-x"));
+                            guideY = asDouble(config.get(path + ".objective-y"));
+                            guideZ = asDouble(config.get(path + ".objective-z"));
+                            guideRadius = config.getDouble(path + ".objective-radius", 5.0);
+                            hasGuide = true;
+                        } else if (config.contains(path + ".x") && config.contains(path + ".y") && config.contains(path + ".z")) {
+                            guideX = asDouble(config.get(path + ".x"));
+                            guideY = asDouble(config.get(path + ".y"));
+                            guideZ = asDouble(config.get(path + ".z"));
+                            guideRadius = config.getDouble(path + ".radius", 5.0);
+                            hasGuide = true;
+                        }
+
+                        encounters.put(encId, new Encounter(encId, desc, conditions, effects, next, exclude, reqClears, encAfterClears, etitle, epool, epoolLists, platforms, maxMobs, leaveMobs, guideX, guideY, guideZ, guideRadius, hasGuide));
                     }
                 }
 

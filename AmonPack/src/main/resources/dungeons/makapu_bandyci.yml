@@ -110,6 +110,10 @@ encounters:
   ENC_1_1:
     title: "&cOdnajdź i uwolnij uwięzionego KonioStrusia!"
     max_mobs: 5
+    guide-x: 60
+    guide-y: 63
+    guide-z: -24
+    guide-radius: 25
     conditions:
       - type: "ZONE"
         x: 65
@@ -149,6 +153,10 @@ encounters:
 ####Strefa 1 - DOM 2 - ŚCIEŻKA, MOBY i KLUCZ
   ENC_1_2:
     title: "&cOdnajdź i uwolnij uwięzionego &a&lShirshu!"
+    guide-x: 87
+    guide-y: 59
+    guide-z: -35
+    guide-radius: 25
     conditions:
       - type: "DROP_ON_DEATH"
         mob-name: "Bandyta"
@@ -156,16 +164,16 @@ encounters:
         chance: 100.0
       - type: DYNAMIC_PATH
         min-x: 91
-        min-y: 48
+        min-y: 49
         min-z: -17
         max-x: 83
-        max-y: 48
+        max-y: 49
         max-z: -33
         start-x: 91
-        start-y: 48
+        start-y: 49
         start-z: -17
         end-x: 83
-        end-y: 48
+        end-y: 49
         end-z: -33
         reveal-x: 89
         reveal-y: 51
@@ -220,6 +228,9 @@ encounters:
   ENC_1_3:
     title: "&cOdnajdź i uwolnij uwięzionego &3&lKretoBorsuka!"
     max_mobs: 6
+    guide-x: 107
+    guide-y: 61
+    guide-z: -12
     conditions:
       - type: "COLLECT_POINTS"
         radius: 2.0

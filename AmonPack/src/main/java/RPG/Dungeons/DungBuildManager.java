@@ -128,7 +128,10 @@ public class DungBuildManager implements Listener {
         org.bukkit.configuration.ConfigurationSection levelsSec = config.getConfigurationSection("DungBuild.Levels");
         if (levelsSec != null) {
             for (String lvlKey : levelsSec.getKeys(false)) {
-                int reqLvl = Integer.parseInt(lvlKey);
+                int reqLvl = 1;
+                try {
+                    reqLvl = Integer.parseInt(lvlKey.replaceAll("\\D+", ""));
+                } catch (Exception ignored) {}
                 org.bukkit.configuration.ConfigurationSection upgrades = levelsSec.getConfigurationSection(lvlKey + ".Upgrades");
                 if (upgrades != null) {
                     for (String key : upgrades.getKeys(false)) {
@@ -148,31 +151,33 @@ public class DungBuildManager implements Listener {
                                 meta = item.getItemMeta();
                                 if (meta != null) {
                                     meta.setDisplayName(name);
-                                    List<String> coloredLore = new ArrayList<>();
+                                    List<String> finalLore = new ArrayList<>();
                                     for (String line : lore) {
-                                        coloredLore.add(ChatColor.translateAlternateColorCodes('&', line));
+                                        finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
                                     }
-                                    coloredLore.add("");
+                                    finalLore.add(" ");
                                     if (isSelected) {
-                                        coloredLore.add(ChatColor.GREEN + "[WYBRANO]");
-                                        coloredLore.add(ChatColor.GRAY + "Kliknij, aby odznaczyc.");
+                                        finalLore.add(ChatColor.GREEN + "▶ Wybrano (Kliknij, aby odznaczyć)");
                                         meta.addEnchant(org.bukkit.enchantments.Enchantment.UNBREAKING, 1, true);
                                         meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
                                     } else {
-                                        coloredLore.add(ChatColor.YELLOW + "[KLIKNIJ ABY WYBRAC]");
+                                        finalLore.add(ChatColor.YELLOW + "▶ Kliknij, aby wybrać");
                                     }
-                                    meta.setLore(coloredLore);
+                                    meta.setLore(finalLore);
                                     item.setItemMeta(meta);
                                 }
                             } else {
-                                item = new ItemStack(Material.BARRIER);
+                                item = new ItemStack(Material.GRAY_DYE);
                                 meta = item.getItemMeta();
                                 if (meta != null) {
-                                    meta.setDisplayName(ChatColor.RED + "ZABLOKOWANE");
-                                    List<String> coloredLore = new ArrayList<>();
-                                    coloredLore.add(ChatColor.GRAY + "Wymaga poziomu Dungeoneering: " + ChatColor.YELLOW + reqLvl);
-                                    coloredLore.add(ChatColor.GRAY + "Twoj poziom: " + ChatColor.AQUA + playerLevel);
-                                    meta.setLore(coloredLore);
+                                    meta.setDisplayName(ChatColor.RED + ChatColor.stripColor(name) + " (Zablokowane)");
+                                    List<String> finalLore = new ArrayList<>();
+                                    for (String line : lore) {
+                                        finalLore.add(ChatColor.DARK_GRAY + ChatColor.stripColor(line));
+                                    }
+                                    finalLore.add(" ");
+                                    finalLore.add(ChatColor.RED + "Wymagany poziom Dungeoneering: " + reqLvl);
+                                    meta.setLore(finalLore);
                                     item.setItemMeta(meta);
                                 }
                             }
@@ -182,20 +187,22 @@ public class DungBuildManager implements Listener {
                 }
             }
         }
+
         player.openInventory(inv);
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) event.getWhoClicked();
+
         if (event.getInventory().getHolder() instanceof DungBuildGuiHolder) {
             event.setCancelled(true);
-            Player player = (Player) event.getWhoClicked();
-            ItemStack clicked = event.getCurrentItem();
-            if (clicked == null || clicked.getType() == Material.AIR || clicked.getType() == Material.BLACK_STAINED_GLASS_PANE || clicked.getType() == Material.BOOK) {
-                return;
-            }
+            if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) return;
 
             init();
+            if (config == null) return;
+
             int playerLevel = PlayerLevelMenager.GetSkillByPlayer(LevelSkill.SkillType.DUNGEON, player);
             int maxChoices = getMaxChoicesForLevel(playerLevel);
             List<String> selections = getPlayerSelections(player);
@@ -204,7 +211,10 @@ public class DungBuildManager implements Listener {
             org.bukkit.configuration.ConfigurationSection levelsSec = config.getConfigurationSection("DungBuild.Levels");
             if (levelsSec != null) {
                 for (String lvlKey : levelsSec.getKeys(false)) {
-                    int reqLvl = Integer.parseInt(lvlKey);
+                    int reqLvl = 1;
+                    try {
+                        reqLvl = Integer.parseInt(lvlKey.replaceAll("\\D+", ""));
+                    } catch (Exception ignored) {}
                     org.bukkit.configuration.ConfigurationSection upgrades = levelsSec.getConfigurationSection(lvlKey + ".Upgrades");
                     if (upgrades != null) {
                         for (String key : upgrades.getKeys(false)) {
@@ -242,6 +252,7 @@ public class DungBuildManager implements Listener {
     }
 
     public static void applyStartingUpgrades(Player player, DungeonPlayerStats stats, DungeonInstance instance) {
+        if (player == null || stats == null) return;
         List<String> selections = getPlayerSelections(player);
         init();
         if (config == null) return;

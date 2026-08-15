@@ -835,13 +835,37 @@ public class DungeonInstance {
 
                     for (int idx = 0; idx < pts.size(); idx++) {
                         if (!collected.contains(idx)) {
-                            Location loc = pts.get(idx).clone();
-                            loc.setWorld(world);
-                            for (double dy = 0.0; dy <= 2.0; dy += 0.4) {
-                                world.spawnParticle(Particle.END_ROD, loc.getX(), loc.getY() + dy, loc.getZ(), 1, 0.02, 0.02, 0.02, 0.0);
+                            Location raw = pts.get(idx);
+                            double cx = Math.floor(raw.getX()) + 0.5;
+                            double cy = Math.floor(raw.getY());
+                            double cz = Math.floor(raw.getZ()) + 0.5;
+
+                            // 1. BEACON BEAM (Vertical pillar of light rising 14 blocks)
+                            for (double dy = 0.0; dy <= 14.0; dy += 0.5) {
+                                world.spawnParticle(Particle.END_ROD, cx, cy + dy, cz, 1, 0.01, 0.01, 0.01, 0.0);
+                                if (((int)(dy * 2)) % 2 == 0) {
+                                    Particle.DustOptions beamDust = new Particle.DustOptions(org.bukkit.Color.fromRGB(0, 240, 255), 1.2f);
+                                    world.spawnParticle(Particle.DUST, cx, cy + dy, cz, 1, 0.02, 0.02, 0.02, 0.0, beamDust);
+                                }
                             }
-                            world.spawnParticle(Particle.GLOW, loc.getX(), loc.getY() + 1.0, loc.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
-                            world.spawnParticle(Particle.HAPPY_VILLAGER, loc.getX(), loc.getY() + 1.0, loc.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+
+                            // 2. CORE ORB at base (cy + 1.0)
+                            world.spawnParticle(Particle.GLOW, cx, cy + 1.0, cz, 4, 0.15, 0.15, 0.15, 0.02);
+                            world.spawnParticle(Particle.FIREWORK, cx, cy + 1.0, cz, 1, 0.05, 0.05, 0.05, 0.01);
+                            Particle.DustOptions coreGold = new Particle.DustOptions(org.bukkit.Color.fromRGB(255, 220, 50), 1.5f);
+                            world.spawnParticle(Particle.DUST, cx, cy + 1.0, cz, 3, 0.2, 0.2, 0.2, 0.0, coreGold);
+
+                            // 3. GROUND CIRCLE AT RADIUS
+                            double colRad = Math.max(1.0, radius);
+                            int circlePoints = 16;
+                            for (int c = 0; c < circlePoints; c++) {
+                                double angle = (2 * Math.PI / circlePoints) * c;
+                                double rx = cx + Math.cos(angle) * colRad;
+                                double rz = cz + Math.sin(angle) * colRad;
+                                world.spawnParticle(Particle.HAPPY_VILLAGER, rx, cy + 0.15, rz, 1, 0, 0, 0, 0);
+                                Particle.DustOptions ringDust = new Particle.DustOptions(org.bukkit.Color.fromRGB(80, 255, 120), 0.8f);
+                                world.spawnParticle(Particle.DUST, rx, cy + 0.15, rz, 1, 0, 0, 0, 0, ringDust);
+                            }
                         }
                     }
 
@@ -850,12 +874,17 @@ public class DungeonInstance {
                             Location pLoc = player.getLocation();
                             for (int idx = 0; idx < pts.size(); idx++) {
                                 if (!collected.contains(idx)) {
-                                    Location loc = pts.get(idx).clone();
-                                    loc.setWorld(world);
-                                    if (pLoc.distanceSquared(loc) <= radius * radius) {
+                                    Location raw = pts.get(idx);
+                                    double cx = Math.floor(raw.getX()) + 0.5;
+                                    double cy = Math.floor(raw.getY());
+                                    double cz = Math.floor(raw.getZ()) + 0.5;
+                                    Location center = new Location(world, cx, cy, cz);
+
+                                    if (pLoc.distanceSquared(center) <= radius * radius) {
                                         collected.add(idx);
-                                        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.2f);
-                                        world.spawnParticle(Particle.HAPPY_VILLAGER, loc.add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.1);
+                                        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.3f);
+                                        world.spawnParticle(Particle.TOTEM_OF_UNDYING, cx, cy + 1.0, cz, 30, 0.4, 0.4, 0.4, 0.2);
+                                        world.spawnParticle(Particle.FIREWORK, cx, cy + 1.0, cz, 15, 0.3, 0.3, 0.3, 0.1);
                                         
                                         if (startTime == null) {
                                             startTime = System.currentTimeMillis();
@@ -896,6 +925,8 @@ public class DungeonInstance {
                     }
                 }
             }
+
+            tickEncounterGuide(encounter);
 
             for (DungeonPlatform platform : template.getPlatforms()) {
                 tickPlatform(platform);
@@ -953,6 +984,77 @@ public class DungeonInstance {
                 transitionToNext();
             }
         }
+    }
+
+    private void tickEncounterGuide(Encounter encounter) {
+        if (world == null || encounter == null || !encounter.hasGuide()) return;
+
+        Location targetLoc = new Location(world, encounter.getGuideX(), encounter.getGuideY(), encounter.getGuideZ());
+        double guideRadius = encounter.getGuideRadius();
+        double radiusSq = guideRadius * guideRadius;
+
+        for (Player p : getOnlinePlayers()) {
+            if (!isPlayerSpectator(p)) {
+                Location pLoc = p.getLocation();
+                double distSq = pLoc.distanceSquared(targetLoc);
+                if (distSq >= radiusSq) {
+                    spawnGuidePathForPlayer(p, pLoc, targetLoc, guideRadius);
+                }
+            }
+        }
+    }
+
+    private void spawnGuidePathForPlayer(Player p, Location from, Location target, double guideRadius) {
+        Vector diff = target.toVector().subtract(from.toVector());
+        double totalDist = diff.length();
+        if (totalDist < 0.5) return;
+
+        Vector stepDir = diff.clone().normalize();
+        double maxTrailDist = Math.min(totalDist, 20.0);
+        Particle.DustOptions pathDust = new Particle.DustOptions(org.bukkit.Color.fromRGB(0, 230, 255), 1.2f);
+
+        for (double d = 1.5; d <= maxTrailDist; d += 1.2) {
+            double x = from.getX() + stepDir.getX() * d;
+            double z = from.getZ() + stepDir.getZ() * d;
+            double approxY = from.getY();
+
+            double groundY = findGuideGroundY(x, approxY, z);
+            Location pt = new Location(world, x, groundY + 0.12, z);
+
+            p.spawnParticle(Particle.DUST, pt, 1, 0, 0, 0, 0, pathDust);
+            if (((int)(d / 1.2)) % 3 == 0) {
+                p.spawnParticle(Particle.END_ROD, pt, 1, 0.01, 0.01, 0.01, 0.01);
+            }
+        }
+
+        if (totalDist <= 60.0) {
+            double tx = Math.floor(target.getX()) + 0.5;
+            double ty = target.getY();
+            double tz = Math.floor(target.getZ()) + 0.5;
+            p.spawnParticle(Particle.GLOW, tx, ty + 1.0, tz, 2, 0.1, 0.1, 0.1, 0.0);
+
+            int circlePts = 12;
+            for (int i = 0; i < circlePts; i++) {
+                double ang = (2 * Math.PI / circlePts) * i;
+                double cx = tx + Math.cos(ang) * guideRadius;
+                double cz = tz + Math.sin(ang) * guideRadius;
+                double gy = findGuideGroundY(cx, ty, cz);
+                p.spawnParticle(Particle.DUST, cx, gy + 0.1, cz, 1, 0, 0, 0, 0, pathDust);
+            }
+        }
+    }
+
+    private double findGuideGroundY(double x, double startY, double z) {
+        int bx = (int) Math.floor(x);
+        int bz = (int) Math.floor(z);
+        int sy = (int) Math.floor(startY);
+        for (int y = sy + 2; y >= sy - 4; y--) {
+            Block b = world.getBlockAt(bx, y, bz);
+            if (b.getType().isSolid()) {
+                return y + 1.0;
+            }
+        }
+        return startY;
     }
 
     public void transitionToNext() {
