@@ -61,7 +61,7 @@ public class FirelordStance extends FireAbility implements AddonAbility {
         loadConfig();
 
         this.startTime = System.currentTimeMillis();
-        this.bossBar = Bukkit.createBossBar("§6⚡ FIRELORD STANCE ⚡", BarColor.YELLOW, BarStyle.SOLID);
+        this.bossBar = Bukkit.createBossBar("§2⚡§4 FIRELORD STANCE §2⚡", BarColor.RED, BarStyle.SOLID);
         this.bossBar.addPlayer(player);
         this.bossBar.setVisible(true);
 
@@ -74,18 +74,29 @@ public class FirelordStance extends FireAbility implements AddonAbility {
 
     private void loadConfig() {
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FirelordStance.Cooldown", 30000L);
-        this.durationMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FirelordStance.Duration", 15L) * 1000L;
-        this.broadcastRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.BroadcastRadius", 50.0);
-        this.speedAmplifier = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FirelordStance.SpeedAmplifier", 1);
-        this.boltDirections = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FirelordStance.BoltBurst.Directions", 8);
-        this.boltDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.BoltBurst.Damage", 3.0);
-        this.boltRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.BoltBurst.Range", 12.0);
-        this.boltBounces = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FirelordStance.BoltBurst.Bounces", 2);
+        this.durationMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FirelordStance.Duration", 15L)
+                * 1000L;
+        this.broadcastRadius = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FirelordStance.BroadcastRadius", 50.0);
+        this.speedAmplifier = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FirelordStance.SpeedAmplifier",
+                1);
+        this.boltDirections = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Fire.FirelordStance.BoltBurst.Directions", 8);
+        this.boltDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.BoltBurst.Damage",
+                3.0);
+        this.boltRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.BoltBurst.Range",
+                12.0);
+        this.boltBounces = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FirelordStance.BoltBurst.Bounces",
+                2);
 
-        this.cooldownMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.Boost.CooldownMultiplier", 0.6);
-        this.rangeMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.Boost.RangeMultiplier", 1.4);
-        this.damageMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.Boost.DamageMultiplier", 1.5);
-        this.speedMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FirelordStance.Boost.SpeedMultiplier", 1.3);
+        this.cooldownMultiplier = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FirelordStance.Boost.CooldownMultiplier", 0.6);
+        this.rangeMultiplier = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FirelordStance.Boost.RangeMultiplier", 1.4);
+        this.damageMultiplier = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FirelordStance.Boost.DamageMultiplier", 1.5);
+        this.speedMultiplier = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FirelordStance.Boost.SpeedMultiplier", 1.3);
     }
 
     private void onActivateVisualsAndBroadcast() {
@@ -100,7 +111,8 @@ public class FirelordStance extends FireAbility implements AddonAbility {
         player.getWorld().playSound(loc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.2f, 0.8f);
         player.getWorld().playSound(loc, Sound.ITEM_TRIDENT_THUNDER, 1.5f, 1.2f);
 
-        String broadcastMsg = "§6[§eFirelord§6] §c" + player.getName() + " §ewszedł w stan Władcy Ognia — §6strzeżcie się!";
+        String broadcastMsg = "§2[§4Firelord§2] §c" + player.getName()
+                + " §ewszedł w stan Władcy Ognia — §6strzeżcie się!";
         double radiusSq = broadcastRadius * broadcastRadius;
         for (Player p : player.getWorld().getPlayers()) {
             if (p.getLocation().distanceSquared(loc) <= radiusSq) {
@@ -123,11 +135,10 @@ public class FirelordStance extends FireAbility implements AddonAbility {
         }
 
         Location loc = player.getLocation();
-        player.getWorld().spawnParticle(Particle.FLAME, loc.clone().add(0, 0.1, 0), 4, 0.3, 0.1, 0.3, 0.02);
-        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc.clone().add(0, 0.2, 0), 5, 0.4, 0.2, 0.4, 0.05);
+        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc.clone().add(0, 0.05, 0), 5, 0.4, 0.2, 0.4, 0.05);
 
         Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(180, 220, 255), 1.0f);
-        player.getWorld().spawnParticle(Particle.DUST, loc.clone().add(0, 0.5, 0), 3, 0.3, 0.4, 0.3, 0, dust);
+        player.getWorld().spawnParticle(Particle.DUST, loc.clone().add(0, 0.1, 0), 3, 0.3, 0.4, 0.3, 0, dust);
 
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 10, speedAmplifier, false, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 10, 0, false, false));
@@ -139,7 +150,8 @@ public class FirelordStance extends FireAbility implements AddonAbility {
     }
 
     public void triggerBoltBurst() {
-        if (player == null || !player.isOnline()) return;
+        if (player == null || !player.isOnline())
+            return;
 
         Location center = player.getLocation().add(0, 1.0, 0);
         center.getWorld().strikeLightningEffect(player.getLocation());
@@ -153,7 +165,8 @@ public class FirelordStance extends FireAbility implements AddonAbility {
             bolts.add(new LightningBolt(player, this, center, dir, boltDamage, boltRange, boltBounces, true));
         }
 
-        bolts.add(new LightningBolt(player, this, center, new Vector(0, 1, 0), boltDamage, boltRange, boltBounces, false));
+        bolts.add(new LightningBolt(player, this, center, new Vector(0, 1, 0), boltDamage, boltRange, boltBounces,
+                false));
 
         new BukkitRunnable() {
             @Override
@@ -197,7 +210,8 @@ public class FirelordStance extends FireAbility implements AddonAbility {
 
     @Override
     public void remove() {
-        if (!alive) return;
+        if (!alive)
+            return;
         alive = false;
         if (bossBar != null) {
             bossBar.removeAll();

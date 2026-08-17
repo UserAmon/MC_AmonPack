@@ -245,7 +245,8 @@ rewards:
 # 6. THROW_AT
 #    Trafienie rzucanym pociskiem (typu PPM 'throwable') w określone współrzędne X razy.
 #    Pociski mają grawitację, parabolę lotu oraz efektowne particle.
-#    Parametry: x, y, z (Double), radius (Double), item (ID pocisku), amount (Integer)
+#    Parametry: x, y, z (Double), radius (Double), item (ID pocisku), amount (Integer), is-returning (Boolean, opcjonalne, domyślnie false)
+#    * is-returning: true -> jeśli gracz rzuci i spudłuje (nie trafi w cel), przedmiot wraca bezpośrednio do jego EQ!
 #    Przykład:
 #      - type: "THROW_AT"
 #        x: 20.0
@@ -254,6 +255,7 @@ rewards:
 #        radius: 1.5
 #        item: "cien_kamien"
 #        amount: 3
+#        is-returning: true
 #
 # 7. SHIELDED
 #    Mechanika przeciwnika z tarczą (odpornego na zwykły DMG). Aby ukończyć warunek, tarcza
@@ -280,7 +282,7 @@ rewards:
 #        z: [-11.0, -13.0]
 #
 # 8. DROP_ON_DEATH
-#    (Pasywny warunek) Szansa na dropnięcie określonego przedmiotu bezpośrednio po śmierci moba o danej nazwie.
+#    Szansa na otrzymanie określonego przedmiotu bezpośrednio do ekwipunku po śmierci moba o danej nazwie.
 #    Parametry: mob-name (String), item (ID przedmiotu z rejestru), chance (Double 0.0-100.0)
 #    Przykład:
 #      - type: "DROP_ON_DEATH"

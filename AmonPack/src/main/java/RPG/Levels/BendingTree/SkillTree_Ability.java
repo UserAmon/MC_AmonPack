@@ -11,15 +11,17 @@ public class SkillTree_Ability {
     List<String> ListOfPreAbility;
     int place;
     boolean def;
-    boolean IsUpgrade=false;
-    boolean isSpecialBindAbility=false;
+    boolean isPassiveUpgrade = false;
+    boolean isSkillUpgrade = false;
+    String skillName = "";
+    boolean isSpecialBindAbility = false;
     List<String> lockAbilities = new java.util.ArrayList<>();
 
     public SkillTree_Ability(Element element, String name, int cost, List<String> listOfPreAbility, int place, boolean aDefault) {
         this.element = element;
         this.name = name;
         this.cost = cost;
-        ListOfPreAbility = listOfPreAbility;
+        ListOfPreAbility = listOfPreAbility != null ? listOfPreAbility : new java.util.ArrayList<>();
         this.place = place;
         def = aDefault;
     }
@@ -48,21 +50,51 @@ public class SkillTree_Ability {
     public boolean isdef() {
         return def;
     }
+
     public boolean isUpgrade() {
-        return IsUpgrade;
+        return isPassiveUpgrade || isSkillUpgrade;
     }
+
     public void setUpgrade(boolean upgrade) {
-        IsUpgrade = upgrade;
+        this.isPassiveUpgrade = upgrade;
     }
+
+    public boolean isPassiveUpgrade() {
+        return isPassiveUpgrade;
+    }
+
+    public void setPassiveUpgrade(boolean passiveUpgrade) {
+        this.isPassiveUpgrade = passiveUpgrade;
+    }
+
+    public boolean isSkillUpgrade() {
+        return isSkillUpgrade;
+    }
+
+    public void setSkillUpgrade(boolean skillUpgrade) {
+        this.isSkillUpgrade = skillUpgrade;
+    }
+
+    public String getSkillName() {
+        return skillName != null ? skillName : "";
+    }
+
+    public void setSkillName(String skillName) {
+        this.skillName = skillName != null ? skillName : "";
+    }
+
     public boolean isSpecialBindAbility() {
         return isSpecialBindAbility;
     }
+
     public void setSpecialBindAbility(boolean specialBindAbility) {
-        isSpecialBindAbility = specialBindAbility;
+        this.isSpecialBindAbility = specialBindAbility;
     }
+
     public List<String> getLockAbilities() {
         return lockAbilities != null ? lockAbilities : new java.util.ArrayList<>();
     }
+
     public void setLockAbilities(List<String> lockAbilities) {
         this.lockAbilities = lockAbilities != null ? lockAbilities : new java.util.ArrayList<>();
     }

@@ -243,7 +243,7 @@ public class DungeonCondition {
                 return instance.isBossDeadForCondition(this);
 
             case DROP_ON_DEATH:
-                return true;
+                return this.dropOnDeathTriggered;
 
             case DYNAMIC_PATH: {
                 Location targetEnd = getResolvedEndLocation(instance);
@@ -681,5 +681,29 @@ public class DungeonCondition {
 
     public void setRequiredItems(boolean requiredItems) {
         this.requiredItems = requiredItems;
+    }
+
+    private boolean isReturning = false;
+    private boolean dropOnDeathTriggered = false;
+
+    public boolean isReturning() {
+        return isReturning;
+    }
+
+    public void setReturning(boolean isReturning) {
+        this.isReturning = isReturning;
+    }
+
+    public boolean isDropOnDeathTriggered() {
+        return dropOnDeathTriggered;
+    }
+
+    public void setDropOnDeathTriggered(boolean dropOnDeathTriggered) {
+        this.dropOnDeathTriggered = dropOnDeathTriggered;
+    }
+
+    public void resetState() {
+        this.interactedMet = false;
+        this.dropOnDeathTriggered = false;
     }
 }

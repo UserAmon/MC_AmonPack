@@ -84,11 +84,11 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
         }
         this.currentFacing = look.normalize();
 
-        Location initialGround = findGroundAhead(player.getLocation(), currentFacing, wallDistance);
+        Location initialGround = findWaterAhead(player.getLocation(), currentFacing, wallDistance);
         if (initialGround == null) {
             return;
         }
-        this.currentCenter = initialGround;
+        this.currentCenter = initialGround.getBlock().getLocation().add(0.5, 0.0, 0.5);
 
         Block groundBlock = initialGround.getBlock().getRelative(BlockFace.DOWN);
         if (isIcebendable(groundBlock)) {
@@ -135,11 +135,22 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
         }
     }
 
+    private Location findWaterAhead(Location origin, Vector direction, double dist) {
+        Location target = origin.clone().add(direction.clone().normalize().multiply(dist));
+        for (int y = 3; y >= -4; y--) {
+            Block b = target.clone().add(0, y, 0).getBlock();
+            if (b.getType() == Material.WATER || isWater(b) || isIcebendable(b)) {
+                return b.getLocation().add(0.5, 1.0, 0.5);
+            }
+        }
+        return null;
+    }
+
     private Location findGroundAhead(Location origin, Vector direction, double dist) {
         Location target = origin.clone().add(direction.clone().normalize().multiply(dist));
-        for (int y = 4; y >= -5; y--) {
+        for (int y = 3; y >= -4; y--) {
             Block b = target.clone().add(0, y, 0).getBlock();
-            if (b.getType().isSolid() || isWaterbendable(b) || isIcebendable(b)) {
+            if (b.getType().isSolid() || b.getType() == Material.WATER || isWater(b) || isIcebendable(b)) {
                 return b.getLocation().add(0.5, 1.0, 0.5);
             }
         }
@@ -161,11 +172,10 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
                     return;
                 }
 
-                updateFacingWithInertia();
                 riseTick++;
                 renderWall(Math.min(1.0, (double) riseTick / maxRiseTicks));
-                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 8, 1.0, 0.5, 1.0, 0.05, wallMaterial.createBlockData());
-                player.getWorld().spawnParticle(Particle.SPLASH, currentCenter, 6, 0.8, 0.4, 0.8, 0.05);
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.5, 0), 8, 1.0, 0.3, 1.0, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.SPLASH, currentCenter.clone().add(0, 0.2, 0), 6, 0.8, 0.2, 0.8, 0.05);
 
                 if (riseTick >= maxRiseTicks) {
                     state = State.HOLDING;
@@ -184,11 +194,10 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
                     return;
                 }
 
-                updateFacingWithInertia();
                 renderWall(1.0);
 
                 if (Math.random() < 0.25) {
-                    player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter, 4, 1.0, 0.8, 1.0, 0.02);
+                    player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter.clone().add(0, 1.0, 0), 4, 1.0, 0.5, 1.0, 0.02);
                 }
                 break;
 
@@ -198,31 +207,18 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
 
                 Location groundLoc = findGroundAhead(currentCenter, currentFacing, 0.2);
                 if (groundLoc != null) {
-                    currentCenter.setY(groundLoc.getY());
+                    currentCenter.setY(groundLoc.getBlockY());
                 }
 
                 renderWall(1.0);
                 pushAndDamageEnemiesInFront();
-                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 10, 1.2, 0.8, 1.2, 0.05, wallMaterial.createBlockData());
-                player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter, 8, 1.0, 0.5, 1.0, 0.05);
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.8, 0), 10, 1.2, 0.5, 1.2, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter.clone().add(0, 0.8, 0), 8, 1.0, 0.5, 1.0, 0.05);
 
                 if (launchDistTraveled >= launchMaxRange || isObstructed()) {
                     crumble();
                 }
                 break;
-        }
-    }
-
-    private void updateFacingWithInertia() {
-        Vector look = player.getEyeLocation().getDirection().setY(0);
-        if (look.lengthSquared() > 0.01) {
-            look.normalize();
-            currentFacing.add(look.clone().subtract(currentFacing).multiply(0.12)).normalize();
-        }
-
-        Location targetGround = findGroundAhead(player.getLocation(), currentFacing, wallDistance);
-        if (targetGround != null) {
-            currentCenter.add(targetGround.toVector().subtract(currentCenter.toVector()).multiply(0.15));
         }
     }
 

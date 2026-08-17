@@ -45,6 +45,27 @@ public class ElementTree {
     public void setPathDecoration(List<Integer> pathDecoration) {
         PathDecoration = pathDecoration;
     }
+    public List<SkillTree_Ability> getSkillUpgradesFor(String skillName) {
+        List<SkillTree_Ability> list = new ArrayList<>();
+        if (skillName == null || skillName.isEmpty()) return list;
+        for (SkillTree_Ability abi : Abilities) {
+            if (abi.isSkillUpgrade() && abi.getSkillName().equalsIgnoreCase(skillName)) {
+                list.add(abi);
+            }
+        }
+        return list;
+    }
+
+    public boolean hasSkillUpgrades(String skillName) {
+        if (skillName == null || skillName.isEmpty()) return false;
+        for (SkillTree_Ability abi : Abilities) {
+            if (abi.isSkillUpgrade() && abi.getSkillName().equalsIgnoreCase(skillName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int getRows() {
         return rows;
     }

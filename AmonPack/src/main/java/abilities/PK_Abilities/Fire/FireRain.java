@@ -64,10 +64,13 @@ public class FireRain extends FireAbility implements AddonAbility {
         this.fireTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FireRain.FireTicks", 60);
         this.multiWindow = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FireRain.MultiWindow", 3000L);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         this.hasWide = (branch != null && (branch.hasUpgrade("FireRainWide") || branch.hasUpgrade("RainWide")));
         this.hasDouble = (branch != null && (branch.hasUpgrade("DoubleTheFun") || branch.hasUpgrade("DoubleFun")));
-        this.hasInferno = (branch != null && (branch.hasUpgrade("FireRainInferno") || branch.hasUpgrade("RainInferno")));
+        this.hasInferno = (branch != null
+                && (branch.hasUpgrade("FireRainInferno") || branch.hasUpgrade("RainInferno")));
 
         this.maxCasts = hasDouble ? 2 : 1;
     }
@@ -102,22 +105,23 @@ public class FireRain extends FireAbility implements AddonAbility {
             Location target1 = targetCenter.clone().add(side.clone().multiply(2.0));
             Location target2 = targetCenter.clone().subtract(side.clone().multiply(2.0));
 
-            projectiles.add(new ParabolicFireProjectile(origin.clone().add(side.clone().multiply(0.8)), target1, dmg * 0.75, rad, isFirelord));
-            projectiles.add(new ParabolicFireProjectile(origin.clone().subtract(side.clone().multiply(0.8)), target2, dmg * 0.75, rad, isFirelord));
+            projectiles.add(new ParabolicFireProjectile(origin.clone().add(side.clone().multiply(0.8)), target1,
+                    dmg * 0.75, rad, isFirelord));
+            projectiles.add(new ParabolicFireProjectile(origin.clone().subtract(side.clone().multiply(0.8)), target2,
+                    dmg * 0.75, rad, isFirelord));
         } else {
             projectiles.add(new ParabolicFireProjectile(origin, targetCenter, dmg, rad, isFirelord));
         }
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.2f, 0.8f);
 
-        if (isFirelord) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§6⚡ Firelord — §eFireRain (" + castCount + "/" + maxCasts + ")"));
-        } else if (maxCasts > 1) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§6[FireRain] §eUżycie " + castCount + "/" + maxCasts));
+        if (maxCasts > 1) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§6[FireRain] §eUżycie " + castCount + "/" + maxCasts));
         }
 
         if (castCount >= maxCasts) {
-            long finalCd = isFirelord ? (long)(cooldown * 0.6) : cooldown;
+            long finalCd = isFirelord ? (long) (cooldown * 0.6) : cooldown;
             bPlayer.addCooldown(this, finalCd);
         }
     }
@@ -131,7 +135,7 @@ public class FireRain extends FireAbility implements AddonAbility {
 
         if (castCount < maxCasts && System.currentTimeMillis() - lastCastTime > multiWindow) {
             boolean isFirelord = FirelordStanceManager.isActive(player);
-            long finalCd = isFirelord ? (long)(cooldown * 0.6) : cooldown;
+            long finalCd = isFirelord ? (long) (cooldown * 0.6) : cooldown;
             bPlayer.addCooldown(this, finalCd);
             castCount = maxCasts;
         }
@@ -184,7 +188,8 @@ public class FireRain extends FireAbility implements AddonAbility {
         }
 
         public void progress() {
-            if (dead) return;
+            if (dead)
+                return;
             currentTick++;
 
             double t = (double) currentTick / totalTicks;
@@ -196,10 +201,10 @@ public class FireRain extends FireAbility implements AddonAbility {
 
             Location currentLoc = new Location(startLoc.getWorld(), curX, curY, curZ);
 
-            currentLoc.getWorld().spawnParticle(Particle.FLAME, currentLoc, 4, 0.12, 0.12, 0.12, 0.02);
-            currentLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, currentLoc, 1, 0.05, 0.05, 0.05, 0.01);
             if (isFirelord) {
-                currentLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, currentLoc, 2, 0.1, 0.1, 0.1, 0.03);
+                currentLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, currentLoc, 3, 0.15, 0.15, 0.15, 0.03);
+            } else {
+                currentLoc.getWorld().spawnParticle(Particle.FLAME, currentLoc, 3, 0.25, 0.25, 0.25, 0.01);
             }
 
             if (currentTick >= totalTicks || (currentTick > 6 && currentLoc.getBlock().getType().isSolid())) {
@@ -208,11 +213,11 @@ public class FireRain extends FireAbility implements AddonAbility {
         }
 
         private void explode(Location loc) {
-            if (dead) return;
+            if (dead)
+                return;
             dead = true;
 
             loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.1f);
-            loc.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, loc, 2, 0.2, 0.2, 0.2, 0.0);
             loc.getWorld().spawnParticle(Particle.FLAME, loc, 35, radius * 0.6, 0.5, radius * 0.6, 0.08);
             loc.getWorld().spawnParticle(Particle.LAVA, loc, 8, radius * 0.4, 0.4, radius * 0.4, 0.0);
 
@@ -221,7 +226,8 @@ public class FireRain extends FireAbility implements AddonAbility {
                     LivingEntity target = (LivingEntity) entity;
                     DamageHandler.damageEntity(target, damage, FireRain.this);
                     target.setFireTicks(fireTicks);
-                    Vector knock = target.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(0.5).setY(0.3);
+                    Vector knock = target.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(0.5)
+                            .setY(0.3);
                     target.setVelocity(knock);
                 }
             }
@@ -276,7 +282,8 @@ public class FireRain extends FireAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {

@@ -160,7 +160,7 @@ public class DungeonInstance {
             }
         }
 
-        if (preWarmedInstance != null && preWarmedInstance.getState() == DungeonWorldManager.InstanceState.READY) {
+        if (preWarmedInstance != null) {
             Location spawnLoc = getEffectiveSpawnLocation();
 
             for (UUID uuid : players) {
@@ -1244,8 +1244,16 @@ public class DungeonInstance {
             deadBossUuids.clear();
             resolvedConditionLocs.clear();
             resolvedEffectLocs.clear();
+            zoneCaptureCounters.clear();
+            throwHitsCounter.clear();
+            collectedPointsMap.clear();
+            collectPointsStartTimes.clear();
+            dynamicPathSafeBlocks.clear();
+            dynamicPathReshuffleTimers.clear();
+            dynamicPathRevealedPlayers.clear();
 
             for (DungeonCondition condition : encounter.getConditions()) {
+                condition.resetState();
                 if (condition.getType() == DungeonCondition.ConditionType.PERIODIC_CHECK) {
                     periodicCheckTimers.put(condition, condition.getInterval());
                 } else if (condition.getType() == DungeonCondition.ConditionType.LOOKING_AT) {
@@ -2059,9 +2067,10 @@ public class DungeonInstance {
         throwHitsCounter.put(condition, val);
     }
 
-    public void registerProjectileHitCoord(Location hitLoc) {
+    public boolean registerProjectileHitCoord(Location hitLoc) {
         Encounter encounter = getActiveEncounter();
-        if (encounter == null) return;
+        if (encounter == null) return false;
+        boolean hitAny = false;
         for (DungeonCondition condition : encounter.getConditions()) {
             if (condition.getType() == DungeonCondition.ConditionType.THROW_AT) {
                 Location target = new Location(world, condition.getX(), condition.getY(), condition.getZ());
@@ -2069,10 +2078,22 @@ public class DungeonInstance {
                     incrementThrowHits(condition);
                     world.playSound(hitLoc, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.5f);
                     world.spawnParticle(Particle.HAPPY_VILLAGER, hitLoc, 10, 0.2, 0.2, 0.2, 0.05);
-                    break;
+                    hitAny = true;
                 }
             }
         }
+        return hitAny;
+    }
+
+    public boolean hasReturningThrowCondition() {
+        Encounter encounter = getActiveEncounter();
+        if (encounter == null) return false;
+        for (DungeonCondition condition : encounter.getConditions()) {
+            if (condition.getType() == DungeonCondition.ConditionType.THROW_AT && condition.isReturning()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void registerSpawnedMob(UUID uuid) {

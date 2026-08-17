@@ -111,4 +111,14 @@ public class DungeonCustomItem {
     public void setEffectValue(double effectValue) {
         this.effectValue = effectValue;
     }
+
+    private boolean isReturning = false;
+
+    public boolean isReturning() {
+        return isReturning;
+    }
+
+    public void setReturning(boolean isReturning) {
+        this.isReturning = isReturning;
+    }
 }

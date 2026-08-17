@@ -185,6 +185,8 @@ public class DungeonManager implements Listener {
                                 customItem.setDuration(dur);
                                 customItem.setEffectValue(val);
                             }
+                            boolean isRet = config.getBoolean(ipath + ".is-returning", config.getBoolean(ipath + ".is_returning", config.getBoolean(ipath + ".IsReturning", false)));
+                            customItem.setReturning(isRet);
                             customItems.put(key, customItem);
                         }
                     }
@@ -355,6 +357,10 @@ public class DungeonManager implements Listener {
                                                 asDouble(map.get("x")), asDouble(map.get("y")), asDouble(map.get("z")),
                                                 asDouble(map.get("radius")), (String) map.get("item"), asInt(map.get("amount"))
                                             );
+                                            boolean isRet = map.containsKey("is-returning") ? Boolean.parseBoolean(String.valueOf(map.get("is-returning")))
+                                                          : (map.containsKey("is_returning") ? Boolean.parseBoolean(String.valueOf(map.get("is_returning")))
+                                                          : (map.containsKey("IsReturning") ? Boolean.parseBoolean(String.valueOf(map.get("IsReturning"))) : false));
+                                            cond.setReturning(isRet);
                                             break;
                                         case SHIELDED:
                                             cond = new DungeonCondition(
@@ -493,21 +499,33 @@ public class DungeonManager implements Listener {
                         int reqClears = config.getInt(path + ".req_clears", 0);
                         String encAfterClears = config.getString(path + ".enc_after_clears", "");
                         String etitle = config.getString(path + ".title", "");
-                        List<String> pool = config.getStringList(path + ".pool");
                         List<String> epool = new ArrayList<>();
+                        if (config.contains(path + ".pool")) {
+                            epool.addAll(config.getStringList(path + ".pool"));
+                        }
                         List<List<String>> epoolLists = new ArrayList<>();
-                        if (pool != null) {
-                            for (Object entry : pool) {
-                                if (entry instanceof String) {
-                                    epool.add((String) entry);
-                                    List<String> inner = new ArrayList<>();
-                                    for (String part : ((String) entry).split(",")) {
-                                        String trimmed = part.trim();
-                                        if (!trimmed.isEmpty()) {
-                                            inner.add(trimmed);
+                        if (config.contains(path + ".pool_lists")) {
+                            List<?> rawList = config.getList(path + ".pool_lists");
+                            if (rawList != null) {
+                                for (Object item : rawList) {
+                                    if (item instanceof List) {
+                                        List<String> sub = new ArrayList<>();
+                                        for (Object subItem : (List<?>) item) {
+                                            if (subItem != null) {
+                                                sub.add(subItem.toString().trim());
+                                            }
                                         }
+                                        if (!sub.isEmpty()) epoolLists.add(sub);
+                                    } else if (item instanceof String) {
+                                        List<String> sub = new ArrayList<>();
+                                        for (String part : ((String) item).split(",")) {
+                                            String trimmed = part.trim();
+                                            if (!trimmed.isEmpty()) {
+                                                sub.add(trimmed);
+                                            }
+                                        }
+                                        if (!sub.isEmpty()) epoolLists.add(sub);
                                     }
-                                    if (!inner.isEmpty()) epoolLists.add(inner);
                                 }
                             }
                         }
@@ -817,7 +835,29 @@ public class DungeonManager implements Listener {
                         if (new Random().nextDouble() * 100 <= chance) {
                             DungeonCustomItem customItem = run.getTemplate().getCustomItems().get(condition.getCustomItemId());
                             if (customItem != null) {
-                                world.dropItemNaturally(victim.getLocation(), customItem.toItemStack());
+                                ItemStack dropStack = customItem.toItemStack();
+                                Player targetPlayer = victim.getKiller();
+                                if (targetPlayer == null || !targetPlayer.isOnline() || run.isPlayerSpectator(targetPlayer)) {
+                                    for (Player p : run.getOnlinePlayers()) {
+                                        if (!run.isPlayerSpectator(p)) {
+                                            targetPlayer = p;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (targetPlayer != null) {
+                                    HashMap<Integer, ItemStack> leftover = targetPlayer.getInventory().addItem(dropStack);
+                                    if (!leftover.isEmpty()) {
+                                        for (ItemStack left : leftover.values()) {
+                                            world.dropItemNaturally(targetPlayer.getLocation(), left);
+                                        }
+                                    }
+                                    targetPlayer.playSound(targetPlayer.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 1.2f);
+                                    targetPlayer.sendMessage(ChatColor.GOLD + "[Dungeon] Otrzymano przedmiot: " + (dropStack.getItemMeta() != null && dropStack.getItemMeta().hasDisplayName() ? dropStack.getItemMeta().getDisplayName() : dropStack.getType().name()));
+                                } else {
+                                    world.dropItemNaturally(victim.getLocation(), dropStack);
+                                }
+                                condition.setDropOnDeathTriggered(true);
                             }
                         }
                     }
@@ -1809,6 +1849,17 @@ public class DungeonManager implements Listener {
             @Override
             public void run() {
                 if (ticks > 100 || thrownItem.isDead() || run.isFinished()) {
+                    boolean shouldReturn = customItem.isReturning() || run.hasReturningThrowCondition();
+                    if (shouldReturn && player.isOnline() && !run.isFinished()) {
+                        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(customItem.toItemStack());
+                        if (!leftover.isEmpty()) {
+                            for (ItemStack left : leftover.values()) {
+                                world.dropItemNaturally(player.getLocation(), left);
+                            }
+                        }
+                        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 1.2f);
+                        player.sendMessage(ChatColor.YELLOW + "[Dungeon] Nie trafiono w cel! Przedmiot wrócił do ekwipunku.");
+                    }
                     thrownItem.remove();
                     cancel();
                     return;
@@ -1824,9 +1875,22 @@ public class DungeonManager implements Listener {
                 world.spawnParticle(Particle.DUST, currentLoc, 2, 0.05, 0.05, 0.05, 0.01, new Particle.DustOptions(Color.ORANGE, 0.8f));
 
                 if (currentLoc.getBlock().getType().isSolid()) {
-                    run.registerProjectileHitCoord(currentLoc);
+                    boolean hitTarget = run.registerProjectileHitCoord(currentLoc);
                     world.playSound(currentLoc, Sound.BLOCK_STONE_BREAK, 1.0f, 1.0f);
                     world.spawnParticle(Particle.BLOCK, currentLoc, 15, 0.2, 0.2, 0.2, Material.STONE.createBlockData());
+                    if (!hitTarget) {
+                        boolean shouldReturn = customItem.isReturning() || run.hasReturningThrowCondition();
+                        if (shouldReturn && player.isOnline() && !run.isFinished()) {
+                            HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(customItem.toItemStack());
+                            if (!leftover.isEmpty()) {
+                                for (ItemStack left : leftover.values()) {
+                                    world.dropItemNaturally(player.getLocation(), left);
+                                }
+                            }
+                            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 1.2f);
+                            player.sendMessage(ChatColor.YELLOW + "[Dungeon] Nie trafiono w cel! Przedmiot wrócił do ekwipunku.");
+                        }
+                    }
                     thrownItem.remove();
                     cancel();
                     return;

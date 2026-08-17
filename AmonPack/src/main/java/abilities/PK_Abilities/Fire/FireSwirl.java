@@ -62,23 +62,27 @@ public class FireSwirl extends FireAbility implements AddonAbility {
         this.baseSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FireSwirl.Speed", 0.9);
         this.fireTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FireSwirl.FireTicks", 60);
         this.multiWindow = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FireSwirl.MultiWindow", 3000L);
-        this.minShotInterval = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FireSwirl.MinShotIntervalMs", 500L);
+        this.minShotInterval = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FireSwirl.MinShotIntervalMs",
+                500L);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         this.hasMulti = (branch != null && (branch.hasUpgrade("FireSwirlMulti") || branch.hasUpgrade("MultiShot")));
         this.hasDouble = (branch != null && (branch.hasUpgrade("FireSwirlDouble") || branch.hasUpgrade("DoubleMulti")));
         this.hasMaster = (branch != null && (branch.hasUpgrade("FireSwirlMaster") || branch.hasUpgrade("SwirlMaster")));
-
+        this.maxShots = 1;
         if (hasDouble) {
-            this.maxShots = 3;
-        } else if (hasMulti) {
-            this.maxShots = 2;
-        } else {
-            this.maxShots = 1;
+            this.maxShots = maxShots + 1;
         }
-
+        if (hasMulti) {
+            this.maxShots = maxShots + 1;
+        }
         if (hasMaster) {
             this.fireTicks *= 2;
+            this.baseRange = baseRange * 1.25;
+            this.baseSpeed = baseSpeed * 1.25;
+            this.baseDamage = baseDamage + 1;
         }
     }
 
@@ -100,21 +104,23 @@ public class FireSwirl extends FireAbility implements AddonAbility {
 
         boolean isFirelord = FirelordStanceManager.isActive(player);
         double dmg = baseDamage * (isFirelord ? 1.5 : 1.0);
-        double rng = baseRange * (isFirelord ? 1.4 : 1.0);
-        double spd = baseSpeed * (isFirelord ? 1.3 : 1.0);
+        double rng = baseRange * (isFirelord ? 1.5 : 1.0);
+        double spd = baseSpeed * (isFirelord ? 1.5 : 1.0);
 
         projectiles.add(new SwirlProjectile(eyeLoc.clone(), dir, dmg, rng, spd, isFirelord));
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 1.3f);
 
         if (isFirelord) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§6⚡ Firelord — §eFireSwirl (" + shotsFired + "/" + maxShots + ")"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§1⚡ Firelord — §4FireSwirl (" + shotsFired + "/" + maxShots + ")"));
         } else if (maxShots > 1) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§6[FireSwirl] §eStrzał " + shotsFired + "/" + maxShots));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§4[FireSwirl] §cStrzał " + shotsFired + "/" + maxShots));
         }
 
         if (shotsFired >= maxShots) {
-            long finalCd = isFirelord ? (long)(cooldown * 0.6) : cooldown;
+            long finalCd = isFirelord ? (long) (cooldown * 0.6) : cooldown;
             bPlayer.addCooldown(this, finalCd);
         }
     }
@@ -128,7 +134,7 @@ public class FireSwirl extends FireAbility implements AddonAbility {
 
         if (shotsFired < maxShots && System.currentTimeMillis() - lastShotTime > multiWindow) {
             boolean isFirelord = FirelordStanceManager.isActive(player);
-            long finalCd = isFirelord ? (long)(cooldown * 0.6) : cooldown;
+            long finalCd = isFirelord ? (long) (cooldown * 0.5) : cooldown;
             bPlayer.addCooldown(this, finalCd);
             shotsFired = maxShots;
         }
@@ -179,7 +185,8 @@ public class FireSwirl extends FireAbility implements AddonAbility {
         }
 
         public void progress() {
-            if (dead) return;
+            if (dead)
+                return;
             ticksAlive++;
 
             if (hasMaster && player != null && player.isOnline()) {
@@ -216,16 +223,18 @@ public class FireSwirl extends FireAbility implements AddonAbility {
                 return;
             }
 
-            currentPos.getWorld().spawnParticle(Particle.FLAME, currentPos, 3, 0.08, 0.08, 0.08, 0.02);
-            currentPos.getWorld().spawnParticle(Particle.SMOKE, currentPos, 1, 0.05, 0.05, 0.05, 0.01);
             if (isFirelord) {
-                currentPos.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, currentPos, 2, 0.1, 0.1, 0.1, 0.04);
+                currentPos.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, currentPos, 4, 0.15, 0.15, 0.15, 0.04);
+            } else {
+                currentPos.getWorld().spawnParticle(Particle.FLAME, currentPos, 3, 0.08, 0.08, 0.08, 0.02);
+                currentPos.getWorld().spawnParticle(Particle.SMOKE, currentPos, 1, 0.05, 0.05, 0.05, 0.01);
             }
 
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentPos, hitboxRadius)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                     LivingEntity target = (LivingEntity) entity;
-                    if (hitEntities.contains(target.getUniqueId())) continue;
+                    if (hitEntities.contains(target.getUniqueId()))
+                        continue;
 
                     hitEntities.add(target.getUniqueId());
                     DamageHandler.damageEntity(target, damage, FireSwirl.this);
@@ -241,7 +250,8 @@ public class FireSwirl extends FireAbility implements AddonAbility {
         }
 
         private void destroy() {
-            if (dead) return;
+            if (dead)
+                return;
             dead = true;
             baseLoc.getWorld().spawnParticle(Particle.FLAME, baseLoc, 8, 0.2, 0.2, 0.2, 0.05);
             baseLoc.getWorld().spawnParticle(Particle.SMOKE, baseLoc, 5, 0.2, 0.2, 0.2, 0.05);
@@ -288,7 +298,8 @@ public class FireSwirl extends FireAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {

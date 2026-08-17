@@ -1,5 +1,5 @@
 mname: "Atak Bandytów na Makapu"
-schematic: "MakapuLapis.schem"
+schematic: "Makapu_Dung.schem"
 paste-location:
   x: 0
   y: 50
@@ -27,12 +27,14 @@ items:
     opis:
       - "&7Rzuc tym kluczem w punkt (1, 54, -6) aby otworzyc brame"
     typ: "throwable"
+    is-returning: true
   esencja_bandytów:
     material: "RED_DYE"
     nazwa: "&4Esencja Bandytów"
     opis:
       - "&7Rzuc tym chronionego &4&ltarczą&7 wroga, a zadasz jej obrażenia!"
     typ: "throwable"
+    is-returning: true
 rewards:
   dungeon-xp: 500
   money: 1000.0
@@ -78,6 +80,7 @@ encounters:
         radius: 5
         item: "klucz_do_klatki_rzucalny"
         amount: 4
+        is-returning: true
         oncomplete:
           - type: "SEND_MESSAGE"
             message: "&a[Dungeon] &fBrama została otwarta!"
@@ -185,7 +188,7 @@ encounters:
         x: 87
         y: 51
         z: -34
-        block-material: "IRON_CHAIN"
+        block-material: "IRON_BARS"
         radius: 5
         item-material: "klucz_do_klatki"
         oncomplete:
@@ -295,6 +298,9 @@ encounters:
         z: -33
         radius: 60
         required_all_players: false
+    effects:
+      - type: "SEND_MESSAGE"
+        message: "&a[Dungeon] Checkpoint 1!"
     next: "random"
     pool_lists:
       - ["ENC2_1"]
@@ -345,7 +351,7 @@ encounters:
         y: 61
         z: -93
         block-material: "TNT"
-        radius: 1
+        radius: 4
         required_items: false
         oncomplete:
           - type: "SEND_MESSAGE"
@@ -362,7 +368,7 @@ encounters:
         y: 68
         z: -87
         block-material: "TNT"
-        radius: 1
+        radius: 4
         required_items: false
         oncomplete:
           - type: "SEND_MESSAGE"
@@ -379,7 +385,7 @@ encounters:
         y: 69
         z: -75
         block-material: "TNT"
-        radius: 1
+        radius: 4
         required_items: false
         oncomplete:
           - type: "SEND_MESSAGE"
@@ -396,7 +402,7 @@ encounters:
         y: 68
         z: -37
         block-material: "TNT"
-        radius: 1
+        radius: 4
         required_items: false
         oncomplete:
           - type: "SEND_MESSAGE"
@@ -413,7 +419,7 @@ encounters:
         y: 61
         z: -36
         block-material: "TNT"
-        radius: 1
+        radius: 4
         required_items: false
         oncomplete:
           - type: "SEND_MESSAGE"

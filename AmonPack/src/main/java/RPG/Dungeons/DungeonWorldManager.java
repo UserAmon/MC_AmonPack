@@ -66,7 +66,30 @@ public class DungeonWorldManager {
 
     private static final Map<String, Queue<PreWarmedInstance>> readyPools = new ConcurrentHashMap<>();
     private static final Map<String, PreWarmedInstance> activeInstances = new ConcurrentHashMap<>();
-    private static final Map<String, Integer> instanceCounters = new ConcurrentHashMap<>();
+
+    private static synchronized int findNextAvailableSlot(String dungeonId) {
+        String key = dungeonId.toLowerCase();
+        int slot = 1;
+        while (true) {
+            String worldName = "dungeon_" + key + "_inst_" + slot;
+            if (!activeInstances.containsKey(worldName)) {
+                Queue<PreWarmedInstance> pool = readyPools.get(key);
+                boolean inPool = false;
+                if (pool != null) {
+                    for (PreWarmedInstance pwi : pool) {
+                        if (pwi.getWorldName().equalsIgnoreCase(worldName)) {
+                            inPool = true;
+                            break;
+                        }
+                    }
+                }
+                if (!inPool) {
+                    return slot;
+                }
+            }
+            slot++;
+        }
+    }
 
     /**
      * Initializes pre-warmed instance pools for all loaded dungeon templates.
@@ -83,32 +106,31 @@ public class DungeonWorldManager {
      */
     public static synchronized void ensurePreWarmed(String dungeonId) {
         if (DungeonManager.getInstance() == null) return;
-        Dungeon template = DungeonManager.getInstance().getTemplates().get(dungeonId.toLowerCase());
+        String key = dungeonId.toLowerCase();
+        Dungeon template = DungeonManager.getInstance().getTemplates().get(key);
         if (template == null) return;
 
-        Queue<PreWarmedInstance> pool = readyPools.computeIfAbsent(dungeonId.toLowerCase(), k -> new ConcurrentLinkedQueue<>());
+        Queue<PreWarmedInstance> pool = readyPools.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>());
 
         long availableOrPreparing = pool.stream().filter(inst -> inst.getState() == InstanceState.READY || inst.getState() == InstanceState.PREPARING).count();
 
         if (availableOrPreparing < 1) {
-            int num = instanceCounters.compute(dungeonId.toLowerCase(), (k, v) -> v == null ? 1 : v + 1);
-            String worldName = "dungeon_" + dungeonId.toLowerCase() + "_inst_" + num;
+            int num = findNextAvailableSlot(key);
+            String worldName = "dungeon_" + key + "_inst_" + num;
 
-            File oldFolder = new File(Bukkit.getWorldContainer(), worldName);
-            if (oldFolder.exists()) {
-                deleteDirectory(oldFolder);
+            World world = Bukkit.getWorld(worldName);
+            if (world == null) {
+                WorldCreator creator = new WorldCreator(worldName);
+                creator.generator(new SimpleWorldGenerator());
+                world = creator.createWorld();
             }
-
-            WorldCreator creator = new WorldCreator(worldName);
-            creator.generator(new SimpleWorldGenerator());
-            World world = creator.createWorld();
             if (world == null) return;
 
             configureWorldRules(world);
             cleanWorldEntities(world);
 
             Clipboard clipboard = SchematicManager.readClipboard(template.getSchematicFile(), AmonPackPlugin.plugin);
-            PreWarmedInstance instance = new PreWarmedInstance(dungeonId.toLowerCase(), worldName, world, clipboard);
+            PreWarmedInstance instance = new PreWarmedInstance(key, worldName, world, clipboard);
             pool.add(instance);
 
             if (clipboard != null) {
@@ -138,11 +160,12 @@ public class DungeonWorldManager {
                     }
                 }
 
+                World finalWorld = world;
                 CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
                     Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
-                        SchematicManager.pasteClipboard(world, clipboard, x, y, z);
+                        SchematicManager.pasteClipboard(finalWorld, clipboard, x, y, z);
                         instance.setState(InstanceState.READY);
-                        System.out.println("[Dungeons] Świat instancji wstępnie przygotowany (READY): " + worldName);
+                        System.out.println("[Dungeons] Świat instancji gotowy (READY): " + worldName);
                     });
                 });
             } else {
@@ -159,30 +182,36 @@ public class DungeonWorldManager {
         Queue<PreWarmedInstance> pool = readyPools.get(key);
         if (pool != null) {
             PreWarmedInstance inst = pool.poll();
-            if (inst != null && inst.getState() == InstanceState.READY) {
+            if (inst != null && (inst.getState() == InstanceState.READY || inst.getState() == InstanceState.PREPARING)) {
                 inst.setState(InstanceState.IN_USE);
                 activeInstances.put(inst.getWorldName(), inst);
+                cleanWorldEntities(inst.getWorld());
                 Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> ensurePreWarmed(dungeonId), 20L);
                 return inst;
             }
         }
 
-        int num = instanceCounters.compute(key, (k, v) -> v == null ? 1 : v + 1);
+        int num = findNextAvailableSlot(key);
         String worldName = "dungeon_" + key + "_inst_" + num;
 
-        File oldFolder = new File(Bukkit.getWorldContainer(), worldName);
-        if (oldFolder.exists()) {
-            deleteDirectory(oldFolder);
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            WorldCreator creator = new WorldCreator(worldName);
+            creator.generator(new SimpleWorldGenerator());
+            world = creator.createWorld();
         }
-
-        WorldCreator creator = new WorldCreator(worldName);
-        creator.generator(new SimpleWorldGenerator());
-        World world = creator.createWorld();
-        configureWorldRules(world);
-        cleanWorldEntities(world);
+        if (world != null) {
+            configureWorldRules(world);
+            cleanWorldEntities(world);
+        }
 
         Dungeon template = DungeonManager.getInstance().getTemplates().get(key);
         Clipboard clipboard = template != null ? SchematicManager.readClipboard(template.getSchematicFile(), AmonPackPlugin.plugin) : null;
+        if (clipboard != null && world != null) {
+            Vector paste = template.getPasteLocation();
+            SchematicManager.pasteClipboard(world, clipboard, paste.getBlockX(), paste.getBlockY(), paste.getBlockZ());
+        }
+
         PreWarmedInstance inst = new PreWarmedInstance(key, worldName, world, clipboard);
         inst.setState(InstanceState.IN_USE);
         activeInstances.put(worldName, inst);
@@ -192,28 +221,27 @@ public class DungeonWorldManager {
     }
 
     /**
-     * Cleans up and deletes a finished instance world from disk to guarantee a 100% clean world next run.
+     * Cleans up and recycles a finished instance world for future runs.
      */
     public static void deleteDungeonWorld(World world) {
         if (world == null) return;
         String worldName = world.getName();
-        activeInstances.remove(worldName);
+        PreWarmedInstance inst = activeInstances.remove(worldName);
 
         cleanWorldEntities(world);
 
-        Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
-            boolean unloaded = Bukkit.unloadWorld(world, false);
-            if (unloaded) {
-                System.out.println("[Dungeons] Rozładowano świat instancji lochu: " + worldName);
-                File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
-                if (worldFolder.exists()) {
-                    deleteDirectory(worldFolder);
-                    System.out.println("[Dungeons] Usunięto katalog instancji z dysku (czyszczenie): " + worldName);
-                }
-            } else {
-                System.err.println("[Dungeons] Nie udało się rozładować świata lochu: " + worldName);
+        if (inst != null) {
+            String key = inst.getDungeonId();
+            Dungeon template = DungeonManager.getInstance().getTemplates().get(key);
+            if (template != null && inst.getClipboard() != null) {
+                Vector paste = template.getPasteLocation();
+                SchematicManager.pasteClipboard(world, inst.getClipboard(), paste.getBlockX(), paste.getBlockY(), paste.getBlockZ());
             }
-        }, 10L);
+            inst.setState(InstanceState.READY);
+            Queue<PreWarmedInstance> pool = readyPools.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>());
+            pool.add(inst);
+            System.out.println("[Dungeons] Zresetowano i zwolniono świat instancji do ponownego użycia: " + worldName);
+        }
     }
 
     private static void configureWorldRules(World world) {
