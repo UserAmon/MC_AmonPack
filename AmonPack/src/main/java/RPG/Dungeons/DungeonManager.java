@@ -1530,7 +1530,7 @@ public class DungeonManager implements Listener {
             if (encounter != null) {
                 for (DungeonCondition condition : encounter.getConditions()) {
                     if (condition.getType() == DungeonCondition.ConditionType.INTERACT_BLOCK_WITH_ITEM) {
-                        if (condition.isMetInteract(block.getLocation(), block.getType(), item, run)) {
+                        if (!condition.isMet(run) && condition.isMetInteract(block.getLocation(), block.getType(), item, run)) {
                             if (item != null && item.getAmount() > 0 && condition.isRequiredItems()) {
                                 int newAmt = item.getAmount() - 1;
                                 if (newAmt > 0) {
@@ -1545,7 +1545,17 @@ public class DungeonManager implements Listener {
                             }
 
                             event.setCancelled(true);
-                            run.transitionToNext();
+
+                            boolean allMet = true;
+                            for (DungeonCondition cond : encounter.getConditions()) {
+                                if (!cond.isMet(run)) {
+                                    allMet = false;
+                                    break;
+                                }
+                            }
+                            if (allMet && !encounter.getConditions().isEmpty()) {
+                                run.transitionToNext();
+                            }
                             return;
                         }
                     }

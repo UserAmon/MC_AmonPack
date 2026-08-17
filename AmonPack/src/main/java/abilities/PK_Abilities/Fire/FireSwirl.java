@@ -113,10 +113,10 @@ public class FireSwirl extends FireAbility implements AddonAbility {
 
         if (isFirelord) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§1⚡ Firelord — §4FireSwirl (" + shotsFired + "/" + maxShots + ")"));
+                    TextComponent.fromLegacyText("§1⚡ Firelord — §cFireSwirl (" + shotsFired + "/" + maxShots + ")"));
         } else if (maxShots > 1) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§4[FireSwirl] §cStrzał " + shotsFired + "/" + maxShots));
+                    TextComponent.fromLegacyText("§c[FireSwirl] (" + shotsFired + "/" + maxShots + ")"));
         }
 
         if (shotsFired >= maxShots) {
@@ -223,8 +223,14 @@ public class FireSwirl extends FireAbility implements AddonAbility {
                 return;
             }
 
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                    || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+
             if (isFirelord) {
                 currentPos.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, currentPos, 4, 0.15, 0.15, 0.15, 0.04);
+            } else if (isBlue) {
+                currentPos.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, currentPos, 3, 0.08, 0.08, 0.08, 0.02);
+                currentPos.getWorld().spawnParticle(Particle.SOUL, currentPos, 1, 0.05, 0.05, 0.05, 0.01);
             } else {
                 currentPos.getWorld().spawnParticle(Particle.FLAME, currentPos, 3, 0.08, 0.08, 0.08, 0.02);
                 currentPos.getWorld().spawnParticle(Particle.SMOKE, currentPos, 1, 0.05, 0.05, 0.05, 0.01);
@@ -253,8 +259,15 @@ public class FireSwirl extends FireAbility implements AddonAbility {
             if (dead)
                 return;
             dead = true;
-            baseLoc.getWorld().spawnParticle(Particle.FLAME, baseLoc, 8, 0.2, 0.2, 0.2, 0.05);
-            baseLoc.getWorld().spawnParticle(Particle.SMOKE, baseLoc, 5, 0.2, 0.2, 0.2, 0.05);
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                    || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+            if (isBlue) {
+                baseLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, baseLoc, 8, 0.2, 0.2, 0.2, 0.05);
+                baseLoc.getWorld().spawnParticle(Particle.SOUL, baseLoc, 4, 0.2, 0.2, 0.2, 0.02);
+            } else {
+                baseLoc.getWorld().spawnParticle(Particle.FLAME, baseLoc, 8, 0.2, 0.2, 0.2, 0.05);
+                baseLoc.getWorld().spawnParticle(Particle.SMOKE, baseLoc, 5, 0.2, 0.2, 0.2, 0.05);
+            }
         }
 
         public boolean isDead() {

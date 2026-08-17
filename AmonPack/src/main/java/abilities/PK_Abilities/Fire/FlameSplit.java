@@ -1,6 +1,8 @@
 package Abilities.PK_Abilities.Fire;
 
 import Plugin.AmonPackPlugin;
+import net.md_5.bungee.api.chat.TextComponent;
+
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.FireAbility;
@@ -114,7 +116,7 @@ public class FlameSplit extends FireAbility implements AddonAbility {
 
         if (FirelordStanceManager.isActive(player)) {
             player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eFlameSplit"));
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§1⚡ Firelord — §cFlameSplit"));
         }
 
         switch (state) {
@@ -169,7 +171,8 @@ public class FlameSplit extends FireAbility implements AddonAbility {
                     .add(new Vector(0, radius * Math.cos(angle), 0));
 
             if (isFirelord) {
-                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, centerLoc.clone().add(offset), 2, 0.02, 0.02, 0.02, 0.05);
+                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, centerLoc.clone().add(offset), 2, 0.02, 0.02,
+                        0.02, 0.05);
             } else {
                 Particle particle = (isBlue && i == 0) ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
                 player.getWorld().spawnParticle(particle, centerLoc.clone().add(offset), 1, 0, 0, 0, 0);

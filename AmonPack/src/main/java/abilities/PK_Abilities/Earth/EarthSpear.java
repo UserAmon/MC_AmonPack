@@ -38,6 +38,7 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
 
     private final List<TempBlock> groundSpearTempBlocks = new ArrayList<>();
     private Location launchLoc;
+    private Material spearMaterial = Material.DIRT;
 
     public EarthSpear(Player player) {
         super(player);
@@ -53,6 +54,17 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         this.startTime = System.currentTimeMillis();
 
         start();
+    }
+
+    private Location findEarthGround(Location origin, Vector direction, double dist) {
+        Location target = origin.clone().add(direction.clone().setY(0).normalize().multiply(dist));
+        for (int y = 3; y >= -4; y--) {
+            Block b = target.clone().add(0, y, 0).getBlock();
+            if (isEarthbendable(player, b) || isEarth(b)) {
+                return b.getLocation().add(0.5, 1.0, 0.5);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -120,19 +132,34 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         revertGroundSpear();
 
         Location eye = player.getEyeLocation();
-        Vector dir = eye.getDirection().normalize();
+        Vector dir = eye.getDirection().setY(0).normalize();
+        if (dir.lengthSquared() < 0.01) {
+            dir = new Vector(1, 0, 0);
+        }
 
-        // Ground spear rampa rising out of ground 2 blocks in front of player
-        Location baseLoc = player.getLocation().add(dir.clone().multiply(2.0)).add(0, 0, 0);
+        // Shifted forward by 1 block (3.0 blocks in front of player) on earthbendable ground
+        Location groundLoc = findEarthGround(player.getLocation(), dir, 3.0);
+        if (groundLoc == null) {
+            launchLoc = null;
+            return;
+        }
 
+        Block underBlock = groundLoc.clone().subtract(0, 1, 0).getBlock();
+        if (isEarthbendable(player, underBlock)) {
+            spearMaterial = underBlock.getType().isSolid() ? underBlock.getType() : Material.DIRT;
+        } else {
+            spearMaterial = Material.DIRT;
+        }
+
+        Location baseLoc = groundLoc.clone();
         int rampLength = chargeLevel + 1;
         for (int i = 0; i < rampLength; i++) {
             Location pt = baseLoc.clone().add(dir.clone().multiply(i * 0.8)).add(0, i * 0.5, 0);
             Block b = pt.getBlock();
             if (b.getType() == Material.AIR) {
-                groundSpearTempBlocks.add(new TempBlock(b, Material.DIRT.createBlockData(), 150));
+                groundSpearTempBlocks.add(new TempBlock(b, spearMaterial.createBlockData(), 150));
             }
-            pt.getWorld().spawnParticle(Particle.FALLING_DUST, pt, 2, 0.05, 0.05, 0.05, 0.01, Material.DIRT.createBlockData());
+            pt.getWorld().spawnParticle(Particle.FALLING_DUST, pt, 2, 0.05, 0.05, 0.05, 0.01, spearMaterial.createBlockData());
             launchLoc = pt;
         }
     }
@@ -141,8 +168,13 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         state = State.FIRED;
         revertGroundSpear();
 
+        if (launchLoc == null) {
+            remove();
+            return;
+        }
+
         Location eye = player.getEyeLocation();
-        Location startLoc = launchLoc != null ? launchLoc : eye.clone().add(eye.getDirection().multiply(2.0));
+        Location startLoc = launchLoc.clone();
         Vector vel = eye.getDirection().normalize().multiply(1.5);
 
         player.getWorld().playSound(startLoc, Sound.ENTITY_GHAST_SHOOT, 1.0f, 0.6f);
@@ -170,10 +202,10 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
                 // Projectile visual TempBlock
                 Block b = loc.getBlock();
                 if (b.getType() == Material.AIR) {
-                    projectileTempBlocks.add(new TempBlock(b, Material.DIRT.createBlockData(), 150));
+                    projectileTempBlocks.add(new TempBlock(b, spearMaterial.createBlockData(), 150));
                 }
 
-                loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 3, 0.1, 0.1, 0.1, 0.02, Material.DIRT.createBlockData());
+                loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 3, 0.1, 0.1, 0.1, 0.02, spearMaterial.createBlockData());
 
                 // PROJECTILE LOGIC AHEAD OF TEMPBLOCKS (checking ahead of motion vector)
                 Location checkLoc = loc.clone().add(currentVel.clone().normalize().multiply(1.0));
@@ -201,7 +233,7 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
 
     private void shatterSpear(Location loc) {
         loc.getWorld().playSound(loc, Sound.BLOCK_GRAVEL_BREAK, 1.2f, 0.7f);
-        loc.getWorld().spawnParticle(Particle.BLOCK, loc, 25, 0.5, 0.5, 0.5, 0.1, Material.DIRT.createBlockData());
+        loc.getWorld().spawnParticle(Particle.BLOCK, loc, 25, 0.5, 0.5, 0.5, 0.1, spearMaterial.createBlockData());
 
         for (int i = 0; i < fragmentCount; i++) {
             Vector fragVel = new Vector(
@@ -209,7 +241,7 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
                     Math.random() * 0.4 + 0.1,
                     (Math.random() - 0.5) * 0.8
             );
-            loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 5, fragVel.getX(), fragVel.getY(), fragVel.getZ(), 0.1, Material.DIRT.createBlockData());
+            loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 5, fragVel.getX(), fragVel.getY(), fragVel.getZ(), 0.1, spearMaterial.createBlockData());
         }
 
         bPlayer.addCooldown(this, cooldown);

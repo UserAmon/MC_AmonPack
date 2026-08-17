@@ -117,7 +117,8 @@ public class FireRain extends FireAbility implements AddonAbility {
 
         if (maxCasts > 1) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§6[FireRain] §eUżycie " + castCount + "/" + maxCasts));
+                    TextComponent.fromLegacyText("§c[FireRain] &e(" + castCount + "/" + maxCasts + ")"));
+
         }
 
         if (castCount >= maxCasts) {
@@ -201,8 +202,14 @@ public class FireRain extends FireAbility implements AddonAbility {
 
             Location currentLoc = new Location(startLoc.getWorld(), curX, curY, curZ);
 
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                    || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+
             if (isFirelord) {
                 currentLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, currentLoc, 3, 0.15, 0.15, 0.15, 0.03);
+            } else if (isBlue) {
+                currentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, currentLoc, 3, 0.2, 0.2, 0.2, 0.01);
+                currentLoc.getWorld().spawnParticle(Particle.SOUL, currentLoc, 1, 0.1, 0.1, 0.1, 0.01);
             } else {
                 currentLoc.getWorld().spawnParticle(Particle.FLAME, currentLoc, 3, 0.25, 0.25, 0.25, 0.01);
             }
@@ -217,9 +224,17 @@ public class FireRain extends FireAbility implements AddonAbility {
                 return;
             dead = true;
 
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                    || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+
             loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.1f);
-            loc.getWorld().spawnParticle(Particle.FLAME, loc, 35, radius * 0.6, 0.5, radius * 0.6, 0.08);
-            loc.getWorld().spawnParticle(Particle.LAVA, loc, 8, radius * 0.4, 0.4, radius * 0.4, 0.0);
+            if (isBlue) {
+                loc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, 35, radius * 0.6, 0.5, radius * 0.6, 0.08);
+                loc.getWorld().spawnParticle(Particle.SOUL, loc, 12, radius * 0.4, 0.4, radius * 0.4, 0.02);
+            } else {
+                loc.getWorld().spawnParticle(Particle.FLAME, loc, 35, radius * 0.6, 0.5, radius * 0.6, 0.08);
+                loc.getWorld().spawnParticle(Particle.LAVA, loc, 8, radius * 0.4, 0.4, radius * 0.4, 0.0);
+            }
 
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, radius)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
@@ -235,7 +250,7 @@ public class FireRain extends FireAbility implements AddonAbility {
             if (hasWide) {
                 for (Block b : GeneralMethods.getBlocksAroundPoint(loc, radius * 0.7)) {
                     if (b.getType() == Material.AIR && b.getRelative(BlockFace.DOWN).getType().isSolid()) {
-                        b.setType(Material.FIRE);
+                        b.setType(isBlue ? Material.SOUL_FIRE : Material.FIRE);
                     }
                 }
             }

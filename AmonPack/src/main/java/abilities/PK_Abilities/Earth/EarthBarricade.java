@@ -162,6 +162,7 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                     return;
                 }
 
+                updateFacingAndCenterWithLerp();
                 riseTick++;
                 renderWall(Math.min(1.0, (double) riseTick / maxRiseTicks));
                 player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.5, 0), 8, 1.0, 0.3, 1.0, 0.05, wallMaterial.createBlockData());
@@ -183,6 +184,7 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                     return;
                 }
 
+                updateFacingAndCenterWithLerp();
                 renderWall(1.0);
 
                 if (Math.random() < 0.25) {
@@ -207,6 +209,21 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                     crumble();
                 }
                 break;
+        }
+    }
+
+    private void updateFacingAndCenterWithLerp() {
+        Vector look = player.getEyeLocation().getDirection().setY(0);
+        if (look.lengthSquared() > 0.01) {
+            look.normalize();
+            currentFacing.add(look.clone().subtract(currentFacing).multiply(0.12)).normalize();
+        }
+
+        Location targetGround = findGroundAhead(player.getLocation(), currentFacing, wallDistance);
+        if (targetGround != null) {
+            currentCenter.setX(currentCenter.getX() + (targetGround.getX() - currentCenter.getX()) * 0.15);
+            currentCenter.setZ(currentCenter.getZ() + (targetGround.getZ() - currentCenter.getZ()) * 0.15);
+            currentCenter.setY(targetGround.getBlockY());
         }
     }
 

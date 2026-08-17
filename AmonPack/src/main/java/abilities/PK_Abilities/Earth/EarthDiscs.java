@@ -185,7 +185,8 @@ public class EarthDiscs extends EarthAbility implements AddonAbility {
             ammo--;
             Location spawn = player.getEyeLocation().clone().add(player.getEyeLocation().getDirection().multiply(1));
 
-            new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, true, sourceMaterial, canRedirect, maxBounces, range);
+            EarthDisc disc = new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, true, sourceMaterial, canRedirect, maxBounces, range);
+            disc.setAbility(this);
 
             player.playSound(player.getLocation(), Sound.ENTITY_SNOWBALL_THROW, 1f, 0.5f);
 

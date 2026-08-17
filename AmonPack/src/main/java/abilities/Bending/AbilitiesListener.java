@@ -237,6 +237,13 @@ public class AbilitiesListener implements Listener {
 					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("EarthDiscs")
 					|| bPlayer.getBoundAbilityName().equalsIgnoreCase("SandDisc")) {
 				EarthDisc.redirectNearby(player, 4.0);
+			} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("ArcBlast")) {
+				if (CoreAbility.hasAbility(player, ArcBlast.class)) {
+					ArcBlast ab = CoreAbility.getAbility(player, ArcBlast.class);
+					if (ab.isFullyCharged()) {
+						ab.onClick();
+					}
+				}
 			}
 			if (!bPlayer.isOnCooldown(bPlayer.getBoundAbility())) {
 				CheckEarthHealthBoost(player, bPlayer.getBoundAbility());

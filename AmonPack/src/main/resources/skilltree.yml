@@ -227,6 +227,17 @@ AmonPack:
         Description:
           - "&1Przyzwij potęgę błyskawic. Zbierz wewnętrzną"            
           - "&1energię elektryczną, by uwolnić niszczycielską wiązkę!"
+      CoilThunder:
+        Cost: 20
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "Coil"
+        ReqAbilities:
+          - Coil
+        Description:
+          - "&eTrafienie głównym pociskiem w blok oznacza ten blok."
+          - "&7Po &e3 sekundach &7w promieniu &e5 bloków &7uderzają pioruny,"
+          - "&7zadając obrażenia i odrzucając wrogów!"
       SmokeSurge:
         Cost: 40
         Place: 78

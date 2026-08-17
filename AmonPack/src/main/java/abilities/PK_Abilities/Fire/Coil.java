@@ -2,6 +2,7 @@ package Abilities.PK_Abilities.Fire;
 
 import Abilities.Bending.SmokeAbility;
 import Abilities.Util_Objects.SmokeSource;
+import RPG.Levels.BendingTree.PlayerBendingBranch;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.FireAbility;
@@ -39,6 +40,11 @@ public class Coil extends LightningAbility implements AddonAbility {
     private double damagePerProjectile;
     private long cooldown;
 
+    private boolean hasThunderMark;
+    private long thunderDelayMs;
+    private double thunderRadius;
+    private double thunderDamage;
+
     private double ringAngle = 0;
 
     public Coil(Player player) {
@@ -63,6 +69,14 @@ public class Coil extends LightningAbility implements AddonAbility {
                 .getDouble("AmonPack.Fire.Coil.DamagePerProjectile", 4.5);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Coil.Cooldown", 8000);
 
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
+        this.hasThunderMark = (branch != null && (branch.hasUpgrade("CoilThunder") || branch.hasUpgrade("CoilStorm") || branch.hasUpgrade("CoilSmite")));
+        this.thunderDelayMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.Coil.ThunderDelayMs", 3000L);
+        this.thunderRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.ThunderRadius", 5.0);
+        this.thunderDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.ThunderDamage", 6.5);
+
         this.state = State.CHARGING;
         this.startTime = System.currentTimeMillis();
 
@@ -78,7 +92,8 @@ public class Coil extends LightningAbility implements AddonAbility {
 
         if (FirelordStanceManager.isActive(player)) {
             player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eCoil"));
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§1⚡ Firelord — §4Coil"));
+            this.chargeIntervalPerRing = this.chargeIntervalPerRing / 2;
         }
 
         if (state == State.CHARGING) {
@@ -100,13 +115,13 @@ public class Coil extends LightningAbility implements AddonAbility {
     }
 
     private void renderTideLockStyleSlowRings() {
-        ringAngle += 0.08; // Slower rotation like TideLock
+        ringAngle += 0.08;
         Location center = player.getLocation().add(0, 1.0, 0);
         boolean isFirelord = FirelordStanceManager.isActive(player);
 
         for (int r = 0; r < ringCount; r++) {
             double radius = 1.4 + (r * 0.5);
-            double yOffset = (r - 1) * 0.2;
+            double yOffset = (r - 1) * 0.15;
 
             int points = 16;
             for (int i = 0; i < points; i++) {
@@ -116,7 +131,7 @@ public class Coil extends LightningAbility implements AddonAbility {
                 Location pt = center.clone().add(x, yOffset + Math.sin(angle) * 0.2, z);
 
                 if (isFirelord) {
-                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pt, 2, 0.02, 0.02, 0.02, 0.05);
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pt, 4, 0.02, 0.02, 0.02, 0.05);
                     player.getWorld().spawnParticle(Particle.DUST, pt, 1, 0, 0, 0, 0,
                             new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(180, 220, 255), 1.0f));
                 } else {
@@ -145,12 +160,12 @@ public class Coil extends LightningAbility implements AddonAbility {
         long actualCooldown = isFirelord ? (long) (cooldown * stance.getCooldownMultiplier()) : cooldown;
 
         for (int r = 0; r < ringCount; r++) {
-            Vector spreadDir = baseDir.clone().add(new Vector(
+            Vector spreadDir = (r == 0) ? baseDir.clone().multiply(actualSpeed) : baseDir.clone().add(new Vector(
                     (Math.random() - 0.5) * 0.8,
                     0.02,
                     (Math.random() - 0.5) * 0.8)).normalize().multiply(actualSpeed);
 
-            spawnGroundLightningProjectile(eye.clone(), spreadDir, actualDamage, actualSmokeRadius);
+            spawnGroundLightningProjectile(eye.clone(), spreadDir, actualDamage, actualSmokeRadius, r == 0);
         }
 
         bPlayer.addCooldown(this, actualCooldown);
@@ -158,7 +173,7 @@ public class Coil extends LightningAbility implements AddonAbility {
     }
 
     private void spawnGroundLightningProjectile(Location startLoc, Vector initialVel, double currentDamage,
-            double currentSmokeRadius) {
+            double currentSmokeRadius, boolean isMain) {
         Abilities.Util_Objects.LightningBolt bolt = new Abilities.Util_Objects.LightningBolt(
                 player, this, startLoc, initialVel.normalize(), currentDamage, 25.0, 0, false);
 
@@ -179,7 +194,6 @@ public class Coil extends LightningAbility implements AddonAbility {
                     currentLoc.getWorld().strikeLightningEffect(currentLoc);
                 }
 
-                // Smoke Source Interaction Check
                 SmokeSource nearSource = SmokeAbility.UseSmokeSource(player, currentSmokeRadius);
                 if (nearSource != null || checkSmokeSourcesNear(currentLoc, currentSmokeRadius)) {
                     triggerSmokeElectrification(currentLoc, currentSmokeRadius);
@@ -195,7 +209,65 @@ public class Coil extends LightningAbility implements AddonAbility {
                 }
 
                 if (currentLoc.getBlock().getType().isSolid()) {
+                    if (hasThunderMark && isMain) {
+                        triggerBlockThunderMark(currentLoc.clone(), thunderDelayMs, thunderRadius, thunderDamage);
+                    }
                     cancel();
+                }
+            }
+        }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
+    }
+
+    private void triggerBlockThunderMark(Location markLoc, long delayMs, double radius, double dmg) {
+        int totalTicks = Math.max(20, (int) (delayMs / 50L));
+        Location center = markLoc.clone().add(0, 0.2, 0);
+        center.getWorld().playSound(center, Sound.BLOCK_BEACON_AMBIENT, 1.2f, 1.8f);
+
+        new BukkitRunnable() {
+            int t = 0;
+
+            @Override
+            public void run() {
+                t++;
+                if (t >= totalTicks) {
+                    center.getWorld().playSound(center, Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.5f, 0.9f);
+                    center.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.0f);
+                    center.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, center, 2, 0.5, 0.5, 0.5, 0.0);
+                    center.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, center, 40, radius * 0.5, 1.0, radius * 0.5, 0.2);
+
+                    center.getWorld().strikeLightningEffect(center);
+                    center.getWorld().strikeLightningEffect(center.clone().add(radius * 0.5, 0, 0));
+                    center.getWorld().strikeLightningEffect(center.clone().add(-radius * 0.5, 0, 0));
+                    center.getWorld().strikeLightningEffect(center.clone().add(0, 0, radius * 0.5));
+                    center.getWorld().strikeLightningEffect(center.clone().add(0, 0, -radius * 0.5));
+
+                    boolean isFirelord = FirelordStanceManager.isActive(player);
+                    FirelordStance stance = FirelordStanceManager.getStance(player);
+                    double actualDmg = isFirelord ? dmg * stance.getDamageMultiplier() : dmg;
+
+                    for (Entity e : GeneralMethods.getEntitiesAroundPoint(center, radius)) {
+                        if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId()) {
+                            DamageHandler.damageEntity(le, actualDmg, Coil.this);
+                            Vector push = le.getLocation().toVector().subtract(center.toVector()).normalize().multiply(1.2).setY(0.4);
+                            le.setVelocity(push);
+                        }
+                    }
+                    cancel();
+                    return;
+                }
+
+                if (t % 5 == 0) {
+                    int points = 16;
+                    for (int i = 0; i < points; i++) {
+                        double angle = (2 * Math.PI / points) * i;
+                        double x = Math.cos(angle) * radius;
+                        double z = Math.sin(angle) * radius;
+                        Location pLoc = center.clone().add(x, 0, z);
+                        center.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pLoc, 1, 0, 0, 0, 0);
+                        center.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(200, 230, 255), 0.8f));
+                    }
+                    center.getWorld().spawnParticle(Particle.FIREWORK, center, 3, 0.2, 0.2, 0.2, 0.02);
+                    center.getWorld().playSound(center, Sound.BLOCK_NOTE_BLOCK_HAT, 0.6f, 1.5f + (t * 0.02f));
                 }
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);

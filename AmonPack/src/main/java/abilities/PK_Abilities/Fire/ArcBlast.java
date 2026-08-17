@@ -28,7 +28,9 @@ import java.util.Random;
 
 public class ArcBlast extends LightningAbility implements AddonAbility {
 
-    private enum State { CHARGING, FULLY_CHARGED, FIRING }
+    private enum State {
+        CHARGING, FULLY_CHARGED, FIRING
+    }
 
     private State state;
     private long cooldown;
@@ -38,6 +40,9 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
     private int chainCount;
     private double chainRange;
     private double waterExtraDamage;
+    private int burstCount;
+    private int burstDelayTicks;
+    private long fullyChargedStartTime = 0;
 
     private List<Vector> pointOffsets = new ArrayList<>();
     private boolean[] collectedPoints;
@@ -77,7 +82,20 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
         this.baseSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.ArcBlast.Speed", 1.2);
         this.chainCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.ArcBlast.ChainCount", 3);
         this.chainRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.ArcBlast.ChainRange", 6.0);
-        this.waterExtraDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.ArcBlast.WaterExtraDamage", 4.0);
+        this.waterExtraDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.ArcBlast.WaterExtraDamage",
+                4.0);
+        this.burstCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.ArcBlast.BurstCount", 4);
+        this.burstDelayTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.ArcBlast.BurstDelayTicks", 3);
+    }
+
+    public boolean isFullyCharged() {
+        return state == State.FULLY_CHARGED;
+    }
+
+    public void onClick() {
+        if (state == State.FULLY_CHARGED) {
+            fire();
+        }
     }
 
     private void initTargetPoints() {
@@ -110,51 +128,52 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
             return;
         }
 
-        if (state == State.CHARGING || state == State.FULLY_CHARGED) {
+        if (state == State.CHARGING) {
             if (!player.isSneaking()) {
-                if (state == State.FULLY_CHARGED) {
-                    fire();
-                    return;
-                } else {
-                    remove();
-                    return;
-                }
+                remove();
+                return;
             }
-
 
             if (FirelordStanceManager.isActive(player)) {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        TextComponent.fromLegacyText("§6⚡ Firelord — §eArcBlast"));
-            Location loc = player.getLocation();
-            if (loc.getY() < startY + 2.0) {
-                player.setVelocity(new Vector(player.getVelocity().getX(), 0.12, player.getVelocity().getZ()));
-            } else {
-                player.setVelocity(new Vector(player.getVelocity().getX(), 0.01, player.getVelocity().getZ()));
-            }
-            player.getWorld().spawnParticle(Particle.FLAME, loc.clone().add(0, 0.1, 0), 3, 0.2, 0.1, 0.2, 0.02);
-            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc.clone().add(0, 0.2, 0), 3, 0.2, 0.2, 0.2, 0.05);
-            }
-
-            if (state == State.CHARGING) {
-                checkHoverCollection();
-
-                Location eyeLoc = player.getEyeLocation();
-                for (int i = 0; i < totalPointsRequired; i++) {
-                    if (!collectedPoints[i]) {
-                        Location ptLoc = eyeLoc.clone().add(pointOffsets.get(i));
-                        player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, ptLoc, 2, 0.1, 0.1, 0.1, 0.05);
-                        Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(180, 220, 255), 0.8f);
-                        player.getWorld().spawnParticle(Particle.DUST, ptLoc, 1, 0, 0, 0, 0, dust);
-                    }
+                Location loc = player.getLocation();
+                if (loc.getY() < startY + 2.0) {
+                    player.setVelocity(new Vector(player.getVelocity().getX(), 0.12, player.getVelocity().getZ()));
+                } else {
+                    player.setVelocity(new Vector(player.getVelocity().getX(), 0.01, player.getVelocity().getZ()));
                 }
-
-                String bar = "§6[ArcBlast] Zbieranie punktów: §e" + collectedCount + "/" + totalPointsRequired;
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(bar));
-            } else if (state == State.FULLY_CHARGED) {
-                Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(135, 206, 250), 1.2f);
-                player.getWorld().spawnParticle(Particle.DUST, player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5)), 5, 0.2, 0.2, 0.2, 0, dust);
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§aArcBlast gotowy! Puść SHIFT, aby wystrzelić!"));
+                player.getWorld().spawnParticle(Particle.FLAME, loc.clone().add(0, 0.1, 0), 3, 0.2, 0.1, 0.2, 0.02);
+                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc.clone().add(0, 0.2, 0), 3, 0.2, 0.2, 0.2,
+                        0.05);
             }
+
+            checkHoverCollection();
+
+            Location eyeLoc = player.getEyeLocation();
+            for (int i = 0; i < totalPointsRequired; i++) {
+                if (!collectedPoints[i]) {
+                    Location ptLoc = eyeLoc.clone().add(pointOffsets.get(i));
+                    player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, ptLoc, 2, 0.1, 0.1, 0.1, 0.05);
+                    Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(180, 220, 255), 0.8f);
+                    player.getWorld().spawnParticle(Particle.DUST, ptLoc, 1, 0, 0, 0, 0, dust);
+                }
+            }
+
+            String bar = "§4[ArcBlast]&c Zbieranie punktów: §e" + collectedCount + "/" + totalPointsRequired;
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(bar));
+        } else if (state == State.FULLY_CHARGED) {
+            if (System.currentTimeMillis() - fullyChargedStartTime > 12000L) {
+                remove();
+                return;
+            }
+
+            Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(135, 206, 250), 1.2f);
+            player.getWorld().spawnParticle(Particle.DUST,
+                    player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5)), 5, 0.2, 0.2,
+                    0.2, 0, dust);
+            player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK,
+                    player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5)), 3, 0.15, 0.15, 0.15, 0.05);
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§aArcBlast gotowy! Kliknij LPM, aby wystrzelić!"));
         } else if (state == State.FIRING) {
             if (projectiles.isEmpty()) {
                 remove();
@@ -183,10 +202,12 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
                 if (angle < 8.0) {
                     collectedPoints[i] = true;
                     collectedCount++;
-                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f + (collectedCount * 0.1f));
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f,
+                            1.5f + (collectedCount * 0.1f));
 
                     if (collectedCount >= totalPointsRequired) {
                         state = State.FULLY_CHARGED;
+                        fullyChargedStartTime = System.currentTimeMillis();
                         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.8f);
                     }
                 }
@@ -194,7 +215,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
         }
     }
 
-    private void fire() {
+    public void fire() {
+        if (state == State.FIRING) return;
         state = State.FIRING;
 
         boolean isFirelord = FirelordStanceManager.isActive(player);
@@ -207,23 +229,57 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
 
         bPlayer.addCooldown(this, actualCooldown);
 
+        fireWave(actualDamage, actualRange, actualSpeed, isFirelord);
+
+        if (burstCount > 0) {
+            new BukkitRunnable() {
+                private int count = 0;
+
+                @Override
+                public void run() {
+                    if (player == null || !player.isOnline() || player.isDead()) {
+                        cancel();
+                        return;
+                    }
+                    count++;
+                    fireSingleBurst(actualDamage * 0.8, actualRange, actualSpeed * 1.1);
+                    if (count >= burstCount) {
+                        cancel();
+                    }
+                }
+            }.runTaskTimer(AmonPackPlugin.plugin, (long) burstDelayTicks, (long) burstDelayTicks);
+        }
+    }
+
+    private void fireWave(double actualDamage, double actualRange, double actualSpeed, boolean isFirelord) {
         Location eye = player.getEyeLocation();
         Vector mainDir = eye.getDirection().normalize();
 
-        projectiles.add(new ArcBlastProjectile(player, this, eye.clone(), mainDir.clone(), actualDamage, actualRange, actualSpeed, chainCount, false));
+        projectiles.add(new ArcBlastProjectile(player, this, eye.clone(), mainDir.clone(), actualDamage, actualRange,
+                actualSpeed, chainCount, false));
 
         if (isFirelord) {
             Vector right = mainDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-            if (right.lengthSquared() < 0.01) right = new Vector(1, 0, 0);
+            if (right.lengthSquared() < 0.01)
+                right = new Vector(1, 0, 0);
 
             Vector leftDir = mainDir.clone().add(right.clone().multiply(-0.35)).normalize();
             Vector rightDir = mainDir.clone().add(right.clone().multiply(0.35)).normalize();
 
-            projectiles.add(new ArcBlastProjectile(player, this, eye.clone().add(right.clone().multiply(-0.5)), leftDir, actualDamage * 0.7, actualRange * 0.8, actualSpeed * 0.9, Math.max(1, chainCount - 1), true));
-            projectiles.add(new ArcBlastProjectile(player, this, eye.clone().add(right.clone().multiply(0.5)), rightDir, actualDamage * 0.7, actualRange * 0.8, actualSpeed * 0.9, Math.max(1, chainCount - 1), true));
+            projectiles.add(new ArcBlastProjectile(player, this, eye.clone().add(right.clone().multiply(-0.5)), leftDir,
+                    actualDamage * 0.7, actualRange * 0.8, actualSpeed * 0.9, Math.max(1, chainCount - 1), true));
+            projectiles.add(new ArcBlastProjectile(player, this, eye.clone().add(right.clone().multiply(0.5)), rightDir,
+                    actualDamage * 0.7, actualRange * 0.8, actualSpeed * 0.9, Math.max(1, chainCount - 1), true));
         }
 
         player.getWorld().playSound(eye, Sound.ITEM_TRIDENT_THUNDER, 1.2f, 1.2f);
+    }
+
+    private void fireSingleBurst(double dmg, double rng, double spd) {
+        Location eye = player.getEyeLocation();
+        Vector dir = eye.getDirection().normalize();
+        projectiles.add(new ArcBlastProjectile(player, this, eye.clone(), dir.clone(), dmg, rng, spd, 1, false));
+        player.getWorld().playSound(eye, Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 0.8f, 1.8f);
     }
 
     @Override
@@ -295,7 +351,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
         private boolean dead = false;
         private List<LivingEntity> hitEntities = new ArrayList<>();
 
-        public ArcBlastProjectile(Player player, ArcBlast ability, Location loc, Vector dir, double damage, double maxDistance, double speed, int chainsRemaining, boolean isSideBolt) {
+        public ArcBlastProjectile(Player player, ArcBlast ability, Location loc, Vector dir, double damage,
+                double maxDistance, double speed, int chainsRemaining, boolean isSideBolt) {
             this.player = player;
             this.ability = ability;
             this.loc = loc.clone();
@@ -308,7 +365,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
         }
 
         public void progress() {
-            if (dead) return;
+            if (dead)
+                return;
 
             if (distanceTraveled >= maxDistance) {
                 dead = true;
@@ -321,7 +379,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
             dir = dir.clone().multiply(1.0 - steerFactor).add(playerLook.multiply(steerFactor)).normalize();
 
             // Add slight lightning randomness jitter
-            dir.add(new Vector((random.nextDouble() - 0.5) * 0.12, (random.nextDouble() - 0.5) * 0.12, (random.nextDouble() - 0.5) * 0.12)).normalize();
+            dir.add(new Vector((random.nextDouble() - 0.5) * 0.12, (random.nextDouble() - 0.5) * 0.12,
+                    (random.nextDouble() - 0.5) * 0.12)).normalize();
 
             RayTraceResult rtr = loc.getWorld().rayTraceBlocks(loc, dir, speed, FluidCollisionMode.NEVER, true);
             if (rtr != null && rtr.getHitBlock() != null) {
@@ -349,7 +408,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
 
             // Hit & chaining collision
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1.4)) {
-                if (entity instanceof LivingEntity target && entity.getEntityId() != player.getEntityId() && !hitEntities.contains(target)) {
+                if (entity instanceof LivingEntity target && entity.getEntityId() != player.getEntityId()
+                        && !hitEntities.contains(target)) {
                     hitEntities.add(target);
 
                     double actualDamage = damage;
@@ -383,7 +443,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
 
             for (int i = 0; i < 4; i++) {
                 Vector randDir = new Vector((random.nextDouble() - 0.5), 0.1, (random.nextDouble() - 0.5)).normalize();
-                LightningBolt subBolt = new LightningBolt(player, ability, waterLoc, randDir, damage * 0.5, 8.0, 0, false);
+                LightningBolt subBolt = new LightningBolt(player, ability, waterLoc, randDir, damage * 0.5, 8.0, 0,
+                        false);
                 subBolt.progress();
             }
         }
@@ -392,7 +453,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
             LivingEntity nearest = null;
             double bestDist = radius * radius;
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(center, radius)) {
-                if (entity instanceof LivingEntity target && entity.getEntityId() != player.getEntityId() && !hitEntities.contains(target)) {
+                if (entity instanceof LivingEntity target && entity.getEntityId() != player.getEntityId()
+                        && !hitEntities.contains(target)) {
                     double dist = center.distanceSquared(target.getLocation());
                     if (dist < bestDist) {
                         bestDist = dist;

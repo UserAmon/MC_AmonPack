@@ -46,14 +46,18 @@ public class FlameWeave extends FireAbility implements AddonAbility {
         super(player);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameWeave.Cooldown", 4000);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.Speed", 0.8);
-        this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameWeave.ChargeTimePerLevel", 1000);
+        this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig()
+                .getLong("AmonPack.Fire.FlameWeave.ChargeTimePerLevel", 1000);
         this.maxChargeLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWeave.MaxChargeLevel", 3);
         this.baseBoltCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameWeave.BaseBoltCount", 2);
-        this.boltCountMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.BoltCountMultiplier", 2.5);
+        this.boltCountMultiplier = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FlameWeave.BoltCountMultiplier", 2.5);
         this.baseDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.BaseDamage", 1.0);
-        this.damageMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.DamageMultiplier", 1.0);
+        this.damageMultiplier = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FlameWeave.DamageMultiplier", 1.0);
         this.baseRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.BaseRange", 10.0);
-        this.rangeMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.RangeMultiplier", 15.0);
+        this.rangeMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameWeave.RangeMultiplier",
+                15.0);
 
         if (bPlayer.isOnCooldown(this)) {
             return;
@@ -78,7 +82,7 @@ public class FlameWeave extends FireAbility implements AddonAbility {
 
             if (FirelordStanceManager.isActive(player)) {
                 player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§6⚡ Firelord — §eFlameWeave"));
+                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§1⚡ Firelord — §cFlameWeave"));
             }
 
             int level = getChargeLevel();
@@ -102,12 +106,29 @@ public class FlameWeave extends FireAbility implements AddonAbility {
                 } else {
                     bar = "§c§l[ §e███ §c§l] §e§lWEAVE COMPLETE!";
                 }
-                player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,net.md_5.bungee.api.chat.TextComponent.fromLegacyText(bar));
+                player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText(bar));
+            } else if (FirelordStanceManager.isActive(player)) {
+                String bar;
+                if (level == 0) {
+                    bar = "§1[ §f░░░ §1] §1§lWEAVING...";
+                } else if (level == 1) {
+                    bar = "§1[ §6█§1░░ §1] §1§lLEVEL 1";
+                } else if (level == 2) {
+                    bar = "§1[ §e██§1░ §1] §1§lLEVEL 2";
+                } else {
+                    bar = "§1[ §e███ §1] §1§lWEAVE COMPLETE!";
+                }
+                player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText(bar));
+
             }
 
             boolean isFirelord = FirelordStanceManager.isActive(player);
-            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
-            Particle flameParticle = isFirelord ? Particle.ELECTRIC_SPARK : (isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME);
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                    || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+            Particle flameParticle = isFirelord ? Particle.ELECTRIC_SPARK
+                    : (isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME);
 
             double radius = 0.8 + (level * 0.15);
             double angle = (System.currentTimeMillis() / 150.0) * (level + 1);
@@ -115,12 +136,15 @@ public class FlameWeave extends FireAbility implements AddonAbility {
             double z = radius * Math.sin(angle);
             Location pLoc = player.getLocation().clone().add(x, 0.2 + (level * 0.4), z);
             player.getWorld().spawnParticle(flameParticle, pLoc, 1, 0, 0, 0, 0);
-            player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(isFirelord ? Color.fromRGB(180, 220, 255) : (isBlue ? Color.AQUA : Color.ORANGE), 0.8f));
+            player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(
+                    isFirelord ? Color.fromRGB(180, 220, 255) : (isBlue ? Color.AQUA : Color.ORANGE), 0.8f));
 
             if (level > 0) {
                 Location eye = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(0.5)).clone()
                         .add(0, -0.5, 0);
-                Particle.DustOptions dust = new Particle.DustOptions(isFirelord ? Color.fromRGB(180, 220, 255) : (isBlue ? Color.AQUA : Color.ORANGE), 0.5f + (level * 0.2f));
+                Particle.DustOptions dust = new Particle.DustOptions(
+                        isFirelord ? Color.fromRGB(180, 220, 255) : (isBlue ? Color.AQUA : Color.ORANGE),
+                        0.5f + (level * 0.2f));
                 eye.getWorld().spawnParticle(Particle.DUST, eye, level * 2, 0.25, 0.1, 0.25, 0, dust);
                 eye.getWorld().spawnParticle(flameParticle, eye, level, 0.1, 0.1, 0.1, 0.02);
             }
@@ -281,8 +305,10 @@ public class FlameWeave extends FireAbility implements AddonAbility {
             }
 
             boolean isFirelord = FirelordStanceManager.isActive(player);
-            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
-            Particle flameParticle = isFirelord ? Particle.ELECTRIC_SPARK : (isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME);
+            boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                    || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+            Particle flameParticle = isFirelord ? Particle.ELECTRIC_SPARK
+                    : (isBlue ? Particle.SOUL_FIRE_FLAME : Particle.FLAME);
             Material fireMat = isBlue ? Material.SOUL_FIRE : Material.FIRE;
 
             Vector velocity = dir.clone().multiply(speed);

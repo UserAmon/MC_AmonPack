@@ -11,7 +11,7 @@ spawn-location:
 exit-location:
   world: "world"
   x: 0
-  y: 64
+  y: -60
   z: 0
 initial-encounter: "MakapuStart"
 items:

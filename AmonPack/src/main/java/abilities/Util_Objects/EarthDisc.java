@@ -42,6 +42,16 @@ public class EarthDisc {
     protected int terrainBounces = 0;
     protected Location origin;
 
+    protected CoreAbility ability;
+
+    public void setAbility(CoreAbility ability) {
+        this.ability = ability;
+    }
+
+    public CoreAbility getAbility() {
+        return this.ability;
+    }
+
     public EarthDisc(Player player, Location location, Vector direction, double damage, double speed, boolean destroyOnEntityHit) {
         this(player, location, direction, damage, speed, destroyOnEntityHit, Material.SANDSTONE);
     }
@@ -145,7 +155,13 @@ public class EarthDisc {
                 }
                 LivingEntity target = (LivingEntity) entity;
                 double healthBefore = target.getHealth();
-                DamageHandler.damageEntity(target, damage, CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.DiscHurl.class));
+                CoreAbility abilityInstance = (ability != null) ? ability : (CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.DiscHurl.class) ? CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.DiscHurl.class) : (CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.EarthDiscs.class) ? CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.EarthDiscs.class) : (CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.SandDisc.class) ? CoreAbility.getAbility(player, Abilities.PK_Abilities.Earth.SandDisc.class) : null)));
+
+                if (abilityInstance != null) {
+                    DamageHandler.damageEntity(target, damage, abilityInstance);
+                } else {
+                    target.damage(damage, player);
+                }
                 if (target.getHealth() < healthBefore || target.isDead()) {
                     Vector forceDir = GeneralMethods.getDirection(target.getLocation(), location.clone().subtract(0,1,0));
                     target.setVelocity(forceDir.clone().normalize().multiply(-1));

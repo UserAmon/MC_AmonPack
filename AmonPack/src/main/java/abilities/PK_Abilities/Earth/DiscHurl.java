@@ -112,7 +112,8 @@ public class DiscHurl extends EarthAbility implements AddonAbility {
 
     private void shoot() {
         Location spawn = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5));
-        new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, false, sourceMaterial, canRedirect, maxBounces, range);
+        EarthDisc disc = new EarthDisc(player, spawn, player.getLocation().getDirection(), damage, speed, false, sourceMaterial, canRedirect, maxBounces, range);
+        disc.setAbility(this);
         player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 0.5f, 1.5f);
         bPlayer.addCooldown(this);
         remove();
