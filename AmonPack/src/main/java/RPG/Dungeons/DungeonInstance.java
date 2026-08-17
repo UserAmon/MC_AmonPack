@@ -1,6 +1,7 @@
 package RPG.Dungeons;
 
 import com.projectkorra.projectkorra.util.TempBlock;
+import com.projectkorra.projectkorra.BendingPlayer;
 import RPG.Levels.Objects.LevelSkill;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
@@ -9,6 +10,8 @@ import org.bukkit.block.Block;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.io.File;
@@ -1252,6 +1255,17 @@ public class DungeonInstance {
             dynamicPathReshuffleTimers.clear();
             dynamicPathRevealedPlayers.clear();
 
+            for (UUID u : dynamicPathChiBlockedPlayers) {
+                Player p = Bukkit.getPlayer(u);
+                if (p != null) {
+                    BendingPlayer bp = BendingPlayer.getBendingPlayer(p);
+                    if (bp != null && bp.isChiBlocked()) {
+                        bp.unblockChi();
+                    }
+                }
+            }
+            dynamicPathChiBlockedPlayers.clear();
+
             for (DungeonCondition condition : encounter.getConditions()) {
                 condition.resetState();
                 if (condition.getType() == DungeonCondition.ConditionType.PERIODIC_CHECK) {
@@ -2489,6 +2503,7 @@ public class DungeonInstance {
     private final Map<DungeonCondition, Set<Location>> dynamicPathSafeBlocks = new HashMap<>();
     private final Map<DungeonCondition, Integer> dynamicPathReshuffleTimers = new HashMap<>();
     private final Map<DungeonCondition, Set<UUID>> dynamicPathRevealedPlayers = new HashMap<>();
+    private final Set<UUID> dynamicPathChiBlockedPlayers = new HashSet<>();
 
     public Location getEffectiveSpawnLocation() {
         Encounter active = getActiveEncounter();
@@ -2534,21 +2549,63 @@ public class DungeonInstance {
             dynamicPathReshuffleTimers.put(cond, timer);
         }
 
+        int minX = (int) Math.min(cond.getMinX(), cond.getMaxX());
+        int maxX = (int) Math.max(cond.getMinX(), cond.getMaxX());
+        int minY = (int) Math.min(cond.getMinY(), cond.getMaxY());
+        int minZ = (int) Math.min(cond.getMinZ(), cond.getMaxZ());
+        int maxZ = (int) Math.max(cond.getMinZ(), cond.getMaxZ());
+
         for (Player p : getOnlinePlayers()) {
             if (!isPlayerSpectator(p)) {
-                Block blockUnder = p.getLocation().getBlock();
-                if (!isInsideBox(blockUnder, cond)) {
-                    blockUnder = p.getLocation().clone().subtract(0, 0.5, 0).getBlock();
-                }
+                Location pLoc = p.getLocation();
+                boolean inColumn = pLoc.getX() >= (minX - 0.5) && pLoc.getX() <= (maxX + 1.5)
+                        && pLoc.getZ() >= (minZ - 0.5) && pLoc.getZ() <= (maxZ + 1.5)
+                        && pLoc.getY() >= (minY - 2.0);
 
-                if (isInsideBox(blockUnder, cond)) {
-                    if (!safeBlocks.contains(blockUnder.getLocation())) {
+                if (inColumn) {
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1, false, false, true));
+                    BendingPlayer bp = BendingPlayer.getBendingPlayer(p);
+                    if (bp != null && !bp.isChiBlocked()) {
+                        bp.blockChi();
+                        dynamicPathChiBlockedPlayers.add(p.getUniqueId());
+                    }
+
+                    // Calculate distance to nearest safe path block
+                    double minSafeDistSq = Double.MAX_VALUE;
+                    for (Location sLoc : safeBlocks) {
+                        double dx = pLoc.getX() - (sLoc.getBlockX() + 0.5);
+                        double dz = pLoc.getZ() - (sLoc.getBlockZ() + 0.5);
+                        double dSq = dx * dx + dz * dz;
+                        if (dSq < minSafeDistSq) {
+                            minSafeDistSq = dSq;
+                        }
+                    }
+
+                    boolean offSafePath = minSafeDistSq > (1.0 * 1.0); // More than 1 block difference
+
+                    Block blockUnder = pLoc.getBlock();
+                    if (!isInsideBox(blockUnder, cond)) {
+                        blockUnder = pLoc.clone().subtract(0, 0.5, 0).getBlock();
+                    }
+
+                    boolean onCrumbleBlock = isInsideBox(blockUnder, cond) && !safeBlocks.contains(blockUnder.getLocation());
+
+                    if (onCrumbleBlock) {
                         if (blockUnder.getType() != Material.AIR && !TempBlock.isTempBlock(blockUnder)) {
                             new TempBlock(blockUnder, Material.AIR.createBlockData(), 3000);
                             blockUnder.getWorld().spawnParticle(Particle.BLOCK, blockUnder.getLocation().add(0.5, 0.5, 0.5), 15, 0.3, 0.3, 0.3, 0.1, cond.getCrumbleBlockMaterial().createBlockData());
                             blockUnder.getWorld().playSound(blockUnder.getLocation(), Sound.BLOCK_STONE_BREAK, 1.0f, 0.8f);
                         }
-                        p.setVelocity(new Vector(0, -1.8, 0));
+                        p.setVelocity(new Vector(p.getVelocity().getX() * 0.2, -2.5, p.getVelocity().getZ() * 0.2));
+                    } else if (offSafePath && pLoc.getY() >= minY - 0.5) {
+                        p.setVelocity(new Vector(p.getVelocity().getX() * 0.2, -2.5, p.getVelocity().getZ() * 0.2));
+                        p.getWorld().spawnParticle(Particle.SMOKE, pLoc, 4, 0.2, 0.2, 0.2, 0.05);
+                    }
+                } else if (dynamicPathChiBlockedPlayers.contains(p.getUniqueId())) {
+                    dynamicPathChiBlockedPlayers.remove(p.getUniqueId());
+                    BendingPlayer bp = BendingPlayer.getBendingPlayer(p);
+                    if (bp != null && bp.isChiBlocked()) {
+                        bp.unblockChi();
                     }
                 }
             }

@@ -559,7 +559,6 @@ AmonPack:
 
     FlameSpins:
       Cooldown: 6000 #ms between ability uses
-      CooldownFirefly: 3000 #ms between firefly mode uses
       MaxClicks: 2 #maximum clicks for normal mode
       MaxClicksFirefly: 3 #maximum clicks for firefly mode
       HoverTicks: 50 #ticks hovering lasts in normal mode

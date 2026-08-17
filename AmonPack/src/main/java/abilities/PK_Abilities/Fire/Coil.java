@@ -12,6 +12,7 @@ import Plugin.AmonPackPlugin;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -177,6 +178,8 @@ public class Coil extends LightningAbility implements AddonAbility {
         Abilities.Util_Objects.LightningBolt bolt = new Abilities.Util_Objects.LightningBolt(
                 player, this, startLoc, initialVel.normalize(), currentDamage, 25.0, 0, false);
 
+        Set<UUID> hitEnemies = new HashSet<>();
+
         new BukkitRunnable() {
             private int ticks = 0;
 
@@ -201,6 +204,17 @@ public class Coil extends LightningAbility implements AddonAbility {
                     return;
                 }
 
+                if (hasThunderMark) {
+                    for (Entity e : GeneralMethods.getEntitiesAroundPoint(currentLoc, 1.6)) {
+                        if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId()) {
+                            if (!hitEnemies.contains(le.getUniqueId())) {
+                                hitEnemies.add(le.getUniqueId());
+                                triggerEnemyThunderMark(le.getLocation().clone(), thunderDelayMs, thunderRadius, thunderDamage);
+                            }
+                        }
+                    }
+                }
+
                 List<Abilities.Util_Objects.LightningBolt> branches = bolt.progress();
                 if (branches != null && !branches.isEmpty()) {
                     for (Abilities.Util_Objects.LightningBolt b : branches) {
@@ -209,22 +223,29 @@ public class Coil extends LightningAbility implements AddonAbility {
                 }
 
                 if (currentLoc.getBlock().getType().isSolid()) {
-                    if (hasThunderMark && isMain) {
-                        triggerBlockThunderMark(currentLoc.clone(), thunderDelayMs, thunderRadius, thunderDamage);
-                    }
                     cancel();
                 }
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
     }
 
-    private void triggerBlockThunderMark(Location markLoc, long delayMs, double radius, double dmg) {
+    private void triggerEnemyThunderMark(Location markLoc, long delayMs, double radius, double dmg) {
         int totalTicks = Math.max(20, (int) (delayMs / 50L));
-        Location center = markLoc.clone().add(0, 0.2, 0);
+        Location center = markLoc.clone().add(0, 0.1, 0);
+
+        for (int y = 2; y >= -3; y--) {
+            Block b = center.clone().add(0, y, 0).getBlock();
+            if (b.getType().isSolid()) {
+                center.setY(b.getY() + 1.05);
+                break;
+            }
+        }
+
         center.getWorld().playSound(center, Sound.BLOCK_BEACON_AMBIENT, 1.2f, 1.8f);
 
         new BukkitRunnable() {
             int t = 0;
+            int lastSegments = 0;
 
             @Override
             public void run() {
@@ -256,18 +277,33 @@ public class Coil extends LightningAbility implements AddonAbility {
                     return;
                 }
 
-                if (t % 5 == 0) {
-                    int points = 16;
-                    for (int i = 0; i < points; i++) {
-                        double angle = (2 * Math.PI / points) * i;
-                        double x = Math.cos(angle) * radius;
-                        double z = Math.sin(angle) * radius;
-                        Location pLoc = center.clone().add(x, 0, z);
-                        center.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pLoc, 1, 0, 0, 0, 0);
-                        center.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, new Particle.DustOptions(org.bukkit.Color.fromRGB(200, 230, 255), 0.8f));
+                double progress = (double) t / totalTicks;
+                int currentSegments = Math.min(12, (int) (progress * 13.0));
+
+                if (currentSegments > lastSegments) {
+                    lastSegments = currentSegments;
+                    center.getWorld().playSound(center, Sound.BLOCK_NOTE_BLOCK_HAT, 0.8f, 1.0f + (currentSegments * 0.09f));
+                    center.getWorld().playSound(center, Sound.BLOCK_COPPER_BREAK, 0.5f, 1.2f + (currentSegments * 0.06f));
+                }
+
+                int maxAngleDeg = currentSegments * 30;
+                for (int deg = 0; deg <= maxAngleDeg; deg += 6) {
+                    double rad = Math.toRadians(deg);
+                    double x = Math.cos(rad) * radius;
+                    double z = Math.sin(rad) * radius;
+                    Location pLoc = center.clone().add(x, 0, z);
+
+                    if (deg % 30 == 0) {
+                        center.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pLoc, 1, 0.02, 0.02, 0.02, 0.01);
                     }
-                    center.getWorld().spawnParticle(Particle.FIREWORK, center, 3, 0.2, 0.2, 0.2, 0.02);
-                    center.getWorld().playSound(center, Sound.BLOCK_NOTE_BLOCK_HAT, 0.6f, 1.5f + (t * 0.02f));
+                    center.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0,
+                            new Particle.DustOptions(org.bukkit.Color.fromRGB(160, 225, 255), 0.75f));
+                }
+
+                if (t % 4 == 0) {
+                    double headRad = Math.toRadians(maxAngleDeg);
+                    Location headLoc = center.clone().add(Math.cos(headRad) * radius, 0, Math.sin(headRad) * radius);
+                    center.getWorld().spawnParticle(Particle.FIREWORK, headLoc, 2, 0.05, 0.05, 0.05, 0.02);
                 }
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);

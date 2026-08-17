@@ -25,7 +25,6 @@ public class FlameSpins extends FireAbility implements AddonAbility {
     private int clicksUsed = 0;
 
     private long cooldown;
-    private long cooldownFirefly;
     private int maxClicks;
     private int maxClicksFirefly;
     private int hoverTicks;
@@ -50,22 +49,33 @@ public class FlameSpins extends FireAbility implements AddonAbility {
         }
 
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.Cooldown", 6000L);
-        this.cooldownFirefly = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Fire.FlameSpins.CooldownFirefly", 3000L);
         this.maxClicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicks", 2);
-        this.maxClicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicksFirefly", 3);
+        this.maxClicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.MaxClicksFirefly",
+                3);
         this.hoverTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicks", 50);
-        this.hoverTicksFirefly = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.HoverTicksFirefly", 70);
-        this.dashMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashMultiplier", 1.35);
+        this.hoverTicksFirefly = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Fire.FlameSpins.HoverTicksFirefly", 70);
+        this.dashMultiplier = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashMultiplier",
+                1.35);
         this.dashYForce = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashYForce", 0.85);
         this.dashRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashRange", 3.5);
         this.dashDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.DashDamage", 3.0);
-        this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileSpeed", 0.8);
-        this.projectileRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileRange", 40);
-        this.projectileDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileDamage", 4.0);
-        this.projectileFireTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileFireTicks", 50);
+        this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.FlameSpins.ProjectileSpeed",
+                0.8);
+        this.projectileRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Fire.FlameSpins.ProjectileRange",
+                40);
+        this.projectileDamage = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Fire.FlameSpins.ProjectileDamage", 4.0);
+        this.projectileFireTicks = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Fire.FlameSpins.ProjectileFireTicks", 50);
 
         this.slot = player.getInventory().getHeldItemSlot();
         this.startTime = System.currentTimeMillis();
+
+        boolean isFirelord = FirelordStanceManager.isActive(player);
+        this.dashYForce = dashYForce * (isFirelord ? 1.5 : 1.0);
+        this.dashRange = dashYForce * (isFirelord ? 1.5 : 1.0);
+        this.dashMultiplier = dashYForce * (isFirelord ? 1.5 : 1.0);
 
         performShiftLaunch();
         start();
@@ -75,7 +85,8 @@ public class FlameSpins extends FireAbility implements AddonAbility {
         boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
                 || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
         if (isBlue) {
-            player.spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
+            player.spawnParticle(Particle.SOUL_FIRE_FLAME, player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1,
+                    0.4, 0.08);
         } else {
             ParticleEffect.FLAME.display(player.getLocation().clone().add(0, 0.15, 0), 25, 0.4, 0.1, 0.4, 0.08);
         }
@@ -84,7 +95,9 @@ public class FlameSpins extends FireAbility implements AddonAbility {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.2f);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1f, 0.8f);
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
         int ht = hasFirefly ? this.hoverTicksFirefly : this.hoverTicks;
         player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, ht, 0, false, false));
@@ -166,8 +179,9 @@ public class FlameSpins extends FireAbility implements AddonAbility {
                     cancel();
                     return;
                 }
-
-                projDir.setY(projDir.getY() - 0.03);
+                if (!isFirelord) {
+                    projDir.setY(projDir.getY() - 0.03);
+                }
                 projLoc.add(projDir);
 
                 angle += 0.5;
@@ -183,7 +197,8 @@ public class FlameSpins extends FireAbility implements AddonAbility {
                     Particle.DustOptions dust = new Particle.DustOptions(org.bukkit.Color.fromRGB(180, 220, 255), 0.8f);
                     projLoc.getWorld().spawnParticle(Particle.DUST, projLoc, 2, 0.1, 0.1, 0.1, 0, dust);
                 } else {
-                    boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE) || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
+                    boolean isBlue = bPlayer.hasElement(com.projectkorra.projectkorra.Element.BLUE_FIRE)
+                            || bPlayer.canUseSubElement(com.projectkorra.projectkorra.Element.BLUE_FIRE);
                     if (isBlue) {
                         p1.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p1, 1, 0, 0, 0, 0);
                         p2.getWorld().spawnParticle(org.bukkit.Particle.SOUL_FIRE_FLAME, p2, 1, 0, 0, 0, 0);
@@ -205,7 +220,9 @@ public class FlameSpins extends FireAbility implements AddonAbility {
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
         int maxClicks = hasFirefly ? this.maxClicksFirefly : this.maxClicks;
 
@@ -219,9 +236,11 @@ public class FlameSpins extends FireAbility implements AddonAbility {
             return;
         }
         state = 2;
-        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         boolean hasFirefly = (branch != null && branch.hasUpgrade("Firefly"));
-        long cd = hasFirefly ? this.cooldownFirefly : this.cooldown;
+        long cd = hasFirefly ? this.cooldown / 2 : this.cooldown;
 
         if (FirelordStanceManager.isActive(player)) {
             FirelordStance stance = FirelordStanceManager.getStance(player);

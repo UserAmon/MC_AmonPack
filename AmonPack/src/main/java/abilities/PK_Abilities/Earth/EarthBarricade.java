@@ -137,9 +137,12 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
     }
 
     private Location findGroundAhead(Location origin, Vector direction, double dist) {
-        Location target = origin.clone().add(direction.clone().normalize().multiply(dist));
-        for (int y = 3; y >= -4; y--) {
+        Location target = origin.clone().add(direction.clone().setY(0).normalize().multiply(dist));
+        for (int y = 3; y >= -5; y--) {
             Block b = target.clone().add(0, y, 0).getBlock();
+            if (TempBlock.isTempBlock(b)) {
+                continue;
+            }
             if (b.getType().isSolid() || EarthAbility.isEarthbendable(player, b)) {
                 return b.getLocation().add(0.5, 1.0, 0.5);
             }

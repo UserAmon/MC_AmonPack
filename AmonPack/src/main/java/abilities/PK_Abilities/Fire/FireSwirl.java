@@ -104,8 +104,8 @@ public class FireSwirl extends FireAbility implements AddonAbility {
 
         boolean isFirelord = FirelordStanceManager.isActive(player);
         double dmg = baseDamage * (isFirelord ? 1.5 : 1.0);
-        double rng = baseRange * (isFirelord ? 1.5 : 1.0);
-        double spd = baseSpeed * (isFirelord ? 1.5 : 1.0);
+        double rng = baseRange * (isFirelord ? 1.75 : 1.0);
+        double spd = baseSpeed * (isFirelord ? 1.75 : 1.0);
 
         projectiles.add(new SwirlProjectile(eyeLoc.clone(), dir, dmg, rng, spd, isFirelord));
 
@@ -120,7 +120,7 @@ public class FireSwirl extends FireAbility implements AddonAbility {
         }
 
         if (shotsFired >= maxShots) {
-            long finalCd = isFirelord ? (long) (cooldown * 0.6) : cooldown;
+            long finalCd = isFirelord ? (long) (cooldown * 0.5) : cooldown;
             bPlayer.addCooldown(this, finalCd);
         }
     }

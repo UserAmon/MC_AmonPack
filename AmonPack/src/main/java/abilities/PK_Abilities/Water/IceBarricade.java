@@ -136,9 +136,12 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
     }
 
     private Location findWaterAhead(Location origin, Vector direction, double dist) {
-        Location target = origin.clone().add(direction.clone().normalize().multiply(dist));
-        for (int y = 3; y >= -4; y--) {
+        Location target = origin.clone().add(direction.clone().setY(0).normalize().multiply(dist));
+        for (int y = 3; y >= -5; y--) {
             Block b = target.clone().add(0, y, 0).getBlock();
+            if (TempBlock.isTempBlock(b)) {
+                continue;
+            }
             if (b.getType() == Material.WATER || isWater(b) || isIcebendable(b)) {
                 return b.getLocation().add(0.5, 1.0, 0.5);
             }
@@ -147,9 +150,12 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
     }
 
     private Location findGroundAhead(Location origin, Vector direction, double dist) {
-        Location target = origin.clone().add(direction.clone().normalize().multiply(dist));
-        for (int y = 3; y >= -4; y--) {
+        Location target = origin.clone().add(direction.clone().setY(0).normalize().multiply(dist));
+        for (int y = 3; y >= -5; y--) {
             Block b = target.clone().add(0, y, 0).getBlock();
+            if (TempBlock.isTempBlock(b)) {
+                continue;
+            }
             if (b.getType().isSolid() || b.getType() == Material.WATER || isWater(b) || isIcebendable(b)) {
                 return b.getLocation().add(0.5, 1.0, 0.5);
             }

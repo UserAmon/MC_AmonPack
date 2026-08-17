@@ -47,6 +47,14 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
             return;
         }
 
+        Vector initDir = player.getEyeLocation().getDirection().setY(0).normalize();
+        if (initDir.lengthSquared() < 0.01) {
+            initDir = new Vector(1, 0, 0);
+        }
+        if (findEarthGround(player.getLocation(), initDir, 3.0) == null) {
+            return;
+        }
+
         this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthSpear.ChargeTimePerLevel", 800);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthSpear.Cooldown", 6000);
 
@@ -60,6 +68,7 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         Location target = origin.clone().add(direction.clone().setY(0).normalize().multiply(dist));
         for (int y = 3; y >= -4; y--) {
             Block b = target.clone().add(0, y, 0).getBlock();
+            if (TempBlock.isTempBlock(b)) continue;
             if (isEarthbendable(player, b) || isEarth(b)) {
                 return b.getLocation().add(0.5, 1.0, 0.5);
             }
@@ -78,6 +87,16 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         if (state == State.CHARGING) {
             if (!player.isSneaking()) {
                 fire();
+                return;
+            }
+
+            Vector checkDir = player.getEyeLocation().getDirection().setY(0).normalize();
+            if (checkDir.lengthSquared() < 0.01) {
+                checkDir = new Vector(1, 0, 0);
+            }
+            if (findEarthGround(player.getLocation(), checkDir, 3.0) == null) {
+                revertGroundSpear();
+                remove();
                 return;
             }
 

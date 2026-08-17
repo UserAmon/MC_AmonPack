@@ -67,7 +67,27 @@ AmonPack:
         ReqAbilities:
         - FireSwirl
         Description:
-        - '&7Dodaje &ekolejne użycie LPM&7.'
+        - '&7Dodaje &eużycie LPM&7.'
+      FireSwirlMaster:
+        Cost: 25
+        Place: 24
+        IsSkillUpgrade: true
+        SkillName: "FireSwirl"
+        ReqAbilities:
+          - FireSwirlDouble
+        Description:
+          - "&ePodpalenie trwa dwukrotnie dłużej&7 (&e6 sekund&7)."
+          - "&7Pociski w locie &elekko podążają za kamerą&7."
+      FireSwirlDouble:
+        Cost: 15
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "FireSwirl"
+        ReqAbilities:
+          - FireSwirlMulti
+        Description:
+          - "&7Dodaje &e użycie LPM&7."
+          - "&ePociski przeszywają wrogów&7."
       FireBlast:
         Cost: 5
         Place: 47
@@ -93,31 +113,21 @@ AmonPack:
         Place: 22
         ReqAbilities:
         - WallOfFire
-      FireShield:
-        Cost: 20
-        Place: 2
-        ReqAbilities:
-        - HeatControl
-      FireSwirlDouble:
-        Cost: 15
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "FireSwirl"
-        ReqAbilities:
-          - FireSwirlMulti
-        Description:
-          - "&7Dodaje &ekolejne użycie LPM&7."
-          - "&ePociski przeszywają wrogów&7."
       Firefly:
-        Cost: 20
-        Place: 4
-        IsPassiveUpgrade: true
+        Cost: 22
+        IsSkillUpgrade: true
+        SkillName: "FlameSpins"
         ReqAbilities:
           - FlameSpins
         Description:
           - "&7Pozwala na &e3 strzały &7LPM dla FlameSpins,"
           - "&7wydłuża czas opadania w powietrzu o &e1 sekundę&7,"
           - "&7oraz skraca cooldown o &epołowę&7."
+      FireShield:
+        Cost: 20
+        Place: 2
+        ReqAbilities:
+        - HeatControl
       FireRain:
         Cost: 20
         Place: 7
@@ -126,25 +136,37 @@ AmonPack:
         Description:
           - "&7Wystrzeliwuje pocisk ognia wysoko w górę po łuku."
           - "&7Pocisk idealnie trafia we wskazany blok i wybucha."
-      FireSwirlMaster:
-        Cost: 25
-        Place: 24
-        IsSkillUpgrade: true
-        SkillName: "FireSwirl"
-        ReqAbilities:
-          - FireSwirlDouble
-        Description:
-          - "&ePodpalenie trwa dwukrotnie dłużej&7 (&e6 sekund&7)."
-          - "&7Pociski w locie &elekko podążają za kamerą&7."
       FireRainWide:
-        Cost: 25
-        Place: 105
-        IsPassiveUpgrade: true
+        Cost: 5
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "FireRain"
         ReqAbilities:
-          - FireRain
+        - FireRain
         Description:
           - "&7Zwiększa obszar wybuchu o &e80%&7."
           - "&7Podpala bloki podłoża w obszarze trafienia."
+      DoubleTheFun:
+        Cost: 35
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "FireRain"
+        ReqAbilities:
+          - FireRain
+        Description:
+          - "&cPozwala na &edrugie użycie FireRain&c"
+          - "&cw ciągu &e3 sekund&c przed nałożeniem cooldownu."     
+      FireRainInferno:
+        Cost: 45
+        Place: 24
+        IsSkillUpgrade: true
+        SkillName: "FireRain"
+        ReqAbilities:
+          - DoubleTheFun
+          - FireRainWide
+        Description:
+          - "&7Każde użycie wystrzeliwuje &e2 pociski ognia&7."
+          - "&7Pociski uderzają symetrycznie z obu stron celu."
       FlameWeave:
         Cost: 30
         Place: 92
@@ -176,16 +198,7 @@ AmonPack:
           - FlameWeave
         Description:
           - "&1Przyzwij potęgę błyskawic. Zbierz wewnętrzną"            
-          - "&1energię elektryczną, by uwolnić niszczycielską wiązkę!"
-      DoubleTheFun:
-        Cost: 35
-        Place: 86
-        IsAbilityUpgrade: true
-        ReqAbilities:
-          - FireJet
-        Description:
-          - "&cPozwala na &edrugie użycie FireRain&c"
-          - "&cw ciągu &e3 sekund&c przed nałożeniem cooldownu."         
+          - "&1energię elektryczną, by uwolnić niszczycielską wiązkę!"    
       SmokeDaggers:
         Cost: 35
         Place: 88
@@ -235,9 +248,9 @@ AmonPack:
         ReqAbilities:
           - Coil
         Description:
-          - "&eTrafienie głównym pociskiem w blok oznacza ten blok."
-          - "&7Po &e3 sekundach &7w promieniu &e5 bloków &7uderzają pioruny,"
-          - "&7zadając obrażenia i odrzucając wrogów!"
+          - "&eTrafienie we wroga tworzy pod jego nogami pierścień błyskawic,"
+          - "&7który &eładuje się stopniowo co 30°&7. Po pełnym naładowaniu"
+          - "&7w obszarze uderzają pioruny, zadając obrażenia i odrzucając wrogów!"
       SmokeSurge:
         Cost: 40
         Place: 78
@@ -273,7 +286,7 @@ AmonPack:
         Description:
           - "&cOsiągnij chwilową maestrię nad żywiołem &4&lOgnia!"
           - "&cUjarzmij &1&lBłyskawicę&c i &4&lOgień&c by zniszczyć wrogów!"
-      FireBarrage:
+      SmokeBarrage:
         Cost: 45
         Place: 61
         ReqAbilities:

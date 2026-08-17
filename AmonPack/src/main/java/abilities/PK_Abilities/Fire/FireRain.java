@@ -94,7 +94,7 @@ public class FireRain extends FireAbility implements AddonAbility {
 
         boolean isFirelord = FirelordStanceManager.isActive(player);
         double dmg = baseDamage * (isFirelord ? 1.5 : 1.0);
-        double rad = (hasWide ? baseRadius * 1.8 : baseRadius) * (isFirelord ? 1.3 : 1.0);
+        double rad = (hasWide ? baseRadius * 1.5 : baseRadius) * (isFirelord ? 1.75 : 1.0);
 
         Location origin = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(0.5));
 
@@ -117,7 +117,7 @@ public class FireRain extends FireAbility implements AddonAbility {
 
         if (maxCasts > 1) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§c[FireRain] &e(" + castCount + "/" + maxCasts + ")"));
+                    TextComponent.fromLegacyText("§c[FireRain] §e(" + castCount + "/" + maxCasts + ")"));
 
         }
 
