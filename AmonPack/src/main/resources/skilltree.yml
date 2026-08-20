@@ -24,6 +24,12 @@ AmonPack:
       Green: 10025
       Orange: 10024
       Red: 10023
+    chi:
+      Material: PAPER
+      Path: 10010
+      Green: 10013
+      Orange: 10012
+      Red: 10011
   Tree:
     Fire:
       PathDecoration:
@@ -1268,5 +1274,459 @@ AmonPack:
 #         Description:
 #           - "&e100% trafień &7salwy natychmiast rozpoczyna"
 #           - "&7nowe ładowanie &ebez cooldownu&7!"
+
+    Chi:
+      PathDecoration:
+      - 50
+      - 48
+      - 38
+      - 42
+      - 28
+      - 32
+      - 31
+      - 24
+      - 20
+      - 27
+      - 16
+      - 13
+      - 11
+      - 9
+      - 101
+      - 103
+      - 106
+      - 91
+      - 67
+      - 65
+      - 63
+      - 99
+      - 93
+      - 97
+      - 73
+      - 85
+      - 79
+      - 70
+
+      QuickStrike:
+        Cost: 0
+        Place: 49
+        ReqAbilities: []
+        Description:
+          - "&7Podstawowy cios wojownika Chi."
+          - "&7Szybkie uderzenie zadające natychmiastowe obrażenia."
+
+      SwiftKick:
+        Cost: 5
+        Place: 47
+        ReqAbilities:
+          - QuickStrike
+        Description:
+          - "&7Błyskawiczne kopnięcie podcinające przeciwnika."
+      SwiftKickVault:
+        Cost: 10
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "SwiftKick"
+        ReqAbilities:
+          - SwiftKick
+        Description:
+          - "&7Po celnym kopnięciu &eodbijasz się wysoko w powietrze&7,"
+          - "&7zyskując &eodporność na obrażenia od upadku&7."
+      SwiftKickDisarm:
+        Cost: 15
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "SwiftKick"
+        ReqAbilities:
+          - SwiftKickVault
+        Description:
+          - "&7Trafienie dezorientuje wroga, nakładając &eSlowness II"
+          - "&7oraz &eWeakness II &7na &e2 sekundy&7."
+
+      RapidPunch:
+        Cost: 5
+        Place: 51
+        ReqAbilities:
+          - QuickStrike
+        Description:
+          - "&7Wyprowadź błyskawiczną serię ciosów pięściami."
+      RapidPunchDrain:
+        Cost: 15
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "RapidPunch"
+        ReqAbilities:
+          - RapidPunch
+        Description:
+          - "&7Każde celne uderzenie z serii &eodnawia +5.0 Chi&7."
+
+      HighJump:
+        Cost: 10
+        Place: 38
+        ReqAbilities:
+          - SwiftKick
+        Description:
+          - "&7Wybij się wysoko w powietrze, omijając ataki wrogów."
+
+      DaggerTrick:
+        Cost: 10
+        Place: 42
+        ReqAbilities:
+          - RapidPunch
+        Description:
+          - "&7Wyskocz w powietrze i rzucaj wachlarzem noży (LPM)."
+      DaggerTrickForward:
+        Cost: 15
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "DaggerTrick"
+        ReqAbilities:
+          - DaggerTrick
+        Description:
+          - "&7Zamiast skoku w tył, wykonujesz &egwałtowny skok w przód&7,"
+          - "&7doskakując do celownika i rzucając nożami w locie."
+      DaggerTrickMulti:
+        Cost: 20
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "DaggerTrick"
+        ReqAbilities:
+          - DaggerTrickForward
+        Description:
+          - "&7Zwiększa liczbę salw noży w locie z &e3 do 4 kliknięć LPM&7."
+
+      PoisonDagger:
+        Cost: 15
+        Place: 33
+        ReqAbilities:
+          - DaggerTrick
+        Description:
+          - "&7Rzuć zatrutym sztyletem, nakładając &aPoison II &7i &8Slowness II&7."
+      PoisonDaggerTwin:
+        Cost: 15
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "PoisonDagger"
+        ReqAbilities:
+          - PoisonDagger
+        Description:
+          - "&7Możliwość rzucenia &edrugiego zatrutego noża&7"
+          - "&7w oknie &e3 sekund &7przed wejściem na cooldown."
+      PoisonDaggerSynergy:
+        Cost: 20
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "PoisonDagger"
+        ReqAbilities:
+          - PoisonDaggerTwin
+        Description:
+          - "&7Celne trafienie nożem natychmiast &eresetuje cooldown"
+          - "&7umiejętności &eDaggerTrick&7!"
+      PoisonDaggerNeurotoxin:
+        Cost: 25
+        Place: 24
+        IsSkillUpgrade: true
+        SkillName: "PoisonDagger"
+        ReqAbilities:
+          - PoisonDaggerSynergy
+        Description:
+          - "&7Neurotoksyna &eparaliżuje układ Chi wroga&7,"
+          - "&7nakładając &eChi Blocking na 2.5 sekundy&7."
+
+      Smokescreen:
+        Cost: 15
+        Place: 29
+        ReqAbilities:
+          - HighJump
+        Description:
+          - "&7Rzuć pod nogi granat dymny oślepiający wrogów."
+
+      CrudeBomb:
+        Cost: 20
+        Place: 20
+        ReqAbilities:
+          - Smokescreen
+        Description:
+          - "&7Rzuć odbijającym się granatem, który wybucha i tworzy chmurę dymu."
+      CrudeBombDouble:
+        Cost: 15
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "CrudeBomb"
+        ReqAbilities:
+          - CrudeBomb
+        Description:
+          - "&7Możliwość rzucenia &edrugiej bomby&7"
+          - "&7w oknie &e3 sekund &7przed wejściem na cooldown."
+      CrudeBombThickSmoke:
+        Cost: 20
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "CrudeBomb"
+        ReqAbilities:
+          - CrudeBombDouble
+        Description:
+          - "&7Zwiększa promień chmury dymu do &e7.0 bloków&7"
+          - "&7oraz wydłuża czas jej trwania do &e14 sekund&7."
+      CrudeBombFlashbang:
+        Cost: 25
+        Place: 24
+        IsSkillUpgrade: true
+        SkillName: "CrudeBomb"
+        ReqAbilities:
+          - CrudeBombThickSmoke
+        Description:
+          - "&7Przy wybuchu emituje &eoślepiający błysk (Flash)&7,"
+          - "&7nakładając &eBlindness i Nausea &7na cele w promieniu &e8m&7."
+          - "&aZmniejsza koszt Chi o 50% (do 20 Chi)&7."
+
+      Feintstep:
+        Cost: 20
+        Place: 24
+        ReqAbilities:
+          - PoisonDagger
+        Description:
+          - "&7Naładuj postawę, aby zyskać przyspieszenie i unikać ataków."
+      FeintstepAgility:
+        Cost: 15
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "Feintstep"
+        ReqAbilities:
+          - Feintstep
+        Description:
+          - "&7Podczas trwania postawy zyskujesz &eSpeed II&7,"
+          - "&a+25 Max Chi &7oraz &a+5.0 Chi/s regeneracji&7."
+      FeintstepMastery:
+        Cost: 20
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "Feintstep"
+        ReqAbilities:
+          - FeintstepAgility
+        Description:
+          - "&7Dodaje &e+1 ładunek uniku &7(łącznie 4 uniki),"
+          - "&eJump Boost II &7oraz &azmniejsza koszt Chi o 50%&7."
+      FeintstepFlow:
+        Cost: 25
+        Place: 24
+        IsSkillUpgrade: true
+        SkillName: "Feintstep"
+        ReqAbilities:
+          - FeintstepMastery
+        Description:
+          - "&7Zamiast kosztu jednorazowego, zużywa &e4 Chi/s&7."
+          - "&7Podstawowe ciosy wręcz zadają &e+1.0 serca obrażeń&7."
+
+      QuickPalms:
+        Cost: 25
+        Place: 11
+        ReqAbilities:
+          - CrudeBomb
+          - Feintstep
+        Description:
+          - "&7Shift = Stan Kontry | LPM = Uderzenie w punkty witalne."
+      QuickPalmsReflex:
+        Cost: 15
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "QuickPalms"
+        ReqAbilities:
+          - QuickPalms
+        Description:
+          - "&7Czas trwania kontry wydłużony do &e7 sekund&7."
+          - "&7Udany blok i teleportacja &aodnawiają natychmiast +30 Chi&7."
+      QuickPalmsTripleStrike:
+        Cost: 20
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "QuickPalms"
+        ReqAbilities:
+          - QuickPalmsReflex
+        Description:
+          - "&7Odsłania &e3 punkty witalne &7zamiast 2."
+          - "&7Każdy cios zadaje &e+1.0 serca obrażeń &7i blokuje Chi na &e4.5s&7."
+      QuickPalmsPressureBurst:
+        Cost: 25
+        Place: 24
+        IsSkillUpgrade: true
+        SkillName: "QuickPalms"
+        ReqAbilities:
+          - QuickPalmsTripleStrike
+        Description:
+          - "&7Trafienie we wszystkie punkty wywołuje &ewewnętrzny wybuch Chi&7:"
+          - "&7Zadaje &c4.0 serca obrażeń&7, odrzuca i nakłada &eParaliż na 2s&7."
+
+      Lasso:
+        Cost: 25
+        Place: 15
+        ReqAbilities:
+          - Feintstep
+        Description:
+          - "&7Przytrzymaj Shift i puść, aby wystrzelić sznur wiążący wroga."
+
+      PointBlank:
+        Cost: 30
+        Place: 7
+        ReqAbilities:
+          - QuickPalms
+        Description:
+          - "&7Skup wzrok na wrogu i wykonaj niszczycielskie uderzenie punktowe."
+      PointBlankFocus:
+        Cost: 20
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "PointBlank"
+        ReqAbilities:
+          - PointBlank
+        Description:
+          - "&7Czas ładowania skrócony z 2.5s do &e1.2s&7."
+          - "&7Zasięg namierzania wroga zwiększony do &e12 metrów&7."
+      PointBlankSlam:
+        Cost: 25
+        Place: 22
+        IsSkillUpgrade: true
+        SkillName: "PointBlank"
+        ReqAbilities:
+          - PointBlankFocus
+        Description:
+          - "&7Uderzenie wbija wroga w ziemię, całkowicie"
+          - "&7blokując skakanie i sprint na &e2 sekundy&7."
+
+      PulseBreak:
+        Cost: 30
+        Place: 3
+        ReqAbilities:
+          - QuickPalms
+        Description:
+          - "&7Uderzenie rozrywające meridiany, dodające cooldown na umiejętności wroga."
+      PulseBreakOverload:
+        Cost: 20
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "PulseBreak"
+        ReqAbilities:
+          - PulseBreak
+        Description:
+          - "&7Nakłada dodatkowy cooldown na &e3 losowe umiejętności &7wroga (zamiast 2)."
+
+      Paralyze:
+        Cost: 35
+        Place: 1
+        ReqAbilities:
+          - PointBlank
+          - PulseBreak
+        Description:
+          - "&7Precyzyjny cios paraliżujący cały układ nerwowy wroga."
+      ParalyzeExtended:
+        Cost: 25
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "Paralyze"
+        ReqAbilities:
+          - Paralyze
+        Description:
+          - "&7Wydłuża czas trwania paraliżu o &e50%&7"
+          - "&7oraz &azmniejsza koszt Chi do 25 punktów&7."
+
+      WarriorStance:
+        Cost: 25
+        Place: 93
+        ReqAbilities:
+          - SwiftKick
+        Description:
+          - "&7Przyjmij bojową postawę wojownika, zyskując Siłę i Odporność."
+      WarriorStanceFortitude:
+        Cost: 20
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "WarriorStance"
+        ReqAbilities:
+          - WarriorStance
+        Description:
+          - "&7Wzmacnia Odporność do &eResistance II&7"
+          - "&7oraz daje &e100% odporności na odrzut (Knockback Resistance)&7."
+
+      AcrobatStance:
+        Cost: 25
+        Place: 97
+        ReqAbilities:
+          - RapidPunch
+        Description:
+          - "&7Przyjmij postawę akrobaty, zyskując ogromną zwinność i skoczność."
+      AcrobatStanceFlurry:
+        Cost: 20
+        Place: 20
+        IsSkillUpgrade: true
+        SkillName: "AcrobatStance"
+        ReqAbilities:
+          - AcrobatStance
+        Description:
+          - "&7Podczas trwania postawy wszystkie czasy odnowienia (cooldowny)"
+          - "&7umiejętności Chi są &eskrócone o 30%&7."
+
+      ChiFlow:
+        Cost: 15
+        Place: 31
+        IsPassiveUpgrade: true
+        ReqAbilities:
+          - HighJump
+          - DaggerTrick
+        Description:
+          - "&eSwobodny Przepływ Chi"
+          - "&a+25 Maksymalnego Chi &7oraz &a+2.5 Chi/s regeneracji&7."
+
+      PrecisionStrikes:
+        Cost: 20
+        Place: 67
+        IsPassiveUpgrade: true
+        ReqAbilities:
+          - QuickPalms
+        Description:
+          - "&ePrecyzyjne Ciosy"
+          - "&7Zwykłe ataki wręcz mają &e15% szansy &7na nałożenie"
+          - "&eChi Blockingu na 1.5 sekundy&7."
+
+      PressureMaster:
+        Cost: 20
+        Place: 65
+        IsPassiveUpgrade: true
+        ReqAbilities:
+          - Paralyze
+        Description:
+          - "&eMistrz Meridianów"
+          - "&7Wydłuża czas trwania wszystkich nakładanych"
+          - "&7efektów &eChi Blockingu i Paraliżu o 25%&7."
+
+      IronBody:
+        Cost: 20
+        Place: 85
+        IsPassiveUpgrade: true
+        ReqAbilities:
+          - WarriorStance
+        Description:
+          - "&eŻelazne Ciało"
+          - "&7Skraca czas trwania otrzymywanych efektów kontroli"
+          - "&7(&eSlowness, Blindness, Nausea, Weakness&7) o &e35%&7."
+
+      ChiExpansion:
+        Cost: 25
+        Place: 79
+        IsPassiveUpgrade: true
+        ReqAbilities:
+          - ChiFlow
+        Description:
+          - "&eEkspansja Zbiornika Chi"
+          - "&a+50 Maksymalnego Chi na stałe!&7"
+
+      ChiRegeneration:
+        Cost: 25
+        Place: 70
+        IsPassiveUpgrade: true
+        ReqAbilities:
+          - ChiFlow
+        Description:
+          - "&eWzmocniona Regeneracja Chi"
+          - "&a+5.0 Chi/sekundę regeneracji na stałe!&7"
+
 
 

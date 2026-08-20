@@ -18,6 +18,7 @@ public class PlayerBendingBranch {
     int EarthPoints;
     int AirPoints;
     int FirePoints;
+    int ChiPoints;
     List<Element> ElementsInPossesion;
     List<String> UnlockedAbilities;
     List<String> TemporaryAbilities;
@@ -29,6 +30,10 @@ public class PlayerBendingBranch {
 
 
     public PlayerBendingBranch(int airPoints, Element currentElement, int earthPoints, List<Element> elementsInPossesion, int firePoints, String name, List<String> unlockedAbilities, int waterPoints) {
+        this(airPoints, currentElement, earthPoints, elementsInPossesion, firePoints, name, unlockedAbilities, waterPoints, 0);
+    }
+
+    public PlayerBendingBranch(int airPoints, Element currentElement, int earthPoints, List<Element> elementsInPossesion, int firePoints, String name, List<String> unlockedAbilities, int waterPoints, int chiPoints) {
         AirPoints = airPoints;
         CurrentElement = currentElement;
         EarthPoints = earthPoints;
@@ -39,6 +44,7 @@ public class PlayerBendingBranch {
         TemporaryAbilities=new ArrayList<>();
         TemporaryElements=new ArrayList<>();
         WaterPoints = waterPoints;
+        ChiPoints = chiPoints;
 
         unlockDefaultAbilities();
     }
@@ -129,6 +135,7 @@ public class PlayerBendingBranch {
         WaterPoints+=amount;
         EarthPoints+=amount;
         FirePoints+=amount;
+        ChiPoints+=amount;
         try {
             SaveInDatabaes();
         } catch (SQLException e) {
@@ -140,6 +147,7 @@ public class PlayerBendingBranch {
         if(element.equals(Element.WATER))WaterPoints+=amount;
         if(element.equals(Element.FIRE))FirePoints+=amount;
         if(element.equals(Element.EARTH))EarthPoints+=amount;
+        if(element.equals(Element.CHI))ChiPoints+=amount;
         try {
             SaveInDatabaes();
         } catch (SQLException e) {
@@ -151,6 +159,7 @@ public class PlayerBendingBranch {
         if(element.equals(Element.WATER))WaterPoints-=amount;
         if(element.equals(Element.FIRE))FirePoints-=amount;
         if(element.equals(Element.EARTH))EarthPoints-=amount;
+        if(element.equals(Element.CHI))ChiPoints-=amount;
         try {
             UnlockedAbilities.add(AbilityName);
         } catch (Exception e) {
@@ -176,6 +185,7 @@ public class PlayerBendingBranch {
                     " FirePoints = '" + FirePoints + "'," +
                     " WaterPoints = '" + WaterPoints + "'," +
                     " EarthPoints = '" + EarthPoints + "'," +
+                    " ChiPoints = '" + ChiPoints + "'," +
                     " CurrentElement = '" + currentElementName + "'," +
                     " AllElements = '" + elementsText + "'," +
                     " UnlockedAbilities = '" + abilitiesText + "'," +
@@ -184,12 +194,13 @@ public class PlayerBendingBranch {
                     " WHERE Player = '"+ Name+"';";
             ExecuteQuery(st);
         }else {
-            String st = "INSERT INTO BendingTree (Player, AirPoints, FirePoints, WaterPoints, EarthPoints, CurrentElement, AllElements, UnlockedAbilities, SwapAbility, DropAbility) VALUES (" +
+            String st = "INSERT INTO BendingTree (Player, AirPoints, FirePoints, WaterPoints, EarthPoints, ChiPoints, CurrentElement, AllElements, UnlockedAbilities, SwapAbility, DropAbility) VALUES (" +
                     "'" + Name + "', " +
                     "'" + AirPoints + "', " +
                     "'" + FirePoints + "', " +
                     "'" + WaterPoints + "', " +
                     "'" + EarthPoints + "', " +
+                    "'" + ChiPoints + "', " +
                     "'" + currentElementName + "', " +
                     "'" + elementsText + "', " +
                     "'" + abilitiesText + "', " +
@@ -213,6 +224,9 @@ public class PlayerBendingBranch {
     }
     public int getFirePoints() {
         return FirePoints;
+    }
+    public int getChiPoints() {
+        return ChiPoints;
     }
     public String getName() {
         return Name;
@@ -243,6 +257,7 @@ public class PlayerBendingBranch {
         if(element.equals(Element.WATER))return WaterPoints;
         if(element.equals(Element.FIRE))return FirePoints;
         if(element.equals(Element.EARTH))return EarthPoints;
+        if(element.equals(Element.CHI))return ChiPoints;
         return 0;
     }
     public boolean hasUpgrade(String upgradeName) {

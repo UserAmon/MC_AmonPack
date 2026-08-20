@@ -1,6 +1,7 @@
 package Abilities.PK_Abilities.Chi;
 
 import Plugin.AmonPackPlugin;
+import RPG.Levels.BendingTree.PlayerBendingBranch;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.ChiAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
@@ -56,7 +57,14 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
         this.slot = player.getInventory().getHeldItemSlot();
 
-        performBackwardJump();
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        boolean hasForward = (branch != null && branch.hasUpgrade("DaggerTrickForward"));
+        boolean hasMulti = (branch != null && branch.hasUpgrade("DaggerTrickMulti"));
+        if (hasMulti) {
+            this.maxArrowClicks = 4;
+        }
+
+        performJump(hasForward);
         start();
     }
 
@@ -72,10 +80,10 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ChiCost", 40.0);
     }
 
-    private void performBackwardJump() {
+    private void performJump(boolean forward) {
         Vector dir = player.getLocation().getDirection().setY(0).normalize();
-        Vector backVel = dir.multiply(-backwardForce).setY(upForce);
-        player.setVelocity(backVel);
+        Vector vel = forward ? dir.multiply(backwardForce).setY(upForce) : dir.multiply(-backwardForce).setY(upForce);
+        player.setVelocity(vel);
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.4f);
         player.getWorld().spawnParticle(Particle.CRIT, player.getLocation(), 15, 0.3, 0.3, 0.3, 0.1);

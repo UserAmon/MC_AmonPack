@@ -45,6 +45,11 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
         this.abilitiesToCooldownCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.PulseBreak.AbilitiesToCooldownCount", 2);
         this.addedCooldownMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PulseBreak.AddedCooldownMs", 5000L);
         this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PulseBreak.ChiCost", 40.0);
+
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        if (branch != null && branch.hasUpgrade("PulseBreakOverload")) {
+            this.abilitiesToCooldownCount = 3;
+        }
     }
 
     @Override

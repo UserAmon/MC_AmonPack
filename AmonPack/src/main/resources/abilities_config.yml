@@ -851,3 +851,24 @@ AmonPack:
 
     Paralyze:
       ChiCost: 40.0 #chi energy consumed per use
+
+    RapidPunch:
+      ChiCost: 30.0 #chi energy consumed per use
+
+    QuickStrike:
+      ChiCost: 20.0 #chi energy consumed per use
+
+    SwiftKick:
+      ChiCost: 25.0 #chi energy consumed per use
+
+    HighJump:
+      ChiCost: 20.0 #chi energy consumed per use
+
+    Smokescreen:
+      ChiCost: 35.0 #chi energy consumed per use
+
+    WarriorStance:
+      ChiCost: 40.0 #chi energy consumed per use
+
+    AcrobatStance:
+      ChiCost: 40.0 #chi energy consumed per use

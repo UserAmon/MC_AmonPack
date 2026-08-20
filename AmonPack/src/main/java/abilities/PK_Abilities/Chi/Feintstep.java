@@ -1,6 +1,7 @@
 package Abilities.PK_Abilities.Chi;
 
 import Plugin.AmonPackPlugin;
+import RPG.Levels.BendingTree.PlayerBendingBranch;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.ChiAbility;
 import org.bukkit.Location;
@@ -31,6 +32,11 @@ public class Feintstep extends ChiAbility implements AddonAbility {
 
     private double chiCost;
 
+    private boolean hasAgility = false;
+    private boolean hasMastery = false;
+    private boolean hasFlow = false;
+    private long lastFlowDrainTime = 0;
+
     public Feintstep(Player player) {
         super(player);
 
@@ -43,7 +49,23 @@ public class Feintstep extends ChiAbility implements AddonAbility {
 
         loadConfig();
 
-        if (!ChiManager.hasChi(player, chiCost)) {
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        if (branch != null) {
+            hasAgility = branch.hasUpgrade("FeintstepAgility");
+            hasMastery = branch.hasUpgrade("FeintstepMastery");
+            hasFlow = branch.hasUpgrade("FeintstepFlow");
+        }
+
+        if (hasMastery) {
+            this.maxDodges = 4;
+            this.jumpAmplifier = 1;
+            this.chiCost = this.chiCost * 0.5;
+        }
+        if (hasAgility) {
+            this.speedAmplifier = 1; // Speed II
+        }
+
+        if (!hasFlow && !ChiManager.hasChi(player, chiCost)) {
             ChiManager.consumeChi(player, chiCost); // trigger warning message & sound
             return;
         }
@@ -83,7 +105,7 @@ public class Feintstep extends ChiAbility implements AddonAbility {
             player.getWorld().spawnParticle(Particle.CRIT, player.getLocation().add(0, 0.5, 0), 2, 0.2, 0.2, 0.2, 0.05);
 
             if (elapsed >= chargeTime) {
-                if (!ChiManager.consumeChi(player, chiCost)) {
+                if (!hasFlow && !ChiManager.consumeChi(player, chiCost)) {
                     remove();
                     return;
                 }
@@ -91,14 +113,30 @@ public class Feintstep extends ChiAbility implements AddonAbility {
                 state = State.STANCE;
                 activeStance = true;
                 startTime = System.currentTimeMillis();
+                lastFlowDrainTime = System.currentTimeMillis();
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.6f);
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.5f);
             }
         } else if (state == State.STANCE) {
-            long elapsed = System.currentTimeMillis() - startTime;
+            long now = System.currentTimeMillis();
+            long elapsed = now - startTime;
             if (elapsed >= duration || dodgesLeft <= 0) {
                 finishSkill();
                 return;
+            }
+
+            if (hasFlow) {
+                double deltaSec = Math.max(0.001, (now - lastFlowDrainTime) / 1000.0);
+                lastFlowDrainTime = now;
+                if (!ChiManager.consumeChi(player, 4.0 * deltaSec)) {
+                    finishSkill();
+                    return;
+                }
+            }
+
+            if (hasAgility) {
+                ChiManager.addTempMaxChi(player, "Feintstep_Agility", 25.0, 20L);
+                ChiManager.addTempRegen(player, "Feintstep_Agility", 5.0, 20L);
             }
 
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 10, speedAmplifier, false, false));
@@ -110,6 +148,10 @@ public class Feintstep extends ChiAbility implements AddonAbility {
 
     public boolean isStanceActive() {
         return activeStance && state == State.STANCE && dodgesLeft > 0;
+    }
+
+    public boolean hasFlow() {
+        return hasFlow;
     }
 
     public void onDodge(Entity attacker) {
@@ -144,7 +186,8 @@ public class Feintstep extends ChiAbility implements AddonAbility {
     }
 
     private void finishSkill() {
-        if (activeStance) {
+        activeStance = false;
+        if (bPlayer != null) {
             bPlayer.addCooldown(this, cooldown);
         }
         remove();
@@ -196,11 +239,11 @@ public class Feintstep extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Ładuje stan akrobaty. Podczas trwania pozwala na uniknięcie określonej liczby instancji obrażeń, wykonując zwinne odskoki i nadając przyspieszenie.";
+        return "Ładujesz unik przytrzymując kucnięcie. Po wejściu w stan postawy zyskujesz przyspieszenie i automatycznie unikasz do 3 kolejnych ataków, wykonując zwinny odskok.";
     }
 
     @Override
     public String getInstructions() {
-        return "Przytrzymaj Shift aby naładować Feintstep, a następnie puść aby wejść w stan akrobaty!";
+        return "Przytrzymaj Shift do naładowania, aby wejść w stan uników!";
     }
 }

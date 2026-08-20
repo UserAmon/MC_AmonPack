@@ -1,9 +1,13 @@
 package Abilities.PK_Abilities.Chi;
 
 import Plugin.AmonPackPlugin;
+import RPG.Levels.BendingTree.PlayerBendingBranch;
+import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.ChiAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -18,7 +22,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class PoisonDagger extends ChiAbility implements AddonAbility {
+
+    private static final Map<UUID, Long> MULTI_THROWS = new ConcurrentHashMap<>();
 
     private long cooldown;
     private double damage;
@@ -29,22 +39,49 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
     private int slownessAmplifier;
     private double chiCost;
 
+    private boolean hasTwin = false;
+    private boolean hasSynergy = false;
+    private boolean hasNeurotoxin = false;
+
     private Arrow firedArrow;
 
     public PoisonDagger(Player player) {
         super(player);
 
-        if (hasAbility(player, PoisonDagger.class)) {
-            return;
-        }
         if (bPlayer.isOnCooldown(this) || !bPlayer.canBend(this)) {
             return;
         }
 
         loadConfig();
 
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        if (branch != null) {
+            hasTwin = branch.hasUpgrade("PoisonDaggerTwin");
+            hasSynergy = branch.hasUpgrade("PoisonDaggerSynergy");
+            hasNeurotoxin = branch.hasUpgrade("PoisonDaggerNeurotoxin");
+        }
+
         if (!ChiManager.consumeChi(player, chiCost)) {
             return;
+        }
+
+        UUID uuid = player.getUniqueId();
+        if (hasTwin) {
+            Long lastThrow = MULTI_THROWS.get(uuid);
+            if (lastThrow != null && (System.currentTimeMillis() - lastThrow <= 3000L)) {
+                MULTI_THROWS.remove(uuid);
+                bPlayer.addCooldown(this, cooldown);
+            } else {
+                MULTI_THROWS.put(uuid, System.currentTimeMillis());
+                AmonPackPlugin.plugin.getServer().getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
+                    Long t = MULTI_THROWS.remove(uuid);
+                    if (t != null && bPlayer != null && !bPlayer.isOnCooldown(this)) {
+                        bPlayer.addCooldown(this, cooldown);
+                    }
+                }, 60L);
+            }
+        } else {
+            bPlayer.addCooldown(this, cooldown);
         }
 
         launchDagger();
@@ -71,6 +108,9 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
         this.firedArrow.setDamage(0.0); // No vanilla damage!
         this.firedArrow.setMetadata("PoisonDaggerArrow", new FixedMetadataValue(AmonPackPlugin.plugin, damage));
         this.firedArrow.setMetadata("PoisonDaggerCaster", new FixedMetadataValue(AmonPackPlugin.plugin, player.getUniqueId().toString()));
+        if (hasNeurotoxin) {
+            this.firedArrow.setMetadata("PoisonDaggerNeurotoxin", new FixedMetadataValue(AmonPackPlugin.plugin, true));
+        }
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1.0f, 1.5f);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, 1.7f);
@@ -85,7 +125,7 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
         }
 
         if (firedArrow == null || !firedArrow.isValid() || firedArrow.isDead() || firedArrow.isInBlock() || firedArrow.isOnGround()) {
-            finishWithCooldown();
+            remove();
             return;
         }
 
@@ -96,7 +136,7 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
         loc.getWorld().spawnParticle(Particle.DUST, loc, 2, 0.05, 0.05, 0.05, 0, greenDust);
 
         if (System.currentTimeMillis() - getStartTime() > 3000L) {
-            finishWithCooldown();
+            remove();
         }
     }
 
@@ -108,20 +148,30 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
             victim.addPotionEffect(new PotionEffect(PotionEffectType.POISON, poisonDuration, poisonAmplifier, false, true));
             victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slownessDuration, slownessAmplifier, false, true));
 
+            if (hasNeurotoxin) {
+                if (victim instanceof Player targetPlayer) {
+                    BendingPlayer bTarget = BendingPlayer.getBendingPlayer(targetPlayer);
+                    if (bTarget != null) {
+                        bTarget.blockChi();
+                    }
+                }
+            }
+
+            if (hasSynergy && bPlayer != null) {
+                if (bPlayer.isOnCooldown("DaggerTrick")) {
+                    bPlayer.removeCooldown("DaggerTrick");
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.8f);
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            TextComponent.fromLegacyText("§a🗡 §lSYNERGIA: §eZresetowano cooldown DaggerTrick!"));
+                }
+            }
+
             victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 1.2f);
             victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_ZOMBIE_INFECT, 0.8f, 1.5f);
             victim.getWorld().spawnParticle(Particle.ITEM_SLIME, victim.getLocation().add(0, 1, 0), 12, 0.2, 0.2, 0.2, 0.1);
             victim.getWorld().spawnParticle(Particle.CRIT, victim.getLocation().add(0, 1, 0), 8, 0.2, 0.2, 0.2, 0.1);
         }
 
-        finishWithCooldown();
-    }
-
-    private void finishWithCooldown() {
-        cleanUp();
-        if (bPlayer != null) {
-            bPlayer.addCooldown(this, cooldown);
-        }
         remove();
     }
 
@@ -169,7 +219,7 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.2";
+        return "1.0";
     }
 
     @Override
@@ -178,17 +228,16 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
 
     @Override
     public void stop() {
-        cleanUp();
         remove();
     }
 
     @Override
     public String getDescription() {
-        return "Wystrzeliwujesz szybką strzałę zatrutego sztyletu (LPM). Trafiony wróg otrzymuje obrażenia oraz efekty Trucizny (Poison) i Spowolnienia (Slowness).";
+        return "Rzucasz trującym sztyletem w stronę wroga (LPM). Trafiony cel otrzymuje obrażenia oraz efekty Trucizny II i Spowolnienia II na 5 sekund.";
     }
 
     @Override
     public String getInstructions() {
-        return "Kliknij LPM, aby wystrzelić zatruty sztylet!";
+        return "Kliknij LPM, aby rzucić zatrutym nożem!";
     }
 }

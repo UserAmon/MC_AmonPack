@@ -1,5 +1,6 @@
 package Abilities.PK_Abilities.Chi;
 
+import Plugin.AmonPackPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -58,6 +59,18 @@ public class ChiProfile {
 
     public double getMaxChi() {
         double max = baseMaxChi + permanentBonusMaxChi;
+        Player player = Bukkit.getPlayer(playerUuid);
+        if (player != null && AmonPackPlugin.levelsBending != null) {
+            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+            if (branch != null) {
+                if (branch.hasUpgrade("ChiExpansion")) {
+                    max += 50.0;
+                }
+                if (branch.hasUpgrade("ChiFlow")) {
+                    max += 25.0;
+                }
+            }
+        }
         for (TempModifier mod : tempMaxChiModifiers.values()) {
             if (!mod.isExpired()) {
                 max += mod.getAmount();
@@ -76,6 +89,18 @@ public class ChiProfile {
 
     public double getRegenRate() {
         double rate = baseRegenRate + permanentBonusRegenRate;
+        Player player = Bukkit.getPlayer(playerUuid);
+        if (player != null && AmonPackPlugin.levelsBending != null) {
+            RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+            if (branch != null) {
+                if (branch.hasUpgrade("ChiRegeneration")) {
+                    rate += 5.0;
+                }
+                if (branch.hasUpgrade("ChiFlow")) {
+                    rate += 2.5;
+                }
+            }
+        }
         for (TempModifier mod : tempRegenModifiers.values()) {
             if (!mod.isExpired()) {
                 rate += mod.getAmount();

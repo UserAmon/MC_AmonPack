@@ -557,12 +557,14 @@ public class AmonPackPlugin extends JavaPlugin {
 					" FirePoints INT," +
 					" WaterPoints INT," +
 					" EarthPoints INT," +
+					" ChiPoints INT," +
 					" UnlockedAbilities TEXT," +
 					" CurrentElement TEXT," +
 					" AllElements TEXT," +
 					" SwapAbility TEXT," +
 					" DropAbility TEXT" +
 					")");
+			ensureColumnExists("BendingTree", "ChiPoints");
 			ensureColumnExists("BendingTree", "SwapAbility");
 			ensureColumnExists("BendingTree", "DropAbility");
 			ExecuteQuery(

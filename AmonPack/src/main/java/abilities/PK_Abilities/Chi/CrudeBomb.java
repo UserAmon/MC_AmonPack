@@ -1,6 +1,7 @@
 package Abilities.PK_Abilities.Chi;
 
 import Plugin.AmonPackPlugin;
+import RPG.Levels.BendingTree.PlayerBendingBranch;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.ChiAbility;
@@ -21,11 +22,16 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
+import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CrudeBomb extends ChiAbility implements AddonAbility {
 
     public enum State { THROWN, SMOKE_CLOUD }
+
+    private static final Map<UUID, Long> MULTI_THROWS = new ConcurrentHashMap<>();
 
     private State state;
     private long cooldown;
@@ -42,6 +48,10 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
     private double tempRegenBonus;
     private double chiCost;
 
+    private boolean hasDouble = false;
+    private boolean hasThickSmoke = false;
+    private boolean hasFlashbang = false;
+
     private Location location;
     private Vector velocity;
     private long launchTime;
@@ -52,17 +62,51 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
     public CrudeBomb(Player player) {
         super(player);
 
-        if (hasAbility(player, CrudeBomb.class)) {
-            return;
-        }
         if (bPlayer.isOnCooldown(this) || !bPlayer.canBend(this)) {
             return;
         }
 
         loadConfig();
 
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        if (branch != null) {
+            hasDouble = branch.hasUpgrade("CrudeBombDouble");
+            hasThickSmoke = branch.hasUpgrade("CrudeBombThickSmoke");
+            hasFlashbang = branch.hasUpgrade("CrudeBombFlashbang");
+        }
+
+        if (hasThickSmoke) {
+            this.smokeRadius = 7.0;
+            this.smokeDurationMs = 14000L;
+        }
+
+        if (hasFlashbang) {
+            this.chiCost = this.chiCost * 0.5;
+        }
+
         if (!ChiManager.consumeChi(player, chiCost)) {
             return;
+        }
+
+        UUID uuid = player.getUniqueId();
+        if (hasDouble) {
+            Long lastThrow = MULTI_THROWS.get(uuid);
+            if (lastThrow != null && (System.currentTimeMillis() - lastThrow <= 3000L)) {
+                // Second throw in window!
+                MULTI_THROWS.remove(uuid);
+                bPlayer.addCooldown(this, cooldown);
+            } else {
+                // First throw in window!
+                MULTI_THROWS.put(uuid, System.currentTimeMillis());
+                AmonPackPlugin.plugin.getServer().getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
+                    Long t = MULTI_THROWS.remove(uuid);
+                    if (t != null && bPlayer != null && !bPlayer.isOnCooldown(this)) {
+                        bPlayer.addCooldown(this, cooldown);
+                    }
+                }, 60L); // 3 seconds window
+            }
+        } else {
+            bPlayer.addCooldown(this, cooldown);
         }
 
         this.state = State.THROWN;
@@ -79,7 +123,7 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
     }
 
     private void loadConfig() {
-        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.CrudeBomb.Cooldown", 10000L);
+        this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.CrudeBomb.Cooldown", 8000L);
         this.throwForce = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.CrudeBomb.ThrowForce", 1.3);
         this.gravity = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.CrudeBomb.Gravity", 0.05);
         this.bounceDamping = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.CrudeBomb.BounceDamping", 0.6);
@@ -169,6 +213,17 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
         location.getWorld().spawnParticle(Particle.LAVA, location, 4, 0.2, 0.2, 0.2, 0.05);
         location.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, location, 8, 0.3, 0.3, 0.3, 0.02);
 
+        if (hasFlashbang) {
+            location.getWorld().spawnParticle(Particle.FLASH, location, 2, 0.5, 0.5, 0.5, 0);
+            location.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1.5f, 0.5f);
+            for (Entity e : GeneralMethods.getEntitiesAroundPoint(location, 8.0)) {
+                if (e instanceof LivingEntity victim && e.getEntityId() != player.getEntityId()) {
+                    victim.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 80, 0, false, true));
+                    victim.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 100, 0, false, true));
+                }
+            }
+        }
+
         // Damage & knockback entities in explosion radius
         for (Entity e : GeneralMethods.getEntitiesAroundPoint(location, explosionRadius)) {
             if (e instanceof LivingEntity victim && e.getEntityId() != player.getEntityId()) {
@@ -184,7 +239,7 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
         long elapsed = System.currentTimeMillis() - smokeStartTime;
 
         if (elapsed >= smokeDurationMs) {
-            finishWithCooldown();
+            remove();
             return;
         }
 
@@ -224,13 +279,6 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                     TextComponent.fromLegacyText(String.format("§8☁ §7Ukryty w dymie §a(+%.0f Max Chi, +%.1f Chi/s)", tempMaxChiBonus, tempRegenBonus)));
         }
-    }
-
-    private void finishWithCooldown() {
-        if (bPlayer != null) {
-            bPlayer.addCooldown(this, cooldown);
-        }
-        remove();
     }
 
     @Override

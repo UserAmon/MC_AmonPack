@@ -343,19 +343,23 @@ public class Levels_Bending {
         Statement stmt = AmonPackPlugin.mysqllite().getConnection().createStatement();
         ResultSet rs = stmt.executeQuery("select * from BendingTree");
         while (rs.next()) {
-            String name = rs.getString(1);
-            int AirP = rs.getInt(2);
-            int FireP = rs.getInt(3);
-            int WaterP = rs.getInt(4);
-            int EarthP = rs.getInt(5);
-            String UnlockedAbilities = rs.getString(6);
-            String CurrentElement = rs.getString(7);
-            String AllElements = rs.getString(8);
+            String name = rs.getString("Player");
+            int AirP = rs.getInt("AirPoints");
+            int FireP = rs.getInt("FirePoints");
+            int WaterP = rs.getInt("WaterPoints");
+            int EarthP = rs.getInt("EarthPoints");
+            int ChiP = 0;
+            try {
+                ChiP = rs.getInt("ChiPoints");
+            } catch (Exception ignored) {}
+            String UnlockedAbilities = rs.getString("UnlockedAbilities");
+            String CurrentElement = rs.getString("CurrentElement");
+            String AllElements = rs.getString("AllElements");
             List<String> unlockedAbilities = UnlockedAbilities == null || UnlockedAbilities.isEmpty() ? new ArrayList<>() : Arrays.asList(UnlockedAbilities.split(","));
             Element currentElement = CurrentElement == null ? null : Element.getElement(CurrentElement);
             List<Element> allElements = AllElements == null || AllElements.isEmpty() ? new ArrayList<>() : Arrays.stream(AllElements.split(",")).map(Element::getElement).filter(Objects::nonNull).collect(Collectors.toList());
 
-            PlayersBending.add(new PlayerBendingBranch(AirP,currentElement,EarthP,allElements,FireP,name,unlockedAbilities,WaterP));
+            PlayersBending.add(new PlayerBendingBranch(AirP, currentElement, EarthP, allElements, FireP, name, unlockedAbilities, WaterP, ChiP));
         }
         stmt.close();
     }//Przy reloadzie pobierz wszystkich graczy z DB

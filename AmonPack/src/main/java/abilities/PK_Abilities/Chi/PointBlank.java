@@ -72,6 +72,12 @@ public class PointBlank extends ChiAbility implements AddonAbility {
         this.chiBlockDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PointBlank.ChiBlockDuration",
                 5000L);
         this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PointBlank.ChiCost", 40.0);
+
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        if (branch != null && branch.hasUpgrade("PointBlankFocus")) {
+            this.chargeTimeMs = 1200L;
+            this.range = 12.0;
+        }
     }
 
     @Override
@@ -192,6 +198,13 @@ public class PointBlank extends ChiAbility implements AddonAbility {
         Location hitLoc = victim.getLocation().add(0, 1.2, 0);
         hitLoc.getWorld().playSound(hitLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.5f);
         hitLoc.getWorld().playSound(hitLoc, Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.2f, 0.6f);
+
+        RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        if (branch != null && branch.hasUpgrade("PointBlankSlam")) {
+            victim.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 40, 4, false, false));
+            victim.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.JUMP_BOOST, 40, 128, false, false));
+            victim.getWorld().spawnParticle(Particle.EXPLOSION, victim.getLocation(), 1, 0, 0, 0, 0);
+        }
 
         hitLoc.getWorld().spawnParticle(Particle.CRIT, hitLoc, 5, 0.4, 0.4, 0.4, 0.2);
 

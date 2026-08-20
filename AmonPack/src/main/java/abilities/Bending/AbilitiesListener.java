@@ -32,6 +32,11 @@ import Plugin.AmonPackPlugin;
 import RPG.Crafting.CraftingMenager;
 import org.bukkit.entity.Arrow;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.Sound;
+import org.bukkit.Particle;
+import org.bukkit.util.Vector;
+import com.projectkorra.projectkorra.ability.ChiAbility;
+import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.event.AbilityStartEvent;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import org.bukkit.potion.PotionEffect;
@@ -722,6 +727,50 @@ public class AbilitiesListener implements Listener {
 						stance.tryApplyAttackBuffs(victim);
 					}
 				}
+
+				// FeintstepFlow bonus melee damage
+				if (CoreAbility.hasAbility(attacker, Feintstep.class)) {
+					Feintstep fs = CoreAbility.getAbility(attacker, Feintstep.class);
+					if (fs != null && fs.isStanceActive() && fs.hasFlow()) {
+						event.setDamage(event.getDamage() + 2.0);
+					}
+				}
+
+				// Chi Tree Passives & Upgrades on Hit
+				if (AmonPackPlugin.levelsBending != null) {
+					PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(attacker.getName());
+					if (branch != null) {
+						if (branch.hasUpgrade("PrecisionStrikes") && Math.random() < 0.15) {
+							if (event.getEntity() instanceof Player targetPlayer) {
+								BendingPlayer bTarget = BendingPlayer.getBendingPlayer(targetPlayer);
+								if (bTarget != null) {
+									bTarget.blockChi();
+									targetPlayer.getWorld().playSound(targetPlayer.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.8f);
+									targetPlayer.getWorld().spawnParticle(Particle.CRIT, targetPlayer.getLocation().add(0, 1.0, 0), 10, 0.2, 0.2, 0.2, 0.1);
+								}
+							}
+						}
+						if (branch.hasUpgrade("RapidPunchDrain")) {
+							if (bAttacker != null && "RapidPunch".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+								ChiManager.addChi(attacker, 5.0);
+							}
+						}
+						if (branch.hasUpgrade("SwiftKickVault")) {
+							if (bAttacker != null && "SwiftKick".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+								attacker.setVelocity(new Vector(0, 1.1, 0));
+								attacker.getWorld().playSound(attacker.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.5f);
+							}
+						}
+						if (branch.hasUpgrade("SwiftKickDisarm")) {
+							if (bAttacker != null && "SwiftKick".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+								if (event.getEntity() instanceof LivingEntity victim) {
+									victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2, false, true));
+									victim.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 2, false, true));
+								}
+							}
+						}
+					}
+				}
 			} finally {
 				activeAttackProcessors.remove(attacker.getUniqueId());
 			}
@@ -775,20 +824,66 @@ public class AbilitiesListener implements Listener {
 	public void onAbilityStart(AbilityStartEvent event) {
 		if (event.getAbility() == null) return;
 		String abiName = event.getAbility().getName();
-		if ("Paralyze".equalsIgnoreCase(abiName)) {
+
+		if (event.getAbility() instanceof ChiAbility && !(event.getAbility() instanceof AddonAbility)) {
 			Player player = event.getAbility().getPlayer();
-			if (player != null) {
-				double chiCost = ChiManager.getAbilityChiCost("Paralyze", 40.0);
-				if (!ChiManager.consumeChi(player, chiCost)) {
-					event.setCancelled(true);
-					event.getAbility().remove();
+			if (player != null && !event.getAbility().isHarmlessAbility()) {
+				PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+				double defaultCost = 25.0;
+				if ("Paralyze".equalsIgnoreCase(abiName)) {
+					defaultCost = (branch != null && branch.hasUpgrade("ParalyzeExtended")) ? 25.0 : 40.0;
+				} else if ("WarriorStance".equalsIgnoreCase(abiName)) {
+					defaultCost = 40.0;
+					if (branch != null && branch.hasUpgrade("WarriorStanceFortitude")) {
+						player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 200, 1, false, false));
+					}
+				} else if ("AcrobatStance".equalsIgnoreCase(abiName)) {
+					defaultCost = 40.0;
+				} else if ("Smokescreen".equalsIgnoreCase(abiName)) defaultCost = 35.0;
+				else if ("RapidPunch".equalsIgnoreCase(abiName)) defaultCost = 30.0;
+				else if ("SwiftKick".equalsIgnoreCase(abiName)) defaultCost = 25.0;
+				else if ("QuickStrike".equalsIgnoreCase(abiName) || "HighJump".equalsIgnoreCase(abiName)) defaultCost = 20.0;
+
+				double chiCost = ChiManager.getAbilityChiCost(abiName, defaultCost);
+				if (chiCost > 0) {
+					if (!ChiManager.consumeChi(player, chiCost)) {
+						event.setCancelled(true);
+						event.getAbility().remove();
+						return;
+					}
 				}
 			}
-		} else if ("AirBlast".equalsIgnoreCase(abiName)) {
+		}
+
+		if ("AirBlast".equalsIgnoreCase(abiName)) {
 			if (event.getAbility() instanceof com.projectkorra.projectkorra.airbending.AirBlast pkBlast) {
 				if (pkBlast.getSource() == null) {
 					event.setCancelled(true);
 					pkBlast.remove();
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onEntityPotionEffect(org.bukkit.event.entity.EntityPotionEffectEvent event) {
+		if (event.getEntity() instanceof Player player) {
+			if (event.getAction() == org.bukkit.event.entity.EntityPotionEffectEvent.Action.ADDED
+					|| event.getAction() == org.bukkit.event.entity.EntityPotionEffectEvent.Action.CHANGED) {
+				PotionEffect newEffect = event.getNewEffect();
+				if (newEffect != null) {
+					PotionEffectType type = newEffect.getType();
+					if (type == PotionEffectType.SLOWNESS || type == PotionEffectType.BLINDNESS
+							|| type == PotionEffectType.NAUSEA || type == PotionEffectType.WEAKNESS) {
+						PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+						if (branch != null && branch.hasUpgrade("IronBody")) {
+							int reduced = (int) (newEffect.getDuration() * 0.65);
+							if (reduced > 0 && reduced < newEffect.getDuration()) {
+								event.setCancelled(true);
+								player.addPotionEffect(new PotionEffect(type, reduced, newEffect.getAmplifier(), newEffect.isAmbient(), newEffect.hasParticles(), newEffect.hasIcon()));
+							}
+						}
+					}
 				}
 			}
 		}
