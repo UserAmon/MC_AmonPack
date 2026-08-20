@@ -30,6 +30,11 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
 import RPG.Crafting.CraftingMenager;
+import org.bukkit.entity.Arrow;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import com.projectkorra.projectkorra.event.AbilityStartEvent;
+import com.projectkorra.projectkorra.util.DamageHandler;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class AbilitiesListener implements Listener {
@@ -191,7 +196,9 @@ public class AbilitiesListener implements Listener {
 					} else if (boundAbility.equalsIgnoreCase("VeinFlow")) {
 						new VeinFlow(player);
 					} else if (boundAbility.equalsIgnoreCase("QuickPalms")) {
-						new QuickPalms(player);
+						new QuickPalms(player, true);
+					} else if (boundAbility.equalsIgnoreCase("AirBlast")) {
+						CustomAirBlast.setOrigin(player);
 					} else if (boundAbility.equalsIgnoreCase("Circulation")) {
 						new Circulation(player);
 					} else if (boundAbility.equalsIgnoreCase("HeartReading")) {
@@ -211,12 +218,20 @@ public class AbilitiesListener implements Listener {
 						if (!CoreAbility.hasAbility(player, BoulderRoll.class)) {
 							new BoulderRoll(player);
 						}
+					} else if (boundAbility.equalsIgnoreCase("Lasso")) {
+						new Lasso(player);
 					}
 				}
 			} else
 				return;
-		} else
-			return;
+		} else {
+			if (CoreAbility.hasAbility(player, Lasso.class)) {
+				Lasso lasso = CoreAbility.getAbility(player, Lasso.class);
+				if (lasso != null) {
+					lasso.onSneakRelease();
+				}
+			}
+		}
 	}
 
 	@EventHandler
@@ -343,6 +358,8 @@ public class AbilitiesListener implements Listener {
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("PoisonDagger")
 						|| bPlayer.getBoundAbilityName().equalsIgnoreCase("PoisonKnife")) {
 					new PoisonDagger(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("CrudeBomb")) {
+					new CrudeBomb(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("PointBlank")) {
 					if (!CoreAbility.hasAbility(player, PointBlank.class)) {
 						new PointBlank(player);
@@ -356,6 +373,8 @@ public class AbilitiesListener implements Listener {
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AerialPush")) {
 					new AerialPush(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("AirBlast")) {
+					new CustomAirBlast(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("GustShield")) {
 					new GustShield(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("Ionization")) {
@@ -638,6 +657,13 @@ public class AbilitiesListener implements Listener {
 			return;
 		}
 
+		if (event.getDamager() instanceof Arrow arrow) {
+			if (arrow.hasMetadata("DaggerTrickArrow") || arrow.hasMetadata("PoisonDaggerArrow")) {
+				event.setDamage(0.0);
+				return;
+			}
+		}
+
 		if (event.getDamager() instanceof Player attacker) {
 			if (!activeAttackProcessors.add(attacker.getUniqueId())) {
 				return;
@@ -698,6 +724,72 @@ public class AbilitiesListener implements Listener {
 				}
 			} finally {
 				activeAttackProcessors.remove(attacker.getUniqueId());
+			}
+		}
+	}
+
+	@EventHandler
+	public void onProjectileHit(ProjectileHitEvent event) {
+		if (event.getEntity() instanceof Arrow arrow) {
+			if (arrow.hasMetadata("DaggerTrickArrow")) {
+				if (event.getHitEntity() != null) {
+					Player caster = null;
+					if (arrow.getShooter() instanceof Player p) {
+						caster = p;
+					}
+					if (caster != null && CoreAbility.hasAbility(caster, DaggerTrick.class)) {
+						DaggerTrick dt = CoreAbility.getAbility(caster, DaggerTrick.class);
+						dt.handleArrowHit(arrow, event.getHitEntity());
+					} else if (event.getHitEntity() instanceof LivingEntity victim) {
+						double dmg = arrow.getMetadata("DaggerTrickArrow").get(0).asDouble();
+						DamageHandler.damageEntity(victim, dmg, null);
+						arrow.remove();
+					}
+				} else {
+					arrow.remove();
+				}
+			} else if (arrow.hasMetadata("PoisonDaggerArrow")) {
+				if (event.getHitEntity() != null) {
+					Player caster = null;
+					if (arrow.getShooter() instanceof Player p) {
+						caster = p;
+					}
+					if (caster != null && CoreAbility.hasAbility(caster, PoisonDagger.class)) {
+						PoisonDagger pd = CoreAbility.getAbility(caster, PoisonDagger.class);
+						pd.handleArrowHit(arrow, event.getHitEntity());
+					} else if (event.getHitEntity() instanceof LivingEntity victim) {
+						double dmg = arrow.getMetadata("PoisonDaggerArrow").get(0).asDouble();
+						DamageHandler.damageEntity(victim, dmg, null);
+						victim.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 1, false, true));
+						victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 1, false, true));
+						arrow.remove();
+					}
+				} else {
+					arrow.remove();
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onAbilityStart(AbilityStartEvent event) {
+		if (event.getAbility() == null) return;
+		String abiName = event.getAbility().getName();
+		if ("Paralyze".equalsIgnoreCase(abiName)) {
+			Player player = event.getAbility().getPlayer();
+			if (player != null) {
+				double chiCost = ChiManager.getAbilityChiCost("Paralyze", 40.0);
+				if (!ChiManager.consumeChi(player, chiCost)) {
+					event.setCancelled(true);
+					event.getAbility().remove();
+				}
+			}
+		} else if ("AirBlast".equalsIgnoreCase(abiName)) {
+			if (event.getAbility() instanceof com.projectkorra.projectkorra.airbending.AirBlast pkBlast) {
+				if (pkBlast.getSource() == null) {
+					event.setCancelled(true);
+					pkBlast.remove();
+				}
 			}
 		}
 	}

@@ -43,6 +43,10 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
     private final Random random = new Random();
 
     public QuickPalms(Player player) {
+        this(player, player.isSneaking());
+    }
+
+    public QuickPalms(Player player, boolean isSneakTrigger) {
         super(player);
 
         if (hasAbility(player, QuickPalms.class)) {
@@ -54,7 +58,7 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
         loadConfig();
 
-        if (player.isSneaking()) {
+        if (isSneakTrigger) {
             // Shift activation: Counter Stance (requires enemy within counterRange)
             LivingEntity nearbyEnemy = findNearestEnemy(player, counterRange);
             if (nearbyEnemy == null) {
@@ -100,7 +104,8 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
         if (mode == Mode.COUNTER_STANCE) {
             long elapsed = System.currentTimeMillis() - startTime;
-            if (elapsed >= stanceDuration || !player.isSneaking()) {
+            // Allow 300ms grace period so sneak state is fully synced
+            if (elapsed >= stanceDuration || (elapsed > 300L && !player.isSneaking())) {
                 finishWithCooldown();
                 return;
             }
@@ -145,11 +150,11 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
     private void renderRotatingShield() {
         Location eye = player.getEyeLocation();
         Vector forward = eye.getDirection().normalize();
-        Location center = eye.clone().add(forward.clone().multiply(1.2));
+        Location center = eye.clone().add(forward.clone().multiply(1.3));
 
-        double time = (System.currentTimeMillis() % 10000) / 120.0;
-        int points = 12;
-        double radius = 0.65;
+        double time = (System.currentTimeMillis() % 10000) / 100.0;
+        int points = 16;
+        double radius = 0.75;
 
         Vector right = new Vector(-forward.getZ(), 0, forward.getX()).normalize();
         if (right.lengthSquared() < 0.01) {
@@ -157,8 +162,8 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
         }
         Vector up = right.clone().crossProduct(forward).normalize();
 
-        Particle.DustOptions outerColor = new Particle.DustOptions(Color.fromRGB(150, 230, 255), 0.85f);
-        Particle.DustOptions innerColor = new Particle.DustOptions(Color.fromRGB(240, 250, 255), 0.65f);
+        Particle.DustOptions outerColor = new Particle.DustOptions(Color.fromRGB(130, 220, 255), 1.2f);
+        Particle.DustOptions innerColor = new Particle.DustOptions(Color.fromRGB(245, 255, 255), 0.9f);
 
         for (int i = 0; i < points; i++) {
             double angle = time + (i * 2 * Math.PI / points);
@@ -167,13 +172,16 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
             Location pLoc = center.clone().add(right.clone().multiply(x)).add(up.clone().multiply(y));
             player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, outerColor);
+            if (i % 4 == 0) {
+                player.getWorld().spawnParticle(Particle.CRIT, pLoc, 1, 0.02, 0.02, 0.02, 0);
+            }
         }
 
-        // Inner shield core
-        for (int i = 0; i < 4; i++) {
-            double angle = -time * 1.5 + (i * Math.PI / 2);
-            double x = (radius * 0.4) * Math.cos(angle);
-            double y = (radius * 0.4) * Math.sin(angle);
+        // Inner rotating core
+        for (int i = 0; i < 6; i++) {
+            double angle = -time * 1.5 + (i * 2 * Math.PI / 6);
+            double x = (radius * 0.45) * Math.cos(angle);
+            double y = (radius * 0.45) * Math.sin(angle);
             Location pLoc = center.clone().add(right.clone().multiply(x)).add(up.clone().multiply(y));
             player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, innerColor);
         }
@@ -183,7 +191,7 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
         if (targetEntity == null) return;
         Location vLoc = targetEntity.getLocation();
 
-        Particle.DustOptions ptDust = new Particle.DustOptions(Color.fromRGB(255, 60, 60), 1.2f);
+        Particle.DustOptions ptDust = new Particle.DustOptions(Color.fromRGB(255, 50, 50), 1.4f);
 
         for (Vector offset : targetPointOffsets) {
             Location pt = vLoc.clone().add(offset);
@@ -269,7 +277,6 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
             Vector lookDir = eye.getDirection().normalize();
 
             int hitIndex = -1;
-            double bestAngle = 0.5; // close aiming
 
             for (int i = 0; i < targetPointOffsets.size(); i++) {
                 Location ptWorld = victim.getLocation().clone().add(targetPointOffsets.get(i));
@@ -282,7 +289,6 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
             }
 
             if (hitIndex == -1 && !targetPointOffsets.isEmpty()) {
-                // Default to closest remaining point on hit
                 hitIndex = 0;
             }
 

@@ -1,22 +1,22 @@
 package Abilities.PK_Abilities.Chi;
 
-import Abilities.Util_Objects.AbilityProjectile;
-import Abilities.Util_Objects.BetterParticles;
 import Plugin.AmonPackPlugin;
-import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.ability.ChiAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class DaggerTrick extends ChiAbility implements AddonAbility {
@@ -26,7 +26,6 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
     private double upForce;
     private int maxArrowClicks;
     private int arrowCount;
-    private int arrowRange;
     private double arrowDamage;
     private double arrowSpeed;
     private double chiCost;
@@ -34,7 +33,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
     private int slot;
     private int clicksUsed = 0;
     private long lastClickTime = 0;
-    private final List<AbilityProjectile> projectiles = new ArrayList<>();
+    private final List<Arrow> activeArrows = new ArrayList<>();
     private boolean launched = false;
     private boolean cooldownApplied = false;
 
@@ -66,9 +65,8 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         this.upForce = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.UpForce", 0.6);
         this.maxArrowClicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.DaggerTrick.MaxArrowClicks", 3);
         this.arrowCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.DaggerTrick.ArrowCount", 3);
-        this.arrowRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.DaggerTrick.ArrowRange", 25);
         this.arrowDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ArrowDamage", 2.5);
-        this.arrowSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ArrowSpeed", 1.0);
+        this.arrowSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ArrowSpeed", 2.0);
         this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ChiCost", 40.0);
     }
 
@@ -85,40 +83,26 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
     @Override
     public void progress() {
         if (player == null || !player.isOnline() || player.isDead()) {
-            projectiles.clear();
+            cleanUpArrows();
             remove();
             return;
         }
 
-        // Advance and process existing projectiles
-        if (!projectiles.isEmpty()) {
-            List<AbilityProjectile> copy = new ArrayList<>(projectiles);
-            for (AbilityProjectile proj : copy) {
-                Location loc = proj.Advance();
-                if (loc == null) {
-                    projectiles.remove(proj);
+        // Tick flying arrows
+        if (!activeArrows.isEmpty()) {
+            Iterator<Arrow> it = activeArrows.iterator();
+            while (it.hasNext()) {
+                Arrow arrow = it.next();
+                if (arrow == null || !arrow.isValid() || arrow.isDead() || arrow.isInBlock() || arrow.isOnGround()) {
+                    if (arrow != null && arrow.isValid()) {
+                        arrow.remove();
+                    }
+                    it.remove();
                     continue;
                 }
 
-                loc.getWorld().spawnParticle(Particle.CRIT, loc, 2, 0.05, 0.05, 0.05, 0.02);
-                loc.getWorld().spawnParticle(Particle.SMOKE, loc, 1, 0.02, 0.02, 0.02, 0.01);
-
-                boolean hit = false;
-                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1.2)) {
-                    if (entity instanceof LivingEntity && entity.getUniqueId() != player.getUniqueId()) {
-                        DamageHandler.damageEntity(entity, arrowDamage, this);
-                        loc.getWorld().playSound(loc, Sound.ENTITY_ITEM_BREAK, 0.8f, 1.5f);
-                        projectiles.remove(proj);
-                        hit = true;
-                        break;
-                    }
-                }
-
-                if (!hit) {
-                    if (loc.distance(proj.getOrigin()) > arrowRange || loc.getBlock().getType().isSolid()) {
-                        projectiles.remove(proj);
-                    }
-                }
+                // Render particle trail
+                arrow.getWorld().spawnParticle(Particle.CRIT, arrow.getLocation(), 2, 0.05, 0.05, 0.05, 0.02);
             }
         }
 
@@ -126,12 +110,12 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         if (launched) {
             if (player.getInventory().getHeldItemSlot() != slot || isGrounded()) {
                 applyCooldown();
-                launched = false; // Player can no longer fire arrows, but flying projectiles continue!
+                launched = false; // Jump ended, but fired arrows keep flying
             }
         }
 
-        // If jump has ended and all projectiles finished their journey, remove ability instance
-        if (!launched && projectiles.isEmpty()) {
+        // If jump has ended and all arrows finished, remove ability instance
+        if (!launched && activeArrows.isEmpty()) {
             remove();
         }
     }
@@ -154,22 +138,37 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         lastClickTime = now;
         clicksUsed++;
 
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1.0f, 1.2f);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ARROW_SHOOT, 1.0f, 1.4f);
 
         Location eye = player.getEyeLocation();
         Vector forward = eye.getDirection().normalize();
 
-        List<BetterParticles> particles = new ArrayList<>();
-        particles.add(new BetterParticles(3, ParticleEffect.CRIT, 0.1, 0.02, 0.1));
-
         int count = Math.max(1, arrowCount);
         for (int i = 0; i < count; i++) {
-            double angleDeg = (count == 1) ? 0 : -45.0 + (i * 90.0 / (count - 1));
+            double angleDeg = (count == 1) ? 0 : -35.0 + (i * 70.0 / (count - 1));
             Vector dir = rotateY(forward.clone(), angleDeg).multiply(arrowSpeed);
 
-            Location startLoc = eye.clone();
-            projectiles.add(new AbilityProjectile(dir, startLoc, startLoc.clone(), particles, 1));
+            Arrow arrow = player.launchProjectile(Arrow.class, dir);
+            arrow.setPickupStatus(AbstractArrow.PickupStatus.DISALLOWED);
+            arrow.setDamage(0.0); // No vanilla damage!
+            arrow.setMetadata("DaggerTrickArrow", new FixedMetadataValue(AmonPackPlugin.plugin, arrowDamage));
+            arrow.setMetadata("DaggerTrickCaster", new FixedMetadataValue(AmonPackPlugin.plugin, player.getUniqueId().toString()));
+
+            activeArrows.add(arrow);
         }
+    }
+
+    public void handleArrowHit(Arrow arrow, Entity hitEntity) {
+        if (arrow == null) return;
+        activeArrows.remove(arrow);
+
+        if (hitEntity instanceof LivingEntity victim && hitEntity.getEntityId() != player.getEntityId()) {
+            DamageHandler.damageEntity(victim, arrowDamage, this);
+            victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, 1.4f);
+            victim.getWorld().spawnParticle(Particle.CRIT, victim.getLocation().add(0, 1, 0), 8, 0.2, 0.2, 0.2, 0.1);
+        }
+
+        arrow.remove();
     }
 
     private Vector rotateY(Vector vector, double angleDegrees) {
@@ -186,6 +185,21 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
             bPlayer.addCooldown(this, cooldown);
             cooldownApplied = true;
         }
+    }
+
+    private void cleanUpArrows() {
+        for (Arrow arrow : activeArrows) {
+            if (arrow != null && arrow.isValid()) {
+                arrow.remove();
+            }
+        }
+        activeArrows.clear();
+    }
+
+    @Override
+    public void remove() {
+        cleanUpArrows();
+        super.remove();
     }
 
     @Override
@@ -220,7 +234,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.1";
+        return "1.2";
     }
 
     @Override
@@ -229,13 +243,13 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
     @Override
     public void stop() {
-        projectiles.clear();
+        cleanUpArrows();
         remove();
     }
 
     @Override
     public String getDescription() {
-        return "Wyskakujesz w powietrze w tył (Shift). Podczas lotu klikaj LPM, aby wystrzeliwać wachlarze sztyletów/strzał w stronę wrogów.";
+        return "Wyskakujesz w powietrze w tył (Shift). Podczas lotu klikaj LPM, aby wystrzeliwać lecące strzały zadające obrażenia od umiejętności.";
     }
 
     @Override

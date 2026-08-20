@@ -647,6 +647,24 @@ AmonPack:
       MultiWindow: 3000 #ms window for 2nd cast with DoubleTheFun
 
   Air:
+    AirBlast:
+      MaxUses: 4 #number of air blasts allowed before cooldown
+      ResetWindow: 5000 #ms window to use the charges
+      Cooldown: 9000 #ms cooldown after using all charges or after window
+      Range: 25.0 #max travel distance
+      Speed: 25.0 #blast movement speed
+      Radius: 2.0 #radius of blast
+      PushSelf: 2.5 #push velocity applied to caster
+      PushEntities: 2.5 #push velocity applied to entities
+      Damage: 0.0 #damage dealt (default 0)
+      Particles: 4 #particles per step
+      SelectParticles: 4 #particles at origin
+      SelectRange: 10.0 #max range to set origin on shift
+      CanFlickLevers: true #whether airblast flicks levers
+      CanOpenDoors: true #whether airblast opens doors
+      CanPressButtons: true #whether airblast presses buttons
+      CanCoolLava: true #whether airblast cools lava into obsidian/cobblestone
+
     AirSwirl:
       Cooldown: 5000 #ms between ability uses
       Damage: 3.5 #hearts dealt per projectile hit
@@ -753,13 +771,13 @@ AmonPack:
       ArrowCount: 3 #arrows launched per click
       ArrowRange: 25 #max range of arrows
       ArrowDamage: 2.5 #hearts per arrow hit
-      ArrowSpeed: 1.0 #arrow speed multiplier
+      ArrowSpeed: 2.0 #arrow speed multiplier
       ChiCost: 40.0 #chi energy consumed per use
 
     PoisonDagger:
       Cooldown: 6000 #ms between ability uses
       Damage: 3.5 #hearts dealt on dagger hit
-      Speed: 1.8 #thrown dagger speed
+      Speed: 2.5 #thrown arrow speed
       Range: 30.0 #max distance dagger travels
       PoisonDuration: 100 #ticks poison lasts (5 seconds)
       PoisonAmplifier: 1 #poison effect level (Poison II)
@@ -801,4 +819,34 @@ AmonPack:
       InitialDamage: 2.5 #hearts dealt on first strike
       StrikeDamage: 3.0 #hearts dealt per vital point hit
       ChiBlockDuration: 3500 #ms chi blocking applied on vital hit
+      ChiCost: 40.0 #chi energy consumed per use
+
+    CrudeBomb:
+      Cooldown: 8000 #ms between ability uses
+      ThrowForce: 1.3 #initial throw speed
+      Gravity: 0.05 #gravity per tick
+      BounceDamping: 0.6 #velocity retention on bounce
+      FuseTimeMs: 2500 #ms before bomb explodes
+      ExplosionRadius: 4.0 #blocks radius of explosion
+      ExplosionDamage: 3 #hearts dealt by explosion
+      KnockbackForce: 1.0 #knockback force applied to enemies
+      SmokeRadius: 4.5 #blocks radius of smoke cloud
+      SmokeDurationMs: 8000 #ms smoke cloud lasts (7 seconds)
+      TempMaxChiBonus: 50.0 #temporary max chi granted inside smoke
+      TempRegenBonus: 7.0 #temporary chi regen granted inside smoke
+      ChiCost: 40.0 #chi consumed on throw
+
+    Lasso:
+      Cooldown: 8000 #ms between ability uses
+      ChargeTime: 1000 #ms required to charge shift
+      Range: 20.0 #max distance lasso flies
+      Speed: 1.8 #speed of lasso projectile
+      PullRadius: 8.0 #max distance enemy can move away before being pulled back
+      InitialPullForce: 0.7 #light pull force applied on hit
+      StrongPullForce: 1.4 #strong pull force applied when enemy tries to escape
+      MaxTetherBreakDistance: 25.0 #distance beyond which tether snaps
+      MaxDurationMs: 8000 #ms max tether duration
+      ChiDrainPerSecond: 5.0 #chi consumed per second while holding target
+
+    Paralyze:
       ChiCost: 40.0 #chi energy consumed per use

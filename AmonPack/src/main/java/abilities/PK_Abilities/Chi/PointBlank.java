@@ -44,6 +44,14 @@ public class PointBlank extends ChiAbility implements AddonAbility {
 
         loadConfig();
 
+        LivingEntity closest = findClosestEnemy();
+        if (closest == null || player.getLocation().distance(closest.getLocation()) > range) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText(String.format("§c✖ Brak przeciwników w zasięgu (%.0f bloków)!", range)));
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.7f, 0.6f);
+            return;
+        }
+
         if (!ChiManager.consumeChi(player, chiCost)) {
             return;
         }

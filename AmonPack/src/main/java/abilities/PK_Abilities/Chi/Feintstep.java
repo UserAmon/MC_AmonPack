@@ -43,7 +43,8 @@ public class Feintstep extends ChiAbility implements AddonAbility {
 
         loadConfig();
 
-        if (!ChiManager.consumeChi(player, chiCost)) {
+        if (!ChiManager.hasChi(player, chiCost)) {
+            ChiManager.consumeChi(player, chiCost); // trigger warning message & sound
             return;
         }
 
@@ -74,7 +75,7 @@ public class Feintstep extends ChiAbility implements AddonAbility {
 
         if (state == State.CHARGING) {
             if (!player.isSneaking()) {
-                finishSkill();
+                remove();
                 return;
             }
 
@@ -82,6 +83,11 @@ public class Feintstep extends ChiAbility implements AddonAbility {
             player.getWorld().spawnParticle(Particle.CRIT, player.getLocation().add(0, 0.5, 0), 2, 0.2, 0.2, 0.2, 0.05);
 
             if (elapsed >= chargeTime) {
+                if (!ChiManager.consumeChi(player, chiCost)) {
+                    remove();
+                    return;
+                }
+
                 state = State.STANCE;
                 activeStance = true;
                 startTime = System.currentTimeMillis();
