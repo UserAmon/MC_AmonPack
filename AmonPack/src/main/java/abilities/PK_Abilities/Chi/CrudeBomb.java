@@ -76,12 +76,13 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
         }
 
         if (hasThickSmoke) {
-            this.smokeRadius = 7.0;
-            this.smokeDurationMs = 14000L;
+            this.smokeRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.CrudeBomb.Upgrades.ThickSmoke.Radius", 7.0);
+            this.smokeDurationMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.CrudeBomb.Upgrades.ThickSmoke.DurationMs", 14000L);
         }
 
         if (hasFlashbang) {
-            this.chiCost = this.chiCost * 0.5;
+            double mult = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.ChiCostMultiplier", 0.5);
+            this.chiCost = this.chiCost * mult;
         }
 
         if (!ChiManager.consumeChi(player, chiCost)) {
@@ -90,8 +91,9 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
 
         UUID uuid = player.getUniqueId();
         if (hasDouble) {
+            long windowMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.CrudeBomb.Upgrades.Double.WindowMs", 3000L);
             Long lastThrow = MULTI_THROWS.get(uuid);
-            if (lastThrow != null && (System.currentTimeMillis() - lastThrow <= 3000L)) {
+            if (lastThrow != null && (System.currentTimeMillis() - lastThrow <= windowMs)) {
                 // Second throw in window!
                 MULTI_THROWS.remove(uuid);
                 bPlayer.addCooldown(this, cooldown);
@@ -103,7 +105,7 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
                     if (t != null && bPlayer != null && !bPlayer.isOnCooldown(this)) {
                         bPlayer.addCooldown(this, cooldown);
                     }
-                }, 60L); // 3 seconds window
+                }, windowMs / 50L);
             }
         } else {
             bPlayer.addCooldown(this, cooldown);
@@ -214,12 +216,16 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
         location.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, location, 8, 0.3, 0.3, 0.3, 0.02);
 
         if (hasFlashbang) {
+            double flashRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.Radius", 8.0);
+            int blindTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.BlindnessDurationTicks", 80);
+            int nauseaTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.NauseaDurationTicks", 100);
+
             location.getWorld().spawnParticle(Particle.FLASH, location, 2, 0.5, 0.5, 0.5, 0);
             location.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1.5f, 0.5f);
-            for (Entity e : GeneralMethods.getEntitiesAroundPoint(location, 8.0)) {
+            for (Entity e : GeneralMethods.getEntitiesAroundPoint(location, flashRadius)) {
                 if (e instanceof LivingEntity victim && e.getEntityId() != player.getEntityId()) {
-                    victim.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 80, 0, false, true));
-                    victim.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 100, 0, false, true));
+                    victim.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blindTicks, 0, false, true));
+                    victim.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, nauseaTicks, 0, false, true));
                 }
             }
         }

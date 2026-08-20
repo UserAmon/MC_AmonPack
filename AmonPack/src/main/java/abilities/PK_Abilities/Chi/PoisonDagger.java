@@ -67,8 +67,9 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
 
         UUID uuid = player.getUniqueId();
         if (hasTwin) {
+            long windowMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PoisonDagger.Upgrades.Twin.WindowMs", 3000L);
             Long lastThrow = MULTI_THROWS.get(uuid);
-            if (lastThrow != null && (System.currentTimeMillis() - lastThrow <= 3000L)) {
+            if (lastThrow != null && (System.currentTimeMillis() - lastThrow <= windowMs)) {
                 MULTI_THROWS.remove(uuid);
                 bPlayer.addCooldown(this, cooldown);
             } else {
@@ -78,7 +79,7 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
                     if (t != null && bPlayer != null && !bPlayer.isOnCooldown(this)) {
                         bPlayer.addCooldown(this, cooldown);
                     }
-                }, 60L);
+                }, windowMs / 50L);
             }
         } else {
             bPlayer.addCooldown(this, cooldown);

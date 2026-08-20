@@ -1340,7 +1340,7 @@ AmonPack:
           - SwiftKickVault
         Description:
           - "&7Trafienie dezorientuje wroga, nakładając &eSlowness II"
-          - "&7oraz &eWeakness II &7na &e2 sekundy&7."
+          - "&7oraz &eWeakness II &7na &e%config_sec:AmonPack.Chi.SwiftKick.Upgrades.Disarm.DurationTicks% sekundy&7."
 
       RapidPunch:
         Cost: 5
@@ -1357,7 +1357,7 @@ AmonPack:
         ReqAbilities:
           - RapidPunch
         Description:
-          - "&7Każde celne uderzenie z serii &eodnawia +5.0 Chi&7."
+          - "&7Każde celne uderzenie z serii &eodnawia +%config:AmonPack.Chi.RapidPunch.Upgrades.Drain.ChiPerHit% Chi&7."
 
       HighJump:
         Cost: 10
@@ -1392,7 +1392,7 @@ AmonPack:
         ReqAbilities:
           - DaggerTrickForward
         Description:
-          - "&7Zwiększa liczbę salw noży w locie z &e3 do 4 kliknięć LPM&7."
+          - "&7Zwiększa liczbę salw noży w locie do &e%config:AmonPack.Chi.DaggerTrick.Upgrades.Multi.MaxArrowClicks% kliknięć LPM&7."
 
       PoisonDagger:
         Cost: 15
@@ -1410,7 +1410,7 @@ AmonPack:
           - PoisonDagger
         Description:
           - "&7Możliwość rzucenia &edrugiego zatrutego noża&7"
-          - "&7w oknie &e3 sekund &7przed wejściem na cooldown."
+          - "&7w oknie &e%config_sec:AmonPack.Chi.PoisonDagger.Upgrades.Twin.WindowMs% sekund &7przed wejściem na cooldown."
       PoisonDaggerSynergy:
         Cost: 20
         Place: 22
@@ -1430,7 +1430,7 @@ AmonPack:
           - PoisonDaggerSynergy
         Description:
           - "&7Neurotoksyna &eparaliżuje układ Chi wroga&7,"
-          - "&7nakładając &eChi Blocking na 2.5 sekundy&7."
+          - "&7nakładając &eChi Blocking na %config_sec:AmonPack.Chi.PoisonDagger.Upgrades.Neurotoxin.DurationMs% sekundy&7."
 
       Smokescreen:
         Cost: 15
@@ -1456,7 +1456,7 @@ AmonPack:
           - CrudeBomb
         Description:
           - "&7Możliwość rzucenia &edrugiej bomby&7"
-          - "&7w oknie &e3 sekund &7przed wejściem na cooldown."
+          - "&7w oknie &e%config_sec:AmonPack.Chi.CrudeBomb.Upgrades.Double.WindowMs% sekund &7przed wejściem na cooldown."
       CrudeBombThickSmoke:
         Cost: 20
         Place: 22
@@ -1465,8 +1465,8 @@ AmonPack:
         ReqAbilities:
           - CrudeBombDouble
         Description:
-          - "&7Zwiększa promień chmury dymu do &e7.0 bloków&7"
-          - "&7oraz wydłuża czas jej trwania do &e14 sekund&7."
+          - "&7Zwiększa promień chmury dymu do &e%config:AmonPack.Chi.CrudeBomb.Upgrades.ThickSmoke.Radius% bloków&7"
+          - "&7oraz wydłuża czas jej trwania do &e%config_sec:AmonPack.Chi.CrudeBomb.Upgrades.ThickSmoke.DurationMs% sekund&7."
       CrudeBombFlashbang:
         Cost: 25
         Place: 24
@@ -1476,8 +1476,8 @@ AmonPack:
           - CrudeBombThickSmoke
         Description:
           - "&7Przy wybuchu emituje &eoślepiający błysk (Flash)&7,"
-          - "&7nakładając &eBlindness i Nausea &7na cele w promieniu &e8m&7."
-          - "&aZmniejsza koszt Chi o 50% (do 20 Chi)&7."
+          - "&7nakładając &eBlindness i Nausea &7na cele w promieniu &e%config:AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.Radius%m&7."
+          - "&aZmniejsza koszt Chi o %config_percent:AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.ChiCostMultiplier%%&7."
 
       Feintstep:
         Cost: 20
@@ -1495,7 +1495,7 @@ AmonPack:
           - Feintstep
         Description:
           - "&7Podczas trwania postawy zyskujesz &eSpeed II&7,"
-          - "&a+25 Max Chi &7oraz &a+5.0 Chi/s regeneracji&7."
+          - "&a+%config:AmonPack.Chi.Feintstep.Upgrades.Agility.TempMaxChiBonus% Max Chi &7oraz &a+%config:AmonPack.Chi.Feintstep.Upgrades.Agility.TempRegenBonus% Chi/s regeneracji&7."
       FeintstepMastery:
         Cost: 20
         Place: 22
@@ -1504,8 +1504,8 @@ AmonPack:
         ReqAbilities:
           - FeintstepAgility
         Description:
-          - "&7Dodaje &e+1 ładunek uniku &7(łącznie 4 uniki),"
-          - "&eJump Boost II &7oraz &azmniejsza koszt Chi o 50%&7."
+          - "&7Zwiększa liczbę uników do &e%config:AmonPack.Chi.Feintstep.Upgrades.Mastery.MaxDodges% uników&7,"
+          - "&eJump Boost II &7oraz &azmniejsza koszt Chi o %config_percent:AmonPack.Chi.Feintstep.Upgrades.Mastery.ChiCostMultiplier%%&7."
       FeintstepFlow:
         Cost: 25
         Place: 24
@@ -1514,8 +1514,8 @@ AmonPack:
         ReqAbilities:
           - FeintstepMastery
         Description:
-          - "&7Zamiast kosztu jednorazowego, zużywa &e4 Chi/s&7."
-          - "&7Podstawowe ciosy wręcz zadają &e+1.0 serca obrażeń&7."
+          - "&7Zamiast kosztu jednorazowego, zużywa &e%config:AmonPack.Chi.Feintstep.Upgrades.Flow.DrainPerSecond% Chi/s&7."
+          - "&7Podstawowe ciosy wręcz zadają &e+%config_hearts:AmonPack.Chi.Feintstep.Upgrades.Flow.BonusMeleeDamage% serca obrażeń&7."
 
       QuickPalms:
         Cost: 25
@@ -1533,8 +1533,8 @@ AmonPack:
         ReqAbilities:
           - QuickPalms
         Description:
-          - "&7Czas trwania kontry wydłużony do &e7 sekund&7."
-          - "&7Udany blok i teleportacja &aodnawiają natychmiast +30 Chi&7."
+          - "&7Czas trwania kontry wydłużony do &e%config_sec:AmonPack.Chi.QuickPalms.Upgrades.Reflex.StanceDurationMs% sekund&7."
+          - "&7Udany blok i teleportacja &aodnawiają natychmiast +%config:AmonPack.Chi.QuickPalms.Upgrades.Reflex.ChiRestore% Chi&7."
       QuickPalmsTripleStrike:
         Cost: 20
         Place: 22
@@ -1543,8 +1543,8 @@ AmonPack:
         ReqAbilities:
           - QuickPalmsReflex
         Description:
-          - "&7Odsłania &e3 punkty witalne &7zamiast 2."
-          - "&7Każdy cios zadaje &e+1.0 serca obrażeń &7i blokuje Chi na &e4.5s&7."
+          - "&7Odsłania &e%config:AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.VitalPoints% punkty witalne &7na ciele wroga."
+          - "&7Każdy cios zadaje &e+%config_hearts:AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.BonusDamage% serca obrażeń &7i blokuje Chi na &e%config_sec:AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.ChiBlockDurationMs%s&7."
       QuickPalmsPressureBurst:
         Cost: 25
         Place: 24
@@ -1554,7 +1554,7 @@ AmonPack:
           - QuickPalmsTripleStrike
         Description:
           - "&7Trafienie we wszystkie punkty wywołuje &ewewnętrzny wybuch Chi&7:"
-          - "&7Zadaje &c4.0 serca obrażeń&7, odrzuca i nakłada &eParaliż na 2s&7."
+          - "&7Zadaje &c%config_hearts:AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.Damage% serca obrażeń&7, odrzuca i nakłada &eParaliż na %config_sec:AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.ParalyzeDurationMs%s&7."
 
       Lasso:
         Cost: 25
@@ -1579,8 +1579,8 @@ AmonPack:
         ReqAbilities:
           - PointBlank
         Description:
-          - "&7Czas ładowania skrócony z 2.5s do &e1.2s&7."
-          - "&7Zasięg namierzania wroga zwiększony do &e12 metrów&7."
+          - "&7Czas ładowania skrócony do &e%config_sec:AmonPack.Chi.PointBlank.Upgrades.Focus.ChargeTimeMs%s&7."
+          - "&7Zasięg namierzania wroga zwiększony do &e%config:AmonPack.Chi.PointBlank.Upgrades.Focus.Range% metrów&7."
       PointBlankSlam:
         Cost: 25
         Place: 22
@@ -1590,7 +1590,7 @@ AmonPack:
           - PointBlankFocus
         Description:
           - "&7Uderzenie wbija wroga w ziemię, całkowicie"
-          - "&7blokując skakanie i sprint na &e2 sekundy&7."
+          - "&7blokując skakanie i sprint na &e%config_sec:AmonPack.Chi.PointBlank.Upgrades.Slam.DurationTicks% sekundy&7."
 
       PulseBreak:
         Cost: 30
@@ -1607,7 +1607,7 @@ AmonPack:
         ReqAbilities:
           - PulseBreak
         Description:
-          - "&7Nakłada dodatkowy cooldown na &e3 losowe umiejętności &7wroga (zamiast 2)."
+          - "&7Nakłada dodatkowy cooldown na &e%config:AmonPack.Chi.PulseBreak.Upgrades.Overload.AbilitiesCount% losowe umiejętności &7wroga."
 
       Paralyze:
         Cost: 35
@@ -1625,8 +1625,8 @@ AmonPack:
         ReqAbilities:
           - Paralyze
         Description:
-          - "&7Wydłuża czas trwania paraliżu o &e50%&7"
-          - "&7oraz &azmniejsza koszt Chi do 25 punktów&7."
+          - "&7Wydłuża czas trwania paraliżu o &e%config_percent:AmonPack.Chi.Paralyze.Upgrades.Extended.DurationMultiplier%%&7"
+          - "&7oraz &azmniejsza koszt Chi do %config:AmonPack.Chi.Paralyze.Upgrades.Extended.ChiCost% punktów&7."
 
       WarriorStance:
         Cost: 25
@@ -1643,7 +1643,7 @@ AmonPack:
         ReqAbilities:
           - WarriorStance
         Description:
-          - "&7Wzmacnia Odporność do &eResistance II&7"
+          - "&7Wzmacnia Odporność do &eResistance II&7 na &e%config_sec:AmonPack.Chi.WarriorStance.Upgrades.Fortitude.DurationTicks%s"
           - "&7oraz daje &e100% odporności na odrzut (Knockback Resistance)&7."
 
       AcrobatStance:
@@ -1662,7 +1662,7 @@ AmonPack:
           - AcrobatStance
         Description:
           - "&7Podczas trwania postawy wszystkie czasy odnowienia (cooldowny)"
-          - "&7umiejętności Chi są &eskrócone o 30%&7."
+          - "&7umiejętności Chi są &eskrócone o %config:AmonPack.Chi.AcrobatStance.Upgrades.Flurry.CooldownReductionPercent%%&7."
 
       ChiFlow:
         Cost: 15
@@ -1673,7 +1673,7 @@ AmonPack:
           - DaggerTrick
         Description:
           - "&eSwobodny Przepływ Chi"
-          - "&a+25 Maksymalnego Chi &7oraz &a+2.5 Chi/s regeneracji&7."
+          - "&a+%config:AmonPack.Chi.Passives.ChiFlow.MaxChiBonus% Maksymalnego Chi &7oraz &a+%config:AmonPack.Chi.Passives.ChiFlow.RegenBonus% Chi/s regeneracji&7."
 
       PrecisionStrikes:
         Cost: 20
@@ -1683,8 +1683,8 @@ AmonPack:
           - QuickPalms
         Description:
           - "&ePrecyzyjne Ciosy"
-          - "&7Zwykłe ataki wręcz mają &e15% szansy &7na nałożenie"
-          - "&eChi Blockingu na 1.5 sekundy&7."
+          - "&7Zwykłe ataki wręcz mają &e%config_percent:AmonPack.Chi.Passives.PrecisionStrikes.Chance%% szansy &7na nałożenie"
+          - "&eChi Blockingu na %config_sec:AmonPack.Chi.Passives.PrecisionStrikes.ChiBlockDurationMs% sekundy&7."
 
       PressureMaster:
         Cost: 20
@@ -1695,7 +1695,7 @@ AmonPack:
         Description:
           - "&eMistrz Meridianów"
           - "&7Wydłuża czas trwania wszystkich nakładanych"
-          - "&7efektów &eChi Blockingu i Paraliżu o 25%&7."
+          - "&7efektów &eChi Blockingu i Paraliżu o %config_percent:AmonPack.Chi.Passives.PressureMaster.DurationMultiplier%%&7."
 
       IronBody:
         Cost: 20
@@ -1706,7 +1706,7 @@ AmonPack:
         Description:
           - "&eŻelazne Ciało"
           - "&7Skraca czas trwania otrzymywanych efektów kontroli"
-          - "&7(&eSlowness, Blindness, Nausea, Weakness&7) o &e35%&7."
+          - "&7(&eSlowness, Blindness, Nausea, Weakness&7) o &e%config_percent:AmonPack.Chi.Passives.IronBody.DurationReductionMultiplier%%&7."
 
       ChiExpansion:
         Cost: 25
@@ -1716,7 +1716,7 @@ AmonPack:
           - ChiFlow
         Description:
           - "&eEkspansja Zbiornika Chi"
-          - "&a+50 Maksymalnego Chi na stałe!&7"
+          - "&a+%config:AmonPack.Chi.Passives.ChiExpansion.MaxChiBonus% Maksymalnego Chi na stałe!&7"
 
       ChiRegeneration:
         Cost: 25
@@ -1726,7 +1726,7 @@ AmonPack:
           - ChiFlow
         Description:
           - "&eWzmocniona Regeneracja Chi"
-          - "&a+5.0 Chi/sekundę regeneracji na stałe!&7"
+          - "&a+%config:AmonPack.Chi.Passives.ChiRegeneration.RegenBonus% Chi/sekundę regeneracji na stałe!&7"
 
 
 

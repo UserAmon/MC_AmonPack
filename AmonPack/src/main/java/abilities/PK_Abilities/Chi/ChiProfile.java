@@ -64,10 +64,10 @@ public class ChiProfile {
             RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
             if (branch != null) {
                 if (branch.hasUpgrade("ChiExpansion")) {
-                    max += 50.0;
+                    max += AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.ChiExpansion.MaxChiBonus", 50.0);
                 }
                 if (branch.hasUpgrade("ChiFlow")) {
-                    max += 25.0;
+                    max += AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.ChiFlow.MaxChiBonus", 25.0);
                 }
             }
         }
@@ -94,10 +94,10 @@ public class ChiProfile {
             RPG.Levels.BendingTree.PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
             if (branch != null) {
                 if (branch.hasUpgrade("ChiRegeneration")) {
-                    rate += 5.0;
+                    rate += AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.ChiRegeneration.RegenBonus", 5.0);
                 }
                 if (branch.hasUpgrade("ChiFlow")) {
-                    rate += 2.5;
+                    rate += AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.ChiFlow.RegenBonus", 2.5);
                 }
             }
         }

@@ -75,8 +75,8 @@ public class PointBlank extends ChiAbility implements AddonAbility {
 
         RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         if (branch != null && branch.hasUpgrade("PointBlankFocus")) {
-            this.chargeTimeMs = 1200L;
-            this.range = 12.0;
+            this.chargeTimeMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PointBlank.Upgrades.Focus.ChargeTimeMs", 1200L);
+            this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PointBlank.Upgrades.Focus.Range", 12.0);
         }
     }
 
@@ -201,8 +201,10 @@ public class PointBlank extends ChiAbility implements AddonAbility {
 
         RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         if (branch != null && branch.hasUpgrade("PointBlankSlam")) {
-            victim.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 40, 4, false, false));
-            victim.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.JUMP_BOOST, 40, 128, false, false));
+            int durationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.PointBlank.Upgrades.Slam.DurationTicks", 40);
+            int slowLevel = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.PointBlank.Upgrades.Slam.SlownessLevel", 4);
+            victim.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, durationTicks, slowLevel, false, false));
+            victim.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.JUMP_BOOST, durationTicks, 128, false, false));
             victim.getWorld().spawnParticle(Particle.EXPLOSION, victim.getLocation(), 1, 0, 0, 0, 0);
         }
 

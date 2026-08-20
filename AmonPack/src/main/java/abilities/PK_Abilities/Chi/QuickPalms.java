@@ -69,11 +69,12 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
         }
 
         if (hasReflex) {
-            this.stanceDuration = 7000L;
+            this.stanceDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.QuickPalms.Upgrades.Reflex.StanceDurationMs", 7000L);
         }
         if (hasTripleStrike) {
-            this.strikeDamage += 2.0;
-            this.chiBlockDuration = 4500L;
+            double bonusDmg = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.BonusDamage", 2.0);
+            this.strikeDamage += bonusDmg;
+            this.chiBlockDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.ChiBlockDurationMs", 4500L);
         }
 
         if (isSneakTrigger) {
@@ -235,7 +236,8 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
         player.teleport(behind);
 
         if (hasReflex) {
-            ChiManager.addChi(player, 30.0);
+            double restoreAmount = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.Upgrades.Reflex.ChiRestore", 30.0);
+            ChiManager.addChi(player, restoreAmount);
         }
 
         // Sound & particles
@@ -273,7 +275,7 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
             DamageHandler.damageEntity(victim, initialDamage, this);
 
             targetPointOffsets.clear();
-            int totalPoints = hasTripleStrike ? 3 : 2;
+            int totalPoints = hasTripleStrike ? AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.VitalPoints", 3) : 2;
             for (int i = 0; i < totalPoints; i++) {
                 Vector pt = generateRandomOffset();
                 targetPointOffsets.add(pt);
@@ -322,16 +324,20 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
                 if (targetPointOffsets.isEmpty()) {
                     if (hasPressureBurst) {
+                        double burstDmg = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.Damage", 8.0);
+                        double burstKb = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.Knockback", 1.4);
+                        long paralyzeMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.ParalyzeDurationMs", 2000L);
+
                         victim.getWorld().spawnParticle(Particle.EXPLOSION, victim.getLocation().add(0, 1.0, 0), 1, 0, 0, 0, 0);
                         victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.4f);
-                        DamageHandler.damageEntity(victim, 8.0, this);
-                        Vector kb = victim.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(1.4).setY(0.35);
+                        DamageHandler.damageEntity(victim, burstDmg, this);
+                        Vector kb = victim.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(burstKb).setY(0.35);
                         victim.setVelocity(kb);
                         if (victim instanceof Player targetPlayer) {
                             BendingPlayer bTarget = BendingPlayer.getBendingPlayer(targetPlayer);
                             if (bTarget != null) {
                                 bTarget.blockChi();
-                                bTarget.addCooldown("Paralyze", 2000L);
+                                bTarget.addCooldown("Paralyze", paralyzeMs);
                             }
                         }
                     }

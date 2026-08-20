@@ -109,12 +109,7 @@ public class Levels_Bending {
                     if (locks != null && !locks.isEmpty()) {
                         modifiedList.add(ChatColor.DARK_RED + "✖ Zablokowano: " + String.join(", ", locks));
                     }
-                    List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
-                    if (desc != null && !desc.isEmpty()) {
-                        for (String line : desc) {
-                            modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
-                        }
-                    }
+                    modifiedList.addAll(getFormattedDescription(SelectedElement.element.getName(), STA.getName()));
                     if (SelectedElement.hasSkillUpgrades(STA.getName())) {
                         modifiedList.add(" ");
                         modifiedList.add(ChatColor.GOLD + "▶ Kliknij LPM, aby otworzyć ulepszenia tej umiejętności!");
@@ -132,12 +127,7 @@ public class Levels_Bending {
                         modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Red");
                         List<String> modifiedList = new ArrayList<>();
                         modifiedList.add(ChatColor.RED + "✖ ZABLOKOWANE PRZEZ INNY SKILL");
-                        List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
-                        if (desc != null && !desc.isEmpty()) {
-                            for (String line : desc) {
-                                modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
-                            }
-                        }
+                        modifiedList.addAll(getFormattedDescription(SelectedElement.element.getName(), STA.getName()));
                         meta.setLore(modifiedList);
                     } else {
                         modelid = SkillTreeConfig.getInt("AmonPack.Menu." + SelectedElement.element.getName().toString().toLowerCase() + ".Orange");
@@ -149,12 +139,7 @@ public class Levels_Bending {
                         if (locks != null && !locks.isEmpty()) {
                             modifiedList.add(ChatColor.RED + "⚠ Zablokuje: " + String.join(", ", locks));
                         }
-                        List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
-                        if (desc != null && !desc.isEmpty()) {
-                            for (String line : desc) {
-                                modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
-                            }
-                        }
+                        modifiedList.addAll(getFormattedDescription(SelectedElement.element.getName(), STA.getName()));
                         meta.setLore(modifiedList);
                     }
                 }else{
@@ -167,12 +152,7 @@ public class Levels_Bending {
                     if (locks != null && !locks.isEmpty()) {
                         modifiedList.add(ChatColor.RED + "⚠ Zablokuje: " + String.join(", ", locks));
                     }
-                    List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + SelectedElement.element.getName() + "." + STA.getName() + ".Description");
-                    if (desc != null && !desc.isEmpty()) {
-                        for (String line : desc) {
-                            modifiedList.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
-                        }
-                    }
+                    modifiedList.addAll(getFormattedDescription(SelectedElement.element.getName(), STA.getName()));
                     meta.setLore(modifiedList);
 
                 }
@@ -258,12 +238,7 @@ public class Levels_Bending {
         if (hMeta != null) {
             List<String> hLore = new ArrayList<>();
             hLore.add(ChatColor.GREEN + "Główna umiejętność");
-            List<String> baseDesc = SkillTreeConfig.getStringList("AmonPack.Tree." + element.getName() + "." + skillName + ".Description");
-            if (baseDesc != null && !baseDesc.isEmpty()) {
-                for (String line : baseDesc) {
-                    hLore.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
-                }
-            }
+            hLore.addAll(getFormattedDescription(element.getName(), skillName));
             hMeta.setLore(hLore);
             headerItem.setItemMeta(hMeta);
         }
@@ -307,12 +282,10 @@ public class Levels_Bending {
                 }
             }
 
-            List<String> desc = SkillTreeConfig.getStringList("AmonPack.Tree." + element.getName() + "." + upg.getName() + ".Description");
-            if (desc != null && !desc.isEmpty()) {
+            List<String> formattedDesc = getFormattedDescription(element.getName(), upg.getName());
+            if (!formattedDesc.isEmpty()) {
                 lore.add(" ");
-                for (String line : desc) {
-                    lore.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', line));
-                }
+                lore.addAll(formattedDesc);
             }
 
             if (meta != null) {
@@ -528,5 +501,114 @@ public class Levels_Bending {
         public String getTitle() {
             return title;
         }
+    }
+
+    public static List<String> getFormattedDescription(String elementName, String nodeName) {
+        org.bukkit.configuration.file.FileConfiguration treeCfg = AmonPackPlugin.getSkillTreeConfig();
+        if (treeCfg == null) return new ArrayList<>();
+        List<String> desc = treeCfg.getStringList("AmonPack.Tree." + elementName + "." + nodeName + ".Description");
+        if (desc == null || desc.isEmpty()) return new ArrayList<>();
+
+        List<String> formatted = new ArrayList<>();
+        org.bukkit.configuration.file.FileConfiguration abiCfg = AmonPackPlugin.getAbilitiesConfig();
+
+        for (String line : desc) {
+            String processed = line;
+            if (abiCfg != null) {
+                // 1. %config_sec:PATH% -> converts ms or ticks to seconds (e.g. 2500 -> 2.5, 40 ticks -> 2)
+                java.util.regex.Matcher mSec = java.util.regex.Pattern.compile("%config_sec:([^%]+)%").matcher(processed);
+                StringBuffer sbSec = new StringBuffer();
+                while (mSec.find()) {
+                    String path = mSec.group(1);
+                    Object val = abiCfg.get(path);
+                    String valStr = (val != null) ? formatSecondsVal(path, val) : mSec.group(0);
+                    mSec.appendReplacement(sbSec, java.util.regex.Matcher.quoteReplacement(valStr));
+                }
+                mSec.appendTail(sbSec);
+                processed = sbSec.toString();
+
+                // 2. %config_percent:PATH% -> converts decimals or numbers to % (e.g. 0.15 -> 15, 1.25 -> 25, 30 -> 30)
+                java.util.regex.Matcher mPct = java.util.regex.Pattern.compile("%config_percent:([^%]+)%").matcher(processed);
+                StringBuffer sbPct = new StringBuffer();
+                while (mPct.find()) {
+                    String path = mPct.group(1);
+                    Object val = abiCfg.get(path);
+                    String valStr = (val != null) ? formatPercentVal(val) : mPct.group(0);
+                    mPct.appendReplacement(sbPct, java.util.regex.Matcher.quoteReplacement(valStr));
+                }
+                mPct.appendTail(sbPct);
+                processed = sbPct.toString();
+
+                // 3. %config_hearts:PATH% -> converts raw damage (half-hearts) to full hearts (e.g. 2.0 -> 1.0, 8.0 -> 4.0)
+                java.util.regex.Matcher mHrt = java.util.regex.Pattern.compile("%config_hearts:([^%]+)%").matcher(processed);
+                StringBuffer sbHrt = new StringBuffer();
+                while (mHrt.find()) {
+                    String path = mHrt.group(1);
+                    Object val = abiCfg.get(path);
+                    String valStr = (val != null) ? formatHeartsVal(val) : mHrt.group(0);
+                    mHrt.appendReplacement(sbHrt, java.util.regex.Matcher.quoteReplacement(valStr));
+                }
+                mHrt.appendTail(sbHrt);
+                processed = sbHrt.toString();
+
+                // 4. Standard %config:PATH%
+                java.util.regex.Matcher mCfg = java.util.regex.Pattern.compile("%config:([^%]+)%").matcher(processed);
+                StringBuffer sbCfg = new StringBuffer();
+                while (mCfg.find()) {
+                    String path = mCfg.group(1);
+                    Object val = abiCfg.get(path);
+                    String valStr = (val != null) ? formatConfigVal(val) : mCfg.group(0);
+                    mCfg.appendReplacement(sbCfg, java.util.regex.Matcher.quoteReplacement(valStr));
+                }
+                mCfg.appendTail(sbCfg);
+                processed = sbCfg.toString();
+            }
+            formatted.add(ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', processed));
+        }
+        return formatted;
+    }
+
+    private static String formatSecondsVal(String path, Object val) {
+        double num = 0;
+        if (val instanceof Number n) num = n.doubleValue();
+        if (path.toLowerCase().endsWith("ticks")) {
+            double sec = num / 20.0;
+            return (sec == Math.floor(sec)) ? String.valueOf((int) sec) : String.valueOf(sec);
+        } else if (path.toLowerCase().endsWith("ms") || path.toLowerCase().endsWith("time") || path.toLowerCase().endsWith("duration")) {
+            double sec = num / 1000.0;
+            return (sec == Math.floor(sec)) ? String.valueOf((int) sec) : String.valueOf(sec);
+        }
+        return formatConfigVal(val);
+    }
+
+    private static String formatPercentVal(Object val) {
+        if (val instanceof Number n) {
+            double d = n.doubleValue();
+            if (d > 1.0 && d < 2.0) {
+                d = (d - 1.0) * 100.0;
+            } else if (d > 0.0 && d < 1.0) {
+                d = d * 100.0;
+            }
+            return (d == Math.floor(d)) ? String.valueOf((int) d) : String.valueOf(d);
+        }
+        return String.valueOf(val);
+    }
+
+    private static String formatHeartsVal(Object val) {
+        if (val instanceof Number n) {
+            double hearts = n.doubleValue() / 2.0;
+            return (hearts == Math.floor(hearts)) ? String.valueOf((int) hearts) : String.valueOf(hearts);
+        }
+        return String.valueOf(val);
+    }
+
+    private static String formatConfigVal(Object val) {
+        if (val instanceof Double d) {
+            return (d == Math.floor(d)) ? String.valueOf(d.intValue()) : String.valueOf(d);
+        }
+        if (val instanceof Float f) {
+            return (f == Math.floor(f)) ? String.valueOf(f.intValue()) : String.valueOf(f);
+        }
+        return String.valueOf(val);
     }
 }

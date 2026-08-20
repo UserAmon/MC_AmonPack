@@ -61,7 +61,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         boolean hasForward = (branch != null && branch.hasUpgrade("DaggerTrickForward"));
         boolean hasMulti = (branch != null && branch.hasUpgrade("DaggerTrickMulti"));
         if (hasMulti) {
-            this.maxArrowClicks = 4;
+            this.maxArrowClicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.DaggerTrick.Upgrades.Multi.MaxArrowClicks", 4);
         }
 
         performJump(hasForward);

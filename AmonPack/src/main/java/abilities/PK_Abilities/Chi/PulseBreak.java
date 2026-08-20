@@ -48,7 +48,7 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
 
         RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         if (branch != null && branch.hasUpgrade("PulseBreakOverload")) {
-            this.abilitiesToCooldownCount = 3;
+            this.abilitiesToCooldownCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.PulseBreak.Upgrades.Overload.AbilitiesCount", 3);
         }
     }
 

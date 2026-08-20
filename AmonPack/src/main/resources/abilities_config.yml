@@ -774,6 +774,9 @@ AmonPack:
       ArrowSpeed: 2.0 #arrow speed multiplier
       AngleBetweenArrows: 10.0 #degrees between arrows in fan
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Multi:
+          MaxArrowClicks: 4 #maximum clicks allowed in air with upgrade
 
     PoisonDagger:
       Cooldown: 6000 #ms between ability uses
@@ -785,6 +788,11 @@ AmonPack:
       SlownessDuration: 100 #ticks slowness lasts (5 seconds)
       SlownessAmplifier: 1 #slowness effect level (Slowness II)
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Twin:
+          WindowMs: 3000 #ms window to throw 2nd dagger before cooldown
+        Neurotoxin:
+          DurationMs: 2500 #ms chi blocking applied on dagger hit
 
     PulseBreak:
       Cooldown: 10000 #ms between ability uses
@@ -793,6 +801,9 @@ AmonPack:
       AbilitiesToCooldownCount: 2 #number of random bound abilities affected
       AddedCooldownMs: 5000 #ms added to existing cooldown of each target ability
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Overload:
+          AbilitiesCount: 3 #number of abilities affected with upgrade
 
     Feintstep:
       ChargeTime: 1500 #ms to charge shift
@@ -803,6 +814,18 @@ AmonPack:
       JumpAmplifier: 1 #jump boost potion amplifier (Jump Boost II)
       DashForce: 1.2 #evasive dash velocity
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Agility:
+          SpeedAmplifier: 1 #speed potion amplifier (Speed II)
+          TempMaxChiBonus: 25.0 #temp max chi bonus during stance
+          TempRegenBonus: 5.0 #temp chi regen bonus during stance
+        Mastery:
+          MaxDodges: 4 #maximum dodges with mastery
+          JumpAmplifier: 1 #jump boost amplifier (Jump Boost II)
+          ChiCostMultiplier: 0.5 #multiplier for chi cost
+        Flow:
+          DrainPerSecond: 4.0 #chi drained per second instead of initial cost
+          BonusMeleeDamage: 2.0 #bonus damage (1 heart) to basic melee attacks
 
     PointBlank:
       Cooldown: 12000 #ms between ability uses
@@ -812,6 +835,13 @@ AmonPack:
       HeavyDamage: 8.0 #hearts dealt on precision hit
       ChiBlockDuration: 5000 #ms chi blocking applied on precision hit
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Focus:
+          ChargeTimeMs: 1200 #ms charge time with focus upgrade
+          Range: 12.0 #blocks detection range with focus upgrade
+        Slam:
+          DurationTicks: 40 #ticks target has jump/sprint disabled (2 seconds)
+          SlownessLevel: 4 #slowness amplifier
 
     QuickPalms:
       Cooldown: 8000 #ms between ability uses
@@ -821,6 +851,18 @@ AmonPack:
       StrikeDamage: 3.0 #hearts dealt per vital point hit
       ChiBlockDuration: 3500 #ms chi blocking applied on vital hit
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Reflex:
+          StanceDurationMs: 7000 #ms counter stance lasts with reflex upgrade
+          ChiRestore: 30.0 #chi restored upon successful counter teleport
+        TripleStrike:
+          VitalPoints: 3 #number of vital points exposed on target
+          BonusDamage: 2.0 #bonus damage per vital strike (1 heart)
+          ChiBlockDurationMs: 4500 #ms chi block duration per vital hit
+        PressureBurst:
+          Damage: 8.0 #hearts dealt by final pressure burst (4 hearts)
+          Knockback: 1.4 #knockback multiplier
+          ParalyzeDurationMs: 2000 #ms paralyze applied on pressure burst
 
     CrudeBomb:
       Cooldown: 8000 #ms between ability uses
@@ -832,10 +874,21 @@ AmonPack:
       ExplosionDamage: 3 #hearts dealt by explosion
       KnockbackForce: 1.0 #knockback force applied to enemies
       SmokeRadius: 4.5 #blocks radius of smoke cloud
-      SmokeDurationMs: 8000 #ms smoke cloud lasts (7 seconds)
+      SmokeDurationMs: 8000 #ms smoke cloud lasts
       TempMaxChiBonus: 50.0 #temporary max chi granted inside smoke
       TempRegenBonus: 7.0 #temporary chi regen granted inside smoke
       ChiCost: 40.0 #chi consumed on throw
+      Upgrades:
+        Double:
+          WindowMs: 3000 #ms window to throw 2nd bomb before cooldown
+        ThickSmoke:
+          Radius: 7.0 #blocks radius of thick smoke cloud
+          DurationMs: 14000 #ms thick smoke cloud lasts (14 seconds)
+        Flashbang:
+          Radius: 8.0 #blocks radius of flashbang effect
+          BlindnessDurationTicks: 80 #ticks blindness lasts (4 seconds)
+          NauseaDurationTicks: 100 #ticks nausea lasts (5 seconds)
+          ChiCostMultiplier: 0.5 #multiplier for chi cost
 
     Lasso:
       Cooldown: 8000 #ms between ability uses
@@ -851,15 +904,29 @@ AmonPack:
 
     Paralyze:
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Extended:
+          DurationMultiplier: 1.5 #multiplier for paralyze duration
+          ChiCost: 25.0 #chi energy consumed with upgrade
 
     RapidPunch:
       ChiCost: 30.0 #chi energy consumed per use
+      Upgrades:
+        Drain:
+          ChiPerHit: 5.0 #chi energy restored per hit
 
     QuickStrike:
       ChiCost: 20.0 #chi energy consumed per use
 
     SwiftKick:
       ChiCost: 25.0 #chi energy consumed per use
+      Upgrades:
+        Vault:
+          UpVelocity: 1.1 #vertical velocity on successful kick
+        Disarm:
+          DurationTicks: 40 #ticks slowness/weakness lasts (2 seconds)
+          SlownessLevel: 2 #slowness level
+          WeaknessLevel: 2 #weakness level
 
     HighJump:
       ChiCost: 20.0 #chi energy consumed per use
@@ -869,6 +936,30 @@ AmonPack:
 
     WarriorStance:
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Fortitude:
+          ResistanceAmplifier: 1 #resistance amplifier (Resistance II)
+          DurationTicks: 200 #ticks resistance lasts (10 seconds)
 
     AcrobatStance:
       ChiCost: 40.0 #chi energy consumed per use
+      Upgrades:
+        Flurry:
+          CooldownReductionPercent: 30 #percentage of chi cooldown reduction
+
+    Passives:
+      ChiFlow:
+        MaxChiBonus: 25.0 #max chi bonus
+        RegenBonus: 2.5 #chi/s regen bonus
+      PrecisionStrikes:
+        Chance: 0.15 #chance (15%) to apply chi block on melee hit
+        ChiBlockDurationMs: 1500 #ms chi block duration
+      PressureMaster:
+        DurationMultiplier: 1.25 #multiplier (125%) for chi block & paralyze duration
+      IronBody:
+        DurationReductionMultiplier: 0.35 #reduction (35%) of incoming negative effects
+      ChiExpansion:
+        MaxChiBonus: 50.0 #permanent max chi bonus
+      ChiRegeneration:
+        RegenBonus: 5.0 #permanent chi/s regen bonus
+

@@ -732,7 +732,8 @@ public class AbilitiesListener implements Listener {
 				if (CoreAbility.hasAbility(attacker, Feintstep.class)) {
 					Feintstep fs = CoreAbility.getAbility(attacker, Feintstep.class);
 					if (fs != null && fs.isStanceActive() && fs.hasFlow()) {
-						event.setDamage(event.getDamage() + 2.0);
+						double bonusDmg = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Feintstep.Upgrades.Flow.BonusMeleeDamage", 2.0);
+						event.setDamage(event.getDamage() + bonusDmg);
 					}
 				}
 
@@ -740,8 +741,9 @@ public class AbilitiesListener implements Listener {
 				if (AmonPackPlugin.levelsBending != null) {
 					PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(attacker.getName());
 					if (branch != null) {
-						if (branch.hasUpgrade("PrecisionStrikes") && Math.random() < 0.15) {
-							if (event.getEntity() instanceof Player targetPlayer) {
+						if (branch.hasUpgrade("PrecisionStrikes")) {
+							double chance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.PrecisionStrikes.Chance", 0.15);
+							if (Math.random() < chance && event.getEntity() instanceof Player targetPlayer) {
 								BendingPlayer bTarget = BendingPlayer.getBendingPlayer(targetPlayer);
 								if (bTarget != null) {
 									bTarget.blockChi();
@@ -752,20 +754,25 @@ public class AbilitiesListener implements Listener {
 						}
 						if (branch.hasUpgrade("RapidPunchDrain")) {
 							if (bAttacker != null && "RapidPunch".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
-								ChiManager.addChi(attacker, 5.0);
+								double drainPerHit = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.RapidPunch.Upgrades.Drain.ChiPerHit", 5.0);
+								ChiManager.addChi(attacker, drainPerHit);
 							}
 						}
 						if (branch.hasUpgrade("SwiftKickVault")) {
 							if (bAttacker != null && "SwiftKick".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
-								attacker.setVelocity(new Vector(0, 1.1, 0));
+								double upVel = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.SwiftKick.Upgrades.Vault.UpVelocity", 1.1);
+								attacker.setVelocity(new Vector(0, upVel, 0));
 								attacker.getWorld().playSound(attacker.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.5f);
 							}
 						}
 						if (branch.hasUpgrade("SwiftKickDisarm")) {
 							if (bAttacker != null && "SwiftKick".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
 								if (event.getEntity() instanceof LivingEntity victim) {
-									victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2, false, true));
-									victim.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 2, false, true));
+									int disarmTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.SwiftKick.Upgrades.Disarm.DurationTicks", 40);
+									int slowLvl = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.SwiftKick.Upgrades.Disarm.SlownessLevel", 2);
+									int weakLvl = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.SwiftKick.Upgrades.Disarm.WeaknessLevel", 2);
+									victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, disarmTicks, slowLvl, false, true));
+									victim.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, disarmTicks, weakLvl, false, true));
 								}
 							}
 						}
@@ -831,11 +838,17 @@ public class AbilitiesListener implements Listener {
 				PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 				double defaultCost = 25.0;
 				if ("Paralyze".equalsIgnoreCase(abiName)) {
-					defaultCost = (branch != null && branch.hasUpgrade("ParalyzeExtended")) ? 25.0 : 40.0;
+					if (branch != null && branch.hasUpgrade("ParalyzeExtended")) {
+						defaultCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Paralyze.Upgrades.Extended.ChiCost", 25.0);
+					} else {
+						defaultCost = 40.0;
+					}
 				} else if ("WarriorStance".equalsIgnoreCase(abiName)) {
 					defaultCost = 40.0;
 					if (branch != null && branch.hasUpgrade("WarriorStanceFortitude")) {
-						player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 200, 1, false, false));
+						int resAmp = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.WarriorStance.Upgrades.Fortitude.ResistanceAmplifier", 1);
+						int resTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.WarriorStance.Upgrades.Fortitude.DurationTicks", 200);
+						player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, resTicks, resAmp, false, false));
 					}
 				} else if ("AcrobatStance".equalsIgnoreCase(abiName)) {
 					defaultCost = 40.0;
@@ -877,7 +890,8 @@ public class AbilitiesListener implements Listener {
 							|| type == PotionEffectType.NAUSEA || type == PotionEffectType.WEAKNESS) {
 						PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 						if (branch != null && branch.hasUpgrade("IronBody")) {
-							int reduced = (int) (newEffect.getDuration() * 0.65);
+							double reductionMult = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.IronBody.DurationReductionMultiplier", 0.35);
+							int reduced = (int) (newEffect.getDuration() * (1.0 - reductionMult));
 							if (reduced > 0 && reduced < newEffect.getDuration()) {
 								event.setCancelled(true);
 								player.addPotionEffect(new PotionEffect(type, reduced, newEffect.getAmplifier(), newEffect.isAmbient(), newEffect.hasParticles(), newEffect.hasIcon()));

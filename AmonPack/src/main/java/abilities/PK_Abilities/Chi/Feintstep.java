@@ -57,12 +57,13 @@ public class Feintstep extends ChiAbility implements AddonAbility {
         }
 
         if (hasMastery) {
-            this.maxDodges = 4;
-            this.jumpAmplifier = 1;
-            this.chiCost = this.chiCost * 0.5;
+            this.maxDodges = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.Feintstep.Upgrades.Mastery.MaxDodges", 4);
+            this.jumpAmplifier = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.Feintstep.Upgrades.Mastery.JumpAmplifier", 1);
+            double costMult = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Feintstep.Upgrades.Mastery.ChiCostMultiplier", 0.5);
+            this.chiCost = this.chiCost * costMult;
         }
         if (hasAgility) {
-            this.speedAmplifier = 1; // Speed II
+            this.speedAmplifier = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.Feintstep.Upgrades.Agility.SpeedAmplifier", 1);
         }
 
         if (!hasFlow && !ChiManager.hasChi(player, chiCost)) {
@@ -126,17 +127,20 @@ public class Feintstep extends ChiAbility implements AddonAbility {
             }
 
             if (hasFlow) {
+                double drainRate = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Feintstep.Upgrades.Flow.DrainPerSecond", 4.0);
                 double deltaSec = Math.max(0.001, (now - lastFlowDrainTime) / 1000.0);
                 lastFlowDrainTime = now;
-                if (!ChiManager.consumeChi(player, 4.0 * deltaSec)) {
+                if (!ChiManager.consumeChi(player, drainRate * deltaSec)) {
                     finishSkill();
                     return;
                 }
             }
 
             if (hasAgility) {
-                ChiManager.addTempMaxChi(player, "Feintstep_Agility", 25.0, 20L);
-                ChiManager.addTempRegen(player, "Feintstep_Agility", 5.0, 20L);
+                double maxChiBonus = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Feintstep.Upgrades.Agility.TempMaxChiBonus", 25.0);
+                double regenBonus = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Feintstep.Upgrades.Agility.TempRegenBonus", 5.0);
+                ChiManager.addTempMaxChi(player, "Feintstep_Agility", maxChiBonus, 20L);
+                ChiManager.addTempRegen(player, "Feintstep_Agility", regenBonus, 20L);
             }
 
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 10, speedAmplifier, false, false));
