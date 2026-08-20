@@ -28,6 +28,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
     private int arrowCount;
     private double arrowDamage;
     private double arrowSpeed;
+    private double angleBetweenArrows;
     private double chiCost;
 
     private int slot;
@@ -67,6 +68,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         this.arrowCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.DaggerTrick.ArrowCount", 3);
         this.arrowDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ArrowDamage", 2.5);
         this.arrowSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ArrowSpeed", 2.0);
+        this.angleBetweenArrows = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.AngleBetweenArrows", 25.0);
         this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ChiCost", 40.0);
     }
 
@@ -144,8 +146,11 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         Vector forward = eye.getDirection().normalize();
 
         int count = Math.max(1, arrowCount);
+        double totalSpan = (count - 1) * angleBetweenArrows;
+        double startAngle = -totalSpan / 2.0;
+
         for (int i = 0; i < count; i++) {
-            double angleDeg = (count == 1) ? 0 : -35.0 + (i * 70.0 / (count - 1));
+            double angleDeg = (count == 1) ? 0 : startAngle + (i * angleBetweenArrows);
             Vector dir = rotateY(forward.clone(), angleDeg).multiply(arrowSpeed);
 
             Arrow arrow = player.launchProjectile(Arrow.class, dir);

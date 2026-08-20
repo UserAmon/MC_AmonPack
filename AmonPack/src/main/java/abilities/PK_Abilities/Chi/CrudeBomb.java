@@ -163,11 +163,11 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
         this.smokeCenter = location.clone();
 
         // Explosion sound & visuals
-        location.getWorld().playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.1f);
-        location.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1.0f, 0.6f);
-        location.getWorld().spawnParticle(Particle.EXPLOSION, location, 2, 0.3, 0.3, 0.3, 0);
-        location.getWorld().spawnParticle(Particle.LAVA, location, 8, 0.4, 0.4, 0.4, 0.1);
-        location.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, location, 25, 0.5, 0.5, 0.5, 0.05);
+        location.getWorld().playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.1f);
+        location.getWorld().playSound(location, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 0.8f, 0.6f);
+        location.getWorld().spawnParticle(Particle.EXPLOSION, location, 1, 0.2, 0.2, 0.2, 0);
+        location.getWorld().spawnParticle(Particle.LAVA, location, 4, 0.2, 0.2, 0.2, 0.05);
+        location.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, location, 8, 0.3, 0.3, 0.3, 0.02);
 
         // Damage & knockback entities in explosion radius
         for (Entity e : GeneralMethods.getEntitiesAroundPoint(location, explosionRadius)) {
@@ -188,8 +188,8 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
             return;
         }
 
-        // Render dense smoke cloud
-        int particleCount = 14;
+        // Render subtle smoke cloud
+        int particleCount = 4;
         for (int i = 0; i < particleCount; i++) {
             double u = random.nextDouble();
             double v = random.nextDouble();
@@ -198,16 +198,11 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
             double r = Math.cbrt(random.nextDouble()) * smokeRadius;
             double sinPhi = Math.sin(phi);
             double x = r * sinPhi * Math.cos(theta);
-            double y = (r * Math.cos(phi)) * 0.75 + 0.5;
+            double y = (r * Math.cos(phi)) * 0.6 + 0.4;
             double z = r * sinPhi * Math.sin(theta);
 
             Location pLoc = smokeCenter.clone().add(x, y, z);
-            if (i % 2 == 0) {
-                pLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, pLoc, 1, 0.02, 0.02, 0.02, 0.01);
-            } else {
-                pLoc.getWorld().spawnParticle(Particle.SQUID_INK, pLoc, 1, 0.04, 0.04, 0.04, 0.01);
-                pLoc.getWorld().spawnParticle(Particle.SMOKE, pLoc, 1, 0.05, 0.05, 0.05, 0.02);
-            }
+            pLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, pLoc, 1, 0.01, 0.01, 0.01, 0.005);
         }
 
         // Apply effects to entities inside smoke cloud

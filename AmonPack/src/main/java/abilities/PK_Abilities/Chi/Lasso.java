@@ -117,6 +117,18 @@ public class Lasso extends ChiAbility implements AddonAbility {
         player.getWorld().spawnParticle(Particle.DUST, ringLoc, 1, 0, 0, 0, 0, ropeColor);
 
         if (!fullyCharged) {
+            double progress = Math.min(1.0, (double) elapsed / chargeTime);
+            int filledBars = (int) (progress * 10);
+            StringBuilder bar = new StringBuilder("§a");
+            for (int i = 0; i < 10; i++) {
+                if (i == filledBars) {
+                    bar.append("§7");
+                }
+                bar.append("■");
+            }
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText(String.format("§6➰ §lŁADOWANIE LASSA: [%s§r] §e%.0f%%", bar, progress * 100)));
+
             if (elapsed >= chargeTime) {
                 fullyCharged = true;
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.8f);
@@ -125,7 +137,7 @@ public class Lasso extends ChiAbility implements AddonAbility {
         } else {
             player.getWorld().spawnParticle(Particle.CRIT, ringLoc, 1, 0.02, 0.02, 0.02, 0.01);
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§6➰ §lLASSO NAŁADOWANE! §e(Puść Shift, aby wystrzelić)"));
+                    TextComponent.fromLegacyText("§6➰ §lLASSO NAŁADOWANE! §a[■■■■■■■■■■] §e(Puść Shift, aby wystrzelić)"));
         }
     }
 
@@ -255,8 +267,8 @@ public class Lasso extends ChiAbility implements AddonAbility {
 
         // Action bar update
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                TextComponent.fromLegacyText(String.format("§6➰ §eUwięziono: §f%s §7| Dystans: §e%.1fm / %.1fm §7| Chi: §e%.0f",
-                        targetEntity.getName(), currentDist, pullRadius, ChiManager.getChi(player))));
+                TextComponent.fromLegacyText(String.format("§6➰ §eUwięziono: §f%s §7| Chi: §e%.0f",
+                        targetEntity.getName(), ChiManager.getChi(player))));
     }
 
     private void renderRopeBeam(Location start, Location end) {

@@ -227,11 +227,17 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
             }
 
             if (loc.getWorld().equals(p.getWorld()) && loc.distanceSquared(p.getLocation()) <= 144.0) {
-                playAirbendingParticles(loc, 4, 0.2, 0.2, 0.2);
+                spawnAirParticles(loc, 3, 0.15, 0.15, 0.15);
             } else {
                 it.remove();
             }
         }
+    }
+
+    private static void spawnAirParticles(Location loc, int amount, double ox, double oy, double oz) {
+        if (loc == null || loc.getWorld() == null) return;
+        loc.getWorld().spawnParticle(Particle.CLOUD, loc, amount, ox, oy, oz, 0.01);
+        loc.getWorld().spawnParticle(Particle.CRIT, loc, Math.max(1, amount / 2), ox, oy, oz, 0.02);
     }
 
     @Override
@@ -255,7 +261,7 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
             return;
         }
 
-        playAirbendingParticles(location, particles, 0.2, 0.2, 0.2);
+        spawnAirParticles(location, particles, 0.15, 0.15, 0.15);
         if (random.nextInt(4) == 0) {
             playAirbendingSound(location);
         }

@@ -246,7 +246,7 @@ public class Resonance extends SoundAbility implements AddonAbility {
 			Location particleLoc = ring.center.clone().add(x, yOffset, z);
 
 			if (ring.isFirstRing && Math.random() < 0.2) {
-				playAirbendingParticles(ring.center.clone().add(x, 0.1, z), 1);
+				particleLoc.getWorld().spawnParticle(Particle.CLOUD, ring.center.clone().add(x, 0.1, z), 1, 0, 0, 0, 0.01);
 			} else {
 				particleLoc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, particleLoc, 1, 0, 0, 0, 0);
 			}

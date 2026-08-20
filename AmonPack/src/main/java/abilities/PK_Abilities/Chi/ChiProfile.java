@@ -124,7 +124,9 @@ public class ChiProfile {
 
     public void addTempMaxChi(String key, double amount, long durationMillis) {
         tempMaxChiModifiers.put(key, new TempModifier(amount, durationMillis));
-        this.currentChi = Math.min(this.currentChi + amount, getMaxChi());
+        if (this.currentChi > getMaxChi()) {
+            this.currentChi = getMaxChi();
+        }
         updateBossBar();
     }
 

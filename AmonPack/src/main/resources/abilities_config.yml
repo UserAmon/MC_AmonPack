@@ -772,6 +772,7 @@ AmonPack:
       ArrowRange: 25 #max range of arrows
       ArrowDamage: 2.5 #hearts per arrow hit
       ArrowSpeed: 2.0 #arrow speed multiplier
+      AngleBetweenArrows: 10.0 #degrees between arrows in fan
       ChiCost: 40.0 #chi energy consumed per use
 
     PoisonDagger:
