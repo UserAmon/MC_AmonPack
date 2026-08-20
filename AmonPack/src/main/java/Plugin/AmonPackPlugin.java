@@ -334,6 +334,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
 			this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
 			Abilities.Bending.SpecialTriggerManager.registerAdvancementPacketListener();
+			Abilities.PK_Abilities.Chi.ChiManager.init();
 			try {
 				StartDeafnessTimer();
 			} catch (Exception e) {
@@ -483,6 +484,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		try {
+			Abilities.PK_Abilities.Chi.ChiManager.stop();
 			if (ENABLE_DUNGEONS && RPG.Dungeons.DungeonManager.getInstance() != null) {
 				RPG.Dungeons.DungeonManager.getInstance().cleanupAll();
 			}

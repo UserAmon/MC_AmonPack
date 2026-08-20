@@ -29,12 +29,14 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
     private int arrowRange;
     private double arrowDamage;
     private double arrowSpeed;
+    private double chiCost;
 
     private int slot;
     private int clicksUsed = 0;
     private long lastClickTime = 0;
-    private List<AbilityProjectile> projectiles = new ArrayList<>();
+    private final List<AbilityProjectile> projectiles = new ArrayList<>();
     private boolean launched = false;
+    private boolean cooldownApplied = false;
 
     public DaggerTrick(Player player) {
         super(player);
@@ -47,6 +49,10 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         }
 
         loadConfig();
+
+        if (!ChiManager.consumeChi(player, chiCost)) {
+            return;
+        }
 
         this.slot = player.getInventory().getHeldItemSlot();
 
@@ -63,6 +69,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         this.arrowRange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.DaggerTrick.ArrowRange", 25);
         this.arrowDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ArrowDamage", 2.5);
         this.arrowSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ArrowSpeed", 1.0);
+        this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.DaggerTrick.ChiCost", 40.0);
     }
 
     private void performBackwardJump() {
@@ -78,16 +85,12 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
     @Override
     public void progress() {
         if (player == null || !player.isOnline() || player.isDead()) {
-            finishSkill();
+            projectiles.clear();
+            remove();
             return;
         }
 
-        if (player.getInventory().getHeldItemSlot() != slot) {
-            finishSkill();
-            return;
-        }
-
-        // Advance existing projectiles
+        // Advance and process existing projectiles
         if (!projectiles.isEmpty()) {
             List<AbilityProjectile> copy = new ArrayList<>(projectiles);
             for (AbilityProjectile proj : copy) {
@@ -119,15 +122,24 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
             }
         }
 
-        // Check ground landing after jump (cooldown is strictly applied on landing)
-        if (launched && isGrounded()) {
-            finishSkill();
+        // Check if player changed slot or grounded
+        if (launched) {
+            if (player.getInventory().getHeldItemSlot() != slot || isGrounded()) {
+                applyCooldown();
+                launched = false; // Player can no longer fire arrows, but flying projectiles continue!
+            }
+        }
+
+        // If jump has ended and all projectiles finished their journey, remove ability instance
+        if (!launched && projectiles.isEmpty()) {
+            remove();
         }
     }
 
     private boolean isGrounded() {
         Location loc = player.getLocation();
-        return (player.getFallDistance() > 0.05 || player.getVelocity().getY() < 0) && (loc.clone().add(0, -0.1, 0).getBlock().getType().isSolid() || player.isOnGround());
+        return (player.getFallDistance() > 0.05 || player.getVelocity().getY() < 0)
+                && (loc.clone().add(0, -0.1, 0).getBlock().getType().isSolid() || player.isOnGround());
     }
 
     public void onLeftClick() {
@@ -169,11 +181,11 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
         return new Vector(x, vector.getY(), z).normalize();
     }
 
-    private void finishSkill() {
-        if (bPlayer != null) {
+    private void applyCooldown() {
+        if (!cooldownApplied && bPlayer != null) {
             bPlayer.addCooldown(this, cooldown);
+            cooldownApplied = true;
         }
-        remove();
     }
 
     @Override
@@ -208,7 +220,7 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1";
     }
 
     @Override
@@ -217,16 +229,17 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
     @Override
     public void stop() {
-        finishSkill();
+        projectiles.clear();
+        remove();
     }
 
     @Override
     public String getDescription() {
-        return "Wykonuje skok w tył i pozwala na wystrzelenie w powietrzu serii sztyletów w stożku 90 stopni przy kliknięciach LPM.";
+        return "Wyskakujesz w powietrze w tył (Shift). Podczas lotu klikaj LPM, aby wystrzeliwać wachlarze sztyletów/strzał w stronę wrogów.";
     }
 
     @Override
     public String getInstructions() {
-        return "Naciśnij Shift aby odskoczyć do tyłu, a następnie klikaj LPM w powietrzu!";
+        return "Kucnij (Shift), aby wyskoczyć do tyłu, a następnie klikaj LPM w powietrzu, aby strzelać!";
     }
 }

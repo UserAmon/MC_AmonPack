@@ -26,20 +26,21 @@ import java.util.Random;
 
 public class QuickPalms extends ChiAbility implements AddonAbility {
 
-    private enum Mode { NONE, SHIFT_STANCE, TARGET_STRIKING }
+    public enum Mode { NONE, COUNTER_STANCE, TARGET_STRIKING }
 
     private Mode mode;
     private long cooldown;
-    private double range;
+    private double counterRange;
     private long stanceDuration;
     private double initialDamage;
-    private int pointCount;
     private double strikeDamage;
+    private long chiBlockDuration;
+    private double chiCost;
 
     private long startTime;
     private LivingEntity targetEntity;
-    private List<Location> targetPoints = new ArrayList<>();
-    private Random random = new Random();
+    private final List<Vector> targetPointOffsets = new ArrayList<>();
+    private final Random random = new Random();
 
     public QuickPalms(Player player) {
         super(player);
@@ -53,24 +54,41 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
         loadConfig();
 
-        this.startTime = System.currentTimeMillis();
         if (player.isSneaking()) {
-            this.mode = Mode.SHIFT_STANCE;
-            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.4f);
-        } else {
-            this.mode = Mode.NONE;
-        }
+            // Shift activation: Counter Stance (requires enemy within counterRange)
+            LivingEntity nearbyEnemy = findNearestEnemy(player, counterRange);
+            if (nearbyEnemy == null) {
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        TextComponent.fromLegacyText(String.format("§c✖ Brak przeciwników w zasięgu (%.0f bloków)!", counterRange)));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.7f, 0.6f);
+                return;
+            }
 
-        start();
+            if (!ChiManager.consumeChi(player, chiCost)) {
+                return;
+            }
+
+            this.mode = Mode.COUNTER_STANCE;
+            this.startTime = System.currentTimeMillis();
+            player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.6f);
+            player.getWorld().playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.4f);
+            start();
+        } else {
+            // Left click or direct melee trigger mode
+            this.mode = Mode.NONE;
+            this.startTime = System.currentTimeMillis();
+            start();
+        }
     }
 
     private void loadConfig() {
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.QuickPalms.Cooldown", 8000L);
-        this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.Range", 6.0);
+        this.counterRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.Range", 8.0);
         this.stanceDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.QuickPalms.StanceDuration", 5000L);
         this.initialDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.InitialDamage", 2.5);
-        this.pointCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.QuickPalms.PointCount", 3);
-        this.strikeDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.StrikeDamage", 2.0);
+        this.strikeDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.StrikeDamage", 3.0);
+        this.chiBlockDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.QuickPalms.ChiBlockDuration", 3500L);
+        this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.ChiCost", 40.0);
     }
 
     @Override
@@ -80,133 +98,230 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
             return;
         }
 
-        if (mode == Mode.SHIFT_STANCE) {
+        if (mode == Mode.COUNTER_STANCE) {
             long elapsed = System.currentTimeMillis() - startTime;
             if (elapsed >= stanceDuration || !player.isSneaking()) {
-                bPlayer.addCooldown(this, cooldown);
-                remove();
+                finishWithCooldown();
                 return;
             }
 
-            // Render rotating Chi rings in front of camera
-            Location eye = player.getEyeLocation();
-            Vector forward = eye.getDirection().normalize();
-            Location center = eye.clone().add(forward.multiply(1.2));
-
-            double time = System.currentTimeMillis() / 150.0;
-            for (int i = 0; i < 6; i++) {
-                double angle = time + (i * Math.PI / 3);
-                double x = 0.5 * Math.cos(angle);
-                double y = 0.5 * Math.sin(angle);
-                Vector right = new Vector(-forward.getZ(), 0, forward.getX()).normalize();
-                if (right.lengthSquared() < 0.01) right = new Vector(1, 0, 0);
-                Vector up = right.clone().crossProduct(forward).normalize();
-
-                Location pLoc = center.clone().add(right.multiply(x)).add(up.multiply(y));
-                Particle.DustOptions chiColor = new Particle.DustOptions(Color.fromRGB(240, 240, 255), 0.8f);
-                player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, chiColor);
+            // Check if any enemy is still within counter range
+            LivingEntity enemy = findNearestEnemy(player, counterRange);
+            if (enemy == null) {
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        TextComponent.fromLegacyText("§c[QuickPalms] Wszyscy przeciwnicy opuścili zasięg kontry!"));
+                finishWithCooldown();
+                return;
             }
 
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§b✦ QUICK PALMS STANCE ✦"));
+            // Render rotating vertical shield ring in front of player
+            renderRotatingShield();
+
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§b✦ §lQUICK PALMS: STAN KONTRY §b✦ §7(Trzymaj Shift)"));
 
         } else if (mode == Mode.TARGET_STRIKING) {
             if (targetEntity == null || targetEntity.isDead() || !targetEntity.isValid()) {
-                bPlayer.addCooldown(this, cooldown);
-                remove();
+                finishWithCooldown();
                 return;
             }
 
-            if (System.currentTimeMillis() - startTime > 10000L) { // 10s window to strike points
-                bPlayer.addCooldown(this, cooldown);
-                remove();
+            // 8 seconds window to strike vital points
+            if (System.currentTimeMillis() - startTime > 8000L) {
+                finishWithCooldown();
                 return;
             }
 
-            // Render target points ONLY to the victim player
-            if (targetEntity instanceof Player victimPlayer) {
-                Location vBase = victimPlayer.getLocation();
-                for (Location pt : targetPoints) {
-                    Location curPt = vBase.clone().add(pt.getX(), pt.getY(), pt.getZ());
-                    victimPlayer.spawnParticle(Particle.CRIT, curPt, 2, 0.05, 0.05, 0.05, 0.02);
-                    Particle.DustOptions ptColor = new Particle.DustOptions(Color.fromRGB(255, 100, 100), 1.0f);
-                    victimPlayer.spawnParticle(Particle.DUST, curPt, 2, 0.05, 0.05, 0.05, 0, ptColor);
-                }
+            // Render vital points ONLY to the caster player
+            renderVitalPointsToCaster();
+        } else if (mode == Mode.NONE) {
+            // Waiting for first hit (or expires in 2s if no attack happened)
+            if (System.currentTimeMillis() - startTime > 2000L) {
+                remove();
             }
         }
     }
 
-    public boolean isShiftStanceActive() {
-        return mode == Mode.SHIFT_STANCE;
-    }
+    private void renderRotatingShield() {
+        Location eye = player.getEyeLocation();
+        Vector forward = eye.getDirection().normalize();
+        Location center = eye.clone().add(forward.clone().multiply(1.2));
 
-    public void onDodgeDamage(Entity damager) {
-        if (mode != Mode.SHIFT_STANCE) return;
+        double time = (System.currentTimeMillis() % 10000) / 120.0;
+        int points = 12;
+        double radius = 0.65;
 
-        if (damager instanceof LivingEntity target) {
-            Location behind = target.getLocation().subtract(target.getLocation().getDirection().normalize().multiply(1.5));
-            behind.setDirection(target.getLocation().getDirection());
-            player.teleport(behind);
+        Vector right = new Vector(-forward.getZ(), 0, forward.getX()).normalize();
+        if (right.lengthSquared() < 0.01) {
+            right = new Vector(1, 0, 0);
+        }
+        Vector up = right.clone().crossProduct(forward).normalize();
 
-            DamageHandler.damageEntity(target, initialDamage, this);
-            apply1SecChiBlockAndSlow(target);
+        Particle.DustOptions outerColor = new Particle.DustOptions(Color.fromRGB(150, 230, 255), 0.85f);
+        Particle.DustOptions innerColor = new Particle.DustOptions(Color.fromRGB(240, 250, 255), 0.65f);
 
-            player.getWorld().playSound(behind, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 1.8f);
-            player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, behind.clone().add(0, 1.0, 0), 2, 0.2, 0.2, 0.2, 0);
+        for (int i = 0; i < points; i++) {
+            double angle = time + (i * 2 * Math.PI / points);
+            double x = radius * Math.cos(angle);
+            double y = radius * Math.sin(angle);
+
+            Location pLoc = center.clone().add(right.clone().multiply(x)).add(up.clone().multiply(y));
+            player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, outerColor);
         }
 
-        bPlayer.addCooldown(this, cooldown);
-        remove();
+        // Inner shield core
+        for (int i = 0; i < 4; i++) {
+            double angle = -time * 1.5 + (i * Math.PI / 2);
+            double x = (radius * 0.4) * Math.cos(angle);
+            double y = (radius * 0.4) * Math.sin(angle);
+            Location pLoc = center.clone().add(right.clone().multiply(x)).add(up.clone().multiply(y));
+            player.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, innerColor);
+        }
+    }
+
+    private void renderVitalPointsToCaster() {
+        if (targetEntity == null) return;
+        Location vLoc = targetEntity.getLocation();
+
+        Particle.DustOptions ptDust = new Particle.DustOptions(Color.fromRGB(255, 60, 60), 1.2f);
+
+        for (Vector offset : targetPointOffsets) {
+            Location pt = vLoc.clone().add(offset);
+            player.spawnParticle(Particle.DUST, pt, 2, 0.04, 0.04, 0.04, 0, ptDust);
+            player.spawnParticle(Particle.CRIT, pt, 1, 0.02, 0.02, 0.02, 0.01);
+        }
+    }
+
+    public boolean isCounterStanceActive() {
+        return mode == Mode.COUNTER_STANCE;
+    }
+
+    public boolean handleCounterDamage(Entity damager) {
+        if (mode != Mode.COUNTER_STANCE || !(damager instanceof LivingEntity attackerEntity)) {
+            return false;
+        }
+
+        // Check if attacker is within counter range
+        double distSq = player.getLocation().distanceSquared(attackerEntity.getLocation());
+        if (distSq > counterRange * counterRange) {
+            // Attacker is outside counter radius - damage is received normally
+            return false;
+        }
+
+        // Teleport behind attacker's back
+        Location attackerLoc = attackerEntity.getLocation();
+        Vector backDir = attackerLoc.getDirection().setY(0).normalize().multiply(-1.5);
+        Location behind = attackerLoc.clone().add(backDir);
+        behind.setY(attackerLoc.getY());
+
+        // Point camera directly at attacker
+        Vector dirToAttacker = attackerEntity.getEyeLocation().toVector().subtract(behind.clone().add(0, 1.6, 0).toVector()).normalize();
+        behind.setDirection(dirToAttacker);
+
+        player.teleport(behind);
+
+        // Sound & particles
+        player.getWorld().playSound(behind, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.5f);
+        player.getWorld().playSound(behind, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 1.8f);
+        player.getWorld().spawnParticle(Particle.SWEEP_ATTACK, behind.clone().add(0, 1.0, 0), 2, 0.2, 0.2, 0.2, 0);
+
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                TextComponent.fromLegacyText("§a✔ §lSKUTECZNA KONTRA! §7Przeniesiono za plecy wroga!"));
+
+        finishWithCooldown();
+        return true; // Damage blocked
     }
 
     public void onHitEntity(LivingEntity victim) {
         if (mode == Mode.NONE) {
-            // First hit - initialize striking mode
+            if (!ChiManager.consumeChi(player, chiCost)) {
+                remove();
+                return;
+            }
+
+            // First hit - initialize striking mode & generate 2 distant vital points
             this.mode = Mode.TARGET_STRIKING;
             this.targetEntity = victim;
             this.startTime = System.currentTimeMillis();
 
             DamageHandler.damageEntity(victim, initialDamage, this);
-            apply1SecChiBlockAndSlow(victim);
 
-            // Generate points with relative offsets
-            targetPoints.clear();
-            for (int i = 0; i < pointCount; i++) {
-                double offX = (random.nextDouble() - 0.5) * 0.8;
-                double offY = 0.4 + (random.nextDouble() * 1.0); // chest / neck / waist
-                double offZ = (random.nextDouble() - 0.5) * 0.8;
-                targetPoints.add(new Location(null, offX, offY, offZ));
-            }
+            // Generate 2 points on body separated by minimum distance of 0.6 blocks
+            targetPointOffsets.clear();
+            Vector pt1 = generateRandomOffset();
+            Vector pt2;
+            int attempts = 0;
+            do {
+                pt2 = generateRandomOffset();
+                attempts++;
+            } while (pt1.distance(pt2) < 0.6 && attempts < 30);
 
-            player.getWorld().playSound(victim.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.4f);
+            targetPointOffsets.add(pt1);
+            targetPointOffsets.add(pt2);
+
+            player.getWorld().playSound(victim.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.5f);
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§e✦ Traf w 2 odsłonięte punkty witalne na ciele wroga!"));
 
         } else if (mode == Mode.TARGET_STRIKING && victim.getEntityId() == targetEntity.getEntityId()) {
-            DamageHandler.damageEntity(victim, strikeDamage, this);
-            apply1SecChiBlockAndSlow(victim);
+            // Check if player struck close to one of the vital points
+            Location eye = player.getEyeLocation();
+            Vector lookDir = eye.getDirection().normalize();
 
-            if (!targetPoints.isEmpty()) {
-                targetPoints.remove(0); // Remove one struck point
+            int hitIndex = -1;
+            double bestAngle = 0.5; // close aiming
+
+            for (int i = 0; i < targetPointOffsets.size(); i++) {
+                Location ptWorld = victim.getLocation().clone().add(targetPointOffsets.get(i));
+                Vector toPt = ptWorld.toVector().subtract(eye.toVector()).normalize();
+                double dot = lookDir.dot(toPt);
+                if (dot > 0.85 || eye.distanceSquared(ptWorld) < 4.0) {
+                    hitIndex = i;
+                    break;
+                }
             }
 
-            player.getWorld().playSound(victim.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.8f);
+            if (hitIndex == -1 && !targetPointOffsets.isEmpty()) {
+                // Default to closest remaining point on hit
+                hitIndex = 0;
+            }
 
-            if (targetPoints.isEmpty()) {
-                // Final Strike — Knock caster BACKWARD away from victim!
-                Vector backVec = player.getLocation().toVector().subtract(victim.getLocation().toVector()).setY(0);
-                if (backVec.lengthSquared() < 0.01) {
-                    backVec = player.getLocation().getDirection().multiply(-1.0);
+            if (hitIndex != -1) {
+                targetPointOffsets.remove(hitIndex);
+
+                DamageHandler.damageEntity(victim, strikeDamage, this);
+                applyChiBlockAndSlow(victim);
+
+                player.playSound(victim.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
+                player.playSound(victim.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.4f);
+
+                if (targetPointOffsets.isEmpty()) {
+                    // Both 2 points struck! Combo finish!
+                    Vector kb = victim.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(0.8).setY(0.3);
+                    victim.setVelocity(kb);
+
+                    player.getWorld().playSound(victim.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.6f);
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            TextComponent.fromLegacyText("§a✔ §lZABLOKOWANO CHI I ZNISZCZONO WSZYSTKIE PUNKTY!"));
+
+                    finishWithCooldown();
+                } else {
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            TextComponent.fromLegacyText("§6✦ Zniszczono 1/2 punktów! Pozostał 1 punkt!"));
                 }
-                backVec.normalize().multiply(1.4).setY(0.4);
-                player.setVelocity(backVec);
-
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 1.6f);
-                bPlayer.addCooldown(this, cooldown);
-                remove();
             }
         }
     }
 
-    private void apply1SecChiBlockAndSlow(LivingEntity victim) {
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 1, false, false));
+    private Vector generateRandomOffset() {
+        double offX = (random.nextDouble() - 0.5) * 0.7;
+        double offY = 0.35 + (random.nextDouble() * 1.1); // between 0.35m and 1.45m height
+        double offZ = (random.nextDouble() - 0.5) * 0.7;
+        return new Vector(offX, offY, offZ);
+    }
+
+    private void applyChiBlockAndSlow(LivingEntity victim) {
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1, false, false));
 
         if (victim instanceof Player targetPlayer) {
             BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(targetPlayer);
@@ -219,7 +334,7 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
                             targetBPlayer.unblockChi();
                         }
                     }
-                }.runTaskLater(AmonPackPlugin.plugin, 20L); // 1 second = 20 ticks
+                }.runTaskLater(AmonPackPlugin.plugin, Math.max(20L, chiBlockDuration / 50L));
             }
         }
     }
@@ -237,6 +352,13 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
             }
         }
         return nearest;
+    }
+
+    private void finishWithCooldown() {
+        if (bPlayer != null) {
+            bPlayer.addCooldown(this, cooldown);
+        }
+        remove();
     }
 
     @Override
@@ -271,7 +393,7 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1";
     }
 
     @Override
@@ -285,11 +407,11 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Pozwala kontrować obrażenia przenosząc się za plecy wroga (Shift) oraz uderzać w słabe punkty na ciele wroga nakładając 1s chi-blocka i odrzucając się w tył po ostatnim ciosie (LPM).";
+        return "Shift: Wchodzi w stan kontry gdy w pobliżu (8 bloków) są wrogowie. Otrzymanie ciosu anuluje obrażenia i przenosi za plecy atakującego. LPM: Uderzenie generuje 2 punkty witalne na ciele wroga (widoczne tylko dla usera). Trafienie w punkty zadaje bonusowy DMG i blokuje Chi.";
     }
 
     @Override
     public String getInstructions() {
-        return "Shift: aktywuj kontrę w pobliżu wroga. LPM: uderzaj we wroga i jego słabe punkty!";
+        return "Shift przy wrogach: Stan Kontry. LPM w walce: Wykryj i uderzaj w 2 punkty witalne wroga!";
     }
 }

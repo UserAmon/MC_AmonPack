@@ -22,6 +22,7 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
     private double knockback;
     private int abilitiesToCooldownCount;
     private long addedCooldownMs;
+    private double chiCost;
 
     public PulseBreak(Player player) {
         super(player);
@@ -43,6 +44,7 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PulseBreak.Knockback", 0.8);
         this.abilitiesToCooldownCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.PulseBreak.AbilitiesToCooldownCount", 2);
         this.addedCooldownMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PulseBreak.AddedCooldownMs", 5000L);
+        this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PulseBreak.ChiCost", 40.0);
     }
 
     @Override
@@ -51,10 +53,20 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
             remove();
             return;
         }
+
+        // PulseBreak is a melee-triggered ability on hit
+        if (System.currentTimeMillis() - getStartTime() > 2000L) {
+            remove();
+        }
     }
 
     public void onHitEntity(LivingEntity victim) {
         if (victim == null || player == null) return;
+
+        if (!ChiManager.consumeChi(player, chiCost)) {
+            remove();
+            return;
+        }
 
         DamageHandler.damageEntity(victim, damage, this);
 
@@ -78,54 +90,52 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
                     int countToDisable = Math.min(abilitiesToCooldownCount, boundAbilities.size());
                     for (int i = 0; i < countToDisable; i++) {
                         String abiName = boundAbilities.get(i);
-                        long currentCd = 0;
-                        if (targetBPlayer.isOnCooldown(abiName)) {
-                            if (targetBPlayer.getCooldowns().containsKey(abiName)) {
-                                currentCd = targetBPlayer.getCooldowns().get(abiName).getCooldown() - System.currentTimeMillis();
-                            }
-                        }
-                        long newCd = Math.max(0, currentCd) + addedCooldownMs;
+                        long currentCd = targetBPlayer.getCooldown(abiName);
+                        long newCd = (currentCd > 0 ? (currentCd - System.currentTimeMillis()) : 0) + addedCooldownMs;
                         targetBPlayer.addCooldown(abiName, newCd);
                     }
                 }
             }
         }
 
-        bPlayer.addCooldown(this, cooldown);
+        if (bPlayer != null) {
+            bPlayer.addCooldown(this, cooldown);
+        }
         remove();
     }
 
     private void playBodyPulseAnimation(LivingEntity victim) {
-        victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.2f, 0.7f);
-        victim.getWorld().playSound(victim.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.4f, 1.8f);
+        Location baseLoc = victim.getLocation();
+        victim.getWorld().playSound(baseLoc, Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.2f, 0.8f);
+        victim.getWorld().playSound(baseLoc, Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 1.0f, 1.6f);
 
         new BukkitRunnable() {
-            private int step = 0;
+            int step = 0;
 
             @Override
             public void run() {
-                step++;
-                if (step > 15 || victim.isDead()) {
+                if (victim.isDead() || !victim.isValid() || step >= 3) {
                     cancel();
                     return;
                 }
 
-                Location loc = victim.getLocation().add(0, 0.9, 0);
-                double radius = 0.5 + (step * 0.08);
+                Location center = victim.getLocation().add(0, 1.0, 0);
+                double radius = 0.5 + (step * 0.4);
+                int points = 16;
 
-                for (int i = 0; i < 12; i++) {
-                    double angle = (2 * Math.PI / 12) * i;
+                for (int i = 0; i < points; i++) {
+                    double angle = (2 * Math.PI / points) * i;
                     double x = radius * Math.cos(angle);
                     double z = radius * Math.sin(angle);
-                    Location pLoc = loc.clone().add(x, Math.sin(step * 0.4) * 0.4, z);
+                    Location pLoc = center.clone().add(x, 0, z);
 
-                    victim.getWorld().spawnParticle(Particle.CRIT, pLoc, 1, 0, 0, 0, 0);
-                    if (step % 3 == 0) {
-                        victim.getWorld().spawnParticle(Particle.ENCHANTED_HIT, pLoc, 1, 0, 0, 0, 0);
-                    }
+                    pLoc.getWorld().spawnParticle(Particle.CRIT, pLoc, 1, 0, 0, 0, 0);
+                    pLoc.getWorld().spawnParticle(Particle.ENCHANTED_HIT, pLoc, 1, 0, 0, 0, 0.05);
                 }
+
+                step++;
             }
-        }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
+        }.runTaskTimer(AmonPackPlugin.plugin, 0L, 2L);
     }
 
     @Override
@@ -160,7 +170,7 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
 
     @Override
     public String getVersion() {
-        return "1.0";
+        return "1.1";
     }
 
     @Override
@@ -174,11 +184,11 @@ public class PulseBreak extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Uderzenie paraliżujące punkty chi przeciwnika. Zadaje obrażenia, odpycha oraz dodaje sekundy cooldownu do wybranych losowo skilli wroga.";
+        return "Uderz przeciwnika w walce wręcz, aby wywołać impuls Chi rozbijający jego równowagę: zadaje obrażenia, odrzuca oraz nakłada wydłużony cooldown na losowe przypisane umiejętności celu.";
     }
 
     @Override
     public String getInstructions() {
-        return "Zadzaj cios przeciwnikowi (LPM) mając wybrany PulseBreak!";
+        return "Wybierz slot z PulseBreak i zaatakuj wroga wręcz!";
     }
 }

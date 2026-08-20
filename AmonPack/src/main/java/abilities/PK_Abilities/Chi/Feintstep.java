@@ -29,6 +29,8 @@ public class Feintstep extends ChiAbility implements AddonAbility {
     private int dodgesLeft;
     private boolean activeStance = false;
 
+    private double chiCost;
+
     public Feintstep(Player player) {
         super(player);
 
@@ -40,6 +42,10 @@ public class Feintstep extends ChiAbility implements AddonAbility {
         }
 
         loadConfig();
+
+        if (!ChiManager.consumeChi(player, chiCost)) {
+            return;
+        }
 
         this.state = State.CHARGING;
         this.startTime = System.currentTimeMillis();
@@ -56,6 +62,7 @@ public class Feintstep extends ChiAbility implements AddonAbility {
         this.speedAmplifier = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.Feintstep.SpeedAmplifier", 1);
         this.jumpAmplifier = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.Feintstep.JumpAmplifier", 1);
         this.dashForce = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Feintstep.DashForce", 1.2);
+        this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Feintstep.ChiCost", 40.0);
     }
 
     @Override

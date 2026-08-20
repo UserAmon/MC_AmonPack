@@ -740,6 +740,11 @@ AmonPack:
       AffectUser: false #if true, effects apply to caster
 
   Chi:
+    System:
+      DefaultMaxChi: 100.0 #base maximum chi energy for players
+      DefaultRegenRate: 5.0 #chi points regenerated per second
+      ShowBossBarWhenNotFull: true #display bossbar indicator when chi is regenerating
+
     DaggerTrick:
       Cooldown: 5000 #ms between ability uses
       BackwardForce: 1.2 #velocity multiplier for backward leap
@@ -749,14 +754,18 @@ AmonPack:
       ArrowRange: 25 #max range of arrows
       ArrowDamage: 2.5 #hearts per arrow hit
       ArrowSpeed: 1.0 #arrow speed multiplier
+      ChiCost: 40.0 #chi energy consumed per use
 
-    PoisonKnife:
-      Cooldown: 8000 #ms between ability uses
-      Damage: 3.0 #hearts dealt on knife hit
-      PoisonDuration: 100 #ticks poison lasts
-      PoisonAmplifier: 1 #poison effect level
-      BlindnessDuration: 60 #ticks blindness lasts
-      ChiBlockDuration: 4000 #ms chi blocking lasts on target
+    PoisonDagger:
+      Cooldown: 6000 #ms between ability uses
+      Damage: 3.5 #hearts dealt on dagger hit
+      Speed: 1.8 #thrown dagger speed
+      Range: 30.0 #max distance dagger travels
+      PoisonDuration: 100 #ticks poison lasts (5 seconds)
+      PoisonAmplifier: 1 #poison effect level (Poison II)
+      SlownessDuration: 100 #ticks slowness lasts (5 seconds)
+      SlownessAmplifier: 1 #slowness effect level (Slowness II)
+      ChiCost: 40.0 #chi energy consumed per use
 
     PulseBreak:
       Cooldown: 10000 #ms between ability uses
@@ -764,6 +773,7 @@ AmonPack:
       Knockback: 0.8 #knockback multiplier
       AbilitiesToCooldownCount: 2 #number of random bound abilities affected
       AddedCooldownMs: 5000 #ms added to existing cooldown of each target ability
+      ChiCost: 40.0 #chi energy consumed per use
 
     Feintstep:
       ChargeTime: 1500 #ms to charge shift
@@ -773,6 +783,7 @@ AmonPack:
       SpeedAmplifier: 1 #speed potion amplifier (Speed II)
       JumpAmplifier: 1 #jump boost potion amplifier (Jump Boost II)
       DashForce: 1.2 #evasive dash velocity
+      ChiCost: 40.0 #chi energy consumed per use
 
     PointBlank:
       Cooldown: 12000 #ms between ability uses
@@ -781,11 +792,13 @@ AmonPack:
       ChargeTime: 2500 #ms for target ring to complete
       HeavyDamage: 8.0 #hearts dealt on precision hit
       ChiBlockDuration: 5000 #ms chi blocking applied on precision hit
+      ChiCost: 40.0 #chi energy consumed per use
 
     QuickPalms:
       Cooldown: 8000 #ms between ability uses
-      Range: 6.0 #max distance to enemy for shift stance
+      Range: 8.0 #max distance to enemy for shift counter stance
       StanceDuration: 5000 #ms shift stance lasts
       InitialDamage: 2.5 #hearts dealt on first strike
-      PointCount: 3 #number of target points generated on victim
-      StrikeDamage: 2.0 #hearts dealt per target point hit
+      StrikeDamage: 3.0 #hearts dealt per vital point hit
+      ChiBlockDuration: 3500 #ms chi blocking applied on vital hit
+      ChiCost: 40.0 #chi energy consumed per use

@@ -30,6 +30,8 @@ public class PointBlank extends ChiAbility implements AddonAbility {
     private int requiredChargeTicks;
     private boolean isMarked = false;
 
+    private double chiCost;
+
     public PointBlank(Player player) {
         super(player);
 
@@ -41,6 +43,10 @@ public class PointBlank extends ChiAbility implements AddonAbility {
         }
 
         loadConfig();
+
+        if (!ChiManager.consumeChi(player, chiCost)) {
+            return;
+        }
 
         this.startTime = System.currentTimeMillis();
         this.requiredChargeTicks = (int) (chargeTimeMs / 50L);
@@ -55,7 +61,9 @@ public class PointBlank extends ChiAbility implements AddonAbility {
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PointBlank.Range", 8.0);
         this.chargeTimeMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PointBlank.ChargeTime", 2500L);
         this.heavyDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PointBlank.HeavyDamage", 8.0);
-        this.chiBlockDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PointBlank.ChiBlockDuration", 5000L);
+        this.chiBlockDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PointBlank.ChiBlockDuration",
+                5000L);
+        this.chiCost = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.PointBlank.ChiCost", 40.0);
     }
 
     @Override
@@ -144,14 +152,17 @@ public class PointBlank extends ChiAbility implements AddonAbility {
             double z = ringRadius * Math.sin(angle);
             Location pt = feet.clone().add(x, 0, z);
 
-            Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(255, (int) (100 + (155 * ratio)), 0), 0.8f);
+            Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(255, (int) (100 + (155 * ratio)), 0),
+                    0.8f);
             feet.getWorld().spawnParticle(Particle.DUST, pt, 1, 0, 0, 0, 0, dust);
         }
     }
 
     public void onHitTarget(LivingEntity victim) {
-        if (!isMarked || targetEnemy == null || victim == null) return;
-        if (!victim.getUniqueId().equals(targetEnemy.getUniqueId())) return;
+        if (!isMarked || targetEnemy == null || victim == null)
+            return;
+        if (!victim.getUniqueId().equals(targetEnemy.getUniqueId()))
+            return;
 
         DamageHandler.damageEntity(victim, heavyDamage, this);
 
@@ -174,8 +185,7 @@ public class PointBlank extends ChiAbility implements AddonAbility {
         hitLoc.getWorld().playSound(hitLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.5f);
         hitLoc.getWorld().playSound(hitLoc, Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.2f, 0.6f);
 
-        hitLoc.getWorld().spawnParticle(Particle.EXPLOSION, hitLoc, 1, 0, 0, 0, 0);
-        hitLoc.getWorld().spawnParticle(Particle.CRIT, hitLoc, 25, 0.4, 0.4, 0.4, 0.2);
+        hitLoc.getWorld().spawnParticle(Particle.CRIT, hitLoc, 5, 0.4, 0.4, 0.4, 0.2);
 
         finishSkill();
     }

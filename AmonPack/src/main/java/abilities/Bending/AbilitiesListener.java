@@ -34,6 +34,8 @@ import org.bukkit.potion.PotionEffectType;
 
 public class AbilitiesListener implements Listener {
 
+	private static final java.util.Set<java.util.UUID> activeAttackProcessors = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
 	private void CheckEarthHealthBoost(Player player, CoreAbility ability) {
 		if (ability.getElement() == Element.EARTH) {
 			boolean hasEffect = false;
@@ -201,10 +203,6 @@ public class AbilitiesListener implements Listener {
 						if (!CoreAbility.hasAbility(player, Abilities.PK_Abilities.Earth.Burrow.class)) {
 							new Abilities.PK_Abilities.Earth.Burrow(player);
 						}
-					} else if (boundAbility.equalsIgnoreCase("PoisonKnife")) {
-						if (!CoreAbility.hasAbility(player, PoisonKnife.class)) {
-							new PoisonKnife(player);
-						}
 					} else if (boundAbility.equalsIgnoreCase("FlameWhip")) {
 						if (!CoreAbility.hasAbility(player, FlameWhip.class)) {
 							new FlameWhip(player);
@@ -342,6 +340,9 @@ public class AbilitiesListener implements Listener {
 					}
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("FirelordStance")) {
 					new FirelordStance(player);
+				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("PoisonDagger")
+						|| bPlayer.getBoundAbilityName().equalsIgnoreCase("PoisonKnife")) {
+					new PoisonDagger(player);
 				} else if (bPlayer.getBoundAbilityName().equalsIgnoreCase("PointBlank")) {
 					if (!CoreAbility.hasAbility(player, PointBlank.class)) {
 						new PointBlank(player);
@@ -592,11 +593,13 @@ public class AbilitiesListener implements Listener {
 			}
 			if (CoreAbility.hasAbility(player, QuickPalms.class)) {
 				QuickPalms qp = CoreAbility.getAbility(player, QuickPalms.class);
-				if (qp != null && qp.isShiftStanceActive()) {
-					event.setCancelled(true);
+				if (qp != null && qp.isCounterStanceActive()) {
 					org.bukkit.entity.Entity damager = (event instanceof EntityDamageByEntityEvent edbe) ? edbe.getDamager() : null;
-					qp.onDodgeDamage(damager);
-					return;
+					boolean blocked = qp.handleCounterDamage(damager);
+					if (blocked) {
+						event.setCancelled(true);
+						return;
+					}
 				}
 			}
 			if (event.getCause() == DamageCause.FALL && FirelordStanceManager.isActive(player)) {
@@ -631,121 +634,72 @@ public class AbilitiesListener implements Listener {
 
 	@EventHandler
 	public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+		if (event.getCause() == DamageCause.CUSTOM) {
+			return;
+		}
+
 		if (event.getDamager() instanceof Player attacker) {
-			BendingPlayer bAttacker = BendingPlayer.getBendingPlayer(attacker);
-
-			// PulseBreak melee attack handler
-			if (bAttacker != null && "PulseBreak".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
-				if (!bAttacker.isOnCooldown("PulseBreak")) {
-					if (event.getEntity() instanceof LivingEntity victim) {
-						PulseBreak pb = new PulseBreak(attacker);
-						pb.onHitEntity(victim);
-					}
-				}
+			if (!activeAttackProcessors.add(attacker.getUniqueId())) {
+				return;
 			}
+			try {
+				BendingPlayer bAttacker = BendingPlayer.getBendingPlayer(attacker);
 
-			// QuickPalms melee attack handler
-			if (bAttacker != null && "QuickPalms".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
-				if (!bAttacker.isOnCooldown("QuickPalms")) {
-					if (event.getEntity() instanceof LivingEntity victim) {
-						QuickPalms qp = CoreAbility.getAbility(attacker, QuickPalms.class);
-						if (qp == null) {
-							qp = new QuickPalms(attacker);
+				// PulseBreak melee attack handler
+				if (bAttacker != null && "PulseBreak".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+					if (!bAttacker.isOnCooldown("PulseBreak")) {
+						if (event.getEntity() instanceof LivingEntity victim) {
+							PulseBreak pb = new PulseBreak(attacker);
+							pb.onHitEntity(victim);
 						}
-						qp.onHitEntity(victim);
 					}
 				}
-			}
 
-			// HeartReading melee attack handler
-			if (bAttacker != null && "HeartReading".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
-				if (!bAttacker.isOnCooldown("HeartReading")) {
-					if (event.getEntity() instanceof LivingEntity victim) {
-						HeartReading hr = CoreAbility.getAbility(attacker, HeartReading.class);
-						if (hr == null) {
-							hr = new HeartReading(attacker);
+				// QuickPalms melee attack handler
+				if (bAttacker != null && "QuickPalms".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+					if (!bAttacker.isOnCooldown("QuickPalms")) {
+						if (event.getEntity() instanceof LivingEntity victim) {
+							QuickPalms qp = CoreAbility.getAbility(attacker, QuickPalms.class);
+							if (qp == null) {
+								qp = new QuickPalms(attacker);
+							}
+							qp.onHitEntity(victim);
 						}
-						hr.onHitEntity(victim);
 					}
 				}
-			}
 
-			// PointBlank precision attack handler
-			if (CoreAbility.hasAbility(attacker, PointBlank.class)) {
-				PointBlank pb = CoreAbility.getAbility(attacker, PointBlank.class);
-				if (pb != null && event.getEntity() instanceof LivingEntity victim) {
-					pb.onHitTarget(victim);
-				}
-			}
-
-			// VeinFlow stance attack handler
-			if (VeinFlowManager.isActive(attacker)) {
-				VeinFlow stance = VeinFlowManager.getStance(attacker);
-				if (stance != null && event.getEntity() instanceof LivingEntity victim) {
-					stance.tryApplyAttackBuffs(victim);
-				}
-			}
-
-			// PoisonKnife attack handler
-			ItemStack held = attacker.getInventory().getItemInMainHand();
-			if (held != null && held.getType() == Material.WOODEN_SWORD) {
-				if (PoisonKnife.isPoisonKnife(held)) {
-					event.setCancelled(true);
-					if (event.getEntity() instanceof LivingEntity victim) {
-						PoisonKnife pk = CoreAbility.getAbility(attacker, PoisonKnife.class);
-						if (pk == null) {
-							pk = new PoisonKnife(attacker);
+				// HeartReading melee attack handler
+				if (bAttacker != null && "HeartReading".equalsIgnoreCase(bAttacker.getBoundAbilityName())) {
+					if (!bAttacker.isOnCooldown("HeartReading")) {
+						if (event.getEntity() instanceof LivingEntity victim) {
+							HeartReading hr = CoreAbility.getAbility(attacker, HeartReading.class);
+							if (hr == null) {
+								hr = new HeartReading(attacker);
+							}
+							hr.onHitEntity(victim);
 						}
-						pk.onHitEntity(victim);
 					}
-				} else {
-					event.setCancelled(true);
-					PoisonKnife.purgeUnregisteredKnives(attacker);
 				}
+
+				// PointBlank precision attack handler
+				if (CoreAbility.hasAbility(attacker, PointBlank.class)) {
+					PointBlank pb = CoreAbility.getAbility(attacker, PointBlank.class);
+					if (pb != null && event.getEntity() instanceof LivingEntity victim) {
+						pb.onHitTarget(victim);
+					}
+				}
+
+				// VeinFlow stance attack handler
+				if (VeinFlowManager.isActive(attacker)) {
+					VeinFlow stance = VeinFlowManager.getStance(attacker);
+					if (stance != null && event.getEntity() instanceof LivingEntity victim) {
+						stance.tryApplyAttackBuffs(victim);
+					}
+				}
+			} finally {
+				activeAttackProcessors.remove(attacker.getUniqueId());
 			}
 		}
-	}
-
-	@EventHandler
-	public void onItemHeld(PlayerItemHeldEvent event) {
-		Player player = event.getPlayer();
-		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-		if (bPlayer == null) return;
-
-		String previousAbi = bPlayer.getAbilities().get(event.getPreviousSlot() + 1);
-		String nextAbi = bPlayer.getAbilities().get(event.getNewSlot() + 1);
-
-		if ("PoisonKnife".equalsIgnoreCase(previousAbi)) {
-			PoisonKnife.purgeUnregisteredKnives(player);
-		}
-	}
-
-	@EventHandler
-	public void onDropItem(PlayerDropItemEvent event) {
-		if (PoisonKnife.isPoisonKnife(event.getItemDrop().getItemStack())) {
-			event.getItemDrop().remove();
-			event.setCancelled(true);
-		}
-	}
-
-	@EventHandler
-	public void onInventoryClick(InventoryClickEvent event) {
-		if (PoisonKnife.isPoisonKnife(event.getCurrentItem()) || PoisonKnife.isPoisonKnife(event.getCursor())) {
-			event.setCancelled(true);
-			if (event.getWhoClicked() instanceof Player p) {
-				PoisonKnife.purgeUnregisteredKnives(p);
-			}
-		}
-	}
-
-	@EventHandler
-	public void onPlayerQuit(PlayerQuitEvent event) {
-		PoisonKnife.purgeUnregisteredKnives(event.getPlayer());
-	}
-
-	@EventHandler
-	public void onPlayerDeath(PlayerDeathEvent event) {
-		event.getDrops().removeIf(PoisonKnife::isPoisonKnife);
 	}
 
 	@EventHandler
