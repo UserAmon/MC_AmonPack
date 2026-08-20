@@ -38,6 +38,8 @@ import org.bukkit.util.Vector;
 import com.projectkorra.projectkorra.ability.ChiAbility;
 import com.projectkorra.projectkorra.ability.AddonAbility;
 import com.projectkorra.projectkorra.event.AbilityStartEvent;
+import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
+import com.projectkorra.projectkorra.event.PlayerCooldownChangeEvent;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -873,6 +875,88 @@ public class AbilitiesListener implements Listener {
 				if (pkBlast.getSource() == null) {
 					event.setCancelled(true);
 					pkBlast.remove();
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onAbilityDamageEntity(AbilityDamageEntityEvent event) {
+		if (event.getAbility() == null) return;
+		com.projectkorra.projectkorra.ability.Ability ability = event.getAbility();
+		Player player = ability.getPlayer();
+		if (player == null || AmonPackPlugin.levelsBending == null) return;
+
+		PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		if (branch == null) return;
+
+		String abiName = ability.getName();
+
+		if ("RapidPunch".equalsIgnoreCase(abiName)) {
+			if (branch.hasUpgrade("RapidPunchDrain")) {
+				double drainPerHit = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.RapidPunch.Upgrades.Drain.ChiPerHit", 5.0);
+				ChiManager.addChi(player, drainPerHit);
+			}
+		} else if ("SwiftKick".equalsIgnoreCase(abiName)) {
+			if (branch.hasUpgrade("SwiftKickVault")) {
+				double upVel = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.SwiftKick.Upgrades.Vault.UpVelocity", 1.1);
+				player.setVelocity(new Vector(0, upVel, 0));
+				player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.5f);
+			}
+			if (branch.hasUpgrade("SwiftKickDisarm")) {
+				if (event.getEntity() instanceof LivingEntity victim) {
+					int disarmTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.SwiftKick.Upgrades.Disarm.DurationTicks", 40);
+					int slowLvl = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.SwiftKick.Upgrades.Disarm.SlownessLevel", 2);
+					int weakLvl = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.SwiftKick.Upgrades.Disarm.WeaknessLevel", 2);
+					victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, disarmTicks, slowLvl, false, true));
+					victim.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, disarmTicks, weakLvl, false, true));
+				}
+			}
+		} else if ("Paralyze".equalsIgnoreCase(abiName)) {
+			double mult = 1.0;
+			if (branch.hasUpgrade("ParalyzeExtended")) {
+				mult *= AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Paralyze.Upgrades.Extended.DurationMultiplier", 1.5);
+			}
+			if (branch.hasUpgrade("PressureMaster")) {
+				mult *= AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.PressureMaster.DurationMultiplier", 1.25);
+			}
+			long baseParalyzeMs = 2000L;
+			long totalParalyzeMs = (long) (baseParalyzeMs * mult);
+			if (event.getEntity() instanceof LivingEntity living) {
+				ChiManager.paralyzeEntity(living, totalParalyzeMs);
+			}
+		}
+	}
+
+	@EventHandler
+	public void onPlayerMove(org.bukkit.event.player.PlayerMoveEvent event) {
+		Player player = event.getPlayer();
+		if (ChiManager.isParalyzed(player)) {
+			org.bukkit.Location from = event.getFrom();
+			org.bukkit.Location to = event.getTo();
+			if (to != null && (from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ())) {
+				event.setTo(new org.bukkit.Location(from.getWorld(), from.getX(), from.getY(), from.getZ(), to.getYaw(), to.getPitch()));
+			}
+		}
+	}
+
+	@EventHandler
+	public void onPlayerCooldownChange(PlayerCooldownChangeEvent event) {
+		if (event.getPlayer() == null || event.getAbility() == null) return;
+		Player player = event.getPlayer().getPlayer();
+		if (player == null || !player.isOnline() || AmonPackPlugin.levelsBending == null) return;
+		PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+		if (branch != null && branch.hasUpgrade("AcrobatStanceFlurry")) {
+			BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
+			if (bPlayer != null && bPlayer.getStance() != null && (bPlayer.getStance().getClass().getSimpleName().equalsIgnoreCase("AcrobatStance") || (bPlayer.getStance() instanceof com.projectkorra.projectkorra.ability.Ability abi && "AcrobatStance".equalsIgnoreCase(abi.getName())))) {
+				CoreAbility core = CoreAbility.getAbility(event.getAbility());
+				if (core instanceof ChiAbility) {
+					int pct = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Chi.AcrobatStance.Upgrades.Flurry.CooldownReductionPercent", 30);
+					long cd = event.getCooldown();
+					if (cd > 0) {
+						long reducedCd = (long) (cd * (1.0 - (pct / 100.0)));
+						event.setCooldown(reducedCd);
+					}
 				}
 			}
 		}

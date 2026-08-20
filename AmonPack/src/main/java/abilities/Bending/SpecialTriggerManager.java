@@ -105,7 +105,7 @@ public class SpecialTriggerManager {
         if (bPlayer == null || ability == null) return false;
         Player player = bPlayer.getPlayer();
         if (player == null || !player.isOnline() || player.isDead()) return false;
-        if (bPlayer.isChiBlocked() || bPlayer.isParalyzed()) return false;
+        if (bPlayer.isChiBlocked() || bPlayer.isParalyzed() || Abilities.PK_Abilities.Chi.ChiManager.isParalyzed(player)) return false;
         if (!bPlayer.isToggled() || !bPlayer.isElementToggled(ability.getElement())) return false;
 
         Element mainElement = ability.getElement();

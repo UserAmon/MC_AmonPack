@@ -184,6 +184,12 @@ public class PointBlank extends ChiAbility implements AddonAbility {
             BendingPlayer targetBPlayer = BendingPlayer.getBendingPlayer(targetPlayer);
             if (targetBPlayer != null) {
                 targetBPlayer.blockChi();
+                long blockDur = chiBlockDuration;
+                RPG.Levels.BendingTree.PlayerBendingBranch pBranch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+                if (pBranch != null && pBranch.hasUpgrade("PressureMaster")) {
+                    double pMult = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.PressureMaster.DurationMultiplier", 1.25);
+                    blockDur = (long) (blockDur * pMult);
+                }
                 new BukkitRunnable() {
                     @Override
                     public void run() {
@@ -191,7 +197,7 @@ public class PointBlank extends ChiAbility implements AddonAbility {
                             targetBPlayer.unblockChi();
                         }
                     }
-                }.runTaskLater(AmonPackPlugin.plugin, Math.max(1L, chiBlockDuration / 50L));
+                }.runTaskLater(AmonPackPlugin.plugin, Math.max(1L, blockDur / 50L));
             }
         }
 

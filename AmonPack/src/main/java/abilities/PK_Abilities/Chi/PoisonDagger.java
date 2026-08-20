@@ -150,6 +150,12 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
             victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slownessDuration, slownessAmplifier, false, true));
 
             if (hasNeurotoxin) {
+                long neuroDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.PoisonDagger.Upgrades.Neurotoxin.DurationMs", 2500L);
+                PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+                if (branch != null && branch.hasUpgrade("PressureMaster")) {
+                    double pMult = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.PressureMaster.DurationMultiplier", 1.25);
+                    neuroDuration = (long) (neuroDuration * pMult);
+                }
                 if (victim instanceof Player targetPlayer) {
                     BendingPlayer bTarget = BendingPlayer.getBendingPlayer(targetPlayer);
                     if (bTarget != null) {

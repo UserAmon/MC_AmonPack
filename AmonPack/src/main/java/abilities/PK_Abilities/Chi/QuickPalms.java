@@ -328,18 +328,18 @@ public class QuickPalms extends ChiAbility implements AddonAbility {
                         double burstKb = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.Knockback", 1.4);
                         long paralyzeMs = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.ParalyzeDurationMs", 2000L);
 
+                        RPG.Levels.BendingTree.PlayerBendingBranch pBranch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+                        if (pBranch != null && pBranch.hasUpgrade("PressureMaster")) {
+                            double pMult = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi.Passives.PressureMaster.DurationMultiplier", 1.25);
+                            paralyzeMs = (long) (paralyzeMs * pMult);
+                        }
+
                         victim.getWorld().spawnParticle(Particle.EXPLOSION, victim.getLocation().add(0, 1.0, 0), 1, 0, 0, 0, 0);
                         victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.4f);
                         DamageHandler.damageEntity(victim, burstDmg, this);
                         Vector kb = victim.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(burstKb).setY(0.35);
                         victim.setVelocity(kb);
-                        if (victim instanceof Player targetPlayer) {
-                            BendingPlayer bTarget = BendingPlayer.getBendingPlayer(targetPlayer);
-                            if (bTarget != null) {
-                                bTarget.blockChi();
-                                bTarget.addCooldown("Paralyze", paralyzeMs);
-                            }
-                        }
+                        ChiManager.paralyzeEntity(victim, paralyzeMs);
                     }
 
                     player.spigot().sendMessage(ChatMessageType.ACTION_BAR,

@@ -148,4 +148,56 @@ public class ChiManager {
         if (AmonPackPlugin.getAbilitiesConfig() == null) return defaultCost;
         return AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Chi." + abilityName + ".ChiCost", defaultCost);
     }
+
+    private static final Map<UUID, Long> paralyzedUntil = new ConcurrentHashMap<>();
+
+    public static boolean isParalyzed(Player player) {
+        if (player == null) return false;
+        Long until = paralyzedUntil.get(player.getUniqueId());
+        if (until == null) return false;
+        if (System.currentTimeMillis() >= until) {
+            paralyzedUntil.remove(player.getUniqueId());
+            return false;
+        }
+        return true;
+    }
+
+    public static void paralyzeEntity(org.bukkit.entity.LivingEntity entity, long durationMs) {
+        if (entity == null || durationMs <= 0) return;
+
+        int ticks = (int) (durationMs / 50L);
+        if (ticks <= 0) ticks = 1;
+
+        if (entity instanceof Player targetPlayer) {
+            long newUntil = System.currentTimeMillis() + durationMs;
+            Long currentUntil = paralyzedUntil.get(targetPlayer.getUniqueId());
+            if (currentUntil == null || newUntil > currentUntil) {
+                paralyzedUntil.put(targetPlayer.getUniqueId(), newUntil);
+            }
+
+            com.projectkorra.projectkorra.BendingPlayer bTarget = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(targetPlayer);
+            if (bTarget != null) {
+                bTarget.blockChi();
+            }
+
+            targetPlayer.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, ticks, 127, false, false, true));
+            targetPlayer.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.JUMP_BOOST, ticks, 200, false, false, false));
+            targetPlayer.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+
+            targetPlayer.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§c✖ §lZOSTAŁEŚ SPARALIŻOWANY! §7(Brak możliwości ruchu i magii)"));
+            targetPlayer.playSound(targetPlayer.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 0.6f, 1.8f);
+        } else {
+            entity.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, ticks, 127, false, false, true));
+            entity.setVelocity(new org.bukkit.util.Vector(0, 0, 0));
+            if (entity instanceof org.bukkit.entity.Mob mob) {
+                mob.setAI(false);
+                Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
+                    if (mob.isValid()) {
+                        mob.setAI(true);
+                    }
+                }, ticks);
+            }
+        }
+    }
 }
