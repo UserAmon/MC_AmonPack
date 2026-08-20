@@ -434,6 +434,96 @@ public class DungeonManager implements Listener {
                                             }
                                             cond.setPoints(pts);
                                             break;
+                                         case REBUILD:
+                                             cond = new DungeonCondition(DungeonCondition.ConditionType.REBUILD);
+                                             if (map.containsKey("start-x")) {
+                                                 cond.setStartX(asDouble(map.get("start-x")));
+                                                 cond.setStartY(asDouble(map.get("start-y")));
+                                                 cond.setStartZ(asDouble(map.get("start-z")));
+                                                 cond.setHasStartLoc(true);
+                                             } else if (map.containsKey("x1")) {
+                                                 cond.setStartX(asDouble(map.get("x1")));
+                                                 cond.setStartY(asDouble(map.get("y1")));
+                                                 cond.setStartZ(asDouble(map.get("z1")));
+                                                 cond.setHasStartLoc(true);
+                                             }
+                                             if (map.containsKey("end-x")) {
+                                                 cond.setEndX(asDouble(map.get("end-x")));
+                                                 cond.setEndY(asDouble(map.get("end-y")));
+                                                 cond.setEndZ(asDouble(map.get("end-z")));
+                                                 cond.setHasEndLoc(true);
+                                             } else if (map.containsKey("x2")) {
+                                                 cond.setEndX(asDouble(map.get("x2")));
+                                                 cond.setEndY(asDouble(map.get("y2")));
+                                                 cond.setEndZ(asDouble(map.get("z2")));
+                                                 cond.setHasEndLoc(true);
+                                             }
+                                             double rMinX = map.containsKey("min-x") ? asDouble(map.get("min-x")) : (cond.hasStartLoc() ? Math.min(cond.getStartX(), cond.getEndX()) : 0);
+                                             double rMaxX = map.containsKey("max-x") ? asDouble(map.get("max-x")) : (cond.hasStartLoc() ? Math.max(cond.getStartX(), cond.getEndX()) : 0);
+                                             double rMinY = map.containsKey("min-y") ? asDouble(map.get("min-y")) : (cond.hasStartLoc() ? Math.min(cond.getStartY(), cond.getEndY()) : 0);
+                                             double rMaxY = map.containsKey("max-y") ? asDouble(map.get("max-y")) : (cond.hasStartLoc() ? Math.max(cond.getStartY(), cond.getEndY()) : 0);
+                                             double rMinZ = map.containsKey("min-z") ? asDouble(map.get("min-z")) : (cond.hasStartLoc() ? Math.min(cond.getStartZ(), cond.getEndZ()) : 0);
+                                             double rMaxZ = map.containsKey("max-z") ? asDouble(map.get("max-z")) : (cond.hasStartLoc() ? Math.max(cond.getStartZ(), cond.getEndZ()) : 0);
+                                             cond.setMinX(rMinX);
+                                             cond.setMaxX(rMaxX);
+                                             cond.setMinY(rMinY);
+                                             cond.setMaxY(rMaxY);
+                                             cond.setMinZ(rMinZ);
+                                             cond.setMaxZ(rMaxZ);
+                                             if (map.containsKey("material")) {
+                                                 cond.setRebuildMaterial(DungeonCondition.parseMaterial((String) map.get("material")));
+                                             }
+                                             if (map.containsKey("clear-field")) {
+                                                 cond.setClearField((Boolean) map.get("clear-field"));
+                                             }
+                                             if (map.containsKey("direction")) {
+                                                 cond.setRebuildDirection((String) map.get("direction"));
+                                             }
+                                             break;
+
+                                         case HIT_TARGETS:
+                                             cond = new DungeonCondition(DungeonCondition.ConditionType.HIT_TARGETS);
+                                             cond.setTargetHp(asDouble(map.getOrDefault("hp", 20.0)));
+                                             cond.setTargetSpeed(asDouble(map.getOrDefault("speed", 0.12)));
+                                             double defOff = asDouble(map.getOrDefault("offset", 3.0));
+                                             cond.setTargetOffsetX(asDouble(map.getOrDefault("offset-x", defOff)));
+                                             cond.setTargetOffsetY(asDouble(map.getOrDefault("offset-y", Math.min(2.0, defOff))));
+                                             cond.setTargetOffsetZ(asDouble(map.getOrDefault("offset-z", defOff)));
+                                             cond.setTargetType((String) map.getOrDefault("target-type", "ORB"));
+                                             cond.setTargetParticle((String) map.getOrDefault("particle", "FLAME"));
+
+                                             List<Location> tPts = new ArrayList<>();
+                                             List<Double> tHpList = new ArrayList<>();
+                                             List<Double> tSpdList = new ArrayList<>();
+
+                                             List<?> rawTargets = map.containsKey("targets") ? (List<?>) map.get("targets") : (List<?>) map.get("points");
+                                             if (rawTargets != null) {
+                                                 for (Object tObj : rawTargets) {
+                                                     if (tObj instanceof String) {
+                                                         String[] parts = ((String) tObj).split(",");
+                                                         if (parts.length >= 3) {
+                                                             double px = Double.parseDouble(parts[0].trim());
+                                                             double py = Double.parseDouble(parts[1].trim());
+                                                             double pz = Double.parseDouble(parts[2].trim());
+                                                             tPts.add(new Location(null, px, py, pz));
+                                                             tHpList.add(cond.getTargetHp());
+                                                             tSpdList.add(cond.getTargetSpeed());
+                                                         }
+                                                     } else if (tObj instanceof Map) {
+                                                         Map<String, Object> tMap = (Map<String, Object>) tObj;
+                                                         double px = asDouble(tMap.get("x"));
+                                                         double py = asDouble(tMap.get("y"));
+                                                         double pz = asDouble(tMap.get("z"));
+                                                         tPts.add(new Location(null, px, py, pz));
+                                                         tHpList.add(asDouble(tMap.getOrDefault("hp", cond.getTargetHp())));
+                                                         tSpdList.add(asDouble(tMap.getOrDefault("speed", cond.getTargetSpeed())));
+                                                     }
+                                                 }
+                                             }
+                                             cond.setPoints(tPts);
+                                             cond.setTargetCustomHpList(tHpList);
+                                             cond.setTargetCustomSpeedList(tSpdList);
+                                             break;
                                     }
                                     if (cond != null) {
                                         if (map.containsKey("x")) cond.setXList(asDoubleList(map.get("x")));
@@ -950,6 +1040,10 @@ public class DungeonManager implements Listener {
         }
 
         if (attacker != null) {
+            if (run.handleTargetHit(event.getEntity(), attacker, event.getDamage())) {
+                event.setCancelled(true);
+                return;
+            }
             DungeonPlayerStats stats = run.getPlayerStats(attacker);
             if (stats != null) {
                 double damage = event.getDamage();

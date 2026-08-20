@@ -16,6 +16,7 @@ import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class DungeonInstance {
@@ -88,6 +89,33 @@ public class DungeonInstance {
     private final Map<UUID, Boolean> waterMarked = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<DungeonCondition, Set<Integer>> collectedPointsMap = new HashMap<>();
     private final Map<DungeonCondition, Long> collectPointsStartTimes = new HashMap<>();
+
+    private final Map<Location, org.bukkit.block.data.BlockData> modifiedBlockHistory = new ConcurrentHashMap<>();
+
+    public void recordBlockModification(Location loc) {
+        if (loc == null) return;
+        modifiedBlockHistory.computeIfAbsent(loc.getBlock().getLocation(), k -> loc.getBlock().getBlockData().clone());
+    }
+
+    public void recordBlockModification(Block block) {
+        if (block == null) return;
+        modifiedBlockHistory.computeIfAbsent(block.getLocation(), k -> block.getBlockData().clone());
+    }
+
+    public void restoreModifiedBlocks() {
+        if (modifiedBlockHistory.isEmpty()) return;
+        int count = 0;
+        for (Map.Entry<Location, org.bukkit.block.data.BlockData> entry : modifiedBlockHistory.entrySet()) {
+            Location loc = entry.getKey();
+            org.bukkit.block.data.BlockData originalData = entry.getValue();
+            if (loc.getWorld() != null) {
+                loc.getBlock().setBlockData(originalData, false);
+                count++;
+            }
+        }
+        System.out.println("[Dungeons] Błyskawicznie przywrócono " + count + " zmodyfikowanych bloków na świecie: " + (world != null ? world.getName() : "null"));
+        modifiedBlockHistory.clear();
+    }
 
     public void markEnemy(org.bukkit.entity.LivingEntity enemy, Player source, long durationMs, boolean isWater) {
         markedEnemies.put(enemy.getUniqueId(), System.currentTimeMillis() + durationMs);
@@ -623,6 +651,12 @@ public class DungeonInstance {
                         }
                     }
                 }
+                if (condition.getType() == DungeonCondition.ConditionType.REBUILD) {
+                    tickRebuild(condition, encounter);
+                }
+                if (condition.getType() == DungeonCondition.ConditionType.HIT_TARGETS) {
+                    tickHitTargets(condition);
+                }
             }
 
             if (!activeShieldedEnemyUuids.isEmpty()) {
@@ -672,6 +706,14 @@ public class DungeonInstance {
                         } else if (condition.getType() == DungeonCondition.ConditionType.THROW_AT) {
                             act = getThrowHits(condition);
                             req = condition.getAmount();
+                            break;
+                        } else if (condition.getType() == DungeonCondition.ConditionType.HIT_TARGETS) {
+                            act = getDestroyedTargetsCount(condition);
+                            req = getTargetCount(condition);
+                            break;
+                        } else if (condition.getType() == DungeonCondition.ConditionType.REBUILD) {
+                            act = getRebuildProgressCount(condition);
+                            req = getRebuildTotalCount(condition);
                             break;
                         } else if (condition.getType() == DungeonCondition.ConditionType.SHIELDED) {
                             UUID bossUuid = conditionBossUuids.get(condition);
@@ -1266,6 +1308,14 @@ public class DungeonInstance {
             }
             dynamicPathChiBlockedPlayers.clear();
 
+            for (List<DungeonTarget> list : activeDungeonTargets.values()) {
+                for (DungeonTarget dt : list) {
+                    dt.removeEntities();
+                }
+            }
+            activeDungeonTargets.clear();
+            rebuildTracks.clear();
+
             for (DungeonCondition condition : encounter.getConditions()) {
                 condition.resetState();
                 if (condition.getType() == DungeonCondition.ConditionType.PERIODIC_CHECK) {
@@ -1275,6 +1325,10 @@ public class DungeonInstance {
                     lookingTimerMap.put(condition, condition.getInterval());
                 } else if (condition.getType() == DungeonCondition.ConditionType.ALIVE) {
                     aliveStateMap.put(condition, false);
+                } else if (condition.getType() == DungeonCondition.ConditionType.REBUILD) {
+                    initRebuild(condition);
+                } else if (condition.getType() == DungeonCondition.ConditionType.HIT_TARGETS) {
+                    spawnHitTargets(condition);
                 }
             }
 
@@ -1657,6 +1711,7 @@ public class DungeonInstance {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
                     Block block = world.getBlockAt(x, y, z);
+                    recordBlockModification(block);
                     block.setType(mat);
                     if (spawnParticles) {
                         Location blockCenter = block.getLocation().add(0.5, 0.5, 0.5);
@@ -1784,6 +1839,14 @@ public class DungeonInstance {
     }
 
     private void cleanupWorldAndBackups() {
+        for (List<DungeonTarget> list : activeDungeonTargets.values()) {
+            for (DungeonTarget dt : list) {
+                dt.removeEntities();
+            }
+        }
+        activeDungeonTargets.clear();
+        rebuildTracks.clear();
+        restoreModifiedBlocks();
         DungeonWorldManager.deleteDungeonWorld(world);
     }
 
@@ -1984,6 +2047,7 @@ public class DungeonInstance {
 
         if (claimants.containsAll(activeLiving)) {
             org.bukkit.block.Block block = loc.getBlock();
+            recordBlockModification(block);
             block.setType(Material.AIR);
             block.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, block.getLocation().add(0.5, 0.5, 0.5), 20, 0.3,
                     0.3, 0.3, Material.CHEST.createBlockData());
@@ -2365,6 +2429,7 @@ public class DungeonInstance {
         p.getWorld().spawnParticle(Particle.HEART, p.getLocation().add(0, 1.5, 0), 1, 0.1, 0.1, 0.1, 0.0);
         Block blockUnder = p.getLocation().getBlock();
         if (blockUnder.getType() == Material.AIR && blockUnder.getRelative(org.bukkit.block.BlockFace.DOWN).getType().isSolid()) {
+            recordBlockModification(blockUnder);
             blockUnder.setType(Material.SNOW);
         }
 
@@ -2380,6 +2445,7 @@ public class DungeonInstance {
                         ally.getWorld().spawnParticle(Particle.HEART, ally.getLocation().add(0, 1.5, 0), 1, 0.1, 0.1, 0.1, 0.0);
                         Block bUnder = ally.getLocation().getBlock();
                         if (bUnder.getType() == Material.AIR && bUnder.getRelative(org.bukkit.block.BlockFace.DOWN).getType().isSolid()) {
+                            recordBlockModification(bUnder);
                             bUnder.setType(Material.SNOW);
                         }
                     }
@@ -2387,6 +2453,7 @@ public class DungeonInstance {
                     le.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 60, 1));
                     Block bUnder = le.getLocation().getBlock();
                     if (bUnder.getType() == Material.AIR && bUnder.getRelative(org.bukkit.block.BlockFace.DOWN).getType().isSolid()) {
+                        recordBlockModification(bUnder);
                         bUnder.setType(Material.SNOW);
                     }
                 }
@@ -2428,6 +2495,7 @@ public class DungeonInstance {
                 if (loc.getX() >= minX && loc.getX() <= maxX &&
                     loc.getY() >= minY && loc.getY() <= maxY &&
                     loc.getZ() >= minZ && loc.getZ() <= maxZ) {
+                    recordBlockModification(block);
                     checkAndGiveZoneTools(player, eff);
                     return true;
                 }
@@ -2453,6 +2521,7 @@ public class DungeonInstance {
                 if (loc.getX() >= minX && loc.getX() <= maxX &&
                     loc.getY() >= minY && loc.getY() <= maxY &&
                     loc.getZ() >= minZ && loc.getZ() <= maxZ) {
+                    recordBlockModification(block);
                     checkAndGiveZoneTools(player, eff);
                     return true;
                 }
@@ -2678,6 +2747,7 @@ public class DungeonInstance {
             for (int by = minY; by <= maxY; by++) {
                 for (int bz = minZ; bz <= maxZ; bz++) {
                     Block b = world.getBlockAt(bx, by, bz);
+                    recordBlockModification(b);
                     if (pathLocations.contains(b.getLocation())) {
                         b.setType(cond.getSafeBlockMaterial());
                     } else {
@@ -2767,5 +2837,452 @@ public class DungeonInstance {
         int minZ = (int) Math.min(cond.getMinZ(), cond.getMaxZ());
         int maxZ = (int) Math.max(cond.getMinZ(), cond.getMaxZ());
         return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
+    }
+
+    // ==========================================
+    // REBUILD MECHANIC
+    // ==========================================
+
+    public static class RebuildTrack {
+        private final DungeonCondition condition;
+        private final List<Location> sortedBlocks = new ArrayList<>();
+        private final Map<Location, org.bukkit.block.data.BlockData> targetBlockData = new HashMap<>();
+        private int currentlyBuiltCount = 0;
+        private boolean initialized = false;
+
+        public RebuildTrack(DungeonCondition condition) {
+            this.condition = condition;
+        }
+
+        public List<Location> getSortedBlocks() {
+            return sortedBlocks;
+        }
+
+        public int getCurrentlyBuiltCount() {
+            return currentlyBuiltCount;
+        }
+
+        public boolean isInitialized() {
+            return initialized;
+        }
+    }
+
+    private final Map<DungeonCondition, RebuildTrack> rebuildTracks = new HashMap<>();
+
+    private void initRebuild(DungeonCondition cond) {
+        if (world == null) return;
+        RebuildTrack track = rebuildTracks.computeIfAbsent(cond, RebuildTrack::new);
+        if (track.initialized) return;
+
+        int minX = (int) Math.min(cond.getMinX(), cond.getMaxX());
+        int maxX = (int) Math.max(cond.getMinX(), cond.getMaxX());
+        int minY = (int) Math.min(cond.getMinY(), cond.getMaxY());
+        int maxY = (int) Math.max(cond.getMinY(), cond.getMaxY());
+        int minZ = (int) Math.min(cond.getMinZ(), cond.getMaxZ());
+        int maxZ = (int) Math.max(cond.getMinZ(), cond.getMaxZ());
+
+        Location start = cond.hasStartLoc() ? new Location(world, cond.getStartX(), cond.getStartY(), cond.getStartZ()) : new Location(world, minX, minY, minZ);
+        Location end = cond.hasEndLoc() ? new Location(world, cond.getEndX(), cond.getEndY(), cond.getEndZ()) : new Location(world, maxX, maxY, maxZ);
+
+        Vector dir = end.toVector().subtract(start.toVector());
+        if (dir.lengthSquared() == 0) {
+            dir = new Vector(1, 0, 0);
+        } else {
+            dir.normalize();
+        }
+
+        List<Location> blockLocs = new ArrayList<>();
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    Location bLoc = new Location(world, x, y, z);
+                    blockLocs.add(bLoc);
+
+                    Block b = bLoc.getBlock();
+                    org.bukkit.block.data.BlockData bd;
+                    if (cond.getRebuildMaterial() != null) {
+                        bd = cond.getRebuildMaterial().createBlockData();
+                    } else if (b.getType() != Material.AIR) {
+                        bd = b.getBlockData().clone();
+                    } else {
+                        bd = Material.STONE_BRICKS.createBlockData();
+                    }
+                    track.targetBlockData.put(bLoc, bd);
+
+                    recordBlockModification(b);
+                }
+            }
+        }
+
+        Vector fStart = start.toVector();
+        Vector fDir = dir;
+        blockLocs.sort(Comparator.comparingDouble((Location loc) -> {
+            Vector v = loc.toVector().subtract(fStart);
+            return v.dot(fDir);
+        }).thenComparingDouble(Location::getY).thenComparingDouble(Location::getX).thenComparingDouble(Location::getZ));
+
+        track.sortedBlocks.addAll(blockLocs);
+
+        if (cond.isClearField()) {
+            for (Location loc : track.sortedBlocks) {
+                loc.getBlock().setType(Material.AIR, false);
+            }
+        } else {
+            track.currentlyBuiltCount = track.sortedBlocks.size();
+        }
+
+        track.initialized = true;
+    }
+
+    private void tickRebuild(DungeonCondition cond, Encounter encounter) {
+        RebuildTrack track = rebuildTracks.get(cond);
+        if (track == null || !track.initialized) {
+            initRebuild(cond);
+            track = rebuildTracks.get(cond);
+            if (track == null) return;
+        }
+
+        double progress = calculateRebuildProgress(cond, encounter);
+        int total = track.sortedBlocks.size();
+        if (total == 0) return;
+
+        int targetCount = (int) Math.round(total * progress);
+        targetCount = Math.max(0, Math.min(total, targetCount));
+
+        if (targetCount > track.currentlyBuiltCount) {
+            for (int i = track.currentlyBuiltCount; i < targetCount; i++) {
+                Location loc = track.sortedBlocks.get(i);
+                Block b = loc.getBlock();
+                org.bukkit.block.data.BlockData bd = track.targetBlockData.get(loc);
+                if (bd != null) {
+                    b.setBlockData(bd, false);
+                    world.spawnParticle(Particle.BLOCK, loc.clone().add(0.5, 0.5, 0.5), 6, 0.2, 0.2, 0.2, 0.05, bd);
+                    if (i % 3 == 0) {
+                        world.playSound(loc, Sound.BLOCK_STONE_PLACE, 0.6f, 1.1f + (float) (0.4 * ((double) i / total)));
+                    }
+                }
+            }
+            track.currentlyBuiltCount = targetCount;
+        } else if (targetCount < track.currentlyBuiltCount) {
+            for (int i = track.currentlyBuiltCount - 1; i >= targetCount; i--) {
+                Location loc = track.sortedBlocks.get(i);
+                Block b = loc.getBlock();
+                b.setType(Material.AIR, false);
+                world.spawnParticle(Particle.SMOKE, loc.clone().add(0.5, 0.5, 0.5), 4, 0.2, 0.2, 0.2, 0.04);
+                if (i % 3 == 0) {
+                    world.playSound(loc, Sound.BLOCK_STONE_BREAK, 0.5f, 0.9f);
+                }
+            }
+            track.currentlyBuiltCount = targetCount;
+        }
+    }
+
+    private double calculateRebuildProgress(DungeonCondition rebuildCond, Encounter encounter) {
+        if (encounter == null) return 1.0;
+        List<DungeonCondition> otherConds = new ArrayList<>();
+        for (DungeonCondition c : encounter.getConditions()) {
+            if (c != rebuildCond && c.getType() != DungeonCondition.ConditionType.REBUILD) {
+                otherConds.add(c);
+            }
+        }
+
+        if (otherConds.isEmpty()) {
+            return 1.0;
+        }
+
+        double sumProgress = 0.0;
+        for (DungeonCondition c : otherConds) {
+            double p = 0.0;
+            switch (c.getType()) {
+                case ZONE:
+                    p = c.getTimeRequired() > 0 ? (double) getZoneProgress(c) / c.getTimeRequired() : 0.0;
+                    break;
+                case KILL_MOBS:
+                    p = c.getAmount() > 0 ? (double) getKilledMobsCount(c.getMobName()) / c.getAmount() : 0.0;
+                    break;
+                case THROW_AT:
+                    p = c.getAmount() > 0 ? (double) getThrowHits(c) / c.getAmount() : 0.0;
+                    break;
+                case HIT_TARGETS:
+                    p = getTargetCount(c) > 0 ? (double) getDestroyedTargetsCount(c) / getTargetCount(c) : 0.0;
+                    break;
+                case COLLECT_POINTS:
+                    int pts = c.getPoints() != null ? c.getPoints().size() : 1;
+                    Set<Integer> col = collectedPointsMap.get(c);
+                    p = (col != null) ? (double) col.size() / pts : 0.0;
+                    break;
+                case INTERACT_BLOCK_WITH_ITEM:
+                case DROP_ON_DEATH:
+                    p = c.isMet(this) ? 1.0 : 0.0;
+                    break;
+                default:
+                    p = c.isMet(this) ? 1.0 : 0.0;
+                    break;
+            }
+            sumProgress += Math.max(0.0, Math.min(1.0, p));
+        }
+
+        return sumProgress / otherConds.size();
+    }
+
+    public boolean isRebuildMet(DungeonCondition cond) {
+        RebuildTrack track = rebuildTracks.get(cond);
+        if (track == null || !track.initialized) return false;
+        return track.currentlyBuiltCount >= track.sortedBlocks.size() && !track.sortedBlocks.isEmpty();
+    }
+
+    public int getRebuildProgressCount(DungeonCondition cond) {
+        RebuildTrack track = rebuildTracks.get(cond);
+        return track != null ? track.currentlyBuiltCount : 0;
+    }
+
+    public int getRebuildTotalCount(DungeonCondition cond) {
+        RebuildTrack track = rebuildTracks.get(cond);
+        return track != null ? track.sortedBlocks.size() : 1;
+    }
+
+    // ==========================================
+    // HIT TARGETS MECHANIC
+    // ==========================================
+
+    public static class DungeonTarget {
+        private final UUID id = UUID.randomUUID();
+        private final Location baseLoc;
+        private Location currentLoc;
+        private Location targetLoc;
+        private final double maxHp;
+        private double currentHp;
+        private final double speed;
+        private final double offsetX, offsetY, offsetZ;
+        private final String particleType;
+        private org.bukkit.entity.ArmorStand nameplate;
+        private org.bukkit.entity.Slime hitboxEntity;
+        private boolean dead = false;
+        private int ticksToNextPath = 0;
+        private final Random rand = new Random();
+
+        public DungeonTarget(Location baseLoc, double maxHp, double speed, double offsetX, double offsetY, double offsetZ, String particleType) {
+            this.baseLoc = baseLoc.clone();
+            this.currentLoc = baseLoc.clone();
+            this.targetLoc = baseLoc.clone();
+            this.maxHp = maxHp;
+            this.currentHp = maxHp;
+            this.speed = Math.max(0.02, speed);
+            this.offsetX = offsetX;
+            this.offsetY = offsetY;
+            this.offsetZ = offsetZ;
+            this.particleType = particleType != null ? particleType : "FLAME";
+        }
+
+        public void spawn(World world) {
+            if (world == null) return;
+            hitboxEntity = world.spawn(currentLoc, org.bukkit.entity.Slime.class, s -> {
+                s.setSize(1);
+                s.setInvisible(true);
+                s.setSilent(true);
+                s.setAI(false);
+                s.setInvulnerable(false);
+                s.setCollidable(true);
+                s.setRemoveWhenFarAway(false);
+                s.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
+            });
+
+            nameplate = world.spawn(currentLoc.clone().add(0, 0.8, 0), org.bukkit.entity.ArmorStand.class, as -> {
+                as.setVisible(false);
+                as.setGravity(false);
+                as.setMarker(true);
+                as.setCustomNameVisible(true);
+                as.setSmall(true);
+            });
+            updateHologram();
+        }
+
+        public void updateHologram() {
+            if (nameplate == null || !nameplate.isValid()) return;
+            int totalBars = 10;
+            int greenBars = Math.max(0, Math.min(totalBars, (int) Math.round((currentHp / maxHp) * totalBars)));
+            int redBars = totalBars - greenBars;
+            String bar = "§c§l[ " + "§a" + "█".repeat(greenBars) + "§c" + "░".repeat(redBars) + " §c§l] §e" + (int) Math.ceil(currentHp) + "§7/§e" + (int) maxHp + " §c❤";
+            nameplate.setCustomName(bar);
+        }
+
+        public boolean damage(double dmg, Player damager) {
+            if (dead) return false;
+            currentHp -= dmg;
+            if (currentLoc.getWorld() != null) {
+                currentLoc.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, currentLoc.clone().add(0, 0.5, 0), 4, 0.2, 0.2, 0.2, 0.1);
+                currentLoc.getWorld().spawnParticle(Particle.CRIT, currentLoc.clone().add(0, 0.5, 0), 8, 0.25, 0.25, 0.25, 0.15);
+                float pitch = 0.8f + (float) ((1.0 - Math.max(0, currentHp) / maxHp) * 0.8f);
+                currentLoc.getWorld().playSound(currentLoc, Sound.ENTITY_ARROW_HIT_PLAYER, 1.0f, pitch);
+                currentLoc.getWorld().playSound(currentLoc, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, pitch);
+            }
+
+            if (currentHp <= 0) {
+                dead = true;
+                currentHp = 0;
+                if (currentLoc.getWorld() != null) {
+                    currentLoc.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, currentLoc, 1, 0, 0, 0, 0);
+                    currentLoc.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, currentLoc, 30, 0.4, 0.4, 0.4, 0.2);
+                    currentLoc.getWorld().spawnParticle(Particle.FIREWORK, currentLoc, 15, 0.3, 0.3, 0.3, 0.1);
+                    currentLoc.getWorld().playSound(currentLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.2f, 1.2f);
+                    currentLoc.getWorld().playSound(currentLoc, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.5f);
+                }
+                removeEntities();
+                return true;
+            } else {
+                updateHologram();
+                return false;
+            }
+        }
+
+        public void tick() {
+            if (dead || currentLoc.getWorld() == null) return;
+
+            ticksToNextPath--;
+            if (ticksToNextPath <= 0 || currentLoc.distanceSquared(targetLoc) <= 0.2) {
+                ticksToNextPath = 40 + rand.nextInt(60);
+                double rx = (rand.nextDouble() * 2 - 1) * offsetX;
+                double ry = (rand.nextDouble() * 2 - 1) * offsetY;
+                double rz = (rand.nextDouble() * 2 - 1) * offsetZ;
+                targetLoc = baseLoc.clone().add(rx, ry, rz);
+            }
+
+            Vector dir = targetLoc.toVector().subtract(currentLoc.toVector());
+            if (dir.lengthSquared() > 0.001) {
+                dir.normalize().multiply(speed);
+                currentLoc.add(dir);
+            }
+
+            if (hitboxEntity != null && hitboxEntity.isValid()) {
+                hitboxEntity.teleport(currentLoc);
+            }
+            if (nameplate != null && nameplate.isValid()) {
+                nameplate.teleport(currentLoc.clone().add(0, 0.8, 0));
+            }
+
+            World w = currentLoc.getWorld();
+            double time = System.currentTimeMillis() / 150.0;
+            for (int i = 0; i < 4; i++) {
+                double a = time + (i * Math.PI / 2.0);
+                double px = 0.45 * Math.cos(a);
+                double pz = 0.45 * Math.sin(a);
+                w.spawnParticle(Particle.SOUL_FIRE_FLAME, currentLoc.getX() + px, currentLoc.getY() + 0.4, currentLoc.getZ() + pz, 1, 0, 0, 0, 0);
+            }
+            w.spawnParticle(Particle.END_ROD, currentLoc.getX(), currentLoc.getY() + 0.4, currentLoc.getZ(), 1, 0.05, 0.05, 0.05, 0.01);
+            w.spawnParticle(Particle.GLOW, currentLoc.getX(), currentLoc.getY() + 0.4, currentLoc.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+        }
+
+        public void removeEntities() {
+            if (hitboxEntity != null && hitboxEntity.isValid()) {
+                hitboxEntity.remove();
+            }
+            if (nameplate != null && nameplate.isValid()) {
+                nameplate.remove();
+            }
+        }
+
+        public boolean isDead() { return dead; }
+        public org.bukkit.entity.Entity getHitboxEntity() { return hitboxEntity; }
+        public org.bukkit.entity.Entity getNameplate() { return nameplate; }
+    }
+
+    private final Map<DungeonCondition, List<DungeonTarget>> activeDungeonTargets = new HashMap<>();
+
+    private void spawnHitTargets(DungeonCondition cond) {
+        if (world == null) return;
+        List<DungeonTarget> list = activeDungeonTargets.computeIfAbsent(cond, k -> new ArrayList<>());
+        for (DungeonTarget dt : list) {
+            dt.removeEntities();
+        }
+        list.clear();
+
+        List<Location> pts = cond.getPoints();
+        if (pts != null && !pts.isEmpty()) {
+            for (int i = 0; i < pts.size(); i++) {
+                Location raw = pts.get(i);
+                Location spawnLoc = new Location(world, raw.getX(), raw.getY(), raw.getZ());
+                double hp = (cond.getTargetCustomHpList() != null && i < cond.getTargetCustomHpList().size())
+                        ? cond.getTargetCustomHpList().get(i) : cond.getTargetHp();
+                double spd = (cond.getTargetCustomSpeedList() != null && i < cond.getTargetCustomSpeedList().size())
+                        ? cond.getTargetCustomSpeedList().get(i) : cond.getTargetSpeed();
+
+                DungeonTarget dt = new DungeonTarget(spawnLoc, hp, spd, cond.getTargetOffsetX(), cond.getTargetOffsetY(), cond.getTargetOffsetZ(), cond.getTargetParticle());
+                dt.spawn(world);
+                list.add(dt);
+            }
+        } else if (cond.hasCoords()) {
+            Location spawnLoc = new Location(world, cond.getX(), cond.getY(), cond.getZ());
+            DungeonTarget dt = new DungeonTarget(spawnLoc, cond.getTargetHp(), cond.getTargetSpeed(), cond.getTargetOffsetX(), cond.getTargetOffsetY(), cond.getTargetOffsetZ(), cond.getTargetParticle());
+            dt.spawn(world);
+            list.add(dt);
+        }
+    }
+
+    private void tickHitTargets(DungeonCondition cond) {
+        List<DungeonTarget> list = activeDungeonTargets.get(cond);
+        if (list == null || list.isEmpty()) {
+            spawnHitTargets(cond);
+            list = activeDungeonTargets.get(cond);
+            if (list == null) return;
+        }
+
+        for (DungeonTarget dt : list) {
+            if (!dt.isDead()) {
+                dt.tick();
+            }
+        }
+    }
+
+    public boolean handleTargetHit(org.bukkit.entity.Entity hitEntity, Player damager, double damage) {
+        if (hitEntity == null) return false;
+        for (Map.Entry<DungeonCondition, List<DungeonTarget>> entry : activeDungeonTargets.entrySet()) {
+            DungeonCondition cond = entry.getKey();
+            for (DungeonTarget target : entry.getValue()) {
+                if (!target.isDead()) {
+                    if ((target.getHitboxEntity() != null && target.getHitboxEntity().getUniqueId().equals(hitEntity.getUniqueId()))
+                            || (target.getNameplate() != null && target.getNameplate().getUniqueId().equals(hitEntity.getUniqueId()))) {
+                        boolean destroyed = target.damage(Math.max(1.0, damage), damager);
+                        if (destroyed) {
+                            int total = entry.getValue().size();
+                            int destCount = 0;
+                            for (DungeonTarget dt : entry.getValue()) {
+                                if (dt.isDead()) destCount++;
+                            }
+                            String msg = ChatColor.GOLD + "[Cele] Zniszczono cel! Postęp: " + ChatColor.GREEN + destCount + "/" + total;
+                            for (Player p : getOnlinePlayers()) {
+                                p.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText(msg));
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isHitTargetsMet(DungeonCondition cond) {
+        List<DungeonTarget> targets = activeDungeonTargets.get(cond);
+        if (targets == null || targets.isEmpty()) return false;
+        for (DungeonTarget dt : targets) {
+            if (!dt.isDead()) return false;
+        }
+        return true;
+    }
+
+    public int getDestroyedTargetsCount(DungeonCondition cond) {
+        List<DungeonTarget> targets = activeDungeonTargets.get(cond);
+        if (targets == null) return 0;
+        int count = 0;
+        for (DungeonTarget dt : targets) {
+            if (dt.isDead()) count++;
+        }
+        return count;
+    }
+
+    public int getTargetCount(DungeonCondition cond) {
+        List<DungeonTarget> targets = activeDungeonTargets.get(cond);
+        return targets != null ? targets.size() : (cond.getPoints() != null ? cond.getPoints().size() : 1);
     }
 }

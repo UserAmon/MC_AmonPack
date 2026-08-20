@@ -24,7 +24,9 @@ public class DungeonCondition {
         LOOKING_AT,
         ALIVE,
         COLLECT_POINTS,
-        DYNAMIC_PATH
+        DYNAMIC_PATH,
+        REBUILD,
+        HIT_TARGETS
     }
 
     private final ConditionType type;
@@ -74,6 +76,20 @@ public class DungeonCondition {
     private boolean requiredAllPlayers = false;
     private boolean requiredItems = true;
     private List<Location> points = new ArrayList<>();
+
+    private Material rebuildMaterial;
+    private boolean clearField = true;
+    private String rebuildDirection = "AUTO";
+
+    private double targetHp = 20.0;
+    private double targetSpeed = 0.12;
+    private double targetOffsetX = 3.0;
+    private double targetOffsetY = 1.5;
+    private double targetOffsetZ = 3.0;
+    private String targetType = "ORB";
+    private String targetParticle = "FLAME";
+    private List<Double> targetCustomHpList = new ArrayList<>();
+    private List<Double> targetCustomSpeedList = new ArrayList<>();
 
     public static Material parseMaterial(String input) {
         if (input == null || input.trim().isEmpty()) return null;
@@ -300,6 +316,12 @@ public class DungeonCondition {
 
             case COLLECT_POINTS:
                 return instance.isCollectPointsMet(this);
+
+            case REBUILD:
+                return instance.isRebuildMet(this);
+
+            case HIT_TARGETS:
+                return instance.isHitTargetsMet(this);
 
             default:
                 return false;
@@ -701,6 +723,42 @@ public class DungeonCondition {
     public void setDropOnDeathTriggered(boolean dropOnDeathTriggered) {
         this.dropOnDeathTriggered = dropOnDeathTriggered;
     }
+
+    public Material getRebuildMaterial() { return rebuildMaterial; }
+    public void setRebuildMaterial(Material rebuildMaterial) { this.rebuildMaterial = rebuildMaterial; }
+
+    public boolean isClearField() { return clearField; }
+    public void setClearField(boolean clearField) { this.clearField = clearField; }
+
+    public String getRebuildDirection() { return rebuildDirection; }
+    public void setRebuildDirection(String rebuildDirection) { this.rebuildDirection = rebuildDirection; }
+
+    public double getTargetHp() { return targetHp; }
+    public void setTargetHp(double targetHp) { this.targetHp = targetHp; }
+
+    public double getTargetSpeed() { return targetSpeed; }
+    public void setTargetSpeed(double targetSpeed) { this.targetSpeed = targetSpeed; }
+
+    public double getTargetOffsetX() { return targetOffsetX; }
+    public void setTargetOffsetX(double targetOffsetX) { this.targetOffsetX = targetOffsetX; }
+
+    public double getTargetOffsetY() { return targetOffsetY; }
+    public void setTargetOffsetY(double targetOffsetY) { this.targetOffsetY = targetOffsetY; }
+
+    public double getTargetOffsetZ() { return targetOffsetZ; }
+    public void setTargetOffsetZ(double targetOffsetZ) { this.targetOffsetZ = targetOffsetZ; }
+
+    public String getTargetType() { return targetType; }
+    public void setTargetType(String targetType) { this.targetType = targetType; }
+
+    public String getTargetParticle() { return targetParticle; }
+    public void setTargetParticle(String targetParticle) { this.targetParticle = targetParticle; }
+
+    public List<Double> getTargetCustomHpList() { return targetCustomHpList; }
+    public void setTargetCustomHpList(List<Double> targetCustomHpList) { this.targetCustomHpList = targetCustomHpList; }
+
+    public List<Double> getTargetCustomSpeedList() { return targetCustomSpeedList; }
+    public void setTargetCustomSpeedList(List<Double> targetCustomSpeedList) { this.targetCustomSpeedList = targetCustomSpeedList; }
 
     public void resetState() {
         this.interactedMet = false;

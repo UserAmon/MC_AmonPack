@@ -89,6 +89,56 @@ public class SchematicManager {
     }
 
     /**
+     * Fast-diff comparison and repair: compares blocks in the Bukkit world with the loaded Clipboard
+     * and only replaces blocks whose BlockData does NOT match the schematic.
+     * Avoids running full WorldEdit EditSession paste operations when only a few blocks changed.
+     */
+    public static int repairClipboardDifferences(World world, Clipboard clipboard, int pasteX, int pasteY, int pasteZ) {
+        if (world == null || clipboard == null) {
+            return 0;
+        }
+
+        BlockVector3 min = clipboard.getMinimumPoint();
+        BlockVector3 max = clipboard.getMaximumPoint();
+        BlockVector3 origin = clipboard.getOrigin();
+
+        int diffCount = 0;
+        int minX = min.x();
+        int maxX = max.x();
+        int minY = min.y();
+        int maxY = max.y();
+        int minZ = min.z();
+        int maxZ = max.z();
+
+        for (int x = minX; x <= maxX; x++) {
+            int worldX = pasteX + (x - origin.x());
+            for (int z = minZ; z <= maxZ; z++) {
+                int worldZ = pasteZ + (z - origin.z());
+                for (int y = minY; y <= maxY; y++) {
+                    int worldY = pasteY + (y - origin.y());
+
+                    BlockVector3 clipPos = BlockVector3.at(x, y, z);
+                    com.sk89q.worldedit.world.block.BlockState clipState = clipboard.getBlock(clipPos);
+                    org.bukkit.block.data.BlockData expectedData = BukkitAdapter.adapt(clipState);
+
+                    org.bukkit.block.Block currentBlock = world.getBlockAt(worldX, worldY, worldZ);
+                    org.bukkit.block.data.BlockData currentData = currentBlock.getBlockData();
+
+                    if (!currentData.equals(expectedData)) {
+                        currentBlock.setBlockData(expectedData, false);
+                        diffCount++;
+                    }
+                }
+            }
+        }
+
+        if (diffCount > 0) {
+            System.out.println("[Dungeons] Szybka naprawa schematu na świecie: " + world.getName() + " — naprawiono " + diffCount + " zmienionych bloków.");
+        }
+        return diffCount;
+    }
+
+    /**
      * Pastes a schematic file onto the specified Bukkit world at coordinates (x, y, z).
      * Retained for backward compatibility.
      */

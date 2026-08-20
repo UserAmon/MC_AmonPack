@@ -3,8 +3,25 @@
 # =========================================================================
 # Ten plik stanowi oficjalny poradnik i kompletną dokumentację techniczną
 # dla systemu dynamicznych lochów rogue-lite wtyczki AmonPack.
-# Wszystkie sekcje, właściwości, efekty i warunki zostały opisane poniżej
-# wraz z dokładnymi parametrami oraz przejrzystymi przykładami.
+# Wszystkie sekcje, właściwości, efekty, warunki, bronie i mechaniki
+# zostały szczegółowo opisane poniżej wraz z dokładnymi parametrami
+# oraz przejrzystymi, gotowymi przykładami konfiguracji YAML.
+#
+# SPIS TREŚCI:
+#   CZĘŚĆ I:    STRUKTURA GŁÓWNA SZABLONU LOCHU
+#   CZĘŚĆ II:   REJESTR PRZEDMIOTÓW NIESTANDARDOWYCH (items & consumables)
+#   CZĘŚĆ III:  SKRZYNIA ULEPSZEŃ I STATYSTYKI ROGUE-LITE (loot-chest)
+#   CZĘŚĆ IV:   NAGRODY KOŃCOWE (rewards)
+#   CZĘŚĆ V:    KOMPLETNY KATALOG WARUNKÓW (Conditions)
+#   CZĘŚĆ VI:   KOMPLETNY KATALOG EFEKTÓW (Effects)
+#   CZĘŚĆ VII:  SYSTEM DYNAMICZNYCH PLATFORM (platforms)
+#   CZĘŚĆ VIII: ZAAWANSOWANA KONTROLA ETAPÓW, POOLE I NAWIGACJA
+#   CZĘŚĆ IX:   SYSTEM LEGENDARNYCH BRONI (Błogosławieństwa Broni)
+#   CZĘŚĆ X:    ULEPSZENIA SKRZYŃ I SYSTEM STARTOWEGO EKWIPUNKU (/dungbuild)
+#   CZĘŚĆ XI:   ZAMROŻENIE W ALL_PLAYERS_READY ORAZ WARUNEK DYNAMIC_PATH
+#   CZĘŚĆ XII:  WARUNEK/MECHANIKA REBUILD (STOPNIOWA ODBUDOWA POLA)
+#   CZĘŚĆ XIII: WARUNEK/MECHANIKA HIT_TARGETS (ZBIJANIE LATAJĄCYCH CELÓW)
+#   CZĘŚĆ XIV:  PRZYKŁADOWY PEŁNY ENCOUNTER Z NOWYMI MECHANIKAMI
 #
 # =========================================================================
 # CZĘŚĆ I: STRUKTURA GŁÓWNA SZABLONU LOCHU
@@ -12,14 +29,14 @@
 # Każdy szablon lochu musi posiadać poprawny format nagłówka konfigurującego
 # parametry bazowe, rejestr przedmiotów, skrzynię ulepszeń oraz nagrody.
 
-name: "Komnata Cieni"                    # Unikalna, wyświetlana nazwa lochu (obsługuje kolory &)
+name: "&6Komnata Cieni"                  # Unikalna, wyświetlana nazwa lochu (obsługuje kolory &)
 schematic: "komnata_cieni.schem"         # Nazwa pliku WorldEdit .schem/.schematic znajdującego się w folderze wtyczki
 paste-location:
-  x: 0                                   # Koordynaty wklejenia schematu w nowo utworzonym świecie
+  x: 0                                   # Koordynaty wklejenia schematu w nowo utworzonym świecie instancji
   y: 60
   z: 0
 spawn-location:
-  x: 0                                   # Początkowy punkt startowy (teleport graczy po wejściu)
+  x: 0                                   # Początkowy punkt startowy (teleport graczy po wejściu do lochu)
   y: 61
   z: 0
 exit-location:
@@ -27,55 +44,42 @@ exit-location:
   x: 100
   y: 64
   z: 100
-initial-encounter: "ENC1"                # Pierwszy, startowy etap lochu od którego rozpoczyna się gra
+initial-encounter: "ENC1"                # Pierwszy, startowy etap lochu, od którego rozpoczyna się gra
 
 # =========================================================================
 # CZĘŚĆ II: REJESTR PRZEDMIOTÓW NIESTANDARDOWYCH (items)
 # =========================================================================
-# Sekcja umożliwiająca tworzenie unikalnych kluczy cieni i rzucanych pocisków.
-# Przedmioty te są automatycznie rejestrowane i mogą być używane w warunkach.
+# Sekcja umożliwiająca tworzenie unikalnych kluczy, rzucanych pocisków oraz
+# materiałów eksploatacyjnych (consumables). Przedmioty te są automatycznie
+# rejestrowane i mogą być wręczane, rzucane lub używane w warunkach.
 #
-# Właściwości przedmiotu:
-#   - material: Materiał bazowy przedmiotu ze Spigota (String)
-#   - nazwa/name: Nazwa wyświetlana przedmiotu w eq (obsługuje kolory &)
-#   - opis/lore: Kilkulinijkowy opis lore przedmiotu (Lista String)
-#   - typ/type: Typ zachowania: 'key' (klucz), 'throwable' (pocisk rzucany PPM)
-#   - custom-model-id: (Opcjonalne) CustomModelData dla ItemsAdder/ResourcePack (Integer)
-
-# Przedmioty Jednorazowego Użytku (consumables)
-#    W sekcji `items` szablonu lochu można zarejestrować materiały eksploatacyjne (consumables).
-#    Parametry konfiguracji przedmiotu:
-#    - typ/type: "consumable" lub "consumables"
-#    - use-mode / tryb-uzycia:
-#        * PPM: Szybkie, natychmiastowe użycie prawym przyciskiem myszy.
-#        * SNEAK / SHIFT: Rytualne ładowanie kucaniem przez 2.5 sekundy.
-#    - effect / efekt:
-#        * heal: Uleczenie o zdefiniowaną wartość HP (np. 4.0 HP = 2 serca).
-#        * speed: Zwiększa statystykę prędkości lochowej (speedBoost) o [wartość] na [czas-trwania] sekund (bezpiecznie przywraca po czasie bez potion effect).
-#        * jumpboost: Daje potkę Jump Boost o poziomie [wartość] na [czas-trwania] sekund.
-#        * damage_boost: Zwiększa statystykę mnożnika obrażeń (dmgMultiplier) o [wartość] (np. 0.2 = +20%) na [czas-trwania] sekund.
-#        * hp_boost: Zwiększa statystykę maksymalnego zdrowia lochowego (hpBoost) o [wartość] (np. 4.0 = +2 serca) na [czas-trwania] sekund z uleczeniem.
-#        * crit_rate_boost: Zwiększa czasowo szansę na Fizyczny i Magiczny Krytyk o [wartość] (np. 0.15 = 15%) na [czas-trwania] sekund.
-#    - duration / czas-trwania: Czas trwania efektu w sekundach.
-#    - value / wartosc: Wartość liczbowa (moc/poziom) efektu.
+# Typy przedmiotów:
+#   1. typ: "key" - Zwykły przedmiot funkcyjny (np. klucz do wrót, artefakt).
+#   2. typ: "throwable" - Pocisk rzucany PPM z trajektorią balistyczną i cząsteczkami.
+#   3. typ: "consumable" / "consumables" - Przedmiot jednorazowy dający czasowe buffy lub leczenie.
 #
-# Przykład przedmiotu jednorazowego:
-# items:
-#   mikstura_sily:
-#     material: "POTION"
-#     nazwa: "&c&lEliksir Gniewu"
-#     opis:
-#       - "&7Przytrzymaj SHIFT (kucanie), aby wypić."
-#       - "&7Zwiększa siłę na 10 sekund."
-#     typ: "consumable"
-#     tryb-uzycia: "SNEAK"
-#     efekt: "damage_boost"
-#     czas-trwania: 10
-#     wartosc: 2
-#     custom-model-id: 2005
-
-
-
+# Parametry konfiguracji przedmiotu:
+#   - material: Materiał bazowy przedmiotu ze Spigota (np. TRIPWIRE_HOOK, FIRE_CHARGE, POTION)
+#   - nazwa / name: Nazwa wyświetlana przedmiotu w ekwipunku (obsługuje kolory &)
+#   - opis / lore: Kilkulinijkowy opis lore przedmiotu (Lista String)
+#   - typ / type: "key", "throwable" lub "consumable"
+#   - custom-model-id: (Opcjonalne) CustomModelData dla ItemsAdder / ResourcePack (Integer)
+#
+# Parametry dedykowane dla "consumable":
+#   - use-mode / tryb-uzycia:
+#       * PPM: Szybkie, natychmiastowe użycie prawym przyciskiem myszy.
+#       * SNEAK / SHIFT: Rytualne ładowanie kucaniem przez 2.5 sekundy.
+#   - effect / efekt:
+#       * heal: Uleczenie o zdefiniowaną wartość HP (np. 4.0 HP = 2 serca).
+#       * speed: Zwiększa statystykę prędkości lochowej (speedBoost) o [wartość] na [czas-trwania] sekund.
+#       * jumpboost: Nadaje efekt Jump Boost o poziomie [wartość] na [czas-trwania] sekund.
+#       * damage_boost: Zwiększa statystykę mnożnika obrażeń (dmgMultiplier) o [wartość] (np. 0.2 = +20%) na [czas-trwania] sekund.
+#       * hp_boost: Zwiększa statystykę maksymalnego zdrowia (hpBoost) o [wartość] (np. 4.0 = +2 serca) na [czas-trwania] sekund z uleczeniem.
+#       * crit_rate_boost: Zwiększa szansę na Fizyczny i Magiczny Krytyk o [wartość] (np. 0.15 = 15%) na [czas-trwania] sekund.
+#   - duration / czas-trwania: Czas trwania efektu w sekundach.
+#   - value / wartosc: Wartość liczbowa (moc/poziom) efektu.
+#
+# Przykład rejestru przedmiotów:
 items:
   cien_klucz:
     material: "TRIPWIRE_HOOK"
@@ -88,19 +92,31 @@ items:
     material: "FIRE_CHARGE"
     nazwa: "&cOgnisty Pocisk"
     opis:
-      - "&7Rzuć nim PPM, aby trafić w punkt lub w shielded bossa!"
+      - "&7Rzuć nim PPM, aby trafić w cel lub rozbić tarczę bossa!"
     typ: "throwable"
     custom-model-id: 1002
+  mikstura_sily:
+    material: "POTION"
+    nazwa: "&c&lEliksir Gniewu"
+    opis:
+      - "&7Przytrzymaj SHIFT (kucanie), aby wypić."
+      - "&7Zwiększa siłę ataku o 20% na 15 sekund."
+    typ: "consumable"
+    tryb-uzycia: "SNEAK"
+    efekt: "damage_boost"
+    czas-trwania: 15
+    wartosc: 0.20
+    custom-model-id: 2005
 
 # =========================================================================
-# CZĘŚĆ III: SKRZYNIA ULEPSZEŃ (loot-chest)
+# CZĘŚĆ III: SKRZYNIA ULEPSZEŃ I STATYSTYKI ROGUE-LITE (loot-chest)
 # =========================================================================
 # Definiuje dozwolone statystyki i ulepszenia rogue-lite (błogosławieństwa)
 # wypadające ze skrzyni w trakcie rozgrywki lochu.
 #
 # Statystyki bazowe (allowed-stats):
 #   - HP: Zwiększa maksymalne zdrowie (+4 HP / +2 Serca).
-#   - DEF: Zwiększa obronę (+10 DEF), zmniejszając procentowo obrażenia.
+#   - DEF: Zwiększa obronę (+10 DEF), zmniejszając procentowo otrzymywane obrażenia.
 #   - DMG: Zwiększa zadawane obrażenia fizyczne i magiczne o 15% (+0.15).
 #   - SPEED: Zwiększa prędkość poruszania się (+10% / +0.02).
 #   - P_CRIT_RATE: Szansa na Fizyczny Kryt bronią lub pięścią (+10% szansy). Bazowa: 5%.
@@ -129,28 +145,28 @@ items:
 #   * Kompas gotowości / rozpoczęcie etapu: Daje wszystkim graczom pełne uleczenie i nasycenie głodu.
 #
 # Przykład konfiguracji w pliku lochu:
-# loot-chest:
-#   allowed-stats:
-#     - HP
-#     - DEF
-#     - DMG
-#     - SPEED
-#     - P_CRIT_RATE
-#     - P_CRIT_DMG
-#     - M_CRIT_RATE
-#     - M_CRIT_DMG
-#     - REGEN
-#   allowed-blessings:
-#     - VAMPIRISM
-#     - DODGE
-#     - ADRENALINE
-#     - LIFESTEAL
-#     - HEAL
-#     - KNOCKBACK
-#     - COUNTER
-#     - FLAMING
-#     - POISON
-#     - COMBUSTION
+loot-chest:
+  allowed-stats:
+    - HP
+    - DEF
+    - DMG
+    - SPEED
+    - P_CRIT_RATE
+    - P_CRIT_DMG
+    - M_CRIT_RATE
+    - M_CRIT_DMG
+    - REGEN
+  allowed-blessings:
+    - VAMPIRISM
+    - DODGE
+    - ADRENALINE
+    - LIFESTEAL
+    - HEAL
+    - KNOCKBACK
+    - COUNTER
+    - FLAMING
+    - POISON
+    - COMBUSTION
 
 # =========================================================================
 # CZĘŚĆ IV: NAGRODY KOŃCOWE (rewards)
@@ -190,16 +206,24 @@ rewards:
 #   y: [61.0, 62.0, 63.0]
 #   z: [-5.0, -10.0, -15.0]
 # Wtyczka wylosuje pojedynczy indeks z list współrzędnych dla danego uruchomienia instancji lochu
-# (np. x[1], y[1], z[1]) i zachowa go jako stały na całą sesję instancji, co umożliwia unikalny układ lochu przy każdym wejściu!
+# i zachowa go jako stały na całą sesję instancji, co umożliwia unikalny układ lochu przy każdym wejściu!
 #
 # 1. ALL_PLAYERS_READY
 #    Sprawdza, czy wszyscy gracze kliknęli gotowość przy użyciu Kompasu Gotowości.
+#    Obsługuje pozycję lobby i opcjonalne zamrożenie kamery/ruchu graczy (freeze).
+#    Parametry: x, y, z (Double), yaw, pitch (Float), freeze (Boolean, domyślnie false)
 #    Przykład:
 #      - type: "ALL_PLAYERS_READY"
+#        x: 10.5
+#        y: 65.0
+#        z: 20.5
+#        yaw: 90.0
+#        pitch: 0.0
+#        freeze: true
 #
 # 2. PLAYER_ENTER_AREA
-#    Zwraca prawda, jeśli chociaż jeden gracz wejdzie w obszar o promieniu R od punktu XYZ.
-#    Parametry: x, y, z (Double), radius (Double), required_all_players (Opcjonalne, domyślnie false. Jeśli true, wymaga aby wszyscy gracze byli w polu, Boolean)
+#    Zwraca prawda, jeśli gracze wejdą w obszar o promieniu R od punktu XYZ.
+#    Parametry: x, y, z (Double), radius (Double), required_all_players (Boolean, domyślnie false)
 #    Przykład:
 #      - type: "PLAYER_ENTER_AREA"
 #        x: 10.0
@@ -210,16 +234,18 @@ rewards:
 #
 # 3. KILL_MOBS
 #    Zaliczane gdy gracze pokonają wymaganą liczbę potworów o danej nazwie.
-#    Śmierć moba jest rejestrowana z DOWOLNEGO źródła (podpalenie, upadek, gracze).
-#    Parametry: mob-name (String) minecraftowy typ moba np ZOMBIE lub displayname "&7Duch" trzeba jako "Duch", amount (Integer)
+#    Śmierć moba jest rejestrowana z DOWOLNEGO źródła (ataki, magia, upadek, ogień).
+#    Parametry: mob-name (String) typ moba np. ZOMBIE lub nazwa MythicMobsa / displayname, amount (Integer)
 #    Przykład:
 #      - type: "KILL_MOBS"
 #        mob-name: "ZOMBIE"
 #        amount: 5
 #
 # 4. INTERACT_BLOCK_WITH_ITEM
-#    Zaliczane przy kliknięciu PPM na określony blok za pomocą przedmiotu z rejestru.
-#    Parametry: x, y, z (Double), radius (Opcjonalny promień w blokach od centrum, Double), block-material (Material), item-material (ID przedmiotu z rejestru lub materiał Spigot), required_items (Opcjonalne, domyślnie true. Jeśli false, warunek zaliczy się przy samym kliknięciu, bez potrzeby posiadania/trzymania przedmiotu, Boolean)
+#    Zaliczane przy kliknięciu PPM na określony blok za pomocą przedmiotu z rejestru lub gołą ręką.
+#    Parametry: x, y, z (Double), radius (Double, promień dozwolonego kliknięcia),
+#               block-material (Material), item-material (ID przedmiotu z rejestru lub materiał Spigot),
+#               required_items (Boolean, domyślnie true. Jeśli false, warunek zaliczy się bez trzymania itemu).
 #    Przykład:
 #      - type: "INTERACT_BLOCK_WITH_ITEM"
 #        x: 5.0
@@ -228,11 +254,11 @@ rewards:
 #        radius: 3.5
 #        block-material: "IRON_DOOR"
 #        item-material: "cien_klucz"
-#        required_items: false
+#        required_items: true
 #
 # 5. ZONE
 #    Przejęcie wyznaczonej strefy (okręgu na ziemi) poprzez stanie w niej łącznie przez X sekund.
-#    Wychodzenie ze strefy cofa postęp o 1 sekundę na sekundę nieobecności. Rysuje cząsteczki GLOW wokół strefy.
+#    Wychodzenie ze strefy cofa postęp o 1 sekundę na sekundę nieobecności. Rysuje cząsteczki GLOW.
 #    Parametry: x, y, z (Double), radius (Double), time (Sekundy, Integer)
 #    Przykład:
 #      - type: "ZONE"
@@ -244,9 +270,8 @@ rewards:
 #
 # 6. THROW_AT
 #    Trafienie rzucanym pociskiem (typu PPM 'throwable') w określone współrzędne X razy.
-#    Pociski mają grawitację, parabolę lotu oraz efektowne particle.
-#    Parametry: x, y, z (Double), radius (Double), item (ID pocisku), amount (Integer), is-returning (Boolean, opcjonalne, domyślnie false)
-#    * is-returning: true -> jeśli gracz rzuci i spudłuje (nie trafi w cel), przedmiot wraca bezpośrednio do jego EQ!
+#    Parametry: x, y, z (Double), radius (Double), item (ID pocisku), amount (Integer),
+#               is-returning (Boolean, opcjonalne, domyślnie false. Jeśli true, chybiony rzut wraca do EQ!)
 #    Przykład:
 #      - type: "THROW_AT"
 #        x: 20.0
@@ -258,31 +283,28 @@ rewards:
 #        is-returning: true
 #
 # 7. SHIELDED
-#    Mechanika przeciwnika z tarczą (odpornego na zwykły DMG). Aby ukończyć warunek, tarcza
-#    musi zostać zniszczona, a sam boss ostatecznie zabity.
+#    Mechanika przeciwnika z tarczą (odpornego na zwykły DMG). Tarcza musi zostać zniszczona,
+#    a sam boss ostatecznie zabity.
 #    Parametry:
-#      - mob-name (String: kodowa nazwa MythicMobsa / Minecrafta służąca do jego przyzwania)
-#      - mob-display-name (Opcjonalne, String: wyświetlana nazwa displayname bossa w grze. Jeśli podana, wtyczka
-#        będzie wyszukiwać i weryfikować bossa po jego nazwie wyświetlanej, a nie kodowej. Przydatne dla MythicMobs!)
-#      - item (String: ID przedmiotu z rejestru, którym trzeba rzucać w trybie 'throw')
-#      - amount (Integer: wymagana ilość trafień pociskiem aby rozbić tarczę w trybie 'throw')
-#      - shield-type (String: typ tarczy, "throw" lub "event_removable")
-#        * "throw" - tarcza zdejmuje się po X celnych rzutach przedmiotem
-#        * "event_removable" - tarcza zdejmuje się wyłącznie poprzez efekt SHIELD_REMOVE
-#      - x, y, z (Double lub List: współrzędne spawnu bossa)
+#      - mob-name: Nazwa kodowa potwora / MythicMobsa
+#      - mob-display-name: (Opcjonalne) Wyświetlana nazwa displayname bossa w grze
+#      - item: ID przedmiotu z rejestru, którym należy rzucać w trybie 'throw'
+#      - amount: Wymagana ilość celnych rzutów
+#      - shield-type: "throw" (zdejmowana rzutami) lub "event_removable" (zdejmowana efektem SHIELD_REMOVE)
+#      - x, y, z: Współrzędne spawnu bossa
 #    Przykład:
 #      - type: "SHIELDED"
 #        mob-name: "ShadowGhost"
 #        mob-display-name: "Cień Bossa"
-#        item: "ksiega"
+#        item: "cien_kamien"
 #        amount: 4
 #        shield-type: "throw"
-#        x: [-2.0, -4.0]
-#        y: [131.0, 131.0]
-#        z: [-11.0, -13.0]
+#        x: 0.0
+#        y: 65.0
+#        z: 10.0
 #
 # 8. DROP_ON_DEATH
-#    Szansa na otrzymanie określonego przedmiotu bezpośrednio do ekwipunku po śmierci moba o danej nazwie.
+#    Szansa na natychmiastowe otrzymanie przedmiotu do ekwipunku po śmierci wskazanego moba.
 #    Parametry: mob-name (String), item (ID przedmiotu z rejestru), chance (Double 0.0-100.0)
 #    Przykład:
 #      - type: "DROP_ON_DEATH"
@@ -302,12 +324,11 @@ rewards:
 #          * MOVING (wszyscy gracze w ruchu w ostatniej sekundzie)
 #          * NEAR_EACH_OTHER (wszyscy gracze w odległości max 6.0 bloków od siebie)
 #          * AWAY_FROM_EACH_OTHER,<dystans> (gracze oddaleni o min. podany dystans, np. AWAY_FROM_EACH_OTHER,10.0)
-#          * HAVE_ITEMS:<id>,<ilość>;<id2>,<ilość> (sprawdza czy PRZYNAJMNIEJ JEDEN gracz posiada podane przedmioty, np. HAVE_ITEMS:cien_klucz,1)
-#          * ALL_HAVE_ITEMS:<id>,<ilość>;<id2>,<ilość> (sprawdza czy WSZYSCY gracze posiadają podane przedmioty, np. ALL_HAVE_ITEMS:cien_klucz,1)
-#      - once: (Opcjonalne, Boolean) Jeśli ustawione na true, pierwszy pomyślny sukces na stałe wyłącza sprawdzanie w trwającym etapie.
-#      - fail-effects: Lista efektów wykonywanych przy porażce sprawdzania.
-#      - success-effects: Lista efektów wykonywanych przy sukcesie sprawdzania.
-#    Wykorzystanie zmiennej: W tytule etapu lochu można użyć tagu %time% pokazującego odliczanie pozostałych sekund.
+#          * HAVE_ITEMS:<id>,<ilość>;<id2>,<ilość> (przynajmniej jeden gracz posiada przedmioty)
+#          * ALL_HAVE_ITEMS:<id>,<ilość>;<id2>,<ilość> (wszyscy gracze posiadają przedmioty)
+#      - once: (Boolean, opcjonalne) Jeśli true, pierwszy sukces trwale wyłącza sprawdzanie w danym etapie.
+#      - fail-effects: Lista efektów wykonywanych przy porażce.
+#      - success-effects: Lista efektów wykonywanych przy sukcesie.
 #    Przykład:
 #      - type: "PERIODIC_CHECK"
 #        interval: 30
@@ -317,19 +338,14 @@ rewards:
 #          - type: "DAMAGE"
 #            amount: 4
 #          - type: "SEND_MESSAGE"
-#            message: "&cNikt z was nie posiada klucza! Otrzymujecie obrażenia krytyczne."
+#            message: "&cNikt z was nie posiada klucza! Otrzymujecie obrażenia."
 #        success-effects:
 #          - type: "SEND_MESSAGE"
 #            message: "&aZadanie zaliczone! Wszyscy gracze posiadają wymagany klucz cieni."
 #
 # 10. LOOKING_AT
 #     Sensor kierunku spojrzenia. Sprawdza, czy chociaż jeden z graczy patrzy bezpośrednio na cel XYZ.
-#     Zmiana stanu z patrzenia na nie-patrzenie wyzwala odpowiednie pakiety efektów.
-#     Dodatkowo, jeśli nikt się nie patrzy, co 'interval' sekund wyzwalają się fail-effects.
-#     Parametry: 
-#       - x, y, z (Double - punkt obserwacji)
-#       - radius (Double - opcjonalny dystans od bloku, w którym gracz musi się znajdować, aby spojrzenie zostało zaliczone)
-#       - interval (Sekundy powtórzeń kar, Integer)
+#     Parametry: x, y, z (Double), radius (Double, max dystans gracza), interval (Sekundy powtórzeń kar, Integer)
 #     Przykład:
 #       - type: "LOOKING_AT"
 #         x: 0.0
@@ -346,12 +362,11 @@ rewards:
 #             z: 5.0
 #         success-effects:
 #           - type: "SEND_MESSAGE"
-#             message: "&dKryształ cieni został uwięziony twoim wzrokiem. Szkielety przestały się rodzić!"
+#             message: "&dKryształ cieni został uwięziony twoim wzrokiem!"
 #
 # 11. ALIVE
 #     Bieżący sensor obecności potworów. Zwraca true jeśli określony potwór o danej nazwie żyje w promieniu R od XYZ.
-#     Zmiana stanu obecności potwora wyzwala natychmiast success-effects lub fail-effects.
-#     Parametry: x, y, z (Double), radius (Double), mob-name (String), amount (Wymagana liczba potworów, Integer)
+#     Parametry: x, y, z (Double), radius (Double), mob-name (String), amount (Integer)
 #     Przykład:
 #       - type: "ALIVE"
 #         x: 10.0
@@ -368,23 +383,14 @@ rewards:
 #             x2: 12.0
 #             y2: 63.0
 #             z2: -1.0
-#             material: "AIR"
 #           - type: "SEND_MESSAGE"
 #             message: "&aBoss poległ! Skalne drzwi do skarbca zostały otwarte!"
 #
 # 12. COLLECT_POINTS
-#     Czasowy warunek zbierania koordynatów. Cząsteczki są ZAWSZE idealnie wyśrodkowane na wskazanym bloku.
-#     Tworzą one pionowy, wznoszący się w niebo efekt BEACONA (kolumnę światła i błysków) oraz świecący okrąg
-#     na podłożu wyznaczający strefę zebrania. Zmusza graczy do wejścia w zasięg wszystkich punktów przed upływem
-#     limitu czasu. Odliczanie rozpoczyna się od pierwszego zebranego punktu.
-#     W przypadku przekroczenia czasu, cały postęp się zeruje, a wtyczka wyzwala fail-effects, wymagając ponownej próby.
-#     Zaliczenie wszystkich punktów wyzwala success-effects oraz pozwala ukończyć warunek.
-#     Parametry: 
-#       - radius (Double - odległość gracza od centrum bloku, by go zebrać, np. 3.0)
-#       - time (Sekundy na ukończenie próby, Integer, np. 60)
-#       - points (Lista Stringów 'x,y,z' lub lista map z kluczami x, y, z)
-#       - fail-effects (Efekty przy porażce czasowej)
-#       - success-effects (Efekty przy pełnym zebraniu wszystkich punktów)
+#     Czasowy warunek zbierania koordynatów. Cząsteczki tworzą pionowy, wznoszący się w niebo efekt BEACONA
+#     oraz świecący okrąg na podłożu wyznaczający strefę zebrania. Zmusza graczy do wejścia w zasięg wszystkich punktów
+#     przed upływem limitu czasu. Odliczanie rozpoczyna się od pierwszego zebranego punktu.
+#     Parametry: radius (Double), time (Sekundy, Integer), points (Lista Stringów 'x,y,z' lub map), fail-effects, success-effects
 #     Przykład:
 #       - type: "COLLECT_POINTS"
 #         radius: 3.0
@@ -401,6 +407,21 @@ rewards:
 #         success-effects:
 #           - type: "SEND_MESSAGE"
 #             message: "&aDoskonale! Wszystkie punkty cieni zostały zebrane na czas!"
+#
+# 13. DYNAMIC_PATH (Dynamiczny Labirynt Ścieżki)
+#     Generuje losową, połączoną 1-blokową bezpieczną ścieżkę od punktu start do end.
+#     Kary: Stanięcie na blok poza ścieżką rozpada go (TempBlock AIR) i ciągnie gracza gwałtownie w dół.
+#     Nad strefą nałożony jest ciągły Slowness i blokada magii (Chi-Block).
+#     (Szczegóły w CZĘŚCI XI dokumentacji).
+#
+# 14. REBUILD (Stopniowa Odbudowa Pola / Mostu / Portalu)
+#     Czyści wyznaczony obszar na start etapu i płynnie odbudowuje go wraz z postępami w pozostałych warunkach
+#     (np. ZONE, KILL_MOBS, HIT_TARGETS).
+#     (Szczegóły w CZĘŚCI XII dokumentacji).
+#
+# 15. HIT_TARGETS (Zbijanie Ruchomych Celów z Paskiem HP)
+#     Generuje latające, poruszające się w promieniu offsetu cele z paskiem HP do zniszczenia bronią lub magią.
+#     (Szczegóły w CZĘŚCI XIII dokumentacji).
 
 # =========================================================================
 # CZĘŚĆ VI: KOMPLETNY KATALOG EFEKTÓW (Effects)
@@ -425,8 +446,8 @@ rewards:
 #        z: -10.0
 #
 # 3. SPAWN_MOB
-#    Spawnuje wybranego potwora MythicMobs wokół punktu z losowym rozrzutem.
-#    Parametry: mob-name (String) lub typ moba np. ZOMBIE, SKELETON, amount (Integer), level (Integer), x, y, z (Double), range (Rozrzut, Double)
+#    Spawnuje wybranego potwora MythicMobs lub vanilla wokół punktu z losowym rozrzutem.
+#    Parametry: mob-name (String), amount (Integer), level (Integer), x, y, z (Double), range (Rozrzut, Double)
 #    Przykład:
 #      - type: "SPAWN_MOB"
 #        mob-name: "Spirit_Earth_1"
@@ -469,13 +490,17 @@ rewards:
 #
 # 7. SPAWN_CHEST
 #    Tworzy interaktywną skrzynię nagród rogue-lite na danych kordach.
-#    Parametry: x, y, z (Double), chest-type (domyślnie 'ROGUELITE_CHEST')
+#    Parametry: x, y, z (Double), chest-type (domyślnie 'ROGUELITE_CHEST'),
+#               blessing_type (Chest_General / Chest_Stats / Chest_Abilities / Chest_Blessings),
+#               slots (Liczba slotów do wyboru w GUI: 1 do 5)
 #    Przykład:
 #      - type: "SPAWN_CHEST"
 #        x: 0.0
 #        y: 61.0
 #        z: 5.0
 #        chest-type: "ROGUELITE_CHEST"
+#        blessing_type: "Chest_Blessings"
+#        slots: 3
 #
 # 8. COMPLETE_DUNGEON
 #    Wysyła status sukcesu, rozdaje nagrody ze struktury 'rewards' i zamyka świat.
@@ -523,17 +548,14 @@ rewards:
 #         amount: 4
 #
 # 13. FORCE_FAIL
-#     Filmowe, dramatyczne uśmiercenie całej drużyny. Przez 10 sekund co sekundę zabiera
-#     10% maksymalnego zdrowia każdemu graczowi, nakładając narastające particle DUST (czerwone)
-#     i LARGE_SMOKE oraz potężne negatywne efekty (Spowolnienie, Ślepota, Nudności), gwarantując
-#     przegraną lochu i oczyszczenie instancji.
+#     Dramatyczne uśmiercenie całej drużyny. Co sekundę zabiera 10% maksymalnego zdrowia każdemu graczowi,
+#     nakładając narastające particle DUST (czerwone) i efekty (Spowolnienie, Ślepota, Nudności).
 #     Przykład:
 #       - type: "FORCE_FAIL"
 #
 # 14. GIVE_ITEM
 #     Daje wszystkim aktywnym graczom przedmiot z rejestru 'items' lub standardowy materiał Spigota.
-#     Zasada bezpiecznego wręczania: wrzuca przedmiot bezpośrednio do głównej ręki (jeśli jest pusta),
-#     w przeciwnym razie dodaje go do pierwszego wolnego slotu ekwipunku, zapobiegając usunięciu trzymanego itemu.
+#     Bezpiecznie wrzuca item do ręki (jeśli pusta) lub do pierwszego wolnego slotu.
 #     Parametry: item (ID przedmiotu z rejestru lub materiału Spigot, String), amount (Ilość, Integer, domyślnie 1)
 #     Przykład:
 #       - type: "GIVE_ITEM"
@@ -541,8 +563,8 @@ rewards:
 #         amount: 1
 #
 # 15. SHIELD_REMOVE
-#     Usuwa tarcze ze wszystkich osłoniętych bossów w określonej lokalizacji i promieniu, wyzwalając efekty sukcesu.
-#     Parametry: x, y, z (Double lub List: współrzędne środka pola działania), radius/range (Promień działania, Double)
+#     Usuwa tarcze ze wszystkich osłoniętych bossów w określonej lokalizacji i promieniu.
+#     Parametry: x, y, z (Double lub List), radius / range (Promień działania, Double)
 #     Przykład:
 #       - type: "SHIELD_REMOVE"
 #         x: 0.0
@@ -557,10 +579,7 @@ rewards:
 # rzeczywistym na określone stany lochu.
 # Rejestracja może odbywać się na dwa sposoby:
 #   1. Globalnie: Zdefiniowana w głównym korzeniu szablonu lochu (obok 'items' lub 'rewards').
-#      Platformy te działają zawsze i są sprawdzane/aktualizowane przez całą rozgrywkę lochu.
 #   2. Lokalnie: Zdefiniowana wewnątrz konkretnego etapu pod kluczem 'platforms'.
-#      Platformy te działają i są aktualizowane wyłącznie wtedy, gdy ten konkretny etap jest aktywny.
-# Powstanie/znikanie platformy generuje cząsteczki CLOUD oraz GLOW.
 #
 # Właściwości:
 #   - x1, y1, z1, x2, y2, z2: Wymiary prostopadłościanu platformy (Double/Integer)
@@ -572,9 +591,8 @@ rewards:
 #       * SNEAKING (gracz kuca)
 #       * ITEM:<id_przedmiotu> (gracz posiada w dłoni/eq podany przedmiot, np. ITEM:cien_klucz)
 #       * MOB_NEAR:<nazwa_moba> (potwór o danej nazwie znajduje się w odległości max 5 bloków od środka platformy)
-#   - delay: (Opcjonalne, Integer) Opóźnienie aktywacji/dezaktywacji stanu platformy w sekundach (np. zapadająca się podłoga po 3 sekundach).
-#   - check-interval: (Opcjonalne, Integer) Interwał sprawdzania warunku platformy w sekundach. Warunek nie jest sprawdzany co sekundę, lecz
-#                     wyłącznie co X sekund (np. naprawa podłoża po 5 sekundach, jeśli nie ma nikogo w pobliżu).
+#   - delay: (Opcjonalne, Integer) Opóźnienie aktywacji/dezaktywacji stanu platformy w sekundach.
+#   - check-interval: (Opcjonalne, Integer) Interwał sprawdzania warunku platformy w sekundach.
 #
 # Przykład kompletnego użycia platformy:
 #   platforms:
@@ -592,15 +610,13 @@ rewards:
 #       check-interval: 5
 
 # =========================================================================
-# CZĘŚĆ VIII: POOLE, PULSE I PĘTLE PROGRESJI
+# CZĘŚĆ VIII: ZAAWANSOWANA KONTROLA ETAPÓW, POOLE I NAWIGACJA
 # =========================================================================
-# Wtyczka obsługuje nieliniowe przechodzenie pokoi oraz pakiety sekwencyjne.
+# Wtyczka obsługuje nieliniowe przechodzenie pokoi, pakiety sekwencyjne oraz nawigację cząsteczkową.
 #
 # 1. Losowość typu POOL (next: random):
 #    Etap wejściowy deklaruje przejście na 'next: random', pulę dozwolonych pokoi 'pool',
 #    liczbę wymaganych pokoi do przejścia 'req_clears' oraz etap wyjściowy 'enc_after_clears'.
-#    Pokoje wewnątrz pool NIE potrzebują zadeklarowanego pola 'next'. Zostaną automatycznie
-#    odegrane w losowej kolejności bez powtórzeń.
 #
 # 2. Pakiet sekwencyjny POOL_LISTS (next: random):
 #    Zamiast pojedynczych pokoi, można zadeklarować gotowe, spięte łańcuchy etapów.
@@ -622,202 +638,82 @@ rewards:
 #    Opcjonalny parametr 'max_mobs' (Integer) zadeklarowany na poziomie etapu (Encounter).
 #    Jeśli w dungeonie znajduje się więcej lub tyle samo żywych potworów, efekty typu SPAWN_MOB
 #    oraz SPAWN_UNTIL nie zrodzą dodatkowych wrogów, chroniąc serwer przed lagami.
-#    Przykład:
-#      ENC_ARENA:
-#        description: "Arena Walki"
-#        max_mobs: 15
-#        conditions:
-#          - type: "KILL_MOBS"
-#            mob-name: "ZOMBIE"
-#            amount: 10
-#        effects:
-#          - type: "SPAWN_UNTIL"
-#            mob-name: "ZOMBIE"
-#            amount: 2
-#            interval: 3
 #
 # 4. Automatyczne czyszczenie potworów po zakończeniu etapu (leave_mobs):
-#    Domyślnie każdy etap (Encounter), po pomyślnym ukończeniu wszystkich warunków, 
-#    automatycznie ZABIJA wszystkie potwory, które sam przyzwał (SPAWN_MOB, SPAWN_UNTIL, boss itp.), 
-#    ZANIM aktywuje się kolejny etap. Gwarantuje to porządek i brak zapychania instancji.
-#    Opcjonalny parametr 'leave_mobs' (Boolean - true/false, domyślnie false) pozwala wyłączyć
-#    to zachowanie, jeśli chcesz, aby moby z danego pokoju pozostały żywe w kolejnym etapie.
-#    Przykład:
-#      ENC_TRANSITION:
-#        description: "Przejściowy korytarz"
-#        leave_mobs: true
+#    Domyślnie każdy etap, po pomyślnym ukończeniu wszystkich warunków, automatycznie ZABIJA
+#    wszystkie potwory, które sam przyzwał, ZANIM aktywuje się kolejny etap.
+#    Ustawienie 'leave_mobs: true' pozwala zachować moby żywe w kolejnym pokoju.
 #
 # 5. Nawigacja i Ścieżka do Celu Etapu (guide-x, guide-y, guide-z, guide-radius):
-#    Każdy etap (Encounter) może posiadać opcjonalne koordynaty celu: guide-x, guide-y, guide-z oraz guide-radius.
-#    Działa to tak: jeśli gracz znajduje się w odległości równej lub większej niż 'guide-radius' od wskazanego punktu,
-#    na ziemi bezpośrednio przed graczem pojawia się dynamiczny ślad świecących cząsteczek, które prowadzą go prosto
-#    do wskazanego celu. Gdy gracz wejdzie w wyznaczony radius, cząsteczki nawigacyjne przestają się wyświetlać.
-#    Obsługiwane formaty w konfiguracji etapu:
+#    Każdy etap może posiadać koordynaty celu guide. Jeśli gracz znajduje się dalej niż 'guide-radius'
+#    od celu, na ziemi przed nim pojawia się świecący ślad cząsteczek prowadzący prosto do celu!
+#    Obsługiwane formaty:
 #      * guide-x: 100, guide-y: 64, guide-z: 200, guide-radius: 5
-#      * target-x: 100, target-y: 64, target-z: 200, target-radius: 5
-#      * x: 100, y: 64, z: 200, radius: 5
 #      * guide: { x: 100, y: 64, z: 200, radius: 5 }
-#    Przykład:
-#      ENC_GATE:
-#        title: "&6Udaj się do Bramy Cieni"
-#        guide-x: 87.0
-#        guide-y: 51.0
-#        guide-z: -34.0
-#        guide-radius: 4.0
-#        conditions:
-#          - type: "INTERACT_BLOCK_WITH_ITEM"
-#            x: 87
-#            y: 51
-#            z: -34
-#            block-material: "IRON_CHAIN"
-#
-# ENC1:
-#   description: "Start lochu - Przygotowanie"
-#   conditions:
-#     - type: "ALL_PLAYERS_READY"
-#   effects:
-#     - type: "GIVE_READY_COMPASS"
-#   next: "random"
-# pool:
-#   - "ENC2_1"
-#   - "ENC2_2"
-#   - "ENC2_3"
-#   - "ENC2_4"
-# req_clears: 2
-# enc_after_clears: "ENC_BOSS"
 
 # =========================================================================
-# CZĘŚĆ IX: SYSTEM LEGENDRANYCH BRONI (Błogosławieństwa Broni)
+# CZĘŚĆ IX: SYSTEM LEGENDARNYCH BRONI (Błogosławieństwa Broni)
 # =========================================================================
-# System unikalnych, ulepszalnych broni (błogosławieństw) otrzymywanych 
-# tymczasowo ze skrzyń w dungeonie. Każda broń posiada stałe obrażenia bazowe 
-# zdefiniowane w configu oraz system unikalnych ulepszeń na trzech poziomach (Tier).
-# Wszystkie w dungeonie używane bronie zadają stałe, niezmienne obrażenia zdefiniowane poniżej.
+# Unikalne, ulepszalne bronie otrzymywane ze skrzyń w lochu (Tiers 1-3)
+# ze specjalnymi synergiami żywiołów (Fire, Water, Earth, Air).
 #
 # 1. ŁUK Z POUHAI (POUHAI_BOW)
-#    - Materiał bazowy: BOW (Łuk)
-#    - Obrażenia bazowe: 3.0 HP (konfigurowalne)
-#    - Naciąganie łuku zwiększa obrażenia o +25% za każdą sekundę (do maks. +100% / 200% obrażeń bazowych).
-#    - Co trzeci strzał gracza automatycznie przebija cele (setPierceLevel(10)) oraz ignoruje obronę wrogów (DEF).
-#    - Poziom 1: Bazowe naciąganie i przebijanie co 3 strzały. Obrażenia bazowe 3.0 HP.
-#    - Poziom 2: Trzeci strzał dodatkowo przyciąga wrogów w promieniu 6 bloków do celu z efektowną chmurą cząsteczek portalowych i chmur (CLOUD, PORTAL).
-#    - Poziom 3: Trzeci strzał zwiększa limit naciągnięcia do +150% (maks. 250% obrażeń bazowych).
-#                Jeśli gracz posiada żywioł ognia (Fire), wszyscy przebici i przyciągnięci wrogowie zostają podpaleni na 4 sekundy (80 ticks).
+#    - Materiał bazowy: BOW
+#    - Naciąganie łuku zwiększa obrażenia o +25% za każdą sekundę (do maks. +100%).
+#    - Co trzeci strzał automatycznie przebija cele (Pierce 10) i ignoruje DEF wrogów.
+#    - Poziom 2: Trzeci strzał przyciąga wrogów w promieniu 6 bloków do celu (efekt wiru).
+#    - Poziom 3: Naciągnięcie do +150% (250% DMG). Mag Ognia: podpala wrogów na 4 sekundy.
 #
 # 2. RĘKAWICA ELEKTRYCZNA AMONA (AMON_GLOVE)
-#    - Materiał bazowy: GOLDEN_HOE (Złota Motyka - dla obsługi paska naładowania durability)
-#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
-#    - Każdy atak wręcz zadaje lekki knockback i ładuje 1 poziom mocy elektrycznej (wywalono spowolnienie na Poziomie 1).
-#    - Poziom naładowania wyświetla się jako transient BossBar nad ekranem gracza (podobny do Flameweave i Bloodarrow).
-#    - Moc elektryczna zanika o 1 poziom co 4 sekundy bezczynności.
-#    - Liczba ładunków wymagana do pełnego naładowania:
-#        * Poziom 1: 5 ładunków
-#        * Poziom 2: 4 ładunki
-#        * Poziom 3: 3 ładunki
-#    - Przy pełnym naładowaniu, kolejny atak zadaje 150% obrażeń bazowych oraz wystrzeliwuje ionization chain lightning:
-#        * Piorun łańcuchowy skacze po wrogach w promieniu 6 bloków (maks. 2 trafienia na wroga).
-#        * Zadaje 100% obrażeń bazowych i zostawia ślady iskier elektrycznych (ELECTRIC_SPARK).
-#    - Poziom 1: Bazowy piorun i knockback.
-#    - Poziom 2: Jeśli gracz posiada żywioł ziemi (Earth), ataki zadają silniejszy knockback oraz nakładają Slowness II na 3 sekundy.
-#                Zabicie wroga daje 25% szansy na efekt Absorption I na 5 sekund.
-#    - Poziom 3: Trafienia piorunem łańcuchowym ogłuszają wrogów (Slowness X) oraz oślepiają (Blindness I) na 1 sekundę.
+#    - Materiał bazowy: GOLDEN_HOE
+#    - Ataki wręcz zadają knockback i ładują poziom mocy elektrycznej (wyświetlany na BossBarze).
+#    - Przy pełnym naładowaniu wystrzeliwuje piorun łańcuchowy (Ionization Chain Lightning) skaczący po wrogach.
+#    - Poziom 2: Mag Ziemi nakłada silniejszy knockback i Slowness II. Zabójstwo daje 25% szansy na Absorption I.
+#    - Poziom 3: Piorun ogłusza wrogów (Slowness X) i oślepia (Blindness I) na 1 sekundę.
 #
 # 3. MIECZE NIEBIESKIEGO DUCHA (BLUE_SPIRIT_SWORDS)
-#    - Materiał bazowy: STONE_SWORD (Kamienny Miecz)
-#    - Obrażenia bazowe: 2.0 HP (konfigurowalne)
-#    - Mechanika Dual-wielding: Trzymanie miecza w głównej ręce automatycznie tworzy lewy miecz (BLUE_SPIRIT_SWORDS_OFFHAND) w drugiej dłoni.
-#    - Poprzedni przedmiot z drugiej dłoni zostaje tymczasowo ukryty i bezpiecznie przywrócony po zmianie broni lub wyjściu z lochu.
-#    - Gracz nie może wyrzucić ani manualnie kliknąć lewego miecza w ekwipunku.
+#    - Materiał bazowy: STONE_SWORD
+#    - Dual-wielding: Trzymanie miecza tworzy drugi miecz w lewej dłoni.
 #    - Poziom 1: Atak w cel inny niż ostatnio trafiony gwarantuje 100% szansy na Fizyczny Kryt.
-#    - Poziom 2: Brak ataku przez 5 sekund (stan bezczynności) zwiększa obrażenia następnego ciosu krytycznego o +50% (+0.50 do crit damage).
-#    - Poziom 3: Trafienie krytyczne ma 33% szansy na uleczenie gracza o 2.0 HP.
-#                Jeśli gracz posiada żywioł ognia (Fire), ciosy krytyczne podpalają cel na 3 sekundy, a trzymanie broni pasywnie daje +25% szansy na fizyczny kryt.
+#    - Poziom 2: Brak ataku przez 5 sekund zwiększa obrażenia następnego kryta o +50%.
+#    - Poziom 3: Kryt ma 33% szansy na uleczenie o 2.0 HP. Mag Ognia: podpala na 3s i daje pasywny +25% crit rate.
 #
 # 4. OBUCH ZIEMI (EARTH_MACE)
-#    - Materiał bazowy: STONE_AXE (Kamienny Topór)
-#    - Obrażenia bazowe: 3.0 HP (konfigurowalne)
-#    - Zaczyna z 5% durability (ataki nie niszczą narzędzia).
-#    - Poziom 1: Posiadanie broni w ekwipunku (EQ) podwaja statystykę obrony gracza (DEF * 2.0).
-#                Otrzymywanie obrażeń (przed redukcją z DEFa) ładuje durability: każde otrzymane serce obrażeń (2.0 HP) ładuje o 25% (1.0 HP = 12.5%).
-#                Przy 100% durability, następny fizyczny atak zadaje 200% obrażeń bazowych i zeruje naładowanie do 5%.
-#    - Poziom 2: Wzmocniony atak przy 100% naładowania zadaje 250% obrażeń bazowych.
-#                Bycie leczonym również ładuje durability: każde otrzymane serce leczenia (2.0 HP regain) ładuje o 25% (1.0 HP = 12.5%).
-#    - Poziom 3: Co sekundę nie będąc w powietrzu (player.isOnGround()), durability rośnie biernie o 10%.
-#                Jeśli gracz ma magię Ziemi (Earth): mając broń w EQ, zyskuje +1 poziom regeneracji zdrowia w lochach (regenLevel).
-#                Jeśli gracz ma magię Powietrza (Air): użycie naładowanego ciosu (przy 100% durability) nakłada na atakującego gracza efekty Slowness II i Blindness I na 3 sekundy, a naładowany atak nakłada na cel 10 stacków dźwięku (Soundability).
+#    - Materiał bazowy: STONE_AXE
+#    - Poziom 1: Podwaja statystykę obrony gracza (DEF * 2.0). Otrzymane obrażenia ładują durability.
+#      Przy 100% durability cios zadaje 200% obrażeń bazowych.
+#    - Poziom 2: Cios przy 100% zadaje 250% obrażeń. Otrzymane leczenie również ładuje durability.
+#    - Poziom 3: Stanie na ziemi ładuje durability o 10%/s. Mag Ziemi: +1 poziom regeneracji lochowej.
 #
 # 5. SIERP WIATRU (WIND_SICKLE)
-#    - Materiał bazowy: IRON_SWORD (Żelazny Miecz)
-#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
-#    - Zaczyna z 5% durability.
-#    - Mechanika Dual-wielding: Trzymanie sierpa w głównej ręce automatycznie tworzy lewy sierp (WIND_SICKLE_OFFHAND) w offhandzie, backupując poprzedni przedmiot.
-#    - Poziom 1: Poruszanie się (mając broń w EQ) co sekundę ładuje durability o 3%.
-#                Co 25% durability, broń zadaje dodatkowe obrażenia fizyczne (od 100% do 200% obrażeń bazowych).
-#                Co kolejne 33% durability, szybkość gracza wzrasta o jeden poziom (+0.02 speedBoost, do maks. +0.06 przy 100%).
-#    - Poziom 2: Bierne ładowanie z ruchu rośnie do 4.5% co sekundę.
-#                Przy durability powyżej 90%, kliknięcie PPM trzymając sierp w ręce odpala umiejętność:
-#                * Odrzuca pobliskich wrogów w promieniu 6 bloków.
-#                * Nakłada 10 stacków dźwięku (Soundability) na cele.
-#                * Daje wszystkim graczom w lochu efekty Speed I i Jump Boost I na 5 sekund.
-#                * Zużywa naładowanie i przywraca durability do początkowych 5%.
-#    - Poziom 3: Maksymalny limit obrażeń fizycznych z naładowania rośnie do 250% obrażeń bazowych.
-#                Umiejętność PPM:
-#                * Nakłada 20 stacków dźwięku zamiast 10.
-#                * Leczy wszystkich graczy w lochu o 1 serce (2.0 HP).
-#                * Jeśli mag Wody: leczenie rośnie do 2 serc (4.0 HP), a sojusznicy otrzymują Speed II zamiast Speed I.
-#                * Jeśli mag Powietrza: zyskiwane durability z ruchu rośnie do 6% co sekundę, a trzymanie sierpa daje pasywny +1 poziom uniku (DODGE).
-#                * Jeśli mag Ognia: ataki na podpalone cele przy 100% naładowania zadają 300% obrażeń bazowych.
+#    - Materiał bazowy: IRON_SWORD (Dual-wielding)
+#    - Poziom 1: Ruch ładuje durability o 3%/s. Wyższe naładowanie zwiększa DMG oraz prędkość ruchu gracza.
+#    - Poziom 2: PPM przy >90% durability odrzuca wrogów w promieniu 6 bloków i daje drużynie Speed I + Jump Boost I na 5s.
+#    - Poziom 3: Umiejętność PPM leczy całą drużynę o 2.0 HP (Mag Wody: 4.0 HP i Speed II).
 #
 # 6. KOSTUR MAGÓW WODY (WATER_STAFF)
-#    - Materiał bazowy: STICK (Patyk)
-#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
-#    - Zaczyna z 99% durability.
-#    - Poziom 1: Posiadanie w EQ/Blessingu zwiększa statystyki HP o +1 poziom (+4.0 HP boost) oraz M_CritRate o +1 poziom (+10%).
-#                Co sekundę, gdy gracz nie trzyma kostura w głównej ręce, ładuje durability o 2%.
-#                Kucnięcie (Sneak) trzymając kostur w ręce zużywa 24% durability na sekundę, wyzwalając obszarową aurę (promień 6 bloków):
-#                * Wrogowie otrzymują Slowness II na 3 sekundy.
-#                * Wrogowie i sojusznicy zostawiają pod nogami śnieg (SNOW).
-#                * Sojusznicy są leczeni o 0.5 serca (1.0 HP) na sekundę.
-#                * Nie można używać leczenia przy durability < 24%.
-#    - Poziom 2: Za każdą przypisaną umiejętność leczenia lub magii krwi w slocie ProjectKorra (subelement Healing lub Blood), kostur zadaje +50% obrażeń bazowych (maks. 300%).
-#                Ataki kosturem odpychają grupy wrogów w promieniu 4 bloków od celu.
-#                Wybranie tego błogosławieństwa zwiększa Magic Crit Rate wszystkich graczy w lochu o jeden poziom (+10%).
-#    - Poziom 3: Posiadanie w EQ/Blessingu zwiększa HP oraz M_CritRate o kolejny, drugi poziom (+8.0 HP, +20% magic crit rate).
-#                Jeśli mag Powietrza: zwiększa bierne ładowanie kostura w EQ o 1% (do 3% na sekundę).
-#                Jeśli mag Ognia: każde zabójstwo potwora ładuje kostur o 10%.
-#                Jeśli mag Ziemi: nakłada klątwę -3 poziomy HP (-12.0 HP boost), a koszt aury leczenia rośnie do 33% durability na sekundę.
+#    - Materiał bazowy: STICK
+#    - Poziom 1: Zwiększa HP i M_CritRate. Kucnięcie (Sneak) zużywa durability, lecząc sojuszników o 1.0 HP/s i spowalniając wrogów.
+#    - Poziom 2: Zwiększa DMG za przypisane skille leczenia/krwi ProjectKorra. Ataki odpychają grupy wrogów.
+#    - Poziom 3: Dalszy wzrost statystyk drużyny. Mag Ognia: zabójstwa ładują kostur o 10%.
 #
 # 7. SZTYLETY MAI (MAI_DAGGERS)
-#    - Materiał bazowy: GOLDEN_SWORD (Złoty Miecz)
-#    - Obrażenia bazowe: 1.0 HP (konfigurowalne)
-#    - Mechanika Dual-wielding: Trzymanie sztyletu w głównej ręce automatycznie tworzy lewy sztylet (MAI_DAGGERS_OFFHAND) w offhandzie.
-#    - Durability broni: Pasywnie rośnie o 10.0% na sekundę, gdy broń jest trzymana. Każde udane trafienie wręcz ładuje o 33.0%.
-#    - Umiejętność PPM: Przy 100% durability, kliknięcie PPM wystrzeliwuje latające sztylety (bez zabierania mieczy z EQ):
-#        * Poziom 1 & 2: Wystrzeliwuje 2 sztylety rozproszone poziomo.
-#        * Poziom 3: Wystrzeliwuje 3 sztylety (lewy, prosty, prawy).
-#    - Cechy pocisków sztyletów:
-#        * Zadają 150% (Poziom 1) lub 200% (Poziom 2 & 3) obrażeń bazowych.
-#        * Nakładają efekty Slowness II oraz Blindness I na 4 sekundy.
-#        * Oznaczają trafionych wrogów (Glow cząsteczki nad głową) na 5 sekund (Poziom 1 & 2) lub 7 sekund (Poziom 3).
-#    - Bonusy z oznaczenia:
-#        * Gracz zyskuje Speed II na 1.5 sekundy jeśli idzie/patrzy w stronę jednego ze swoich oznaczonych wrogów (dystans < 25 bloków, dot product spojrzenia > 0.6).
-#        * Zabicie oznaczonego wroga natychmiast ulecza gracza o 4.0 HP (2 serca) i daje niewidzialność na 1 sekundę.
-#    - Synergie żywiołów:
-#        * Magia Ognia (Fire): Rzucone sztylety dodatkowo podpalają wroga na cały czas trwania oznaczenia (5 lub 7 sekund).
-#        * Magia Wody (Water - Poziom 2): Rzucone sztylety zadają tylko 100% obrażeń bazowych, ale zabicie oznaczonego wroga leczy wszystkich graczy w lochu o 4.0 HP.
-#        * Poziom 2 DOT: Oznaczeni wrogowie co sekundę otrzymują obrażenia równe 25% obrażeń bazowych (baseDamage * 0.25).
-#
+#    - Materiał bazowy: GOLDEN_SWORD (Dual-wielding)
+#    - PPM przy 100% durability wystrzeliwuje wachlarz sztyletów, które spowalniają, oślepiają i oznaczają cele (Glow).
+#    - Gracz zyskuje Speed II idąc w stronę oznaczonego wroga, a zabicie go leczy o 4.0 HP i daje niewidzialność na 1s.
+#    - Poziom 2: Oznaczeni wrogowie otrzymują obrażenia w czasie (DOT). Mag Wody: zabicie leczy cały team o 4.0 HP.
+
 # =========================================================================
-# CZĘŚĆ VIII: ULEPSZENIA SKRZYŃ I SYSTEM STARTOWEGO EKWIPUNKU (DUNGBUILD)
+# CZĘŚĆ X: ULEPSZENIA SKRZYŃ I SYSTEM STARTOWEGO EKWIPUNKU (/dungbuild)
 # =========================================================================
-# 1. Filtrowanie Skrzyń (blessing_type & slots)
+# 1. Filtrowanie Skrzyń (blessing_type & slots w efekcie SPAWN_CHEST)
 #    Efekt SPAWN_CHEST obsługuje dodatkowe parametry w skrypcie YAML:
 #    - blessing_type: Chest_General / Chest_Stats / Chest_Abilities / Chest_Blessings
 #        * Chest_Stats: Skrzynia zawiera wyłącznie ulepszenia statystyk lochu (Allowed Stats).
 #        * Chest_Abilities: Skrzynia zawiera wyłącznie ruchy do wyboru (Allowed Skills).
 #        * Chest_Blessings: Skrzynia zawiera wyłącznie błogosławieństwa/bronie legendarne (Allowed Blessings).
 #        * Chest_General: Skrzynia zawiera tradycyjną, losową mieszankę wszystkich typów nagród.
-#    - slots: Określa dokładną liczbę slotów z nagrodami do wyboru (od 1 do 5).
+#    - slots: Określa dokładną liczbę slotów z nagrodami do wyboru w GUI (od 1 do 5).
 #        Układy slotów są automatycznie centrowane w GUI:
 #        * 1 slot: [13]
 #        * 2 sloty: [11, 15]
@@ -831,9 +727,9 @@ rewards:
 #    - Dostęp do ulepszeń i maksymalny limit wyborów (MaxChoices) zależy od poziomu Dungeoneering.
 #    - Wybrane ulepszenia są automatycznie przyznawane graczowi w momencie wejścia na jakikolwiek loch.
 #    - Konfiguracja ulepszeń, poziomów i slotów znajduje się w pliku `dung_build.yml`.
-#
+
 # =========================================================================
-# CZĘŚĆ X: KORDY ZAMROŻENIA ALL_PLAYERS_READY ORAZ WARUNEK DYNAMIC_PATH (LABIRYNT ŚCIEŻKI)
+# CZĘŚĆ XI: ZAMROŻENIE W ALL_PLAYERS_READY ORAZ WARUNEK DYNAMIC_PATH
 # =========================================================================
 # 1. Kordy i Zamrożenie w Warunku ALL_PLAYERS_READY
 #    Warunek `ALL_PLAYERS_READY` umożliwia zdefiniowanie dokładnych kordów spawn/oczekiwania oraz zamrożenia graczy:
@@ -852,13 +748,15 @@ rewards:
 #
 # 2. Warunek/Zdarzenie DYNAMIC_PATH (Dynamiczny Labirynt Ścieżki)
 #    Mechanika `DYNAMIC_PATH` generuje losową, 1-blokową połączoną bezpieczną ścieżkę w obszarze bloków od `start` do `end`:
-#    - min: {x: 10, y: 64, z: 10} / max: {x: 20, y: 64, z: 30} (Obszar podłogi)
+#    - min-x, min-y, min-z / max-x, max-y, max-z: Obszar prostopadłościanu podłogi labiryntu.
 #    - start-x, start-y, start-z / end-x, end-y, end-z: Punkty startowe i końcowe ścieżki.
-#    - safe-block-material: CRACKED_DEEPSLATE_BRICKS (Materiał bezpiecznej ścieżki)
-#    - crumble-block-material: CRACKED_DEEPSLATE_BRICKS (Materiał fałszywych bloków)
+#    - safe-block-material: Materiał bezpiecznej ścieżki (np. CRACKED_DEEPSLATE_BRICKS).
+#    - crumble-block-material: Materiał fałszywych bloków (np. CRACKED_DEEPSLATE_BRICKS).
 #    - Kary za błędny krok: Stanięcie na blok poza ścieżką rozpada go (TempBlock AIR z efektami) i siłą ciągnie gracza w dół aż dotknie pierwszego bloku podłoża.
+#    - Efekty strefowe: W kolumnie nad całą strefą podłogi gracze otrzymują ciągły efekt Slowness oraz blokadę magii (Chi-Block).
+#      Jeśli gracz zboczy w osi X/Z o więcej niż 1 blok poza krawędzie bezpiecznej ścieżki, zostaje gwałtownie ściągnięty w dół!
 #    - reveal-x, reveal-y, reveal-z, reveal-radius: Stanięcie w strefie reveal podświetla bezpieczną ścieżkę partiklami (END_ROD/GLOW) TYLKO GRACZOWI stojącemu w strefie.
-#    - reshuffle-interval-seconds: Opcjonalna zmiana ścieżki co X sekund (zachowuje pozycje graczy).
+#    - reshuffle-interval-seconds: Opcjonalna zmiana ścieżki co X sekund (zachowuje pozycje graczy na ich obecnych blokach).
 #    Przykład YAML:
 #      conditions:
 #        - type: DYNAMIC_PATH
@@ -882,4 +780,232 @@ rewards:
 #          crumble-block-material: CRACKED_DEEPSLATE_BRICKS
 #          reshuffle-interval-seconds: 10
 
+# =========================================================================
+# CZĘŚĆ XII: WARUNEK/MECHANIKA REBUILD (STOPNIOWA ODBUDOWA POLA)
+# =========================================================================
+# Mechanika `REBUILD` pozwala na dynamiczne odtworzenie wyznaczonego pola bloków w miarę
+# postępów gracza w pozostałych warunkach etapu (np. ZONE, KILL_MOBS, INTERACT_BLOCK_WITH_ITEM, HIT_TARGETS itp.).
+#
+# Zasada działania:
+# - Na starcie encounteru zdefiniowany obszar (`start` do `end` lub `min` do `max`) zostaje wyczyszczony do AIR (jeśli clear-field: true).
+# - W miarę wykonywania celów (np. ładowanie strefy ZONE lub zabijanie kolejnych mobów), bloki pola są stopniowo
+#   i płynnie odbudowywane w kolejności od punktu `start` do `end` z efektami cząsteczek stawiania bloków i dźwiękami!
+# - Jeżeli gracz opuści strefę ZONE (lub postęp spadnie), odbudowane bloki płynnie znikają z dźwiękiem kruszenia.
+# - Gdy warunek zostanie naładowany w 100%, całe pole jest w pełni ukończone i trwale zmaterializowane.
+# - Może współpracować z DOWOLNYMI warunkami (nawet kilkoma naraz, obliczając uśredniony postęp).
+#
+# Parametry konfiguracji REBUILD:
+# - type: REBUILD
+# - start-x, start-y, start-z: Początek linii / punkt startowy odbudowy (blok #1).
+# - end-x, end-y, end-z: Koniec linii / punkt końcowy odbudowy (ostatni blok).
+# - min-x, min-y, min-z / max-x, max-y, max-z: (Alternatywnie/Opcjonalnie) Bounding box obszaru.
+# - material: Materiał z jakiego ma powstać pole (np. STONE_BRICKS, OBSIDIAN, OAK_PLANKS).
+#   Jeśli parametr 'material' nie zostanie podany, plugin zachowa i odtworzy oryginalne bloki ze schematu!
+# - clear-field: true (Domyślnie true - usuwa bloki na start etapu, aby gracz musiał je odbudować).
+#
+# Przykłady użycia REBUILD:
+#
+# Przykład A: Odbudowa mostu podczas stania w strefie rytuału (ZONE)
+# ENC_MOST_RYTUAL:
+#   title: "&eUtrzymaj pozycję w kręgu, aby odbudować most!"
+#   conditions:
+#     - type: ZONE
+#       x: 100.5
+#       y: 64.0
+#       z: -50.5
+#       radius: 3.5
+#       time: 25
+#     - type: REBUILD
+#       start-x: 105
+#       start-y: 63
+#       start-z: -50
+#       end-x: 125
+#       end-y: 63
+#       end-z: -50
+#       material: CRACKED_DEEPSLATE_BRICKS
+#
+# Przykład B: Odbudowa portalu wraz z zabijaniem mobów (KILL_MOBS)
+# ENC_PORTAL_KILLS:
+#   title: "&cPokonaj 6 strażników, aby zrekonstruować wrota!"
+#   conditions:
+#     - type: KILL_MOBS
+#       mob-name: "Straznik"
+#       amount: 6
+#     - type: REBUILD
+#       start-x: 50
+#       start-y: 60
+#       start-z: 10
+#       end-x: 50
+#       end-y: 68
+#       end-z: 14
+#       material: OBSIDIAN
 
+# =========================================================================
+# CZĘŚĆ XIII: WARUNEK/MECHANIKA HIT_TARGETS (ZBIJANIE LATAJĄCYCH CELÓW)
+# =========================================================================
+# Mechanika `HIT_TARGETS` generuje dynamiczne, poruszające się cele w powietrzu lub na mapie,
+# którym gracze muszą zadać określoną ilość obrażeń (HP), aby je zniszczyć i zaliczyć etap.
+#
+# Zasada działania:
+# - W każdym zadeklarowanym punkcie pojawia się świecący cel z hologramowym paskiem HP.
+# - Cel porusza się w losowych trajektoriach w zdefiniowanym zasięgu `offset` z ustaloną prędkością `speed`.
+# - Gracze mogą zadawać celom obrażenia:
+#   * Atakiem wręcz (miecz, broń),
+#   * Strzałem z łuku/kuszy/trójzębu,
+#   * Rzucanymi pociskami lochowymi (np. cien_kamien / throwables),
+#   * Magią żywiołów (ProjectKorra / umiejętności AmonPack).
+# - Po każdym trafieniu cel odtwarza dźwięk trafienia, wskaźniki obrażeń oraz aktualizuje pasek zdrowia.
+# - Po spadku HP do 0 cel widowiskowo eksploduje cząsteczkami, a na actionbarze pojawia się informacja o postępie.
+# - Etap zostaje ukończony po zniszczeniu wszystkich zadeklarowanych celów.
+#
+# Parametry konfiguracji HIT_TARGETS:
+# - type: HIT_TARGETS
+# - hp: 25.0              # Ilość punktów życia każdego celu (domyślnie 20.0).
+# - speed: 0.12           # Prędkość poruszania się celu (bloki na tick, domyślnie 0.12).
+# - offset: 3.5           # Maksymalny promień losowego ruchu celu od punktu początkowego.
+# - offset-x, offset-y, offset-z: (Opcjonalnie) Indywidualny zasięg ruchu w konkretnych osiach.
+# - target-type: "ORB"    # Typ wizualny / kształt (ORB, SLIME, MAGMA_CUBE, ARMOR_STAND).
+# - particle: "SOUL_FIRE_FLAME" # Typ cząsteczek otaczających cel (opcjonalny).
+# - points:               # Lista koordynatów punktów startowych (każdy punkt = jeden cel).
+#     - "85.5, 65.0, -30.5"
+#     - "92.5, 66.5, -28.0"
+#     - "80.0, 64.0, -35.0"
+# - targets:              # (Alternatywnie) Lista celów z indywidualnym HP i prędkością:
+#     - x: 85.5
+#       y: 65.0
+#       z: -30.5
+#       hp: 40.0
+#       speed: 0.18
+#       offset: 4.0
+#     - x: 92.5
+#       y: 66.5
+#       z: -28.0
+#       hp: 20.0
+#       speed: 0.10
+#       offset: 2.5
+#
+# Przykład YAML dla HIT_TARGETS:
+# ENC_STRZELNICA_CELI:
+#   title: "&6Zestrzel wszystkie 3 latające kule energii!"
+#   conditions:
+#     - type: HIT_TARGETS
+#       hp: 30.0
+#       speed: 0.14
+#       offset-x: 4.0
+#       offset-y: 2.0
+#       offset-z: 4.0
+#       points:
+#         - "120.5, 70.0, -45.5"
+#         - "128.0, 72.0, -40.0"
+#         - "115.0, 69.5, -48.0"
+#       oncomplete:
+#         - type: SEND_MESSAGE
+#           message: "&a[Dungeon] &2Wszystkie rdzenie energii zostały zniszczone!"
+#         - type: OPEN_DOOR
+#           x1: 130
+#           y1: 68
+#           z1: -45
+#           x2: 130
+#           y2: 72
+#           z2: -43
+#
+# =========================================================================
+# CZĘŚĆ XIV: PRZYKŁADOWY PEŁNY ENCOUNTER Z NOWYMI MECHANIKAMI
+# =========================================================================
+#
+# ENC1:
+#   description: "Lobby przygotowawcze i akceptacja gotowości"
+#   conditions:
+#     - type: "ALL_PLAYERS_READY"
+#       x: 0.5
+#       y: 61.0
+#       z: 0.5
+#       yaw: 0.0
+#       pitch: 0.0
+#       freeze: true
+#   effects:
+#     - type: "GIVE_READY_COMPASS"
+#     - type: "SEND_MESSAGE"
+#       message: "&eWitaj w lochu! Użyj kompasu w dłoni, aby potwierdzić gotowość."
+#   next: "ENC2_WYBÓR"
+#
+# ENC2_WYBÓR:
+#   description: "Wybór losowej ścieżki wyzwań"
+#   next: "random"
+#   pool_lists:
+#     - ["ENC_MOST_RYTUALNY", "ENC_STRZELNICA"]
+#     - ["ENC_LABIRYNT_DYNAMICZNY", "ENC_PORTAL_WALKI"]
+#   enc_after_clears: "ENC_BOSS_FINALNY"
+#
+# ENC_MOST_RYTUALNY:
+#   title: "&eUtrzymaj pozycję w kręgu, aby odbudować most!"
+#   guide-x: 100.5
+#   guide-y: 64.0
+#   guide-z: -50.5
+#   guide-radius: 3.5
+#   conditions:
+#     - type: "ZONE"
+#       x: 100.5
+#       y: 64.0
+#       z: -50.5
+#       radius: 3.5
+#       time: 25
+#     - type: "REBUILD"
+#       start-x: 105
+#       start-y: 63
+#       start-z: -50
+#       end-x: 125
+#       end-y: 63
+#       end-z: -50
+#       material: "CRACKED_DEEPSLATE_BRICKS"
+#   effects:
+#     - type: "SPAWN_UNTIL"
+#       mob-name: "ZOMBIE"
+#       amount: 2
+#       interval: 8
+#       x: 100.5
+#       y: 64.0
+#       z: -50.5
+#       range: 5.0
+#   oncomplete:
+#     - type: "SEND_MESSAGE"
+#       message: "&a[Dungeon] Most został w pełni odbudowany!"
+#
+# ENC_STRZELNICA:
+#   title: "&6Zniszcz latające rdzenie energii!"
+#   conditions:
+#     - type: "HIT_TARGETS"
+#       hp: 35.0
+#       speed: 0.15
+#       offset-x: 5.0
+#       offset-y: 2.5
+#       offset-z: 5.0
+#       points:
+#         - "135.5, 68.0, -50.0"
+#         - "140.0, 70.5, -45.0"
+#         - "130.0, 69.0, -55.0"
+#   oncomplete:
+#     - type: "SPAWN_CHEST"
+#       x: 135.0
+#       y: 64.0
+#       z: -50.0
+#       blessing_type: "Chest_Blessings"
+#       slots: 3
+#
+# ENC_BOSS_FINALNY:
+#   title: "&4&lSTAROŻYTNY STRAŻNIK CIENI"
+#   conditions:
+#     - type: "SHIELDED"
+#       mob-name: "ShadowBoss"
+#       mob-display-name: "&4&lStrażnik Cieni"
+#       item: "cien_kamien"
+#       amount: 5
+#       shield-type: "throw"
+#       x: 200.0
+#       y: 65.0
+#       z: 0.0
+#   effects:
+#     - type: "SEND_MESSAGE"
+#       message: "&4[Boss] Nie ujdziecie stąd z życiem!"
+#   oncomplete:
+#     - type: "COMPLETE_DUNGEON"

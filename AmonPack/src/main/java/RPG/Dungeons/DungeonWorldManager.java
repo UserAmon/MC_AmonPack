@@ -235,7 +235,7 @@ public class DungeonWorldManager {
             Dungeon template = DungeonManager.getInstance().getTemplates().get(key);
             if (template != null && inst.getClipboard() != null) {
                 Vector paste = template.getPasteLocation();
-                SchematicManager.pasteClipboard(world, inst.getClipboard(), paste.getBlockX(), paste.getBlockY(), paste.getBlockZ());
+                SchematicManager.repairClipboardDifferences(world, inst.getClipboard(), paste.getBlockX(), paste.getBlockY(), paste.getBlockZ());
             }
             inst.setState(InstanceState.READY);
             Queue<PreWarmedInstance> pool = readyPools.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>());

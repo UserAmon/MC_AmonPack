@@ -173,11 +173,11 @@ public class DungeonEffect {
                 break;
 
             case OPEN_DOOR:
-                manipulateBlocks(instance.getWorld(), Material.AIR);
+                manipulateBlocks(instance, Material.AIR);
                 break;
 
             case CLOSE_DOOR:
-                manipulateBlocks(instance.getWorld(), material == null ? Material.STONE : material);
+                manipulateBlocks(instance, material == null ? Material.STONE : material);
                 break;
 
             case GIVE_READY_COMPASS:
@@ -203,6 +203,7 @@ public class DungeonEffect {
             case SPAWN_CHEST:
                 Location chestLoc = getResolvedLocation(instance);
                 Block block = chestLoc.getBlock();
+                instance.recordBlockModification(block);
                 block.setType(Material.CHEST);
                 
                 instance.registerLootChest(block.getLocation(), chestType == null ? "ROGUELITE_CHEST" : chestType, blessingType, slotsCount);
@@ -364,7 +365,9 @@ public class DungeonEffect {
         }
     }
 
-    private void manipulateBlocks(org.bukkit.World world, Material mat) {
+    private void manipulateBlocks(DungeonInstance instance, Material mat) {
+        if (instance == null || instance.getWorld() == null) return;
+        org.bukkit.World world = instance.getWorld();
         int minX = (int) Math.min(x1, x2);
         int minY = (int) Math.min(y1, y2);
         int minZ = (int) Math.min(z1, z2);
@@ -375,7 +378,9 @@ public class DungeonEffect {
         for (int sx = minX; sx <= maxX; sx++) {
             for (int sy = minY; sy <= maxY; sy++) {
                 for (int sz = minZ; sz <= maxZ; sz++) {
-                    world.getBlockAt(sx, sy, sz).setType(mat);
+                    org.bukkit.block.Block b = world.getBlockAt(sx, sy, sz);
+                    instance.recordBlockModification(b);
+                    b.setType(mat);
                 }
             }
         }
