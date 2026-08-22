@@ -108,21 +108,33 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
     private void loadConfigAndUpgrades() {
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthBarricade.Cooldown", 8000L);
         this.duration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthBarricade.Duration", 5000L);
-        this.wallDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.WallDistance", 3.5);
+        this.wallDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.WallDistance",
+                3.5);
         this.baseWidth = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthBarricade.WallWidth", 3);
         this.baseHeight = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthBarricade.WallHeight", 3);
-        this.baseThickness = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthBarricade.WallThickness", 1);
-        this.crumbleDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.CrumbleDamage", 3.0);
-        this.crumbleRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.CrumbleRadius", 3.5);
-        this.shatterDebrisCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthBarricade.ShatterDebrisCount", 10);
-        this.launchSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.LaunchSpeed", 0.75);
-        this.launchMaxRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.LaunchMaxRange", 14.0);
-        this.launchDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.LaunchDamage", 4.5);
-        this.launchPush = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.LaunchPush", 0.85);
+        this.baseThickness = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthBarricade.WallThickness",
+                1);
+        this.crumbleDamage = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Earth.EarthBarricade.CrumbleDamage", 3.0);
+        this.crumbleRadius = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Earth.EarthBarricade.CrumbleRadius", 3.5);
+        this.shatterDebrisCount = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Earth.EarthBarricade.ShatterDebrisCount", 10);
+        this.launchSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.LaunchSpeed",
+                0.75);
+        this.launchMaxRange = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Earth.EarthBarricade.LaunchMaxRange", 14.0);
+        this.launchDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.LaunchDamage",
+                4.5);
+        this.launchPush = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthBarricade.LaunchPush",
+                0.85);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         this.hasSize = (branch != null && (branch.hasUpgrade("EarthWallSize") || branch.hasUpgrade("WallSize")));
-        this.hasShatter = (branch != null && (branch.hasUpgrade("EarthWallShatter") || branch.hasUpgrade("WallShatter")));
+        this.hasShatter = (branch != null
+                && (branch.hasUpgrade("EarthWallShatter") || branch.hasUpgrade("WallShatter")));
         this.hasLaunch = (branch != null && (branch.hasUpgrade("EarthWallLaunch") || branch.hasUpgrade("WallLaunch")));
 
         if (hasSize) {
@@ -168,7 +180,8 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                 updateFacingAndCenterWithLerp();
                 riseTick++;
                 renderWall(Math.min(1.0, (double) riseTick / maxRiseTicks));
-                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.5, 0), 8, 1.0, 0.3, 1.0, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.5, 0), 8, 1.0, 0.3, 1.0,
+                        0.05, wallMaterial.createBlockData());
 
                 if (riseTick >= maxRiseTicks) {
                     state = State.HOLDING;
@@ -191,7 +204,8 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
                 renderWall(1.0);
 
                 if (Math.random() < 0.25) {
-                    player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 1.0, 0), 4, 1.0, 0.5, 1.0, 0.02, wallMaterial.createBlockData());
+                    player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 1.0, 0), 4, 1.0, 0.5,
+                            1.0, 0.02, wallMaterial.createBlockData());
                 }
                 break;
 
@@ -206,7 +220,8 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
 
                 renderWall(1.0);
                 pushAndDamageEnemiesInFront();
-                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.8, 0), 10, 1.2, 0.5, 1.2, 0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.8, 0), 10, 1.2, 0.5, 1.2,
+                        0.05, wallMaterial.createBlockData());
 
                 if (launchDistTraveled >= launchMaxRange || isObstructed()) {
                     crumble();
@@ -277,7 +292,8 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
 
     private boolean isTempBlock(Block b) {
         for (TempBlock tb : activeBlocks) {
-            if (tb.getBlock().equals(b)) return true;
+            if (tb.getBlock().equals(b))
+                return true;
         }
         return false;
     }
@@ -298,7 +314,8 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
         cleanWall();
 
         player.getWorld().playSound(currentCenter, Sound.BLOCK_STONE_BREAK, 1.2f, 0.8f);
-        player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1, wallMaterial.createBlockData());
+        player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1,
+                wallMaterial.createBlockData());
         Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(110, 80, 50), 1.3f);
         player.getWorld().spawnParticle(Particle.DUST, currentCenter, 15, 1.5, 1.0, 1.5, 0, dust);
 
@@ -306,7 +323,8 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
             if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                 LivingEntity target = (LivingEntity) entity;
                 DamageHandler.damageEntity(target, crumbleDamage, this);
-                Vector knock = target.getLocation().toVector().subtract(currentCenter.toVector()).normalize().multiply(0.6).setY(0.3);
+                Vector knock = target.getLocation().toVector().subtract(currentCenter.toVector()).normalize()
+                        .multiply(0.6).setY(0.3);
                 target.setVelocity(knock);
             }
         }
@@ -325,24 +343,27 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
 
         for (int i = 0; i < count; i++) {
             FallingBlock fb = currentCenter.getWorld().spawnFallingBlock(
-                    currentCenter.clone().add((rand.nextDouble() - 0.5) * 1.5, 0.5 + rand.nextDouble() * 1.5, (rand.nextDouble() - 0.5) * 1.5),
-                    wallMaterial.createBlockData()
-            );
+                    currentCenter.clone().add((rand.nextDouble() - 0.5) * 1.5, 0.5 + rand.nextDouble() * 1.5,
+                            (rand.nextDouble() - 0.5) * 1.5),
+                    wallMaterial.createBlockData());
             fb.setDropItem(false);
             fb.setCancelDrop(true);
 
             Vector forwardBias = currentFacing.clone().multiply(0.6 + rand.nextDouble() * 0.5);
-            Vector side = new Vector((rand.nextDouble() - 0.5) * 0.7, 0.35 + rand.nextDouble() * 0.35, (rand.nextDouble() - 0.5) * 0.7);
+            Vector side = new Vector((rand.nextDouble() - 0.5) * 0.7, 0.35 + rand.nextDouble() * 0.35,
+                    (rand.nextDouble() - 0.5) * 0.7);
             fb.setVelocity(forwardBias.add(side));
 
             new BukkitRunnable() {
                 int ticks = 0;
+
                 @Override
                 public void run() {
                     ticks++;
                     if (fb.isDead() || !fb.isValid() || fb.isOnGround() || ticks > 30) {
                         if (fb.isValid()) {
-                            fb.getWorld().spawnParticle(Particle.BLOCK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05, wallMaterial.createBlockData());
+                            fb.getWorld().spawnParticle(Particle.BLOCK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05,
+                                    wallMaterial.createBlockData());
                             fb.remove();
                         }
                         this.cancel();
@@ -403,20 +424,21 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {
         remove();
     }
 
-	@Override
-	public String getDescription() {
-		return "Błyskawicznie wznosi solidną ścianę z ziemi i kamienia przed graczem, blokując wrogie ataki i pociski.";
-	}
+    @Override
+    public String getDescription() {
+        return "Błyskawicznie wznosi solidną ścianę z ziemi i kamienia przed graczem, blokując wrogie ataki i pociski.";
+    }
 
-	@Override
-	public String getInstructions() {
-		return "Kliknij LPM patrząc przed siebie, aby postawić barykadę z ziemi.";
-	}
+    @Override
+    public String getInstructions() {
+        return "Przytrzymaj shift aby postawić barykadę z ziemi.";
+    }
 }
