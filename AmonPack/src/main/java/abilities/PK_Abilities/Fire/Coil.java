@@ -78,6 +78,11 @@ public class Coil extends LightningAbility implements AddonAbility {
         this.thunderRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.ThunderRadius", 5.0);
         this.thunderDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Fire.Coil.ThunderDamage", 6.5);
 
+        if (FirelordStanceManager.isActive(player)) {
+            this.chargeIntervalPerRing = Math.max(100L, this.chargeIntervalPerRing / 2);
+        }
+        this.chargeIntervalPerRing = Math.max(1L, this.chargeIntervalPerRing);
+
         this.state = State.CHARGING;
         this.startTime = System.currentTimeMillis();
 
@@ -89,12 +94,6 @@ public class Coil extends LightningAbility implements AddonAbility {
         if (player == null || !player.isOnline() || player.isDead()) {
             remove();
             return;
-        }
-
-        if (FirelordStanceManager.isActive(player)) {
-            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§1⚡ Firelord — §4Coil"));
-            this.chargeIntervalPerRing = this.chargeIntervalPerRing / 2;
         }
 
         if (state == State.CHARGING) {

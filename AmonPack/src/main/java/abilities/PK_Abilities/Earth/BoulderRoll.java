@@ -279,7 +279,7 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
                     Location loc = center.clone().add(x, y, z);
                     if (loc.distance(center) <= 1.25) {
                         Block b = loc.getBlock();
-                        if (b.getType() == Material.AIR || isEarthbendable(player, b) || PlantAbility.isPlant(b)) {
+                        if (b.getType() == Material.AIR || PlantAbility.isPlant(b)) {
                             Material mat = rand.nextBoolean() ? Material.DIRT : Material.STONE;
                             TempBlock tb = new TempBlock(b, mat);
                             tb.setRevertTime(100L);
@@ -307,13 +307,17 @@ public class BoulderRoll extends EarthAbility implements AddonAbility, SpecialTr
             Material fbMat = rand.nextBoolean() ? Material.STONE : Material.DIRT;
             FallingBlock fb = spawnLoc.getWorld().spawnFallingBlock(spawnLoc, fbMat.createBlockData());
             fb.setDropItem(false);
-            fb.setVelocity(rollDir.clone().multiply(speed * 0.5).add(new Vector((rand.nextDouble() - 0.5) * 0.2, 0.1, (rand.nextDouble() - 0.5) * 0.2)));
+            fb.setCancelDrop(true);
+            fb.setHurtEntities(false);
+            fb.setMetadata("AmonPack_NoPlace", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, true));
             Methods.SpawnedByMe.add(fb.getUniqueId());
+            fb.setVelocity(rollDir.clone().multiply(speed * 0.5).add(new Vector((rand.nextDouble() - 0.5) * 0.2, 0.1, (rand.nextDouble() - 0.5) * 0.2)));
 
             Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, () -> {
-                if (fb.isValid() && !fb.isDead()) {
+                if (fb.isValid()) {
                     fb.remove();
                 }
+                Methods.SpawnedByMe.remove(fb.getUniqueId());
             }, 6L);
             boulderLoc.getWorld().playSound(boulderLoc, Sound.BLOCK_GRASS_STEP, 0.8f, 0.6f);
         }

@@ -1245,10 +1245,10 @@ public class Listeners implements Listener {
      */
     @EventHandler
     public void onFallingBlockLand(EntityChangeBlockEvent event) {
-        if (event.getEntity() instanceof FallingBlock) {
-            if (Methods.SpawnedByMe.contains(event.getEntity().getUniqueId())) {
+        if (event.getEntity() instanceof FallingBlock fb) {
+            if (Methods.SpawnedByMe.contains(fb.getUniqueId()) || fb.hasMetadata("AmonPack_NoPlace")) {
                 event.setCancelled(true);
-                event.getEntity().remove();
+                fb.remove();
             }
         }
     }

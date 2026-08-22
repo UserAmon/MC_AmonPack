@@ -61,6 +61,9 @@ public class TideLock extends WaterAbility implements AddonAbility {
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.TideLock.Range", 25.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.TideLock.Speed", 1.0);
 
+        if (hasAbility(player, TideLock.class)) {
+            return;
+        }
         if (bPlayer.isOnCooldown(this)) {
             return;
         }
@@ -243,6 +246,7 @@ public class TideLock extends WaterAbility implements AddonAbility {
         projectileDir = player.getLocation().getDirection();
         isReturning = false;
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_SPLASH, 1f, 1f);
+        bPlayer.addCooldown(this, 999999L);
     }
 
     private void markTarget(LivingEntity target) {
@@ -256,7 +260,6 @@ public class TideLock extends WaterAbility implements AddonAbility {
             return;
         state = State.LOCKING;
         lockStartTime = System.currentTimeMillis();
-        bPlayer.addCooldown(this);
     }
 
     private void burst() {

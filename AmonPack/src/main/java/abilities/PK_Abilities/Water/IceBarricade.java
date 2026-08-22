@@ -4,6 +4,7 @@ import Plugin.AmonPackPlugin;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import com.projectkorra.projectkorra.GeneralMethods;
 import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.IceAbility;
 import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.util.DamageHandler;
 import com.projectkorra.projectkorra.util.TempBlock;
@@ -25,7 +26,7 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-public class IceBarricade extends WaterAbility implements AddonAbility {
+public class IceBarricade extends IceAbility implements AddonAbility {
 
     private enum State {
         RISING, HOLDING, LAUNCHING
@@ -92,7 +93,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
 
         Block groundBlock = initialGround.getBlock().getRelative(BlockFace.DOWN);
         if (isIcebendable(groundBlock)) {
-            this.wallMaterial = groundBlock.getType() == Material.PACKED_ICE || groundBlock.getType() == Material.BLUE_ICE ? groundBlock.getType() : Material.ICE;
+            this.wallMaterial = groundBlock.getType() == Material.PACKED_ICE
+                    || groundBlock.getType() == Material.BLUE_ICE ? groundBlock.getType() : Material.ICE;
         } else {
             this.wallMaterial = Material.ICE;
         }
@@ -106,20 +108,29 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
     private void loadConfigAndUpgrades() {
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.IceBarricade.Cooldown", 8000L);
         this.duration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.IceBarricade.Duration", 5000L);
-        this.wallDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.WallDistance", 3.5);
+        this.wallDistance = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.WallDistance",
+                3.5);
         this.baseWidth = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.IceBarricade.WallWidth", 3);
         this.baseHeight = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.IceBarricade.WallHeight", 3);
         this.baseThickness = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.IceBarricade.WallThickness", 1);
-        this.crumbleDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.CrumbleDamage", 3.0);
-        this.crumbleRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.CrumbleRadius", 3.5);
-        this.shatterDebrisCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.IceBarricade.ShatterDebrisCount", 10);
-        this.launchSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.LaunchSpeed", 0.75);
-        this.launchMaxRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.LaunchMaxRange", 14.0);
-        this.launchDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.LaunchDamage", 4.5);
+        this.crumbleDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.CrumbleDamage",
+                3.0);
+        this.crumbleRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.CrumbleRadius",
+                3.5);
+        this.shatterDebrisCount = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Water.IceBarricade.ShatterDebrisCount", 10);
+        this.launchSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.LaunchSpeed",
+                0.75);
+        this.launchMaxRange = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Water.IceBarricade.LaunchMaxRange", 14.0);
+        this.launchDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.LaunchDamage",
+                4.5);
         this.launchPush = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.IceBarricade.LaunchPush", 0.85);
         this.slowDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.IceBarricade.SlowDuration", 60);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         this.hasSize = (branch != null && (branch.hasUpgrade("IceWallSize") || branch.hasUpgrade("WallSize")));
         this.hasShatter = (branch != null && (branch.hasUpgrade("IceWallShatter") || branch.hasUpgrade("WallShatter")));
         this.hasLaunch = (branch != null && (branch.hasUpgrade("IceWallLaunch") || branch.hasUpgrade("WallLaunch")));
@@ -181,8 +192,10 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
                 updateFacingAndCenterWithLerp();
                 riseTick++;
                 renderWall(Math.min(1.0, (double) riseTick / maxRiseTicks));
-                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.5, 0), 8, 1.0, 0.3, 1.0, 0.05, wallMaterial.createBlockData());
-                player.getWorld().spawnParticle(Particle.SPLASH, currentCenter.clone().add(0, 0.2, 0), 6, 0.8, 0.2, 0.8, 0.05);
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.5, 0), 8, 1.0, 0.3, 1.0,
+                        0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.SPLASH, currentCenter.clone().add(0, 0.2, 0), 6, 0.8, 0.2, 0.8,
+                        0.05);
 
                 if (riseTick >= maxRiseTicks) {
                     state = State.HOLDING;
@@ -205,7 +218,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
                 renderWall(1.0);
 
                 if (Math.random() < 0.25) {
-                    player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter.clone().add(0, 1.0, 0), 4, 1.0, 0.5, 1.0, 0.02);
+                    player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter.clone().add(0, 1.0, 0), 4, 1.0,
+                            0.5, 1.0, 0.02);
                 }
                 break;
 
@@ -220,8 +234,10 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
 
                 renderWall(1.0);
                 pushAndDamageEnemiesInFront();
-                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.8, 0), 10, 1.2, 0.5, 1.2, 0.05, wallMaterial.createBlockData());
-                player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter.clone().add(0, 0.8, 0), 8, 1.0, 0.5, 1.0, 0.05);
+                player.getWorld().spawnParticle(Particle.BLOCK, currentCenter.clone().add(0, 0.8, 0), 10, 1.2, 0.5, 1.2,
+                        0.05, wallMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.SNOWFLAKE, currentCenter.clone().add(0, 0.8, 0), 8, 1.0, 0.5,
+                        1.0, 0.05);
 
                 if (launchDistTraveled >= launchMaxRange || isObstructed()) {
                     crumble();
@@ -296,7 +312,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
 
     private boolean isTempBlock(Block b) {
         for (TempBlock tb : activeBlocks) {
-            if (tb.getBlock().equals(b)) return true;
+            if (tb.getBlock().equals(b))
+                return true;
         }
         return false;
     }
@@ -317,7 +334,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
         cleanWall();
 
         player.getWorld().playSound(currentCenter, Sound.BLOCK_GLASS_BREAK, 1.2f, 0.8f);
-        player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1, wallMaterial.createBlockData());
+        player.getWorld().spawnParticle(Particle.BLOCK, currentCenter, 30, 1.5, 1.0, 1.5, 0.1,
+                wallMaterial.createBlockData());
         player.getWorld().spawnParticle(Particle.SPLASH, currentCenter, 20, 1.5, 1.0, 1.5, 0.1);
 
         for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentCenter, crumbleRadius)) {
@@ -325,7 +343,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
                 LivingEntity target = (LivingEntity) entity;
                 DamageHandler.damageEntity(target, crumbleDamage, this);
                 target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slowDuration, 1));
-                Vector knock = target.getLocation().toVector().subtract(currentCenter.toVector()).normalize().multiply(0.6).setY(0.3);
+                Vector knock = target.getLocation().toVector().subtract(currentCenter.toVector()).normalize()
+                        .multiply(0.6).setY(0.3);
                 target.setVelocity(knock);
             }
         }
@@ -344,24 +363,27 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
 
         for (int i = 0; i < count; i++) {
             FallingBlock fb = currentCenter.getWorld().spawnFallingBlock(
-                    currentCenter.clone().add((rand.nextDouble() - 0.5) * 1.5, 0.5 + rand.nextDouble() * 1.5, (rand.nextDouble() - 0.5) * 1.5),
-                    wallMaterial.createBlockData()
-            );
+                    currentCenter.clone().add((rand.nextDouble() - 0.5) * 1.5, 0.5 + rand.nextDouble() * 1.5,
+                            (rand.nextDouble() - 0.5) * 1.5),
+                    wallMaterial.createBlockData());
             fb.setDropItem(false);
             fb.setCancelDrop(true);
 
             Vector forwardBias = currentFacing.clone().multiply(0.6 + rand.nextDouble() * 0.5);
-            Vector side = new Vector((rand.nextDouble() - 0.5) * 0.7, 0.35 + rand.nextDouble() * 0.35, (rand.nextDouble() - 0.5) * 0.7);
+            Vector side = new Vector((rand.nextDouble() - 0.5) * 0.7, 0.35 + rand.nextDouble() * 0.35,
+                    (rand.nextDouble() - 0.5) * 0.7);
             fb.setVelocity(forwardBias.add(side));
 
             new BukkitRunnable() {
                 int ticks = 0;
+
                 @Override
                 public void run() {
                     ticks++;
                     if (fb.isDead() || !fb.isValid() || fb.isOnGround() || ticks > 30) {
                         if (fb.isValid()) {
-                            fb.getWorld().spawnParticle(Particle.BLOCK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05, wallMaterial.createBlockData());
+                            fb.getWorld().spawnParticle(Particle.BLOCK, fb.getLocation(), 6, 0.2, 0.2, 0.2, 0.05,
+                                    wallMaterial.createBlockData());
                             fb.remove();
                         }
                         this.cancel();
@@ -422,7 +444,8 @@ public class IceBarricade extends WaterAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {

@@ -105,30 +105,6 @@ public class BloodArrow extends BloodAbility implements AddonAbility {
                 }
             }
 
-            if (VeinFlowManager.isActive(player)) {
-                player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c🩸 VeinFlow — §4BloodArrow"));
-            } else {
-                StringBuilder barBuilder = new StringBuilder();
-                if (level == 0) {
-                    barBuilder.append("§7[ §f");
-                    for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("░");
-                    barBuilder.append(" §7] §7§lBLOOD WEAVE...");
-                } else if (level < maxChargeLevel) {
-                    barBuilder.append("§c[ §4");
-                    for (int k = 0; k < level; k++) barBuilder.append("█");
-                    barBuilder.append("§7");
-                    for (int k = 0; k < maxChargeLevel - level; k++) barBuilder.append("░");
-                    barBuilder.append(" §c] §c§lLEVEL ").append(level);
-                } else {
-                    barBuilder.append("§4§l[ §c");
-                    for (int k = 0; k < maxChargeLevel; k++) barBuilder.append("█");
-                    barBuilder.append(" §4§l] §c§lMAX BLOOD ARROW");
-                }
-                player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                        net.md_5.bungee.api.chat.TextComponent.fromLegacyText(barBuilder.toString()));
-            }
-
             double radius = 0.6 + (level * 0.2);
             double angle = (System.currentTimeMillis() / 160.0) * (level + 1);
             double x = radius * Math.cos(angle);

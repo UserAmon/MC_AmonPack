@@ -115,8 +115,6 @@ public class Withering extends PlantAbility implements AddonAbility, SpecialTrig
 
         Block targetBlock = player.getTargetBlockExact(18);
         if (targetBlock == null || !isPlantbendableGround(targetBlock)) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§cMusisz patrzeć na blok roślinny!"));
             return;
         }
 
@@ -162,8 +160,6 @@ public class Withering extends PlantAbility implements AddonAbility, SpecialTrig
             public void run() {
                 phase1Ticks++;
                 SpecialTriggerManager.applySoftCooldownToToolbar(player);
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                        TextComponent.fromLegacyText("§8[Withering] Usychanie na bloku..."));
 
                 ParticleEffect.SMOKE_NORMAL.display(initialTargetBlock.getLocation().add(0.5, 1.0, 0.5), 3, 0.2, 0.2,
                         0.2, 0.02);

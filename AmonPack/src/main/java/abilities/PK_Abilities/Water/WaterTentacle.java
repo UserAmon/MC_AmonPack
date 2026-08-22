@@ -80,9 +80,6 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
             return;
         }
 
-        // Always refresh base water source block so the lake beneath never disappears
-        refreshBaseWaterSource();
-
         if (state == State.GROWING) {
             if (!player.isSneaking()) {
                 startDissolving();
@@ -100,7 +97,7 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
                 player.getWorld().playSound(originLoc, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
             }
 
-        } else if (state == State.READY) {
+        } else if (state == State.READY || state == State.STRIKING) {
             if (!player.isSneaking()) {
                 startDissolving();
                 return;
@@ -110,15 +107,8 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
         }
     }
 
-    private void refreshBaseWaterSource() {
-        if (originBlock != null && !TempBlock.isTempBlock(originBlock)) {
-            activeTempBlocks.add(new TempBlock(originBlock, Material.WATER.createBlockData(), 200));
-        }
-    }
-
     private void renderWrithingTentacle(int hLimit) {
         revertTempBlocks();
-        refreshBaseWaterSource();
 
         waveTime += 0.12;
 
@@ -149,9 +139,8 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
         state = State.STRIKING;
         remainingStrikes--;
         hitEntities.clear();
-        revertTempBlocks();
 
-        Location topLoc = originLoc.clone().add(0, 4, 0);
+        Location topLoc = originLoc.clone().add(0, maxHeight, 0);
         Location targetLoc = player.getTargetBlockExact(20) != null
                 ? player.getTargetBlockExact(20).getLocation().add(0.5, 1, 0.5)
                 : player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(15));

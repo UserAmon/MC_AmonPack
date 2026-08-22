@@ -66,7 +66,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public FileConfiguration config;
 
 	public static boolean ENABLE_BENDING_ABILITIES = true;
-	public static boolean ENABLE_DATABASE = true;
+	public static boolean ENABLE_DATABASE = false;
 	public static boolean ENABLE_SKILL_TREE = ENABLE_DATABASE;
 	public static boolean ENABLE_DUNGEONS = ENABLE_DATABASE;
 	public static boolean ENABLE_RPG_GATHERING = ENABLE_DATABASE;
@@ -287,7 +287,8 @@ public class AmonPackPlugin extends JavaPlugin {
 		try {
 			java.io.InputStream defLevelsStream = getResource("Levels.yml");
 			if (defLevelsStream != null) {
-				java.io.Reader defReader = new java.io.InputStreamReader(defLevelsStream, java.nio.charset.StandardCharsets.UTF_8);
+				java.io.Reader defReader = new java.io.InputStreamReader(defLevelsStream,
+						java.nio.charset.StandardCharsets.UTF_8);
 				YamlConfiguration defLevels = YamlConfiguration.loadConfiguration(defReader);
 				LevelConfig.setDefaults(defLevels);
 				if (!LevelConfig.contains("AmonPack.Levels.DUNGEON")) {
@@ -302,7 +303,8 @@ public class AmonPackPlugin extends JavaPlugin {
 					LevelConfig.save(LevelConfigFile);
 				}
 			}
-		} catch (Exception ignored) {}
+		} catch (Exception ignored) {
+		}
 
 		// --- 2. BAZA DANYCH SQLITE ---
 		if (ENABLE_DATABASE) {
@@ -861,7 +863,8 @@ public class AmonPackPlugin extends JavaPlugin {
 			java.util.zip.ZipEntry entry;
 			while ((entry = zip.getNextEntry()) != null) {
 				String name = entry.getName();
-				if (name.startsWith("dungeons/") && !entry.isDirectory() && (name.endsWith(".yml") || name.endsWith(".yaml"))) {
+				if (name.startsWith("dungeons/") && !entry.isDirectory()
+						&& (name.endsWith(".yml") || name.endsWith(".yaml"))) {
 					File target = new File(getDataFolder(), name);
 					if (!target.exists()) {
 						saveResource(name, false);

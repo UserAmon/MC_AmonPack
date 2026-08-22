@@ -79,7 +79,16 @@ public class SandRupture extends SandAbility implements AddonAbility {
 
 	private boolean isStandingOnSand(Player p) {
 		Block below = p.getLocation().clone().subtract(0, 0.5, 0).getBlock();
-		return below.getType() == Material.SAND || below.getType() == Material.RED_SAND;
+		Block atFeet = p.getLocation().getBlock();
+		return isSandbendableBlock(below) || isSandbendableBlock(atFeet);
+	}
+
+	public static boolean isSandbendableBlock(Block block) {
+		if (block == null) return false;
+		if (EarthAbility.isSand(block)) return true;
+		Material mat = block.getType();
+		String name = mat.name();
+		return name.contains("SAND") && !name.contains("SOUL_SAND");
 	}
 
 	@Override
@@ -113,30 +122,41 @@ public class SandRupture extends SandAbility implements AddonAbility {
 				remove();
 				return;
 			}
-
-			chargeProgress++;
-			
-			if (chargeProgress >= 40) {
-				charged = true;
+			if (isStandingOnSand(player)) {
 				state = 2;
+				charged = true;
 				player.getWorld().playSound(player.getLocation(), Sound.BLOCK_SAND_PLACE, 1f, 1.5f);
+			} else {
+				chargeProgress++;
+				if (chargeProgress % 5 == 0) {
+					player.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, player.getLocation().add(0, 0.1, 0), 5, 0.3, 0.1, 0.3, 0.0, Material.SAND.createBlockData());
+				}
+				if (System.currentTimeMillis() - startTime >= 1000) {
+					charged = true;
+					state = 2;
+					player.getWorld().playSound(player.getLocation(), Sound.BLOCK_SAND_PLACE, 1f, 1.5f);
+				}
 			}
 		} else if (state == 2) {
 			if (!player.isSneaking()) {
-				state = 3;
-				waveLoc = player.getLocation().clone();
-				waveDir = player.getLocation().getDirection().clone().setY(0).normalize();
-				waveDistanceTraveled = 0.0;
-				player.getWorld().playSound(player.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 0.8f);
+				launchWave();
 			} else {
-				ParticleEffect.BLOCK_CRACK.display(player.getLocation().clone().add(0, 0.8, 0), 4, 0.5, 0.5, 0.5, 0.05, Material.SAND.createBlockData());
+				player.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, player.getLocation().add(0, 0.1, 0), 2, 0.2, 0.1, 0.2, 0.0, Material.SAND.createBlockData());
 			}
 		} else if (state == 3) {
 			tickCount++;
-			waveLoc.add(waveDir.clone().multiply(this.waveSpeed));
 			waveDistanceTraveled += this.waveSpeed;
-
+			waveLoc.add(waveDir.clone().multiply(this.waveSpeed));
 			adjustWaveY();
+
+			for (int x = -1; x <= 1; x++) {
+				for (int z = -1; z <= 1; z++) {
+					Block neighbor = waveLoc.clone().add(x, 0, z).getBlock();
+					if (neighbor.getType().isSolid()) {
+						neighbor.getWorld().spawnParticle(org.bukkit.Particle.BLOCK, neighbor.getLocation().add(0.5, 0.5, 0.5), 2, 0.1, 0.1, 0.1, 0.0, Material.SAND.createBlockData());
+					}
+				}
+			}
 
 			Block b = waveLoc.getBlock();
 			if (EarthAbility.isEarthbendable(player, b)) {
@@ -177,6 +197,14 @@ public class SandRupture extends SandAbility implements AddonAbility {
 		}
 	}
 
+	private void launchWave() {
+		state = 3;
+		waveLoc = player.getLocation().clone();
+		waveDir = player.getLocation().getDirection().clone().setY(0).normalize();
+		waveDistanceTraveled = 0.0;
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_HORSE_GALLOP, 1f, 0.8f);
+	}
+
 	private void adjustWaveY() {
 		Location check = waveLoc.clone();
 		for (int yOffset = 3; yOffset >= -3; yOffset--) {
@@ -211,7 +239,7 @@ public class SandRupture extends SandAbility implements AddonAbility {
 				return;
 			}
 		} else {
-			if (mat != Material.SAND && mat != Material.RED_SAND) {
+			if (!isSandbendableBlock(targetBlock)) {
 				return;
 			}
 		}

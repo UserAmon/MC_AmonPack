@@ -106,6 +106,8 @@ public class Methods {
 			FallingBlock fallingBlock = world.spawnFallingBlock(location, mat.createBlockData());
 			fallingBlock.setDropItem(false);
 			fallingBlock.setCancelDrop(true);
+			fallingBlock.setHurtEntities(false);
+			fallingBlock.setMetadata("AmonPack_NoPlace", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, true));
 			double x = (random.nextDouble() - 0.5) * (0.5 * factor);
 			double z = (random.nextDouble() - 0.5) * (0.5 * factor);
 			double y = 0.3 + random.nextDouble() * (0.1 * factor);

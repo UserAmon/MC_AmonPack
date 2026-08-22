@@ -55,11 +55,22 @@ public class BassDrop extends SoundAbility implements AddonAbility {
     private double currentShockwaveRadius;
 
     public BassDrop(Player player) {
-        this(player, player.getTargetBlockExact(20));
+        this(player, null);
     }
 
     public BassDrop(Player player, Block targetBlock) {
         super(player);
+
+        double range = Math.max(5.0, getAbilityConfig().getDouble("AmonPack.Air.BassDrop.Range", 20.0));
+        if (targetBlock == null || targetBlock.getType().isAir()) {
+            targetBlock = player.getTargetBlockExact((int) range);
+            if (targetBlock == null || targetBlock.getType().isAir()) {
+                Location eyeRay = GeneralMethods.getTargetedLocation(player, range);
+                if (eyeRay != null) {
+                    targetBlock = GeneralMethods.getTopBlock(eyeRay, 3, 3);
+                }
+            }
+        }
 
         this.cooldown = getAbilityConfig().getLong("AmonPack.Air.BassDrop.Cooldown", 8000L);
         this.height = Math.max(1.0, getAbilityConfig().getDouble("AmonPack.Air.BassDrop.Height", 20.0));
@@ -132,13 +143,37 @@ public class BassDrop extends SoundAbility implements AddonAbility {
 
     private void progressDelay() {
         ticksElapsed++;
-        if (ticksElapsed % 4 == 0) {
-            drawTargetMarker();
-        }
+
+        double progress = (double) ticksElapsed / (double) Math.max(1, delayTicks);
+        drawProgressRing(impactLocation, 1.8, progress);
+
         if (ticksElapsed >= delayTicks) {
             phase = Phase.FALLING;
             ticksElapsed = 0;
             player.getWorld().playSound(projectileLocation, Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.55f);
+        }
+    }
+
+    private void drawProgressRing(Location center, double radius, double progress) {
+        if (center == null || center.getWorld() == null) return;
+
+        int totalPoints = 20;
+        int pointsToDraw = (int) Math.ceil(totalPoints * Math.min(1.0, progress));
+
+        // Draw filled arc with progress
+        for (int i = 0; i < pointsToDraw; i++) {
+            double angle = (Math.PI * 2.0 * i) / totalPoints;
+            Location point = center.clone().add(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
+            center.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, point, 1, 0, 0, 0, 0);
+        }
+
+        // Faint outline of full ring
+        if (ticksElapsed % 6 == 0) {
+            for (int i = 0; i < totalPoints; i += 2) {
+                double angle = (Math.PI * 2.0 * i) / totalPoints;
+                Location point = center.clone().add(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
+                center.getWorld().spawnParticle(Particle.CRIT, point, 1, 0, 0, 0, 0);
+            }
         }
     }
 
@@ -155,8 +190,8 @@ public class BassDrop extends SoundAbility implements AddonAbility {
         double radius = projectileMinRadius
                 + (projectileMaxRadius - projectileMinRadius) * clamp(progress, 0.0, 1.0);
         drawSonicRing(projectileLocation, radius, 0.0);
-        projectileLocation.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, projectileLocation, 3,
-                0.12, 0.12, 0.12, 0.02);
+        projectileLocation.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, projectileLocation, 1,
+                0.05, 0.05, 0.05, 0.01);
 
         ticksElapsed++;
         if (ticksElapsed % 4 == 0) {
@@ -172,8 +207,8 @@ public class BassDrop extends SoundAbility implements AddonAbility {
         impactLocation.getWorld().playSound(impactLocation, Sound.BLOCK_NOTE_BLOCK_BASS, 2.0f, 0.4f);
         impactLocation.getWorld().playSound(impactLocation, Sound.ENTITY_WARDEN_SONIC_BOOM, 0.8f, 0.8f);
         impactLocation.getWorld().spawnParticle(Particle.SONIC_BOOM, impactLocation, 1, 0, 0, 0, 0);
-        impactLocation.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, impactLocation, 20,
-                0.7, 0.25, 0.7, 0.1);
+        impactLocation.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, impactLocation, 8,
+                0.4, 0.1, 0.4, 0.05);
     }
 
     private void progressShockwave() {
@@ -238,22 +273,16 @@ public class BassDrop extends SoundAbility implements AddonAbility {
         target.setVelocity(push.multiply(knockback).setY(verticalKnockback));
     }
 
-    private void drawTargetMarker() {
-        Location marker = impactLocation.clone().add(0.0, 0.06, 0.0);
-        drawSonicRing(marker, 0.7, 0.0);
-        marker.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, marker, 2, 0.15, 0.02, 0.15, 0.01);
-    }
-
     private void drawSonicRing(Location center, double radius, double yOffset) {
         if (radius <= 0.0 || center.getWorld() == null) {
             return;
         }
 
-        int points = Math.max(12, (int) Math.ceil((Math.PI * 2.0 * radius) / 0.5));
+        int points = Math.max(8, (int) Math.ceil((Math.PI * 2.0 * radius) / 1.0));
         for (int i = 0; i < points; i++) {
             double angle = Math.PI * 2.0 * i / points;
             Location point = center.clone().add(Math.cos(angle) * radius, yOffset, Math.sin(angle) * radius);
-            center.getWorld().spawnParticle(Particle.SONIC_BOOM, point, 1, 0, 0, 0, 0);
+            center.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, point, 1, 0, 0, 0, 0);
         }
     }
 

@@ -1,74 +1,69 @@
 package Abilities.PK_Abilities.Earth;
 
-import com.projectkorra.projectkorra.GeneralMethods;
-import com.projectkorra.projectkorra.ProjectKorra;
-import com.projectkorra.projectkorra.ability.*;
-import com.projectkorra.projectkorra.attribute.Attribute;
-import com.projectkorra.projectkorra.firebending.FireBlastCharged;
-import com.projectkorra.projectkorra.util.DamageHandler;
-import com.projectkorra.projectkorra.util.ParticleEffect;
-import com.projectkorra.projectkorra.util.TempBlock;
 import Plugin.AmonPackPlugin;
 import Plugin.Methods;
-import org.bukkit.Bukkit;
+import com.projectkorra.projectkorra.GeneralMethods;
+import com.projectkorra.projectkorra.ability.AddonAbility;
+import com.projectkorra.projectkorra.ability.EarthAbility;
+import com.projectkorra.projectkorra.ability.PlantAbility;
+import com.projectkorra.projectkorra.util.DamageHandler;
+import com.projectkorra.projectkorra.util.TempBlock;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
 
-import static Plugin.Methods.getRandom;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class EarthHammer extends EarthAbility implements AddonAbility {
 
-	public static final java.util.HashMap<java.util.UUID, Long> chunkyHaste = new java.util.HashMap<>();
-	private boolean fastSlam = false;
+	public static final java.util.HashMap<UUID, Long> chunkyHaste = new java.util.HashMap<>();
+
+	private long cooldown;
+	private double damage;
+	private long chargeTime;
+	private long revertTime;
+	private double range;
+	private double radius;
 	private double speed = 1.0;
 
-	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Cooldown");
-
-	private int dmg = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Damage");
-
-	private long TimeToCharge = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.ChargeTime");
-	private final long RevertTime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.RevertTime");
-
-	private int range = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Range");
-
-	private int radius = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthHammer.Radius");
-	private State AbilityState;
-
 	private enum State {
-		BENDABLE,
 		CHARGING,
 		READY,
-		USED
+		SLAMMING
 	}
 
-	private List<Location> NearBlocks;
-	private Location Projectile;
-	private Vector Direction;
+	private State state;
+	private long chargeStartTime;
 	private Location origin;
-	private long interval;
+	private Location projectile;
+	private Vector direction;
+	private final Set<UUID> hitEntities = new HashSet<>();
+	private final List<TempBlock> tempBlocks = new ArrayList<>();
+	private int travelledDistance = 0;
 
 	public EarthHammer(Player player) {
 		super(player);
-		if (bPlayer.isOnCooldown(this)) {
+		if (hasAbility(player, EarthHammer.class)) {
 			return;
 		}
-		if (!bPlayer.canBend(this)) {
+		if (bPlayer.isOnCooldown(this) || !bPlayer.canBend(this)) {
 			return;
 		}
 
-		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+		loadConfig();
+
+		RPG.Levels.BendingTree.PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+				? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
 		boolean hasChunky = (branch != null && branch.hasUpgrade("Chunky"));
 		if (hasChunky) {
 			this.range += 1;
@@ -78,176 +73,190 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 		long now = System.currentTimeMillis();
 		if (chunkyHaste.containsKey(player.getUniqueId()) && now - chunkyHaste.getOrDefault(player.getUniqueId(), 0L) < 10000) {
 			chunkyHaste.remove(player.getUniqueId());
-			this.fastSlam = true;
 			this.speed = 1.6;
-			this.AbilityState = State.READY;
-			player.getWorld().playSound(player.getLocation(), org.bukkit.Sound.ITEM_TRIDENT_THUNDER, 1.2f, 1.8f);
+			this.state = State.READY;
+			player.getWorld().playSound(player.getLocation(), Sound.ITEM_TRIDENT_THUNDER, 1.2f, 1.8f);
 			start();
 			return;
 		}
 
-		interval = 0;
-		AbilityState = State.BENDABLE;
+		this.state = State.CHARGING;
+		this.chargeStartTime = System.currentTimeMillis();
 
-		List<Location> shuffledList = new ArrayList<>();
-		for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 10)) {
-			if (b.getLocation().getY() <= player.getLocation().getY() + 1
-					&& b.getLocation().distance(player.getLocation()) > 7
-					&& EarthAbility.isEarthbendable(player, b)) {
-				shuffledList.add(b.getLocation());
-			}
-		}
-		if (shuffledList.size() > 0) {
-			Collections.shuffle(shuffledList);
-			NearBlocks = shuffledList.subList(0, Math.min(4, shuffledList.size()));
-			for (Location loc : NearBlocks) {
-				TempBlock tb1 = new TempBlock(loc.getBlock(), Material.AIR);
-				tb1.setRevertTime(RevertTime);
-				loc.setY(loc.getY() + 2);
-			}
-			start();
-		}
+		player.getWorld().playSound(player.getLocation(), Sound.BLOCK_ROOTED_DIRT_BREAK, 0.8f, 0.7f);
+		start();
 	}
 
 	public EarthHammer(Player player, int mode) {
 		super(player);
-		if (mode == 0 && this.bPlayer.isOnCooldown("EarthHammerItem_Smash")) {
-			Methods.spawnFallingBlocks(player.getLocation(), Material.DIRT, 6, 1.5, player);
-			bPlayer.addCooldown("EarthHammerItem_Smash", 5000);
+		loadConfig();
+
+		if (mode == 0) {
+			if (!this.bPlayer.isOnCooldown("EarthHammerItem_Smash")) {
+				Methods.spawnFallingBlocks(player.getLocation(), Material.DIRT, 6, 1.5, player);
+				bPlayer.addCooldown("EarthHammerItem_Smash", 5000);
+			}
+			return;
 		}
 		if (mode == 1) {
 			if (!this.bPlayer.isOnCooldown("EarthHammerItem")) {
-				interval = 0;
-				origin = player.getLocation();
-				origin.setPitch(0);
-				Direction = origin.getDirection();
-				Projectile = origin.clone();
-				AbilityState = State.USED;
+				this.origin = player.getLocation().clone();
+				this.origin.setPitch(0);
+				this.direction = origin.getDirection().clone().setY(0).normalize();
+				this.projectile = origin.clone();
+				this.state = State.SLAMMING;
 				bPlayer.addCooldown("EarthHammerItem", 5000);
 				start();
 			}
 		}
 	}
 
+	private void loadConfig() {
+		this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthHammer.Cooldown", 7000L);
+		this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthHammer.Damage", 4.0);
+		this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthHammer.ChargeTime", 1000L);
+		this.revertTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthHammer.RevertTime", 8000L);
+		this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthHammer.Range", 20.0);
+		this.radius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthHammer.Radius", 2.0);
+	}
+
 	@Override
 	public void progress() {
-		if (player.isDead() || !player.isOnline()) {
+		if (player == null || !player.isOnline() || player.isDead()) {
 			remove();
 			return;
 		}
-		if (AbilityState == State.BENDABLE) {
-			if (player.isSneaking()) {
-				interval++;
-				if (interval >= 2) {
-					interval = 0;
-					NearBlocks = Methods.BendableBlocksAnimation(NearBlocks, player.getLocation().clone(),
-							Material.STONE, 0.8);
-					if (NearBlocks.isEmpty() || NearBlocks.size() < 2) {
-						AbilityState = State.CHARGING;
-					}
-				}
-			} else {
-				bPlayer.addCooldown(this);
-				remove();
-				return;
-			}
-		}
-		if (AbilityState == State.CHARGING) {
-			if (bPlayer.getBoundAbility() == null || bPlayer.getBoundAbilityName() == null
+
+		if (state == State.CHARGING) {
+			if (bPlayer.getBoundAbilityName() == null
 					|| !bPlayer.getBoundAbilityName().equalsIgnoreCase(getName())) {
-				bPlayer.addCooldown(this);
 				remove();
 				return;
 			}
-			if (System.currentTimeMillis() > getStartTime() + TimeToCharge) {
-				AbilityState = State.READY;
-			}
-			if (!player.isSneaking()) {
-				bPlayer.addCooldown(this);
-				remove();
-				return;
-			}
-		}
-		if (AbilityState == State.READY) {
-			origin = player.getLocation();
-			origin.setPitch(0);
-			Direction = origin.getDirection();
-			Projectile = origin.clone();
+
 			if (player.isSneaking()) {
-				ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.5, 0.5, 0.5, 0.1,
+				long elapsed = System.currentTimeMillis() - chargeStartTime;
+				Location pLoc = player.getLocation();
+				pLoc.getWorld().spawnParticle(Particle.BLOCK, pLoc.clone().add(0, 0.2, 0), 4, 0.4, 0.1, 0.4, 0.05,
 						Material.DIRT.createBlockData());
-				ParticleEffect.BLOCK_CRACK.display(player.getLocation(), 5, 0.5, 0.5, 0.5, 0.1,
-						Material.STONE.createBlockData());
+
+				if (elapsed >= chargeTime) {
+					state = State.READY;
+					player.getWorld().playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.6f, 1.4f);
+				}
 			} else {
-				AbilityState = State.USED;
-				bPlayer.addCooldown(this);
-			}
-		}
-		if (AbilityState == State.USED) {
-			interval++;
-			if (interval >= 2) {
-				interval = 0;
-				Projectile.add(Direction.clone().multiply(speed));
-				if (Projectile.getBlock().getType() != Material.AIR && !PlantAbility.isPlant(Projectile.getBlock())) {
-					Projectile.setY(Projectile.getY() + 1);
-				}
-				if (Projectile.clone().subtract(0, 1, 0).getBlock().getType() == Material.AIR) {
-					Projectile.setY(Projectile.getY() - 1);
-				}
-				List<Block> BendableBlocks = new ArrayList<>();
-				for (Block b : GeneralMethods.getBlocksAroundPoint(Projectile, radius)) {
-					if (b.getY() < Projectile.getY() && (EarthAbility.isEarthbendable(player, b))) {
-						BendableBlocks.add(b);
-						int chance = getRandom(0, 15);
-						if (chance <= 5) {
-							TempBlock tb2 = new TempBlock(b, Material.STONE);
-							tb2.setRevertTime(RevertTime);
-						} else if (chance <= 10) {
-							TempBlock tb2 = new TempBlock(b, Material.DIRT);
-							tb2.setRevertTime(RevertTime);
-						} else if (chance <= 13) {
-							Methods.spawnFallingBlocks(b.getLocation(), Material.STONE, 1, 1, player);
-						} else {
-							Methods.spawnFallingBlocks(b.getLocation(), Material.DIRT, 1, 1, player);
-						}
-					}
-				}
-				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(Projectile, radius)) {
-					if ((entity instanceof LivingEntity)) {
-						if (entity.getUniqueId() != player.getUniqueId()) {
-							if (entity.getLocation().getY() < Projectile.getY() + 2) {
-								Vector forceDir = GeneralMethods.getDirection(Projectile.clone().subtract(0, 4, 0),
-										entity.getLocation());
-								entity.setVelocity(forceDir.clone().normalize().multiply(1));
-								DamageHandler.damageEntity(entity, dmg, this);
-							}
-						}
-					}
-				}
-				if (BendableBlocks.size() < 2) {
-					Methods.spawnFallingBlocks(Projectile, Material.DIRT, 12, 2.2, player);
+				long elapsed = System.currentTimeMillis() - chargeStartTime;
+				if (elapsed >= chargeTime) {
+					launchHammerSlam();
+				} else {
 					remove();
 				}
 			}
-			Block stop = Projectile.clone().add(0, 2, 0).getBlock();
-			if (!EarthAbility.isEarthbendable(player, stop) && !stop.getType().isAir()) {
+		} else if (state == State.READY) {
+			if (bPlayer.getBoundAbilityName() == null
+					|| !bPlayer.getBoundAbilityName().equalsIgnoreCase(getName())) {
 				remove();
+				return;
 			}
-			if (Projectile.distance(origin) > range) {
-				Methods.spawnFallingBlocks(Projectile, Material.DIRT, 12, 2.2, player);
-				remove();
+
+			if (player.isSneaking()) {
+				Location pLoc = player.getLocation();
+				pLoc.getWorld().spawnParticle(Particle.BLOCK, pLoc.clone().add(0, 0.3, 0), 6, 0.5, 0.2, 0.5, 0.1,
+						Material.STONE.createBlockData());
+				pLoc.getWorld().spawnParticle(Particle.CRIT, pLoc.clone().add(0, 0.8, 0), 2, 0.3, 0.3, 0.3, 0.05);
+			} else {
+				launchHammerSlam();
+			}
+		} else if (state == State.SLAMMING) {
+			progressSlam();
+		}
+	}
+
+	private void launchHammerSlam() {
+		this.state = State.SLAMMING;
+		this.origin = player.getLocation().clone();
+		this.origin.setPitch(0);
+		this.direction = origin.getDirection().clone().setY(0).normalize();
+		this.projectile = origin.clone();
+		this.travelledDistance = 0;
+
+		bPlayer.addCooldown(this, cooldown);
+
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 0.7f);
+		player.getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.3f);
+	}
+
+	private void progressSlam() {
+		projectile.add(direction.clone().multiply(speed));
+		travelledDistance += (int) Math.ceil(speed);
+
+		// Ground hugging
+		Block topBlock = GeneralMethods.getTopBlock(projectile, 4, 4);
+		if (topBlock != null && topBlock.getY() > 0) {
+			projectile.setY(topBlock.getY() + 1.0);
+		}
+
+		// Collision check with solid non-bendable walls
+		Block front = projectile.getBlock();
+		if (front.getType().isSolid() && !EarthAbility.isEarthbendable(player, front) && !PlantAbility.isPlant(front)) {
+			explodeAndFinish();
+			return;
+		}
+
+		Location ground = projectile.clone().subtract(0, 1.0, 0);
+		Material mat = EarthAbility.isEarthbendable(player, ground.getBlock()) ? ground.getBlock().getType() : Material.DIRT;
+
+		// Visual ground rupture wave
+		projectile.getWorld().spawnParticle(Particle.BLOCK, projectile.clone().add(0, 0.2, 0), 12, 0.6, 0.2, 0.6, 0.1, mat.createBlockData());
+		projectile.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, projectile.clone().add(0, 0.2, 0), 2, 0.3, 0.1, 0.3, 0.01);
+		projectile.getWorld().playSound(projectile, Sound.BLOCK_STONE_BREAK, 0.8f, 0.9f);
+
+		// Upheaval of earth blocks along the path
+		for (Block b : GeneralMethods.getBlocksAroundPoint(projectile, radius)) {
+			if (b.getY() <= projectile.getY() && EarthAbility.isEarthbendable(player, b)) {
+				Block above = b.getRelative(0, 1, 0);
+				if (above.getType().isAir() || PlantAbility.isPlant(above)) {
+					if (Math.random() < 0.35) {
+						TempBlock tb = new TempBlock(above, Material.STONE);
+						tb.setRevertTime(revertTime);
+						tempBlocks.add(tb);
+					}
+				}
 			}
 		}
+
+		// Damage & knockback
+		for (Entity entity : GeneralMethods.getEntitiesAroundPoint(projectile, radius + 1.0)) {
+			if (entity instanceof LivingEntity target && !entity.getUniqueId().equals(player.getUniqueId()) && !hitEntities.contains(entity.getUniqueId())) {
+				hitEntities.add(target.getUniqueId());
+				DamageHandler.damageEntity(target, damage, this);
+				Vector knock = direction.clone().multiply(0.9).setY(0.65);
+				target.setVelocity(knock);
+				target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 0.8f);
+			}
+		}
+
+		if (travelledDistance >= range || projectile.distance(origin) >= range) {
+			explodeAndFinish();
+		}
+	}
+
+	private void explodeAndFinish() {
+		Location burstLoc = projectile.clone().add(0, 0.5, 0);
+		burstLoc.getWorld().spawnParticle(Particle.BLOCK, burstLoc, 30, 0.8, 0.6, 0.8, 0.15, Material.DIRT.createBlockData());
+		burstLoc.getWorld().spawnParticle(Particle.BLOCK, burstLoc, 30, 0.8, 0.6, 0.8, 0.15, Material.STONE.createBlockData());
+		burstLoc.getWorld().playSound(burstLoc, Sound.ENTITY_GENERIC_EXPLODE, 0.9f, 1.1f);
+		remove();
 	}
 
 	@Override
 	public long getCooldown() {
-		return Cooldown;
+		return cooldown;
 	}
 
 	@Override
 	public Location getLocation() {
-		return null;
+		return projectile != null ? projectile : (player != null ? player.getLocation() : null);
 	}
 
 	@Override
@@ -262,7 +271,7 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 
 	@Override
 	public String getVersion() {
-		return "1.0";
+		return "1.1";
 	}
 
 	@Override
@@ -286,12 +295,11 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "Summons a massive hammer of earth that slams forward after a short charge, damaging and launching enemies in its path.";
+		return "Przytrzymaj SHIFT aby naładować potężny młot ziemi, a po puszczeniu wywołaj pędzącą falę uderzeniową, która wyrzuca wrogów w powietrze.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Sneak near bendable blocks to charge, relase to slam the earth hammer!";
+		return "Przytrzymaj SHIFT aby naładować, a następnie puść SHIFT aby wystrzelić młot ziemi.";
 	}
-
 }

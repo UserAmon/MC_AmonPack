@@ -90,11 +90,9 @@ public class Circulation extends BloodAbility implements AddonAbility {
             long elapsed = System.currentTimeMillis() - startTime;
             if (elapsed >= chargeTime) {
                 state = State.FULLY_CHARGED;
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§aCirculation gotowy! Puść SHIFT, aby zmusić wroga do marszu!"));
                 Particle.DustOptions darkRed = new Particle.DustOptions(Color.fromRGB(180, 0, 0), 1.0f);
                 player.getWorld().spawnParticle(Particle.DUST, target.getEyeLocation(), 4, 0.2, 0.2, 0.2, 0, darkRed);
             } else {
-                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§c[Circulation] Przejmowanie krążenia wroga..."));
                 Particle.DustOptions bloodRed = new Particle.DustOptions(Color.fromRGB(130, 0, 0), 0.7f);
                 player.getWorld().spawnParticle(Particle.DUST, target.getEyeLocation(), 2, 0.1, 0.1, 0.1, 0, bloodRed);
             }
@@ -105,38 +103,54 @@ public class Circulation extends BloodAbility implements AddonAbility {
         state = State.CONTROLLED;
         bPlayer.addCooldown(this, cooldown);
 
-        player.getWorld().playSound(target.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1.2f, 0.6f);
-        player.getWorld().playSound(target.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 0.5f, 1.6f);
+        applyForcedWalk(target, walkDurationTicks, true);
 
-        // Force victim to walk around like an NPC/bot for walkDurationTicks
+        if (VeinFlowManager.isActive(player)) {
+            double aoeRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.VeinFlow.CirculationAoeRadius", 10.0);
+            for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), aoeRadius)) {
+                if (entity instanceof LivingEntity le && !entity.getUniqueId().equals(player.getUniqueId()) && !entity.getUniqueId().equals(target.getUniqueId())) {
+                    applyForcedWalk(le, walkDurationTicks, false);
+                }
+            }
+        }
+    }
+
+    private void applyForcedWalk(LivingEntity victim, int durationTicks, boolean isPrimary) {
+        if (victim == null || victim.isDead()) return;
+
+        player.getWorld().playSound(victim.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1.2f, 0.6f);
+        player.getWorld().playSound(victim.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 0.5f, 1.6f);
+
         new BukkitRunnable() {
             private int ticks = 0;
-            private float targetYaw = target.getLocation().getYaw();
+            private float victimYaw = victim.getLocation().getYaw();
 
             @Override
             public void run() {
                 ticks++;
-                if (ticks > walkDurationTicks || target.isDead() || !target.isValid()) {
-                    remove();
+                if (ticks > durationTicks || victim.isDead() || !victim.isValid()) {
+                    if (isPrimary) {
+                        remove();
+                    }
                     cancel();
                     return;
                 }
 
                 // Every 10 ticks pick a random new walking yaw direction
                 if (ticks % 10 == 0) {
-                    targetYaw = random.nextFloat() * 360.0f - 180.0f;
+                    victimYaw = random.nextFloat() * 360.0f - 180.0f;
                 }
 
-                Location loc = target.getLocation();
-                loc.setYaw(targetYaw);
+                Location loc = victim.getLocation();
+                loc.setYaw(victimYaw);
                 loc.setPitch(0.0f);
 
-                Vector walkDir = loc.getDirection().normalize().multiply(0.28).setY(target.getVelocity().getY());
-                target.teleport(loc);
-                target.setVelocity(walkDir);
+                Vector walkDir = loc.getDirection().normalize().multiply(0.28).setY(victim.getVelocity().getY());
+                victim.teleport(loc);
+                victim.setVelocity(walkDir);
 
                 Particle.DustOptions bloodRed = new Particle.DustOptions(Color.fromRGB(160, 0, 0), 0.8f);
-                target.getWorld().spawnParticle(Particle.DUST, target.getEyeLocation(), 3, 0.15, 0.15, 0.15, 0, bloodRed);
+                victim.getWorld().spawnParticle(Particle.DUST, victim.getEyeLocation(), 3, 0.15, 0.15, 0.15, 0, bloodRed);
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
     }

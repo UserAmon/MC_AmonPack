@@ -577,22 +577,12 @@ AmonPack:
         - '&7Wystrzeliwuje bicz wodny podążający za ścieżką'
         - '&7obrotu kamery z odrzutem i obrażeniami.'
         - '&e[Ruch Specjalny - SWAP (F)]'
-      Hoarfrost:
-        Cost: 25
+      VineSnare:
+        Cost: 35
         Place: 25
         IsSpecialBindAbility: true
         ReqAbilities:
         - WaterWhip
-        Description:
-        - '&7Przyciąga lód ze źródła wody (do 3 stacków).'
-        - '&7Wciśnięcie SHIFT wystrzeliwuje sople lodu.'
-        - '&e[Ruch Specjalny - SWAP (F)]'
-      VineSnare:
-        Cost: 35
-        Place: 26
-        IsSpecialBindAbility: true
-        ReqAbilities:
-        - Hoarfrost
         Description:
         - '&7Tworzy zielony krąg pnączy w wskazanym miejscu roślinnym.'
         - '&7Po 2s animacji macki pnączy strzelają w górę i przyciągają wrogów.'

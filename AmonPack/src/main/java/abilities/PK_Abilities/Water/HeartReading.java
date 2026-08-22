@@ -62,10 +62,6 @@ public class HeartReading extends BloodAbility implements AddonAbility {
                 remove();
                 return;
             }
-
-            long remainingSec = Math.max(0, (copyDurationMs - elapsed) / 1000L);
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText("§c🩸 Skopiowano: §e" + copiedAbilityName + " §7[§c" + remainingSec + "s§7] (Użyj LPM/Shift)"));
         }
     }
 

@@ -66,7 +66,7 @@ public class SandDisc extends SandAbility implements AddonAbility {
 		}
 
 		Block sourceBlock = player.getTargetBlockExact((int) selectRange);
-		if (sourceBlock == null || (sourceBlock.getType() != Material.SAND && sourceBlock.getType() != Material.RED_SAND)) {
+		if (sourceBlock == null || !isSandbendableBlock(sourceBlock)) {
 			return;
 		}
 
@@ -198,6 +198,14 @@ public class SandDisc extends SandAbility implements AddonAbility {
 	@Override
 	public String getInstructions() {
 		return "Left-click a sand block to draw water-like sand to your hand. Once loaded, left-click again to hurl the sand disc.";
+	}
+
+	public static boolean isSandbendableBlock(Block block) {
+		if (block == null) return false;
+		if (EarthAbility.isSand(block)) return true;
+		Material mat = block.getType();
+		String name = mat.name();
+		return name.contains("SAND") && !name.contains("SOUL_SAND");
 	}
 }
 

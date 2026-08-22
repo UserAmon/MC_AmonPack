@@ -55,9 +55,10 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
                 15.0);
 
         Block target = player.getTargetBlockExact((int) sourceRange, org.bukkit.FluidCollisionMode.ALWAYS);
-        if (target == null || !(target.getType() == Material.LAVA || isEarthbendable(target))) {
-            if (player.getLocation().getBlock().getType() == Material.LAVA) {
-                target = player.getLocation().getBlock();
+        if (target == null || !(target.getType() == Material.LAVA || target.getType() == Material.MAGMA_BLOCK)) {
+            Block atFeet = player.getLocation().getBlock();
+            if (atFeet.getType() == Material.LAVA || atFeet.getType() == Material.MAGMA_BLOCK) {
+                target = atFeet;
             } else {
                 return;
             }
@@ -80,9 +81,6 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
             return;
         }
 
-        // Always refresh base lava source block so the lake beneath never disappears
-        refreshBaseLavaSource();
-
         if (state == State.GROWING) {
             if (!player.isSneaking()) {
                 startDissolving();
@@ -100,7 +98,7 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
                 player.getWorld().playSound(originLoc, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
             }
 
-        } else if (state == State.READY) {
+        } else if (state == State.READY || state == State.STRIKING) {
             if (!player.isSneaking()) {
                 startDissolving();
                 return;
@@ -110,15 +108,8 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
         }
     }
 
-    private void refreshBaseLavaSource() {
-        if (originBlock != null && !TempBlock.isTempBlock(originBlock)) {
-            activeTempBlocks.add(new TempBlock(originBlock, Material.LAVA.createBlockData(), 200));
-        }
-    }
-
     private void renderWrithingTentacle(int hLimit) {
         revertTempBlocks();
-        refreshBaseLavaSource();
 
         waveTime += 0.12;
 
@@ -149,9 +140,8 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
         state = State.STRIKING;
         remainingStrikes--;
         hitEntities.clear();
-        revertTempBlocks();
 
-        Location topLoc = originLoc.clone().add(0, 4, 0);
+        Location topLoc = originLoc.clone().add(0, maxHeight, 0);
         Location targetLoc = player.getTargetBlockExact(20) != null
                 ? player.getTargetBlockExact(20).getLocation().add(0.5, 1, 0.5)
                 : player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(15));
@@ -225,13 +215,9 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
                             .add(finalRight.clone().multiply(sideOffset))
                             .add(finalUp.clone().multiply(upOffset));
 
-                    // Lava particles along tentacle body
-                    segLoc.getWorld().spawnParticle(Particle.LAVA, segLoc, 2, 0.1, 0.1, 0.1, 0.05);
-                    segLoc.getWorld().spawnParticle(Particle.FLAME, segLoc, 3, 0.08, 0.08, 0.08, 0.02);
-
-                    if (i == segments) {
-                        segLoc.getWorld().spawnParticle(Particle.EXPLOSION, segLoc, 1, 0.1, 0.1, 0.1, 0.0);
-                    }
+                    // Lava and flame particles along tentacle body (reduced count, NO EXPLOSION)
+                    segLoc.getWorld().spawnParticle(Particle.LAVA, segLoc, 1, 0.05, 0.05, 0.05, 0.01);
+                    segLoc.getWorld().spawnParticle(Particle.FLAME, segLoc, 1, 0.05, 0.05, 0.05, 0.01);
 
                     // Lava TempBlocks at tip and middle nodes
                     if (i % 2 == 0 || i == segments) {

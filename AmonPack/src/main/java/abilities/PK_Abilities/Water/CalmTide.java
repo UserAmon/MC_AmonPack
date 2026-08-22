@@ -145,7 +145,6 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 					}
 				}
 			} else {
-				player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, new net.md_5.bungee.api.chat.TextComponent(ChatColor.AQUA + "Look down to begin healing / Spójrz w dół"));
 				Location feetLoc = player.getLocation().clone().subtract(0, 0.2, 0);
 				player.spawnParticle(org.bukkit.Particle.DUST, feetLoc, 6, 0.3, 0.0, 0.3, 0, new org.bukkit.Particle.DustOptions(org.bukkit.Color.fromRGB(0, 191, 255), 1.5f));
 
@@ -170,11 +169,6 @@ public class CalmTide extends HealingAbility implements AddonAbility {
 					boolean isVeinFlow = VeinFlowManager.isActive(player);
 					VeinFlow stance = VeinFlowManager.getStance(player);
 					double actualHeal = isVeinFlow && stance != null ? healingAmount * stance.getHealingMultiplier() : healingAmount;
-
-					if (isVeinFlow) {
-						player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-								net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c🩸 VeinFlow — §4CalmTide"));
-					}
 
 					double newH = Math.min(maxH, player.getHealth() + actualHeal);
 					totalHealed += (newH - player.getHealth());

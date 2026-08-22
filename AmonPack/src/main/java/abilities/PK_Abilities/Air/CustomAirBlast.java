@@ -39,7 +39,17 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
         long windowStartTime = 0;
     }
 
-    private static final Map<Player, Location> ORIGINS = new ConcurrentHashMap<>();
+    public static class OriginData {
+        public final Location location;
+        public final long timestamp;
+
+        public OriginData(Location location, long timestamp) {
+            this.location = location;
+            this.timestamp = timestamp;
+        }
+    }
+
+    private static final Map<UUID, OriginData> ORIGINS = new ConcurrentHashMap<>();
     private static final Map<UUID, ChargeTracker> CHARGE_TRACKERS = new ConcurrentHashMap<>();
     private static boolean originTaskRunning = false;
 
@@ -79,7 +89,6 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
 
         loadConfig();
 
-        // Multi-charge logic
         ChargeTracker tracker = CHARGE_TRACKERS.computeIfAbsent(player.getUniqueId(), k -> new ChargeTracker());
         long now = System.currentTimeMillis();
 
@@ -94,7 +103,8 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
         if (remaining > 0) {
             double timeLeft = Math.max(0.0, (resetWindowMs - (now - tracker.windowStartTime)) / 1000.0);
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                    TextComponent.fromLegacyText(String.format("§f💨 §lAIR BLAST: §a[ %d / %d ] §7(Czas: §e%.1fs§7)", remaining, maxUses, timeLeft)));
+                    TextComponent.fromLegacyText(String.format("§f💨 §lAIR BLAST: §a[ %d / %d ] §7(Czas: §e%.1fs§7)",
+                            remaining, maxUses, timeLeft)));
         } else {
             bPlayer.addCooldown("AirBlast", cooldown);
             tracker.chargesUsed = 0;
@@ -102,14 +112,14 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
                     TextComponent.fromLegacyText("§f💨 §lAIR BLAST: §c[ COOLDOWN ]"));
         }
 
-        // Schedule timeout cooldown if player doesn't use remaining charges
         final int currentCount = tracker.chargesUsed;
         final long currentWindowStart = tracker.windowStartTime;
         new BukkitRunnable() {
             @Override
             public void run() {
                 ChargeTracker currentTracker = CHARGE_TRACKERS.get(player.getUniqueId());
-                if (currentTracker != null && currentTracker.windowStartTime == currentWindowStart && currentTracker.chargesUsed > 0 && currentTracker.chargesUsed < maxUses) {
+                if (currentTracker != null && currentTracker.windowStartTime == currentWindowStart
+                        && currentTracker.chargesUsed > 0 && currentTracker.chargesUsed < maxUses) {
                     if (System.currentTimeMillis() - currentTracker.windowStartTime >= resetWindowMs) {
                         currentTracker.chargesUsed = 0;
                         if (!bPlayer.isOnCooldown("AirBlast")) {
@@ -124,14 +134,19 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
             }
         }.runTaskLater(AmonPackPlugin.plugin, (resetWindowMs / 50L) + 1L);
 
-        // Check if player set an origin with Shift
-        if (ORIGINS.containsKey(player)) {
-            this.origin = ORIGINS.get(player);
-            ORIGINS.remove(player);
+        OriginData originData = ORIGINS.remove(player.getUniqueId());
+        if (originData != null && originData.location != null
+                && originData.location.getWorld().equals(player.getWorld())) {
+            this.origin = originData.location;
 
             Entity targetEntity = GeneralMethods.getTargetedEntity(player, range);
-            Location targetLoc = targetEntity != null ? targetEntity.getLocation() : GeneralMethods.getTargetedLocation(player, range);
-            this.direction = GeneralMethods.getDirection(this.origin, targetLoc).normalize();
+            Location targetLoc = targetEntity != null ? targetEntity.getLocation()
+                    : GeneralMethods.getTargetedLocation(player, range);
+            if (targetLoc.distanceSquared(this.origin) < 0.01) {
+                this.direction = player.getEyeLocation().getDirection().normalize();
+            } else {
+                this.direction = GeneralMethods.getDirection(this.origin, targetLoc).normalize();
+            }
             this.location = this.origin.clone();
             this.isFromOtherOrigin = true;
         } else {
@@ -173,22 +188,35 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
         this.particles = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirBlast.Particles", 4);
         this.selectParticles = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirBlast.SelectParticles", 4);
         this.selectRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirBlast.SelectRange", 10.0);
-        this.canFlickLevers = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Air.AirBlast.CanFlickLevers", true);
+        this.canFlickLevers = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Air.AirBlast.CanFlickLevers",
+                true);
         this.canOpenDoors = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Air.AirBlast.CanOpenDoors", true);
-        this.canPressButtons = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Air.AirBlast.CanPressButtons", true);
+        this.canPressButtons = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Air.AirBlast.CanPressButtons",
+                true);
         this.canCoolLava = AmonPackPlugin.getAbilitiesConfig().getBoolean("AmonPack.Air.AirBlast.CanCoolLava", true);
     }
 
     public static void setOrigin(Player player) {
+        if (player == null || !player.isOnline() || player.isDead())
+            return;
         BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
-        Location target = GeneralMethods.getTargetedLocation(player, 10.0);
-        if (target == null) return;
+        if (bPlayer == null || !bPlayer.canBendIgnoreCooldowns(CoreAbility.getAbility(CustomAirBlast.class))) {
+            return;
+        }
+
+        double selectRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirBlast.SelectRange", 10.0);
+        Location target = GeneralMethods.getTargetedLocation(player, selectRange);
+        if (target == null)
+            return;
 
         if (RegionProtection.isRegionProtected(player, target, "AirBlast")) {
             return;
         }
 
-        ORIGINS.put(player, target);
+        ORIGINS.put(player.getUniqueId(), new OriginData(target, System.currentTimeMillis()));
+
+        spawnAirParticles(target, 6, 0.8, 0.8, 0.8);
+        player.playSound(target, Sound.ENTITY_HORSE_BREATHE, 0.7f, 1.6f);
         ensureOriginTask();
     }
 
@@ -209,13 +237,24 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
     }
 
     public static void progressOrigins() {
-        Iterator<Map.Entry<Player, Location>> it = ORIGINS.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<Player, Location> entry = it.next();
-            Player p = entry.getKey();
-            Location loc = entry.getValue();
+        long now = System.currentTimeMillis();
+        long maxDuration = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirBlast.OriginDuration", 8000L);
+        double selectRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirBlast.SelectRange", 10.0);
+        double maxDistSq = Math.pow(selectRange + 15.0, 2);
 
-            if (p == null || !p.isOnline() || p.isDead() || !p.isSneaking()) {
+        Iterator<Map.Entry<UUID, OriginData>> it = ORIGINS.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<UUID, OriginData> entry = it.next();
+            UUID uuid = entry.getKey();
+            OriginData data = entry.getValue();
+            Player p = Bukkit.getPlayer(uuid);
+
+            if (p == null || !p.isOnline() || p.isDead()) {
+                it.remove();
+                continue;
+            }
+
+            if (now - data.timestamp > maxDuration) {
                 it.remove();
                 continue;
             }
@@ -226,8 +265,9 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
                 continue;
             }
 
-            if (loc.getWorld().equals(p.getWorld()) && loc.distanceSquared(p.getLocation()) <= 144.0) {
-                spawnAirParticles(loc, 3, 0.15, 0.15, 0.15);
+            Location loc = data.location;
+            if (loc.getWorld().equals(p.getWorld()) && loc.distanceSquared(p.getLocation()) <= maxDistSq) {
+                spawnAirParticles(loc, 6, 0.8, 0.8, 0.8);
             } else {
                 it.remove();
             }
@@ -235,7 +275,8 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
     }
 
     private static void spawnAirParticles(Location loc, int amount, double ox, double oy, double oz) {
-        if (loc == null || loc.getWorld() == null) return;
+        if (loc == null || loc.getWorld() == null)
+            return;
         loc.getWorld().spawnParticle(Particle.CLOUD, loc, amount, ox, oy, oz, 0.01);
         loc.getWorld().spawnParticle(Particle.CRIT, loc, Math.max(1, amount / 2), ox, oy, oz, 0.02);
     }
@@ -266,15 +307,12 @@ public class CustomAirBlast extends AirAbility implements AddonAbility {
             playAirbendingSound(location);
         }
 
-        // Process block interactions
         processBlock(location);
 
-        // Affect entities in radius
         for (Entity entity : GeneralMethods.getEntitiesAroundPoint(location, radius)) {
             affect(entity);
         }
 
-        // Advance forward
         Location nextLoc = location.clone().add(direction.clone().multiply(speedFactor));
         if (nextLoc.getBlock().getType().isSolid() && !nextLoc.getBlock().isPassable()) {
             remove();

@@ -25,14 +25,6 @@ AmonPack:
         Radius: 2 #blocks radius of spike area
         FreezeDuration: 3000 #ms enemies are frozen after hit
 
-      FrostGrip:
-        Cooldown: 7000 #ms between ability uses
-        Damage: 4.5 #hearts dealt on hit
-        SourceRange: 15.0 #max distance to absorb water/ice block
-        SlowDuration: 60 #ticks slowness lasts on target
-        SlowAmplifier: 2 #slowness potion level
-        NoJumpDurationTicks: 60 #ticks target is pulled down blocking jumps
-
     WaterStrike:
       Cooldown: 6000 #ms between ability uses
       Damage: 5.0 #hearts dealt per projectile hit
@@ -52,6 +44,7 @@ AmonPack:
       StunChance: 0.35 #chance on hit to stun enemy and add cooldown
       StunDurationMs: 1500 #ms target's movement and camera are locked
       AddedCooldownMs: 4000 #ms added to target's selected ability on hit
+      CirculationAoeRadius: 10.0 #radius to force other enemies to walk when charging Circulation during VeinFlow
       Boost:
         ChargeTimeMultiplier: 0.6 #multiplier for blood ability charge times
         DamageMultiplier: 1.5 #damage multiplier for blood abilities
@@ -120,11 +113,6 @@ AmonPack:
       SlowDuration: 40 #ticks slowness lasts on hit
       SelectWindow: 4000 #ms window to click 2nd LPM after selecting source
       ExtendDuration: 5000 #ms active handheld whip state lasts with upgrade
-
-    Hoarfrost:
-      Cooldown: 6000 #ms miedzy uzyciami
-      DamagePerSpear: 2 #obrazenia od jednego sopla lodu
-      Knockback: 0.8 #odrzut od uderzenia sopla
 
     BloodCall:
       Cooldown: 3000 #ms between ability uses
@@ -271,6 +259,7 @@ AmonPack:
 
     BassDrop:
       Cooldown: 8000 #ms between ability uses
+      Range: 20.0 #max target range on left click
       DelaySeconds: 3.0 #seconds before the bass projectile appears
       Height: 20.0 #blocks above the clicked block where the projectile starts
       ProjectileSpeed: 1.0 #blocks per tick while falling
@@ -660,6 +649,7 @@ AmonPack:
       Particles: 4 #particles per step
       SelectParticles: 4 #particles at origin
       SelectRange: 10.0 #max range to set origin on shift
+      OriginDuration: 8000 #ms duration marked origin remains active after releasing shift
       CanFlickLevers: true #whether airblast flicks levers
       CanOpenDoors: true #whether airblast opens doors
       CanPressButtons: true #whether airblast presses buttons

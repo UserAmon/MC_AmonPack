@@ -16,18 +16,19 @@ import com.projectkorra.projectkorra.util.ParticleEffect;
 
 public class AirPressure extends AirAbility implements AddonAbility {
 
-	private int Cooldown = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Cooldown");
-	private int dmg = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Dmg");
-	private int sphererange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Range-Sphere");
-	private int pullrange = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.Range-Pull");
-	private int pushpower = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.PushPower");
-	private int mintime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.MinHoldTime");
+	private long Cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirPressure.Cooldown", 5000L);
+	private double dmg = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirPressure.Dmg", 3.0);
+	private double sphererange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirPressure.Range-Sphere", 15.0);
+	private double pullrange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirPressure.Range-Pull", 5.0);
+	private double pushpower = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirPressure.PushPower", 2.0);
+	private long mintime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirPressure.MinHoldTime", 1000L);
 	private boolean cancontrol = AmonPackPlugin.getAbilitiesConfig()
-			.getBoolean("AmonPack.Air.AirPressure.CanControlSphere");
-	private int maxtime = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirPressure.MaxHoldTime");
+			.getBoolean("AmonPack.Air.AirPressure.CanControlSphere", true);
+	private long maxtime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirPressure.MaxHoldTime", 4000L);
 
 	public Location preloc;
 	public int abilityState;
+	private int initialSlot;
 
 	public AirPressure(Player player) {
 		super(player);
@@ -37,80 +38,77 @@ public class AirPressure extends AirAbility implements AddonAbility {
 		if (!bPlayer.canBend(this)) {
 			return;
 		}
-		if (cancontrol == false) {
-			preloc = Methods.getTargetLocation(player, sphererange).clone();
+		this.initialSlot = player.getInventory().getHeldItemSlot();
+		if (!cancontrol) {
+			preloc = Methods.getTargetLocation(player, (int) sphererange).clone();
 		}
 		abilityState = 0;
-		if (!player.isSneaking()) {
-			start();
-		}
+		start();
 	}
 
 	@Override
 	public void progress() {
-		if (cancontrol == true) {
-			preloc = Methods.getTargetLocation(player, sphererange).clone();
-		}
-		if (bPlayer.isOnCooldown(this)) {
+		if (player.isDead() || !player.isOnline()) {
 			remove();
+			return;
 		}
-		if (bPlayer.getBoundAbility() == null || bPlayer.getBoundAbilityName() == null) {
+
+		if (player.getInventory().getHeldItemSlot() != initialSlot) {
 			bPlayer.addCooldown(this);
 			remove();
+			return;
 		}
-		if (bPlayer.getBoundAbility() != null || bPlayer.getBoundAbilityName() != null) {
-			if (!bPlayer.getBoundAbilityName().equalsIgnoreCase("AirPressure")) {
+
+		if (bPlayer.getBoundAbilityName() == null || !bPlayer.getBoundAbilityName().equalsIgnoreCase("AirPressure")) {
+			bPlayer.addCooldown(this);
+			remove();
+			return;
+		}
+
+		if (cancontrol) {
+			preloc = Methods.getTargetLocation(player, (int) sphererange).clone();
+		}
+
+		if (abilityState == 0) {
+			if (player.isSneaking()) {
+				if (System.currentTimeMillis() > getStartTime() + 300) {
+					abilityState = 1;
+				} else if (System.currentTimeMillis() < getStartTime() + mintime) {
+					ParticleEffect.CLOUD.display(preloc, (int) (pullrange * 2), (float) (pullrange / 2), (float) (pullrange / 2),
+							(float) pullrange, 0);
+					for (Entity entity : GeneralMethods.getEntitiesAroundPoint(preloc, pullrange)) {
+						Vector forceDir = GeneralMethods.getDirection(entity.getLocation(), preloc);
+						entity.setVelocity(forceDir.clone().normalize().multiply(0.5));
+					}
+				}
+			} else {
+				bPlayer.addCooldown(this);
+				abilityState = 0;
+				remove();
+			}
+		} else if (abilityState == 1) {
+			ParticleEffect.CLOUD.display(preloc, (int) (pullrange * 2), (float) (pullrange / 2), (float) (pullrange / 2), (float) (pullrange / 2),
+					0);
+			ParticleEffect.SMOKE_NORMAL.display(
+					player.getEyeLocation().add(player.getLocation().getDirection().clone().multiply(1)), 1, 0.3f,
+					0.3f, 0.3f, 0);
+			for (Entity entity : GeneralMethods.getEntitiesAroundPoint(preloc, pullrange)) {
+				Vector forceDir = GeneralMethods.getDirection(entity.getLocation(), preloc.clone().add(0, 1, 0));
+				entity.setVelocity(forceDir.clone().normalize().multiply(0.5));
+			}
+			if (!player.isSneaking() || System.currentTimeMillis() > getStartTime() + maxtime) {
+				abilityState = 0;
+				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(preloc, pullrange)) {
+					Vector forceDir = GeneralMethods.getDirection(entity.getLocation(),
+							preloc.clone().subtract(0, 2, 0));
+					entity.setVelocity(forceDir.clone().normalize().multiply(-pushpower));
+					if (entity.getUniqueId() != player.getUniqueId() && entity instanceof LivingEntity) {
+						DamageHandler.damageEntity(entity, dmg, this);
+					}
+				}
 				bPlayer.addCooldown(this);
 				remove();
 			}
-			if (player.isDead() || !player.isOnline()) {
-				remove();
-				return;
-			}
-			if (abilityState == 0) {
-				if (player.isSneaking()) {
-					if (System.currentTimeMillis() > getStartTime() + 300) {
-						abilityState = 1;
-					} else if (System.currentTimeMillis() < getStartTime() + mintime) {
-						ParticleEffect.CLOUD.display(preloc, (pullrange * 2), (pullrange / 2), (pullrange / 2),
-								(pullrange), 0);
-						for (Entity entity : GeneralMethods.getEntitiesAroundPoint(preloc, pullrange)) {
-							Vector forceDir = GeneralMethods.getDirection(entity.getLocation(), preloc);
-							entity.setVelocity(forceDir.clone().normalize().multiply(0.5));
-						}
-					}
-				} else if (!player.isSneaking()) {
-					bPlayer.addCooldown(this);
-					abilityState = 0;
-					remove();
-				}
-			} else if (abilityState == 1) {
-				ParticleEffect.CLOUD.display(preloc, (pullrange * 2), (pullrange / 2), (pullrange / 2), (pullrange / 2),
-						0);
-				ParticleEffect.SMOKE_NORMAL.display(
-						player.getEyeLocation().add(player.getLocation().getDirection().clone().multiply(1)), 1, 0.3,
-						0.3, 0.3, 0);
-				for (Entity entity : GeneralMethods.getEntitiesAroundPoint(preloc, pullrange)) {
-					Vector forceDir = GeneralMethods.getDirection(entity.getLocation(), preloc.clone().add(0, 1, 0));
-					entity.setVelocity(forceDir.clone().normalize().multiply(0.5));
-				}
-				if (!player.isSneaking() || System.currentTimeMillis() > getStartTime() + maxtime) {
-					abilityState = 0;
-					for (Entity entity : GeneralMethods.getEntitiesAroundPoint(preloc, pullrange)) {
-						Vector forceDir = GeneralMethods.getDirection(entity.getLocation(),
-								preloc.clone().subtract(0, 2, 0));
-						entity.setVelocity(forceDir.clone().normalize().multiply(-pushpower));
-						if (entity.getUniqueId() != player.getUniqueId() && entity instanceof LivingEntity) {
-							DamageHandler.damageEntity(entity, dmg, this);
-						}
-					}
-					bPlayer.addCooldown(this);
-					remove();
-				}
-			}
-		} else {
-			bPlayer.addCooldown(this);
-			remove();
 		}
 	}
 
