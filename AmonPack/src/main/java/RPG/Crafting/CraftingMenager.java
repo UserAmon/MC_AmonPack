@@ -827,14 +827,24 @@ public class CraftingMenager {
         if (mat != null) {
             return new ItemStack(mat, amount);
         } else {
-            if (matName.startsWith("ia:")) {
-                matName = matName.substring(3);
+            String cleanName = matName;
+            if (cleanName.startsWith("ia:")) {
+                cleanName = cleanName.substring(3);
             }
-            dev.lone.itemsadder.api.CustomStack custom = dev.lone.itemsadder.api.CustomStack.getInstance(matName);
-            if (custom != null) {
-                ItemStack iaItem = custom.getItemStack().clone();
-                iaItem.setAmount(amount);
-                return iaItem;
+            if (Plugin.AmonPackPlugin.customItemManager != null) {
+                ItemStack amonItem = Plugin.AmonPackPlugin.customItemManager.createItemStack(cleanName);
+                if (amonItem != null) {
+                    amonItem.setAmount(amount);
+                    return amonItem;
+                }
+            }
+            if (CustomContent.Hooks.ItemsAdderHook.isAvailable()) {
+                ItemStack iaItem = CustomContent.Hooks.ItemsAdderHook.getItem(cleanName);
+                if (iaItem != null) {
+                    ItemStack clone = iaItem.clone();
+                    clone.setAmount(amount);
+                    return clone;
+                }
             }
         }
         return null;

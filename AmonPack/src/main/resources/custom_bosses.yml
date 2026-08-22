@@ -1,0 +1,50 @@
+bosses:
+  Spirit_Earth_2:
+    display_name: "&2&lStarożytny Duch Ziemi"
+    base_entity: HUSK
+    model:
+      model_path: "boss/Spirit_Earth_2"
+      custom_model_data: 20001
+      scale: 2.2
+    stats:
+      max_health: 550.0
+      attack_damage: 15.0
+      movement_speed: 0.29
+      knockback_resistance: 1.0
+      follow_range: 40.0
+    boss_bar:
+      enabled: true
+      title: "&2&lStarożytny Duch Ziemi &7- &a{health}&7/&a{max_health} HP"
+      color: GREEN
+      style: SEGMENTED_10
+      range: 40.0
+    skills:
+      - trigger: TIMER
+        interval_seconds: 7
+        ability: "EarthStrike"
+        range: 16.0
+        announcement: "&2[Duch Ziemi] &aZiemia odpowiada na moje wezwanie!"
+      - trigger: HEALTH_BELOW
+        health_percent: 50.0
+        ability: "BoulderRoll"
+        announcement: "&2[Duch Ziemi] &4Zmiażdżę was potęgą skał!"
+      - trigger: TIMER
+        interval_seconds: 14
+        ability: "SoundCrash"
+        range: 12.0
+      - trigger: ON_HIT
+        ability: "EarthHammer"
+    drops:
+      - custom_item: "meteor_scythe"
+        chance: 0.60
+        min: 1
+        max: 1
+      - custom_item: "meteor_axe"
+        chance: 0.50
+        min: 1
+        max: 1
+      - custom_item: "meteor_shard"
+        chance: 1.0
+        min: 4
+        max: 8
+    exp: 400

@@ -75,6 +75,11 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static boolean ENABLE_WORLD_GEN = ENABLE_DATABASE;
 	public static boolean ENABLE_ARMOR_EFFECTS = ENABLE_DATABASE;
 
+	public static CustomContent.Pack.PackManager packManager;
+	public static CustomContent.Items.CustomItemManager customItemManager;
+	public static CustomContent.Blocks.CustomBlockManager customBlockManager;
+	public static CustomContent.Bosses.BossManager bossManager;
+
 	@Override
 	public FileConfiguration getConfig() {
 		if (config == null) {
@@ -480,12 +485,45 @@ public class AmonPackPlugin extends JavaPlugin {
 			new ArmorEffectsRunnable().runTaskTimer(this, 0, 20);
 		}
 
+		// --- 6. AUTORSKI RESOURCE PACK & CUSTOM CONTENT ---
+		packManager = new CustomContent.Pack.PackManager();
+		customItemManager = new CustomContent.Items.CustomItemManager(packManager);
+		customBlockManager = new CustomContent.Blocks.CustomBlockManager(packManager, customItemManager);
+		bossManager = new CustomContent.Bosses.BossManager(packManager);
+
+		customItemManager.load();
+		customBlockManager.load();
+		bossManager.load();
+		packManager.load();
+
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Pack.PackListener(packManager), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Items.CustomItemListener(customItemManager), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Blocks.CustomBlockListener(customBlockManager, customItemManager), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Blocks.OreWorldGenerator(customBlockManager), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Bosses.BossListener(bossManager, customItemManager), this);
+
+		if (this.getCommand("amon") != null) {
+			CustomContent.Commands.AmonCommand amonCmd = new CustomContent.Commands.AmonCommand(packManager, customItemManager, customBlockManager, bossManager);
+			this.getCommand("amon").setExecutor(amonCmd);
+			this.getCommand("amon").setTabCompleter(new CustomContent.Commands.AmonTabCompleter(customItemManager, customBlockManager, bossManager));
+		}
+
 		System.out.println("Amonpack Załadowany!");
 	}
 
 	@Override
 	public void onDisable() {
 		try {
+			if (bossManager != null) {
+				bossManager.unload();
+			}
+			if (customBlockManager != null) {
+				customBlockManager.unload();
+			}
+			if (packManager != null) {
+				packManager.unload();
+			}
+
 			Abilities.PK_Abilities.Chi.ChiManager.stop();
 			if (ENABLE_DUNGEONS && RPG.Dungeons.DungeonManager.getInstance() != null) {
 				RPG.Dungeons.DungeonManager.getInstance().cleanupAll();

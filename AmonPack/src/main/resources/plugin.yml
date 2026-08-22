@@ -38,3 +38,7 @@ commands:
   dungbuild:
     usage: /<command>
     description: "Poczatkowe ulepszenia lochow"
+  amon:
+    usage: /<command>
+    description: "Zarzadzanie customowymi modelami, itemami, blokami i bossami"
+    aliases: [apack, amoncustom]

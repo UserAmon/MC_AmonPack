@@ -1,0 +1,11 @@
+# Konfiguracja wbudowanego serwera ResourcePacka AmonPack
+PackServer:
+  Port: 8085
+  # "auto" - w 100% automatycznie wykrywa adres IP, z którego gracz łączy się z serwerem (działa dla LAN, domen, publicznych IP i zewnętrznych graczy)
+  # Możesz też wpisać tu na stałe swoje publiczne IP lub domenę np. "89.23.45.67" lub "mc.twojserwer.pl"
+  Host: "auto"
+
+ResourcePack:
+  AutoSendOnJoin: true
+  ForcePack: false
+  PromptMessage: "&6&lAmonPack &7- Załaduj autorskie modele 3D broni, zbroi, rud i bossów!"
