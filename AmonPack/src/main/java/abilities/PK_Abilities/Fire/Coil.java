@@ -390,4 +390,14 @@ public class Coil extends LightningAbility implements AddonAbility {
     @Override
     public void stop() {
     }
+
+	@Override
+	public String getDescription() {
+		return "Formuje wokół gracza cewki piorunowe generujące coraz silniejsze pierścienie elektryczne, a po puszczeniu wystrzeliwuje salwę błyskawic.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Przytrzymaj SHIFT aby ładować kolejne pierścienie cewki, a następnie puść SHIFT aby wyładować energię.";
+	}
 }

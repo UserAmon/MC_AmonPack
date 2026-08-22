@@ -66,7 +66,8 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
 
         int neededSources = hasTriOrbit ? 3 : 1;
         List<Block> candidates = new ArrayList<>();
-        for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), hasTriOrbit ? multiSourceRange : sourceRange)) {
+        for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(),
+                hasTriOrbit ? multiSourceRange : sourceRange)) {
             if (b.getLocation().distance(player.getLocation()) >= 1.5
                     && (isWaterbendable(b) || isIcebendable(b))) {
                 candidates.add(b);
@@ -82,7 +83,8 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
         for (int i = 0; i < takeCount; i++) {
             Block b = candidates.get(i);
             sourceBlocks.add(b.getLocation().clone().add(0.5, 0.5, 0.5));
-            sourceMaterial = b.getType() == Material.ICE || b.getType() == Material.PACKED_ICE || b.getType() == Material.BLUE_ICE ? b.getType() : Material.WATER;
+            sourceMaterial = b.getType() == Material.ICE || b.getType() == Material.PACKED_ICE
+                    || b.getType() == Material.BLUE_ICE ? b.getType() : Material.WATER;
             TempBlock tb = new TempBlock(b, Material.AIR);
             tb.setRevertTime(10000);
             currentBlockPositions.add(b.getLocation().clone().add(0.5, 0.5, 0.5));
@@ -97,17 +99,24 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.Damage", 5.0);
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.Range", 30.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.Speed", 1.2);
-        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.SourceRange", 10.0);
-        this.multiSourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.MultiSourceRange", 12.0);
+        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.SourceRange",
+                10.0);
+        this.multiSourceRange = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Water.WaterStrike.MultiSourceRange", 12.0);
         this.splitCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterStrike.SplitCount", 5);
         this.splitRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.SplitRange", 8.0);
         this.splitDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.WaterStrike.SplitDamage", 2.0);
         this.slowDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.WaterStrike.SlowDuration", 40);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
-        this.hasSplitShot = (branch != null && (branch.hasUpgrade("WaterStrikeSplit") || branch.hasUpgrade("SplitShot")));
-        this.hasTriOrbit = (branch != null && (branch.hasUpgrade("WaterStrikeTriOrbit") || branch.hasUpgrade("TriOrbit")));
-        this.hasPiercing = (branch != null && (branch.hasUpgrade("WaterStrikePiercing") || branch.hasUpgrade("Piercing")));
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
+        this.hasSplitShot = (branch != null
+                && (branch.hasUpgrade("WaterStrikeSplit") || branch.hasUpgrade("SplitShot")));
+        this.hasTriOrbit = (branch != null
+                && (branch.hasUpgrade("WaterStrikeTriOrbit") || branch.hasUpgrade("TriOrbit")));
+        this.hasPiercing = (branch != null
+                && (branch.hasUpgrade("WaterStrikePiercing") || branch.hasUpgrade("Piercing")));
     }
 
     @Override
@@ -143,7 +152,8 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
                 Location targetPos;
                 if (count > 1) {
                     double angle = orbitAngle + (i * (2 * Math.PI / count));
-                    Vector offset = right.clone().multiply(Math.cos(angle) * 0.8).add(up.clone().multiply(Math.sin(angle) * 0.8));
+                    Vector offset = right.clone().multiply(Math.cos(angle) * 0.8)
+                            .add(up.clone().multiply(Math.sin(angle) * 0.8));
                     targetPos = centerTarget.clone().add(offset);
                 } else {
                     targetPos = centerTarget.clone();
@@ -242,7 +252,8 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
         }
 
         public void progress() {
-            if (dead) return;
+            if (dead)
+                return;
 
             if (!isMini && hasPiercing && player != null && player.isOnline()) {
                 Vector eyeDir = player.getEyeLocation().getDirection();
@@ -294,7 +305,8 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, isMini ? 0.9 : 1.2)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                     LivingEntity target = (LivingEntity) entity;
-                    if (hitEntities.contains(target.getUniqueId())) continue;
+                    if (hitEntities.contains(target.getUniqueId()))
+                        continue;
 
                     hitEntities.add(target.getUniqueId());
                     double dmg = isMini ? splitDamage : damage;
@@ -312,7 +324,8 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
         }
 
         private void destroy(boolean triggerSplit) {
-            if (dead) return;
+            if (dead)
+                return;
             dead = true;
 
             if (currentTempBlock != null) {
@@ -382,10 +395,21 @@ public class WaterStrike extends WaterAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {
         remove();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Podstawowy ruch Magów Wody. Wystrzeliwuje szybki strumień sprężonej wody, który zadaje bezpośrednie obrażenia.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Przytrzymaj Shift aby zebrać z okolicy wodę i zacząć celować, puść by wystrzelić.";
     }
 }

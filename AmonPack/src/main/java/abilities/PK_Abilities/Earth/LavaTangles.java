@@ -324,4 +324,14 @@ public class LavaTangles extends LavaAbility implements AddonAbility {
     @Override
     public void stop() {
     }
+
+	@Override
+	public String getDescription() {
+		return "Formuje ze źródła lawy lub magmy falującą mackę, która na komendę uderza we wrogów, podpalając ich i spowalniając.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Kucnij (Shift) patrząc na lawę aby wznieść mackę, a następnie kliknij LPM aby zaatakować.";
+	}
 }

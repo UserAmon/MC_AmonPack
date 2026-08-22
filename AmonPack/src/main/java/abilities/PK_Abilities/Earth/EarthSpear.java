@@ -23,7 +23,9 @@ import java.util.*;
 
 public class EarthSpear extends EarthAbility implements AddonAbility {
 
-    private enum State { CHARGING, FIRED }
+    private enum State {
+        CHARGING, FIRED
+    }
 
     private State state;
     private long startTime;
@@ -55,7 +57,8 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
             return;
         }
 
-        this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthSpear.ChargeTimePerLevel", 800);
+        this.chargeTimePerLevel = AmonPackPlugin.getAbilitiesConfig()
+                .getLong("AmonPack.Earth.EarthSpear.ChargeTimePerLevel", 800);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Earth.EarthSpear.Cooldown", 6000);
 
         this.state = State.CHARGING;
@@ -68,7 +71,8 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         Location target = origin.clone().add(direction.clone().setY(0).normalize().multiply(dist));
         for (int y = 3; y >= -4; y--) {
             Block b = target.clone().add(0, y, 0).getBlock();
-            if (TempBlock.isTempBlock(b)) continue;
+            if (TempBlock.isTempBlock(b))
+                continue;
             if (isEarthbendable(player, b) || isEarth(b)) {
                 return b.getLocation().add(0.5, 1.0, 0.5);
             }
@@ -110,7 +114,6 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
                 player.playSound(player.getLocation(), Sound.BLOCK_GRAVEL_BREAK, 0.8f, pitch);
             }
 
-            // Actionbar progress text like FlameWeave
             String bar;
             if (chargeLevel == 1) {
                 bar = "§e[ §6█§7░░ §e] §e§lEARTH SPEAR L1";
@@ -130,19 +133,25 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         switch (chargeLevel) {
             case 1:
                 damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.DamageLevel1", 4.0);
-                knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.KnockbackLevel1", 0.8);
-                fragmentCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthSpear.FragmentCountLevel1", 3);
+                knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.KnockbackLevel1",
+                        0.8);
+                fragmentCount = AmonPackPlugin.getAbilitiesConfig()
+                        .getInt("AmonPack.Earth.EarthSpear.FragmentCountLevel1", 3);
                 break;
             case 2:
                 damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.DamageLevel2", 7.0);
-                knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.KnockbackLevel2", 1.4);
-                fragmentCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthSpear.FragmentCountLevel2", 5);
+                knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.KnockbackLevel2",
+                        1.4);
+                fragmentCount = AmonPackPlugin.getAbilitiesConfig()
+                        .getInt("AmonPack.Earth.EarthSpear.FragmentCountLevel2", 5);
                 break;
             case 3:
             default:
                 damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.DamageLevel3", 10.0);
-                knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.KnockbackLevel3", 2.0);
-                fragmentCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthSpear.FragmentCountLevel3", 8);
+                knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthSpear.KnockbackLevel3",
+                        2.0);
+                fragmentCount = AmonPackPlugin.getAbilitiesConfig()
+                        .getInt("AmonPack.Earth.EarthSpear.FragmentCountLevel3", 8);
                 break;
         }
     }
@@ -155,8 +164,6 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
         if (dir.lengthSquared() < 0.01) {
             dir = new Vector(1, 0, 0);
         }
-
-        // Shifted forward by 1 block (3.0 blocks in front of player) on earthbendable ground
         Location groundLoc = findEarthGround(player.getLocation(), dir, 3.0);
         if (groundLoc == null) {
             launchLoc = null;
@@ -178,7 +185,8 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
             if (b.getType() == Material.AIR) {
                 groundSpearTempBlocks.add(new TempBlock(b, spearMaterial.createBlockData(), 150));
             }
-            pt.getWorld().spawnParticle(Particle.FALLING_DUST, pt, 2, 0.05, 0.05, 0.05, 0.01, spearMaterial.createBlockData());
+            pt.getWorld().spawnParticle(Particle.FALLING_DUST, pt, 2, 0.05, 0.05, 0.05, 0.01,
+                    spearMaterial.createBlockData());
             launchLoc = pt;
         }
     }
@@ -208,7 +216,8 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
             public void run() {
                 ticks++;
                 if (ticks > 40 || player == null || !player.isOnline()) {
-                    for (TempBlock tb : projectileTempBlocks) tb.revertBlock();
+                    for (TempBlock tb : projectileTempBlocks)
+                        tb.revertBlock();
                     bPlayer.addCooldown(EarthSpear.this, cooldown);
                     remove();
                     cancel();
@@ -218,13 +227,13 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
                 currentVel.add(new Vector(0, -0.03, 0));
                 loc.add(currentVel);
 
-                // Projectile visual TempBlock
                 Block b = loc.getBlock();
                 if (b.getType() == Material.AIR) {
                     projectileTempBlocks.add(new TempBlock(b, spearMaterial.createBlockData(), 150));
                 }
 
-                loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 3, 0.1, 0.1, 0.1, 0.02, spearMaterial.createBlockData());
+                loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 3, 0.1, 0.1, 0.1, 0.02,
+                        spearMaterial.createBlockData());
 
                 // PROJECTILE LOGIC AHEAD OF TEMPBLOCKS (checking ahead of motion vector)
                 Location checkLoc = loc.clone().add(currentVel.clone().normalize().multiply(1.0));
@@ -234,7 +243,8 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
                         Vector push = currentVel.clone().normalize().multiply(knockback).setY(0.3);
                         le.setVelocity(push);
                         shatterSpear(checkLoc);
-                        for (TempBlock tb : projectileTempBlocks) tb.revertBlock();
+                        for (TempBlock tb : projectileTempBlocks)
+                            tb.revertBlock();
                         cancel();
                         return;
                     }
@@ -243,7 +253,8 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
                 Block aheadBlock = checkLoc.getBlock();
                 if (aheadBlock.getType().isSolid() && !TempBlock.isTempBlock(aheadBlock)) {
                     shatterSpear(checkLoc);
-                    for (TempBlock tb : projectileTempBlocks) tb.revertBlock();
+                    for (TempBlock tb : projectileTempBlocks)
+                        tb.revertBlock();
                     cancel();
                 }
             }
@@ -258,9 +269,9 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
             Vector fragVel = new Vector(
                     (Math.random() - 0.5) * 0.8,
                     Math.random() * 0.4 + 0.1,
-                    (Math.random() - 0.5) * 0.8
-            );
-            loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 5, fragVel.getX(), fragVel.getY(), fragVel.getZ(), 0.1, spearMaterial.createBlockData());
+                    (Math.random() - 0.5) * 0.8);
+            loc.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 5, fragVel.getX(), fragVel.getY(), fragVel.getZ(),
+                    0.1, spearMaterial.createBlockData());
         }
 
         bPlayer.addCooldown(this, cooldown);
@@ -323,5 +334,15 @@ public class EarthSpear extends EarthAbility implements AddonAbility {
 
     @Override
     public void stop() {
+    }
+
+    @Override
+    public String getDescription() {
+        return "Wystrzeliwuje z ziemi ostrą kamienną włócznie, z każdym poziomem naładowania jest silniejsza!";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Przytrzymaj Shift aby zacząć ładować ruch. Puść aby wystrzelić";
     }
 }

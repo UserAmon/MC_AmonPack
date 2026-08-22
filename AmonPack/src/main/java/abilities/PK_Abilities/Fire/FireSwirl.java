@@ -318,4 +318,14 @@ public class FireSwirl extends FireAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Podstawowy ruch Magów Ognia. Wystrzeliwuje spirale płomieni podpalającą trafionych wrogów!";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Kliknij LPM aby wystrzelić ognisty wir.";
+    }
 }

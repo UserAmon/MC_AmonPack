@@ -286,4 +286,14 @@ public class MoltenBlast extends LavaAbility implements AddonAbility {
     @Override
     public void stop() {
     }
+
+    @Override
+    public String getDescription() {
+        return "Wystrzeliwuje strumień ciekłej lawy eksplodującej przy kontakcie z podłożem i podpalającej otoczenie.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Przytrzymaj Shift (patrząc na blok ziemi) aby zacząć topić bloki i ładować pocisk, puść by wystrzelić.";
+    }
 }

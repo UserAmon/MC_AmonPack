@@ -65,9 +65,12 @@ public class AirSwirl extends AirAbility implements AddonAbility {
         this.airKnockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirSwirl.AirKnockback", 1.5);
         this.wallDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirSwirl.WallDamage", 3.0);
         this.multiWindow = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirSwirl.MultiWindow", 3000L);
-        this.minShotInterval = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirSwirl.MinShotIntervalMs", 500L);
+        this.minShotInterval = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.AirSwirl.MinShotIntervalMs",
+                500L);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
         this.hasMulti = (branch != null && (branch.hasUpgrade("AirSwirlMulti") || branch.hasUpgrade("MultiShot")));
         this.hasDouble = (branch != null && (branch.hasUpgrade("AirSwirlDouble") || branch.hasUpgrade("DoubleMulti")));
         this.hasMaster = (branch != null && (branch.hasUpgrade("AirSwirlMaster") || branch.hasUpgrade("SwirlMaster")));
@@ -106,7 +109,8 @@ public class AirSwirl extends AirAbility implements AddonAbility {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.4f);
 
         if (maxShots > 1) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§f[AirSwirl] §bStrzał " + shotsFired + "/" + maxShots));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText("§f[AirSwirl] §bStrzał " + shotsFired + "/" + maxShots));
         }
 
         if (shotsFired >= maxShots) {
@@ -170,7 +174,8 @@ public class AirSwirl extends AirAbility implements AddonAbility {
         }
 
         public void progress() {
-            if (dead) return;
+            if (dead)
+                return;
             ticksAlive++;
 
             if (hasMaster && player != null && player.isOnline()) {
@@ -208,14 +213,14 @@ public class AirSwirl extends AirAbility implements AddonAbility {
             }
 
             currentPos.getWorld().spawnParticle(Particle.CLOUD, currentPos, 2, 0.05, 0.05, 0.05, 0.01);
-            currentPos.getWorld().spawnParticle(Particle.WITCH, currentPos, 1, 0.02, 0.02, 0.02, 0.0);
             Particle.DustOptions whiteDust = new Particle.DustOptions(Color.fromRGB(225, 240, 255), 0.8f);
             currentPos.getWorld().spawnParticle(Particle.DUST, currentPos, 1, 0, 0, 0, 0, whiteDust);
 
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentPos, hitboxRadius)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                     LivingEntity target = (LivingEntity) entity;
-                    if (hitEntities.contains(target.getUniqueId())) continue;
+                    if (hitEntities.contains(target.getUniqueId()))
+                        continue;
 
                     hitEntities.add(target.getUniqueId());
                     DamageHandler.damageEntity(target, damage, AirSwirl.this);
@@ -239,6 +244,7 @@ public class AirSwirl extends AirAbility implements AddonAbility {
         private void trackWallImpact(final LivingEntity target) {
             new BukkitRunnable() {
                 int checks = 0;
+
                 @Override
                 public void run() {
                     if (target == null || target.isDead() || !target.isValid() || checks++ > 8) {
@@ -249,8 +255,10 @@ public class AirSwirl extends AirAbility implements AddonAbility {
                     for (Block b : GeneralMethods.getBlocksAroundPoint(target.getLocation(), 1.0)) {
                         if (b.getType().isSolid()) {
                             DamageHandler.damageEntity(target, wallDamage, AirSwirl.this);
-                            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 0.8f);
-                            target.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3, 0.1);
+                            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f,
+                                    0.8f);
+                            target.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 10, 0.3,
+                                    0.3, 0.3, 0.1);
                             cancel();
                             return;
                         }
@@ -260,7 +268,8 @@ public class AirSwirl extends AirAbility implements AddonAbility {
         }
 
         private void destroy() {
-            if (dead) return;
+            if (dead)
+                return;
             dead = true;
             baseLoc.getWorld().spawnParticle(Particle.CLOUD, baseLoc, 8, 0.2, 0.2, 0.2, 0.05);
             baseLoc.getWorld().spawnParticle(Particle.SWEEP_ATTACK, baseLoc, 1, 0, 0, 0, 0);
@@ -307,10 +316,21 @@ public class AirSwirl extends AirAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {
         remove();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Wystrzeliwuje wirujący pocisk powietrza, który odrzuca cel i zadaje dodatkowe obrażenia przy uderzeniu w ścianę.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Kliknij LPM, aby wystrzelić wirujący pocisk powietrza.";
     }
 }

@@ -329,4 +329,14 @@ public class WaterWhip extends WaterAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+	@Override
+	public String getDescription() {
+		return "Pobiera wodę ze źródła i tworzy elastyczny bicz wodny, którym można smagać i odrzucać wrogów.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Kliknij LPM na wodę aby pobrać bicz, a następnie klikaj LPM aby uderzać.";
+	}
 }

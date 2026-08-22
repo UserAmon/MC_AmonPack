@@ -24,7 +24,9 @@ import java.util.*;
 
 public class Burrow extends EarthAbility implements AddonAbility {
 
-    private enum State { CHARGING, BURROW_AREA, TRAVELING }
+    private enum State {
+        CHARGING, BURROW_AREA, TRAVELING
+    }
 
     private State state;
     private long startTime;
@@ -114,7 +116,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
             double x = Math.cos(angle) * r;
             double z = Math.sin(angle) * r;
             Location pt = center.clone().add(x, 0.1, z);
-            center.getWorld().spawnParticle(Particle.FALLING_DUST, pt, 2, 0.02, 0.02, 0.02, 0.01, Material.DIRT.createBlockData());
+            center.getWorld().spawnParticle(Particle.FALLING_DUST, pt, 2, 0.02, 0.02, 0.02, 0.01,
+                    Material.DIRT.createBlockData());
         }
     }
 
@@ -150,7 +153,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
                     tempBlocks.add(new TempBlock(b2, Material.AIR.createBlockData(), duration));
                 }
 
-                target.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 20, 0.5, 0.5, 0.5, 0.1, Material.DIRT.createBlockData());
+                target.getWorld().spawnParticle(Particle.FALLING_DUST, loc, 20, 0.5, 0.5, 0.5, 0.1,
+                        Material.DIRT.createBlockData());
             }
         }
 
@@ -166,7 +170,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
     }
 
     public void onClick() {
-        if (state != State.CHARGING) return;
+        if (state != State.CHARGING)
+            return;
 
         long elapsed = System.currentTimeMillis() - startTime;
         if (elapsed < chargeTime) {
@@ -175,7 +180,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
 
         Block targetBlock = player.getTargetBlockExact(25);
         if (targetBlock == null || !isEarthbendable(targetBlock)) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy("§cBrak połączenia z podłożem"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacy("§cBrak połączenia z podłożem"));
             return;
         }
 
@@ -186,7 +192,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
 
         List<Location> tunnelPath = find3DEarthPath(startBlock, targetBlock);
         if (tunnelPath == null || tunnelPath.isEmpty()) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy("§cBrak połączenia z podłożem"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacy("§cBrak połączenia z podłożem"));
             return;
         }
 
@@ -206,7 +213,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
         Location current = startLoc.clone();
         for (int i = 0; i <= steps; i++) {
             Block b = current.getBlock();
-            if (!isEarthbendable(b) && !isEarthbendable(b.getRelative(org.bukkit.block.BlockFace.DOWN)) && !isEarthbendable(b.getRelative(org.bukkit.block.BlockFace.UP))) {
+            if (!isEarthbendable(b) && !isEarthbendable(b.getRelative(org.bukkit.block.BlockFace.DOWN))
+                    && !isEarthbendable(b.getRelative(org.bukkit.block.BlockFace.UP))) {
                 return null; // Connection broken!
             }
             path.add(current.clone());
@@ -251,7 +259,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
                 player.teleport(undergroundLoc);
                 player.setFallDistance(0);
 
-                surfaceLoc.getWorld().spawnParticle(Particle.FALLING_DUST, surfaceLoc, 6, 0.3, 0.3, 0.3, 0.05, Material.DIRT.createBlockData());
+                surfaceLoc.getWorld().spawnParticle(Particle.FALLING_DUST, surfaceLoc, 6, 0.3, 0.3, 0.3, 0.05,
+                        Material.DIRT.createBlockData());
                 surfaceLoc.getWorld().playSound(surfaceLoc, Sound.BLOCK_GRAVEL_STEP, 0.5f, 0.6f);
 
                 index++;
@@ -269,7 +278,8 @@ public class Burrow extends EarthAbility implements AddonAbility {
         player.setVelocity(new Vector(0, 0.5, 0));
 
         exitLoc.getWorld().playSound(exitLoc, Sound.BLOCK_GRAVEL_BREAK, 1.2f, 1.2f);
-        exitLoc.getWorld().spawnParticle(Particle.FALLING_DUST, exitLoc, 35, 0.6, 0.6, 0.6, 0.15, Material.DIRT.createBlockData());
+        exitLoc.getWorld().spawnParticle(Particle.FALLING_DUST, exitLoc, 35, 0.6, 0.6, 0.6, 0.15,
+                Material.DIRT.createBlockData());
 
         new BukkitRunnable() {
             @Override
@@ -339,5 +349,15 @@ public class Burrow extends EarthAbility implements AddonAbility {
 
     @Override
     public void stop() {
+    }
+
+    @Override
+    public String getDescription() {
+        return "Zaawansowany ruch magów ziemie. Pozwala zakopać pobliskie cele pod ziemią lub samemu przemieszczać się pod ziemią.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Kucnij (Shift) aby naładować ruch. Puszczenie shifta zakopie pod ziemią pobliskie cele. Kliknięcie LPM natomiast sprawi że przejdziesz pod ziemią w kierunku wybranego bloku.";
     }
 }

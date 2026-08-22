@@ -20,7 +20,9 @@ import java.util.Random;
 
 public class Circulation extends BloodAbility implements AddonAbility {
 
-    private enum State { CHARGING, FULLY_CHARGED, CONTROLLED }
+    private enum State {
+        CHARGING, FULLY_CHARGED, CONTROLLED
+    }
 
     private State state;
     private long cooldown;
@@ -61,7 +63,8 @@ public class Circulation extends BloodAbility implements AddonAbility {
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Circulation.Cooldown", 12000L);
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.Circulation.Range", 15.0);
         this.chargeTime = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Water.Circulation.ChargeTime", 1500L);
-        this.walkDurationTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Water.Circulation.WalkDurationTicks", 80);
+        this.walkDurationTicks = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Water.Circulation.WalkDurationTicks", 80);
     }
 
     @Override
@@ -89,9 +92,18 @@ public class Circulation extends BloodAbility implements AddonAbility {
 
             long elapsed = System.currentTimeMillis() - startTime;
             if (elapsed >= chargeTime) {
-                state = State.FULLY_CHARGED;
-                Particle.DustOptions darkRed = new Particle.DustOptions(Color.fromRGB(180, 0, 0), 1.0f);
-                player.getWorld().spawnParticle(Particle.DUST, target.getEyeLocation(), 4, 0.2, 0.2, 0.2, 0, darkRed);
+                if (state != State.FULLY_CHARGED) {
+                    state = State.FULLY_CHARGED;
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
+                    player.playSound(player.getLocation(), Sound.ENTITY_WARDEN_HEARTBEAT, 1.0f, 1.4f);
+                    Particle.DustOptions brightRed = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 1.5f);
+                    player.getWorld().spawnParticle(Particle.DUST, target.getEyeLocation(), 12, 0.3, 0.3, 0.3, 0,
+                            brightRed);
+                    player.getWorld().spawnParticle(Particle.CRIT, target.getEyeLocation(), 6, 0.3, 0.3, 0.3, 0.1);
+                }
+                Particle.DustOptions darkRed = new Particle.DustOptions(Color.fromRGB(220, 0, 0), 1.2f);
+                player.getWorld().spawnParticle(Particle.DUST, target.getEyeLocation(), 5, 0.2, 0.2, 0.2, 0, darkRed);
+                player.getWorld().spawnParticle(Particle.CRIT, target.getEyeLocation(), 2, 0.2, 0.2, 0.2, 0.05);
             } else {
                 Particle.DustOptions bloodRed = new Particle.DustOptions(Color.fromRGB(130, 0, 0), 0.7f);
                 player.getWorld().spawnParticle(Particle.DUST, target.getEyeLocation(), 2, 0.1, 0.1, 0.1, 0, bloodRed);
@@ -106,9 +118,11 @@ public class Circulation extends BloodAbility implements AddonAbility {
         applyForcedWalk(target, walkDurationTicks, true);
 
         if (VeinFlowManager.isActive(player)) {
-            double aoeRadius = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Water.VeinFlow.CirculationAoeRadius", 10.0);
+            double aoeRadius = AmonPackPlugin.getAbilitiesConfig()
+                    .getDouble("AmonPack.Water.VeinFlow.CirculationAoeRadius", 10.0);
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(player.getLocation(), aoeRadius)) {
-                if (entity instanceof LivingEntity le && !entity.getUniqueId().equals(player.getUniqueId()) && !entity.getUniqueId().equals(target.getUniqueId())) {
+                if (entity instanceof LivingEntity le && !entity.getUniqueId().equals(player.getUniqueId())
+                        && !entity.getUniqueId().equals(target.getUniqueId())) {
                     applyForcedWalk(le, walkDurationTicks, false);
                 }
             }
@@ -116,7 +130,8 @@ public class Circulation extends BloodAbility implements AddonAbility {
     }
 
     private void applyForcedWalk(LivingEntity victim, int durationTicks, boolean isPrimary) {
-        if (victim == null || victim.isDead()) return;
+        if (victim == null || victim.isDead())
+            return;
 
         player.getWorld().playSound(victim.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1.2f, 0.6f);
         player.getWorld().playSound(victim.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 0.5f, 1.6f);
@@ -150,7 +165,8 @@ public class Circulation extends BloodAbility implements AddonAbility {
                 victim.setVelocity(walkDir);
 
                 Particle.DustOptions bloodRed = new Particle.DustOptions(Color.fromRGB(160, 0, 0), 0.8f);
-                victim.getWorld().spawnParticle(Particle.DUST, victim.getEyeLocation(), 3, 0.15, 0.15, 0.15, 0, bloodRed);
+                victim.getWorld().spawnParticle(Particle.DUST, victim.getEyeLocation(), 3, 0.15, 0.15, 0.15, 0,
+                        bloodRed);
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
     }
@@ -217,7 +233,7 @@ public class Circulation extends BloodAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Przejmuje krążenie wroga poprzez ładowanie shiftem i zmusza go do losowego chodzenia jak bot/NPC.";
+        return "Przejmuje krążenie wroga poprzez ładowanie shiftem i zmusza go do losowego chodzenia.";
     }
 
     @Override

@@ -171,7 +171,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
                     player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5)), 5, 0.2, 0.2,
                     0.2, 0, dust);
             player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK,
-                    player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5)), 3, 0.15, 0.15, 0.15, 0.05);
+                    player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(1.5)), 3, 0.15, 0.15,
+                    0.15, 0.05);
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                     TextComponent.fromLegacyText("§aArcBlast gotowy! Kliknij LPM, aby wystrzelić!"));
         } else if (state == State.FIRING) {
@@ -216,7 +217,8 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
     }
 
     public void fire() {
-        if (state == State.FIRING) return;
+        if (state == State.FIRING)
+            return;
         state = State.FIRING;
 
         boolean isFirelord = FirelordStanceManager.isActive(player);
@@ -328,12 +330,12 @@ public class ArcBlast extends LightningAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Gromadzi energię piorunów unosząc się w powietrzu i kalibrując celownik na punkty. Wypuszcza długi naprowadzany promień pioruna przeskakujący na kolejne cele i rażący wodę.";
+        return "Gromadzi energię piorunów w powietrzu. Skup swoje chi na punktach wyładowania. Wypuszcza długi serię pocisków błyskawic.";
     }
 
     @Override
     public String getInstructions() {
-        return "Przytrzymaj Shift aby unieść się i najechać celownikiem na punkty, a następnie puść Shift aby wystrzelić!";
+        return "Przytrzymaj SHIFT aby naładować ładunek elektryczny, a następnie kliknij LPM aby wystrzelić pociski błyskawic.";
     }
 
     private class ArcBlastProjectile {

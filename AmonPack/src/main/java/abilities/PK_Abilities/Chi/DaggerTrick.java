@@ -262,11 +262,11 @@ public class DaggerTrick extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Wyskakujesz w powietrze w tył (Shift). Podczas lotu klikaj LPM, aby wystrzeliwać lecące strzały zadające obrażenia od umiejętności.";
-    }
+		return "Wyskakujesz w tył w powietrze. Podczas lotu klikanie LPM pozwala rzucać sztyletami w stronę wrogów.";
+	}
 
     @Override
     public String getInstructions() {
-        return "Kucnij (Shift), aby wyskoczyć do tyłu, a następnie klikaj LPM w powietrzu, aby strzelać!";
-    }
+		return "Kucnij (Shift) aby wyskoczyć, a następnie klikaj LPM aby rzucać sztyletami.";
+	}
 }

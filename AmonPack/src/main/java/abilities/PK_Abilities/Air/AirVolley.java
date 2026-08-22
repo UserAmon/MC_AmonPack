@@ -75,13 +75,19 @@ public class AirVolley extends AirAbility implements AddonAbility {
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirVolley.Range", 25.0);
         this.knockback = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirVolley.Knockback", 0.8);
         this.baseSegments = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirVolley.Segments", 6);
-        this.salvoIntervalTicks = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.AirVolley.SalvoIntervalTicks", 3);
+        this.salvoIntervalTicks = AmonPackPlugin.getAbilitiesConfig()
+                .getInt("AmonPack.Air.AirVolley.SalvoIntervalTicks", 3);
         this.soundStacks = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.AirVolley.SoundStacks", 4.0);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
-        this.hasBarrage = (branch != null && (branch.hasUpgrade("AirVolleyBarrage") || branch.hasUpgrade("VolleyBarrage")));
-        this.hasHarmonics = (branch != null && (branch.hasUpgrade("AirVolleyHarmonics") || branch.hasUpgrade("VolleyHarmonics")));
-        this.hasPrecision = (branch != null && (branch.hasUpgrade("AirVolleyPrecision") || branch.hasUpgrade("VolleyPrecision")));
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
+        this.hasBarrage = (branch != null
+                && (branch.hasUpgrade("AirVolleyBarrage") || branch.hasUpgrade("VolleyBarrage")));
+        this.hasHarmonics = (branch != null
+                && (branch.hasUpgrade("AirVolleyHarmonics") || branch.hasUpgrade("VolleyHarmonics")));
+        this.hasPrecision = (branch != null
+                && (branch.hasUpgrade("AirVolleyPrecision") || branch.hasUpgrade("VolleyPrecision")));
 
         this.totalSegments = hasBarrage ? baseSegments + 4 : baseSegments;
     }
@@ -114,13 +120,14 @@ public class AirVolley extends AirAbility implements AddonAbility {
 
                 renderSegmentedRing(totalSegments, chargeProgress);
 
-                String bar = "§f[AirVolley] Ładowanie salwy: §b" + (int)(chargeProgress * 100) + "%";
+                String bar = "§f[AirVolley] Ładowanie salwy: §b" + (int) (chargeProgress * 100) + "%";
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(bar));
 
                 if (elapsed >= chargeTime) {
                     state = State.FIRING;
                     player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.2f, 1.8f);
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§b🌪 [AirVolley] Ostrzał rozpoczęty!"));
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            TextComponent.fromLegacyText("§b🌪 [AirVolley] Ostrzał rozpoczęty!"));
                 }
                 break;
 
@@ -150,7 +157,8 @@ public class AirVolley extends AirAbility implements AddonAbility {
                 if (firedShots >= totalSegments && activeProjectiles.isEmpty()) {
                     if (hasPrecision && successfulHits >= totalSegments && totalSegments > 0) {
                         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.2f, 1.5f);
-                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§a⚡ [AirVolley] 100% Celności! Kolejna salwa bez cooldownu!"));
+                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent
+                                .fromLegacyText("§a⚡ [AirVolley] 100% Celności! Kolejna salwa bez cooldownu!"));
                         startCharging();
                     } else {
                         bPlayer.addCooldown(this, cooldown);
@@ -181,7 +189,8 @@ public class AirVolley extends AirAbility implements AddonAbility {
     private void renderSegmentedRing(int segmentsToShow, double brightnessRatio) {
         Location eye = player.getEyeLocation();
         Vector lookDir = eye.getDirection().setY(0).normalize();
-        if (lookDir.lengthSquared() < 0.01) lookDir = new Vector(0, 0, 1);
+        if (lookDir.lengthSquared() < 0.01)
+            lookDir = new Vector(0, 0, 1);
 
         Vector backOffset = lookDir.clone().multiply(-0.7);
         Location ringCenter = eye.clone().add(backOffset).add(0, -0.1, 0);
@@ -197,13 +206,15 @@ public class AirVolley extends AirAbility implements AddonAbility {
 
             boolean isSoundSegment = hasHarmonics && ((i + 1) % 2 == 0);
             if (isSoundSegment) {
-                Particle.DustOptions cyanDust = new Particle.DustOptions(Color.fromRGB(0, 230, 255), (float) (0.8f * brightnessRatio));
+                Particle.DustOptions cyanDust = new Particle.DustOptions(Color.fromRGB(0, 230, 255),
+                        (float) (0.8f * brightnessRatio));
                 pt.getWorld().spawnParticle(Particle.DUST, pt, 2, 0.05, 0.05, 0.05, 0, cyanDust);
                 if (Math.random() < 0.3) {
                     pt.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, pt, 1, 0.02, 0.02, 0.02, 0.0);
                 }
             } else {
-                Particle.DustOptions whiteDust = new Particle.DustOptions(Color.fromRGB(240, 250, 255), (float) (0.9f * brightnessRatio));
+                Particle.DustOptions whiteDust = new Particle.DustOptions(Color.fromRGB(240, 250, 255),
+                        (float) (0.9f * brightnessRatio));
                 pt.getWorld().spawnParticle(Particle.DUST, pt, 2, 0.05, 0.05, 0.05, 0, whiteDust);
                 pt.getWorld().spawnParticle(Particle.CLOUD, pt, 1, 0.02, 0.02, 0.02, 0.0);
             }
@@ -213,7 +224,8 @@ public class AirVolley extends AirAbility implements AddonAbility {
     private Location getSegmentLocation(int segmentIndex, int total) {
         Location eye = player.getEyeLocation();
         Vector lookDir = eye.getDirection().setY(0).normalize();
-        if (lookDir.lengthSquared() < 0.01) lookDir = new Vector(0, 0, 1);
+        if (lookDir.lengthSquared() < 0.01)
+            lookDir = new Vector(0, 0, 1);
 
         Vector backOffset = lookDir.clone().multiply(-0.7);
         Location ringCenter = eye.clone().add(backOffset).add(0, -0.1, 0);
@@ -242,7 +254,8 @@ public class AirVolley extends AirAbility implements AddonAbility {
         }
 
         public void progress() {
-            if (dead) return;
+            if (dead)
+                return;
 
             loc.add(vel);
             distTraveled += speed;
@@ -327,10 +340,21 @@ public class AirVolley extends AirAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {
         remove();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Ładuje salwę pocisków powietrznych, po chwili wystrzeliwuje serię szybkich uderzeń w stronę przeciwnika.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Przytrzymaj SHIFT aby naładować salwę i ją wystrzelić.";
     }
 }

@@ -409,4 +409,14 @@ public class EarthBarricade extends EarthAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+	@Override
+	public String getDescription() {
+		return "Błyskawicznie wznosi solidną ścianę z ziemi i kamienia przed graczem, blokując wrogie ataki i pociski.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Kliknij LPM patrząc przed siebie, aby postawić barykadę z ziemi.";
+	}
 }

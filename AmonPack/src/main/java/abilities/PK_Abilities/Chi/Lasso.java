@@ -339,11 +339,11 @@ public class Lasso extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Kucnij (Shift), aby naładować lasso, a następnie puść Shift, aby wystrzelić wijący się sznur. Trafienie wroga wiąże go z Tobą, lekko przyciąga i mocno ściąga z powrotem gdy próbuje uciec poza zasięg! Utrzymanie lassa zużywa energię Chi co sekundę.";
-    }
+		return "Wystrzeliwuje wijące się lasso z liny, które pęta wroga i przyciąga go gwałtownie, gdy próbuje uciec poza promień.";
+	}
 
     @Override
     public String getInstructions() {
-        return "Przytrzymaj Shift do naładowania, a następnie puść Shift, aby wystrzelić lasso w stronę wroga!";
-    }
+		return "Przytrzymaj SHIFT aby naładować lasso, a po puszczeniu wyceluj i wystrzel w przeciwnika.";
+	}
 }

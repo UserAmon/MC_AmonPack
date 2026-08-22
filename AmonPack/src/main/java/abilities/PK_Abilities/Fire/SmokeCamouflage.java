@@ -78,7 +78,9 @@ public class SmokeCamouflage extends SmokeAbility implements AddonAbility {
 				// Visual smoke charging around player
 				ParticleEffect.SMOKE_NORMAL.display(player.getLocation().add(0, 0.5, 0), 4, 0.25, 0.25, 0.25, 0.02);
 				if (source != null) {
-					source.IsNearPlayer(player.getLocation(), 1.5, player);
+					if (source.IsNearPlayer(player.getLocation(), 1.5, player)) {
+						source = null;
+					}
 				}
 			} else {
 				long chargedMs = System.currentTimeMillis() - chargeStartTime;

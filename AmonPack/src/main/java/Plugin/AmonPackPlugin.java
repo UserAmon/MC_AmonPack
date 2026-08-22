@@ -789,6 +789,12 @@ public class AmonPackPlugin extends JavaPlugin {
 	}
 
 	public static FileConfiguration getAbilitiesConfig() {
+		if (AbilitiesConfig == null && plugin != null) {
+			File f = new File(plugin.getDataFolder(), "abilities_config.yml");
+			if (f.exists()) {
+				AbilitiesConfig = YamlConfiguration.loadConfiguration(f);
+			}
+		}
 		return AbilitiesConfig;
 	}
 

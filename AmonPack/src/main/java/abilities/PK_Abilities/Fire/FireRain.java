@@ -304,4 +304,14 @@ public class FireRain extends FireAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Ciśnij pociskiem ognia w górę, aby zaskoczyć przeciwników atakiem z góry!";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Kliknij LPM aby wystrzelić po łuku pocisk ognia.";
+    }
 }

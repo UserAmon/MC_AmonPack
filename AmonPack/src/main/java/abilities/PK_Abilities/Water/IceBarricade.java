@@ -451,4 +451,14 @@ public class IceBarricade extends IceAbility implements AddonAbility {
     public void stop() {
         remove();
     }
+
+    @Override
+    public String getDescription() {
+        return "Błyskawicznie wznosi masywną lodową ścianę przed magiem, blokując wszelkie ataki i zamrażając pobliskie źródła wody.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Przytrzymaj SHIFT aby postawić lodową barykadę.";
+    }
 }

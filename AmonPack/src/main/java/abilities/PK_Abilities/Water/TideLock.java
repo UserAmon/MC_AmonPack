@@ -89,6 +89,10 @@ public class TideLock extends WaterAbility implements AddonAbility {
             return;
         }
 
+        if (state == State.LAUNCHED || state == State.MARKING || state == State.LOCKING) {
+            bPlayer.addCooldown(this, cooldown);
+        }
+
         switch (state) {
             case IDLE:
                 if (player.isSneaking()) {
@@ -246,7 +250,7 @@ public class TideLock extends WaterAbility implements AddonAbility {
         projectileDir = player.getLocation().getDirection();
         isReturning = false;
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_SPLASH, 1f, 1f);
-        bPlayer.addCooldown(this, 999999L);
+        bPlayer.addCooldown(this, cooldown);
     }
 
     private void markTarget(LivingEntity target) {
@@ -329,12 +333,12 @@ public class TideLock extends WaterAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Launches a freezing projectile that marks a target, eventually locking them in solid ice.";
-    }
+		return "Wystrzeliwuje wodny pocisk oznaczający cel. Po oznaczeniu kucnięcie zamraża ofiarę w lodowym uwięzieniu i detonuje lód.";
+	}
 
     @Override
     public String getInstructions() {
-        return "Sneak near water source to charge. Relase and launch water torrent and mark your enemies. Sneak to lock them in solid ice.";
-    }
+		return "Przytrzymaj SHIFT i puść aby wystrzelić pocisk. Po trafieniu przytrzymaj SHIFT aby zamrozić cel.";
+	}
 
 }

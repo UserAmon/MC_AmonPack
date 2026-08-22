@@ -272,11 +272,11 @@ public class PointBlank extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Aktywuje ruch PointBlank. Podczas trwania ładuje oznaczenie celu pod nogami wroga w zasięgu. Po naładowaniu pokazuje punkt czuły wroga (widoczny tylko dla Ciebie). Celne uderzenie w ten punkt zadaje potężne obrażenia i blokuje chi.";
-    }
+		return "Aktywuje stan skupienia PointBlank. Utrzymując cel w pobliżu, ładujesz potężne uderzenie z bliska, które odrzuca wroga i niszczy jego pancerz.";
+	}
 
     @Override
     public String getInstructions() {
-        return "Naciśnij LPM aby aktywować PointBlank. Utrzymuj dystans od wroga aż załaduje się punkt, a następnie zaatakuj go!";
-    }
+		return "Kliknij LPM aby aktywować PointBlank, trzymaj się blisko wroga i uderz go ponownie.";
+	}
 }

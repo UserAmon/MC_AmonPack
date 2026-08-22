@@ -44,13 +44,18 @@ public class Harmony extends SoundAbility implements AddonAbility {
             return;
         }
 
-        this.rhythmInterval = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Sound.Harmony.RhythmInterval", 1000);
+        this.rhythmInterval = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Sound.Harmony.RhythmInterval",
+                1000);
         this.inputWindow = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Sound.Harmony.InputWindow", 500);
-        this.selfPenaltyStacks = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Sound.Harmony.SelfPenaltyStacks", 4.0);
+        this.selfPenaltyStacks = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Air.Sound.Harmony.SelfPenaltyStacks", 4.0);
         this.slowDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Sound.Harmony.SlowDuration", 60);
-        this.nauseaDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Sound.Harmony.NauseaDuration", 100);
-        this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Sound.Harmony.ProjectileSpeed", 1.2);
-        this.stackCountPerHit = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Sound.Harmony.StackCountPerHit", 3.0);
+        this.nauseaDuration = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Air.Sound.Harmony.NauseaDuration",
+                100);
+        this.projectileSpeed = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Air.Sound.Harmony.ProjectileSpeed", 1.2);
+        this.stackCountPerHit = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Air.Sound.Harmony.StackCountPerHit", 3.0);
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Air.Sound.Harmony.Damage", 3.0);
         this.cooldown = AmonPackPlugin.getAbilitiesConfig().getLong("AmonPack.Air.Sound.Harmony.Cooldown", 7000);
 
@@ -88,7 +93,8 @@ public class Harmony extends SoundAbility implements AddonAbility {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        if (!loopActive) return;
+                        if (!loopActive)
+                            return;
                         if (waitingForClick && !clickedInWindow) {
                             applySelfPenalty();
                         }
@@ -100,7 +106,8 @@ public class Harmony extends SoundAbility implements AddonAbility {
     }
 
     public void onLeftClick() {
-        if (!loopActive) return;
+        if (!loopActive)
+            return;
 
         long now = System.currentTimeMillis();
         long elapsed = now - lastCueTime;
@@ -159,7 +166,8 @@ public class Harmony extends SoundAbility implements AddonAbility {
                 loc.getWorld().spawnParticle(Particle.SCULK_CHARGE_POP, loc, 3, 0.1, 0.1, 0.1, 0.02);
 
                 for (Entity e : GeneralMethods.getEntitiesAroundPoint(loc, 1.8)) {
-                    if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId() && !hitSet.contains(e.getUniqueId())) {
+                    if (e instanceof LivingEntity le && e.getEntityId() != player.getEntityId()
+                            && !hitSet.contains(e.getUniqueId())) {
                         hitSet.add(e.getUniqueId());
                         DamageHandler.damageEntity(le, damage, Harmony.this);
                         SoundAbility.HandleDamage(player, le, stackCountPerHit);
@@ -221,5 +229,15 @@ public class Harmony extends SoundAbility implements AddonAbility {
 
     @Override
     public void stop() {
+    }
+
+    @Override
+    public String getDescription() {
+        return "Wypuszcza pocisk wibracji powietrza zadający obrażenia i nakładający poziom dźwięku na wroga. Można użyć wielokrotnie pod warunkiem zachowania idealnego rytmu.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Użyj LPM aby wystrzelić pocisk. Powtórz kliknięcie w odpowiednim momencie, aby wystrzelić kolejny pocisk.";
     }
 }

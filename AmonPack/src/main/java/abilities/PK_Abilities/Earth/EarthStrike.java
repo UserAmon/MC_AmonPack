@@ -64,7 +64,8 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
 
         int neededSources = hasTriOrbit ? 3 : 1;
         List<Block> candidates = new ArrayList<>();
-        for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), hasTriOrbit ? multiSourceRange : sourceRange)) {
+        for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(),
+                hasTriOrbit ? multiSourceRange : sourceRange)) {
             if (b.getLocation().getY() <= player.getLocation().getY() + 1
                     && b.getLocation().distance(player.getLocation()) >= 1.5
                     && EarthAbility.isEarthbendable(player, b)) {
@@ -96,16 +97,23 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
         this.damage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.Damage", 5.0);
         this.range = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.Range", 30.0);
         this.speed = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.Speed", 1.2);
-        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.SourceRange", 10.0);
-        this.multiSourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.MultiSourceRange", 12.0);
+        this.sourceRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.SourceRange",
+                10.0);
+        this.multiSourceRange = AmonPackPlugin.getAbilitiesConfig()
+                .getDouble("AmonPack.Earth.EarthStrike.MultiSourceRange", 12.0);
         this.splitCount = AmonPackPlugin.getAbilitiesConfig().getInt("AmonPack.Earth.EarthStrike.SplitCount", 5);
         this.splitRange = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.SplitRange", 8.0);
         this.splitDamage = AmonPackPlugin.getAbilitiesConfig().getDouble("AmonPack.Earth.EarthStrike.SplitDamage", 2.0);
 
-        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
-        this.hasSplitShot = (branch != null && (branch.hasUpgrade("EarthStrikeSplit") || branch.hasUpgrade("SplitShot")));
-        this.hasTriOrbit = (branch != null && (branch.hasUpgrade("EarthStrikeTriOrbit") || branch.hasUpgrade("TriOrbit")));
-        this.hasPiercing = (branch != null && (branch.hasUpgrade("EarthStrikePiercing") || branch.hasUpgrade("Piercing")));
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null)
+                ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName())
+                : null;
+        this.hasSplitShot = (branch != null
+                && (branch.hasUpgrade("EarthStrikeSplit") || branch.hasUpgrade("SplitShot")));
+        this.hasTriOrbit = (branch != null
+                && (branch.hasUpgrade("EarthStrikeTriOrbit") || branch.hasUpgrade("TriOrbit")));
+        this.hasPiercing = (branch != null
+                && (branch.hasUpgrade("EarthStrikePiercing") || branch.hasUpgrade("Piercing")));
     }
 
     @Override
@@ -141,7 +149,8 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
                 Location targetPos;
                 if (count > 1) {
                     double angle = orbitAngle + (i * (2 * Math.PI / count));
-                    Vector offset = right.clone().multiply(Math.cos(angle) * 0.8).add(up.clone().multiply(Math.sin(angle) * 0.8));
+                    Vector offset = right.clone().multiply(Math.cos(angle) * 0.8)
+                            .add(up.clone().multiply(Math.sin(angle) * 0.8));
                     targetPos = centerTarget.clone().add(offset);
                 } else {
                     targetPos = centerTarget.clone();
@@ -158,7 +167,8 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
                     floatingTempBlocks.add(tb);
                 }
 
-                player.getWorld().spawnParticle(Particle.BLOCK, current, 3, 0.15, 0.15, 0.15, 0.02, sourceMaterial.createBlockData());
+                player.getWorld().spawnParticle(Particle.BLOCK, current, 3, 0.15, 0.15, 0.15, 0.02,
+                        sourceMaterial.createBlockData());
             }
 
         } else if (state == State.FIRING) {
@@ -239,7 +249,8 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
         }
 
         public void progress() {
-            if (dead) return;
+            if (dead)
+                return;
 
             if (!isMini && hasPiercing && player != null && player.isOnline()) {
                 Vector eyeDir = player.getEyeLocation().getDirection();
@@ -283,14 +294,16 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
                 currentTempBlock.setRevertTime(150);
             }
 
-            loc.getWorld().spawnParticle(Particle.BLOCK, loc, isMini ? 2 : 4, 0.15, 0.15, 0.15, 0.02, sourceMaterial.createBlockData());
+            loc.getWorld().spawnParticle(Particle.BLOCK, loc, isMini ? 2 : 4, 0.15, 0.15, 0.15, 0.02,
+                    sourceMaterial.createBlockData());
             Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(120, 85, 50), isMini ? 0.7f : 1.1f);
             loc.getWorld().spawnParticle(Particle.DUST, loc, 1, 0, 0, 0, 0, dust);
 
             for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, isMini ? 0.9 : 1.2)) {
                 if (entity instanceof LivingEntity && !entity.getUniqueId().equals(player.getUniqueId())) {
                     LivingEntity target = (LivingEntity) entity;
-                    if (hitEntities.contains(target.getUniqueId())) continue;
+                    if (hitEntities.contains(target.getUniqueId()))
+                        continue;
 
                     hitEntities.add(target.getUniqueId());
                     double dmg = isMini ? splitDamage : damage;
@@ -309,7 +322,8 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
         }
 
         private void destroy(boolean triggerSplit) {
-            if (dead) return;
+            if (dead)
+                return;
             dead = true;
 
             if (currentTempBlock != null) {
@@ -317,7 +331,8 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
                 currentTempBlock = null;
             }
 
-            loc.getWorld().spawnParticle(Particle.BLOCK, loc, 12, 0.3, 0.3, 0.3, 0.05, sourceMaterial.createBlockData());
+            loc.getWorld().spawnParticle(Particle.BLOCK, loc, 12, 0.3, 0.3, 0.3, 0.05,
+                    sourceMaterial.createBlockData());
             loc.getWorld().playSound(loc, Sound.BLOCK_STONE_BREAK, 1.0f, 0.8f);
 
             if (triggerSplit && hasSplitShot && !isMini) {
@@ -379,10 +394,21 @@ public class EarthStrike extends EarthAbility implements AddonAbility {
     }
 
     @Override
-    public void load() {}
+    public void load() {
+    }
 
     @Override
     public void stop() {
         remove();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Podstawowy ruch magii Ziemi. Wyrywa odłamki ziemi którymi można celować i ciskać we wrogów.";
+    }
+
+    @Override
+    public String getInstructions() {
+        return "Przytrzymaj SHIFT aby zebrać skały. Puść aby wystrzelić.";
     }
 }

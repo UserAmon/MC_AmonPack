@@ -333,11 +333,11 @@ public class CrudeBomb extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Rzucasz granatem (LPM), który odbija się od ścian i wybucha po 2 sekundach zadając obrażenia i odrzucając cele. Po wybuchu pozostawia chmurę dymu, w której user jest niewidzialny, zyskuje +50 tymczasowego Max Chi oraz +5 Chi/s regeneracji, a wrogowie są oślepieni.";
-    }
+		return "Rzucasz granatem z opóźnionym zapłonem, który po wybuchu odrzuca wrogów i tworzy chmurę dymu maskującą użytkownika i regenerującą Chi.";
+	}
 
     @Override
     public String getInstructions() {
-        return "Kliknij LPM, aby rzucić granatem dymnym!";
-    }
+		return "Kliknij LPM, aby rzucić bombą dymną.";
+	}
 }

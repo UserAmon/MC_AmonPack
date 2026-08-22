@@ -243,11 +243,11 @@ public class Feintstep extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Ładujesz unik przytrzymując kucnięcie. Po wejściu w stan postawy zyskujesz przyspieszenie i automatycznie unikasz do 3 kolejnych ataków, wykonując zwinny odskok.";
-    }
+		return "Ładujesz unik przytrzymując kucnięcie. W stanie uniku automatycznie odskakujesz od nadchodzących ataków wręcz i umiejętności.";
+	}
 
     @Override
     public String getInstructions() {
-        return "Przytrzymaj Shift do naładowania, aby wejść w stan uników!";
-    }
+		return "Przytrzymaj SHIFT do naładowania, aby wejść w stan uników Feintstep.";
+	}
 }

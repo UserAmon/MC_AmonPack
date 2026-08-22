@@ -240,11 +240,11 @@ public class PoisonDagger extends ChiAbility implements AddonAbility {
 
     @Override
     public String getDescription() {
-        return "Rzucasz trującym sztyletem w stronę wroga (LPM). Trafiony cel otrzymuje obrażenia oraz efekty Trucizny II i Spowolnienia II na 5 sekund.";
-    }
+		return "Rzucasz trującym sztyletem w stronę wroga. Trafiony cel zostaje otruty i spowolniony.";
+	}
 
     @Override
     public String getInstructions() {
-        return "Kliknij LPM, aby rzucić zatrutym nożem!";
-    }
+		return "Kliknij LPM, aby rzucić zatrutym sztyletem.";
+	}
 }

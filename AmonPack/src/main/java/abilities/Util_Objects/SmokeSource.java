@@ -141,6 +141,9 @@ public class SmokeSource {
     }
 
     public boolean IsNearPlayer(Location playerloc, double speed, Player player) {
+        if (location == null || location.getWorld() == null || playerloc == null) {
+            return true;
+        }
         IsPulled = true;
         double dmg = 1.0;
         if (player != null) {

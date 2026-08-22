@@ -325,4 +325,14 @@ public class WaterTentacle extends WaterAbility implements AddonAbility {
     @Override
     public void stop() {
     }
+
+	@Override
+	public String getDescription() {
+		return "Formuje z wody pionową, falującą mackę, która na komendę gracza wyprowadza dalekie uderzenie we wroga.";
+	}
+
+	@Override
+	public String getInstructions() {
+		return "Przytrzymaj SHIFT na wodzie aby wznieść mackę, a następnie kliknij LPM aby uderzyć.";
+	}
 }

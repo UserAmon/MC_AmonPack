@@ -321,11 +321,11 @@ public class WaterFist extends WaterAbility implements AddonAbility {
 
 	@Override
 	public String getDescription() {
-		return "Summons a floating liquid fist on your main hand from a nearby water source. Once loaded, left-click to throw punches (3 uses). The third strike freezes the target in ice.";
+		return "Unosi ze źródła wody potężną wodną pięść na dłoni gracza, pozwalającą na wyprowadzanie potężnych ciosów z odrzutem.";
 	}
 
 	@Override
 	public String getInstructions() {
-		return "Hold sneak to draw water from within 20 blocks. Release sneak to keep the fist, left-click to punch (max 3 times, 1s cooldown between punches).";
+		return "Przytrzymaj SHIFT patrząc na wodę aby uformować pięść, a następnie klikaj LPM aby uderzać.";
 	}
 }
