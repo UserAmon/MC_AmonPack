@@ -195,7 +195,6 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 			}
 		}
 		if (AbilityState == State.USED) {
-			player.sendMessage("leci");
 			interval++;
 			if (interval >= 2) {
 				interval = 0;
@@ -238,18 +237,15 @@ public class EarthHammer extends EarthAbility implements AddonAbility {
 				}
 				if (BendableBlocks.size() < 2) {
 					Methods.spawnFallingBlocks(Projectile, Material.DIRT, 12, 2.2, player);
-					player.sendMessage("koniec bo juz bendable blokow nie ma");
 					remove();
 				}
 			}
 			Block stop = Projectile.clone().add(0, 2, 0).getBlock();
 			if (!EarthAbility.isEarthbendable(player, stop) && !stop.getType().isAir()) {
-				player.sendMessage("koniec bo bendable");
 				remove();
 			}
 			if (Projectile.distance(origin) > range) {
 				Methods.spawnFallingBlocks(Projectile, Material.DIRT, 12, 2.2, player);
-				player.sendMessage("koniec bo range");
 				remove();
 			}
 		}
