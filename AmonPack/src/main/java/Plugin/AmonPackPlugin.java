@@ -66,19 +66,22 @@ public class AmonPackPlugin extends JavaPlugin {
 	public FileConfiguration config;
 
 	public static boolean ENABLE_BENDING_ABILITIES = true;
+	public static boolean ENABLE_RPG_SYSTEMS = true;
+	public static boolean ENABLE_SLOW_PROGRESSION = ENABLE_RPG_SYSTEMS;
 	public static boolean ENABLE_DATABASE = false;
-	public static boolean ENABLE_SKILL_TREE = ENABLE_DATABASE;
-	public static boolean ENABLE_DUNGEONS = ENABLE_DATABASE;
-	public static boolean ENABLE_RPG_GATHERING = ENABLE_DATABASE;
-	public static boolean ENABLE_BOUNTIES = ENABLE_DATABASE;
-	public static boolean ENABLE_PARTY = ENABLE_DATABASE;
-	public static boolean ENABLE_WORLD_GEN = ENABLE_DATABASE;
-	public static boolean ENABLE_ARMOR_EFFECTS = ENABLE_DATABASE;
+	public static boolean ENABLE_SKILL_TREE = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
+	public static boolean ENABLE_DUNGEONS = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
+	public static boolean ENABLE_RPG_GATHERING = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
+	public static boolean ENABLE_BOUNTIES = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
+	public static boolean ENABLE_PARTY = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
+	public static boolean ENABLE_WORLD_GEN = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
+	public static boolean ENABLE_ARMOR_EFFECTS = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
 
 	public static CustomContent.Pack.PackManager packManager;
 	public static CustomContent.Items.CustomItemManager customItemManager;
 	public static CustomContent.Blocks.CustomBlockManager customBlockManager;
 	public static CustomContent.Bosses.BossManager bossManager;
+	public static RPG.Progression.ProgressionManager progressionManager;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -137,12 +140,13 @@ public class AmonPackPlugin extends JavaPlugin {
 			AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
 		}
 
-		SkillTreeFile = new File(getDataFolder(), "skilltree.yml");
+		File rpgFolder = new File(getDataFolder(), "RPG");
+		SkillTreeFile = new File(rpgFolder, "skilltree.yml");
 		if (SkillTreeFile.exists()) {
 			setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
 		}
 
-		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
+		LevelConfigFile = new File(rpgFolder, "Levels.yml");
 		if (LevelConfigFile.exists()) {
 			LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 		}
@@ -213,6 +217,11 @@ public class AmonPackPlugin extends JavaPlugin {
 			BossScrollManager.getInstance().reloadConfig();
 		}
 
+		// 7. Przeładowanie Slow Progression
+		if (ENABLE_SLOW_PROGRESSION && RPG.Progression.ProgressionManager.getInstance() != null) {
+			RPG.Progression.ProgressionManager.getInstance().reload();
+		}
+
 		getLogger().info("Pełny reload konfiguracji oraz instancji AmonPack zakończony sukcesem!");
 	}
 
@@ -257,15 +266,20 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 		String[] resourcesToSave = {
 				"abilities_config.yml",
-				"BossConfig.yml",
-				"Bounties.yml",
-				"Crafting_Items.yml",
-				"dung_build.yml",
-				"skilltree.yml",
-				"Levels.yml",
+				"pack/pack_config.yml",
+				"pack/custom_items.yml",
+				"pack/custom_blocks.yml",
+				"pack/custom_bosses.yml",
+				"progression/slow_progression.yml",
+				"RPG/Levels.yml",
+				"RPG/skilltree.yml",
+				"RPG/Crafting_Items.yml",
+				"RPG/Bounties.yml",
+				"RPG/BossConfig.yml",
+				"dungeons/dung_build.yml",
 				"dungeons/dungeon_config.yml",
 				"dungeons/przykladowy_dungeon.yml",
-				"dungeons/lodowa_krypta.yml",
+				"dungeons/makapu_bandyci.yml",
 				"dungeons/dokumentacja_dungeonow.yml"
 		};
 		for (String res : resourcesToSave) {
@@ -284,13 +298,20 @@ public class AmonPackPlugin extends JavaPlugin {
 		saveDefaultDungeonResources();
 
 		// --- 0.1 Wczytanie konfiguracji poziomów przed utworzeniem bazy SQL ---
-		LevelConfigFile = new File(getDataFolder(), "Levels.yml");
+		File rpgDir = new File(getDataFolder(), "RPG");
+		if (!rpgDir.exists()) {
+			rpgDir.mkdirs();
+		}
+		LevelConfigFile = new File(rpgDir, "Levels.yml");
 		if (!LevelConfigFile.exists()) {
-			saveResource("Levels.yml", false);
+			saveResource("RPG/Levels.yml", false);
 		}
 		LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 		try {
-			java.io.InputStream defLevelsStream = getResource("Levels.yml");
+			java.io.InputStream defLevelsStream = getResource("RPG/Levels.yml");
+			if (defLevelsStream == null) {
+				defLevelsStream = getResource("Levels.yml");
+			}
 			if (defLevelsStream != null) {
 				java.io.Reader defReader = new java.io.InputStreamReader(defLevelsStream,
 						java.nio.charset.StandardCharsets.UTF_8);
@@ -354,9 +375,9 @@ public class AmonPackPlugin extends JavaPlugin {
 			configs_menager = new ConfigsMenager(getDataFolder());
 			configs_menager.CreateMenagers();
 
-			File craftingItemsFile = new File(getDataFolder(), "Crafting_Items.yml");
+			File craftingItemsFile = new File(rpgDir, "Crafting_Items.yml");
 			if (!craftingItemsFile.exists()) {
-				saveResource("Crafting_Items.yml", false);
+				saveResource("RPG/Crafting_Items.yml", false);
 			}
 			farmmenager = new FarmMenager();
 			combatMenager = new CombatMenager();
@@ -364,16 +385,16 @@ public class AmonPackPlugin extends JavaPlugin {
 
 		// --- 4. SKILL TREE & LEVELS ---
 		if (ENABLE_SKILL_TREE) {
-			SkillTreeFile = new File(getDataFolder(), "skilltree.yml");
+			SkillTreeFile = new File(rpgDir, "skilltree.yml");
 			if (!SkillTreeFile.exists()) {
-				saveResource("skilltree.yml", false);
+				saveResource("RPG/skilltree.yml", false);
 			}
 			setSkillTreeConfig(YamlConfiguration.loadConfiguration(SkillTreeFile));
 			saveSkillTreeConfig();
 
-			LevelConfigFile = new File(getDataFolder(), "Levels.yml");
+			LevelConfigFile = new File(rpgDir, "Levels.yml");
 			if (!LevelConfigFile.exists()) {
-				saveResource("Levels.yml", false);
+				saveResource("RPG/Levels.yml", false);
 			}
 			LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 
@@ -509,12 +530,21 @@ public class AmonPackPlugin extends JavaPlugin {
 			this.getCommand("amon").setTabCompleter(new CustomContent.Commands.AmonTabCompleter(customItemManager, customBlockManager, bossManager));
 		}
 
+		// --- 8. SYSTEM SLOW PROGRESSION ---
+		if (ENABLE_SLOW_PROGRESSION) {
+			progressionManager = new RPG.Progression.ProgressionManager();
+			progressionManager.load();
+		}
+
 		System.out.println("Amonpack Załadowany!");
 	}
 
 	@Override
 	public void onDisable() {
 		try {
+			if (ENABLE_SLOW_PROGRESSION && progressionManager != null) {
+				progressionManager.unload();
+			}
 			if (bossManager != null) {
 				bossManager.unload();
 			}
@@ -724,8 +754,9 @@ public class AmonPackPlugin extends JavaPlugin {
 
 			if (ENABLE_SKILL_TREE) {
 				if (configpath != null) {
-					LevelConfig = YamlConfiguration.loadConfiguration(new File(configpath, "Levels.yml"));
-					SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(configpath, "skilltree.yml"));
+					File rpgDir = new File(configpath, "RPG");
+					LevelConfig = YamlConfiguration.loadConfiguration(new File(rpgDir, "Levels.yml"));
+					SkillTreeConfig = YamlConfiguration.loadConfiguration(new File(rpgDir, "skilltree.yml"));
 				}
 				if (levelsBending != null) {
 					levelsBending.LoadData();

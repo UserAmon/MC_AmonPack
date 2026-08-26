@@ -28,9 +28,12 @@ public class BossManager {
 
     public void load() {
         bosses.clear();
-        File file = new File(AmonPackPlugin.plugin.getDataFolder(), "custom_bosses.yml");
+        File packFolder = new File(AmonPackPlugin.plugin.getDataFolder(), "pack");
+        if (!packFolder.exists()) packFolder.mkdirs();
+
+        File file = new File(packFolder, "custom_bosses.yml");
         if (!file.exists()) {
-            AmonPackPlugin.plugin.saveResource("custom_bosses.yml", false);
+            AmonPackPlugin.plugin.saveResource("pack/custom_bosses.yml", false);
         }
 
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);

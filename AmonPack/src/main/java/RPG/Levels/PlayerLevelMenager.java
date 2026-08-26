@@ -441,6 +441,7 @@ public class PlayerLevelMenager {
                                 ChatColor.GREEN + "Osiągnąłeś poziom " + (actualLevel + 1) + " " + skill.getType()
                                         + "!",
                                 ChatColor.YELLOW + "Odbierz swoje nagrody!", 20, 80, 20);
+                        Bukkit.getPluginManager().callEvent(new RPG.Progression.event.PlayerSkillLevelUpEvent(player, skill.getType(), actualLevel + 1));
                     } else {
                         neededExp = reqExp;
                         break;

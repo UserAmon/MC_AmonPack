@@ -1,11 +1,14 @@
 package CustomContent.Bosses;
 
 import CustomContent.Items.CustomItemManager;
+import RPG.Progression.event.CustomBossDefeatEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -13,7 +16,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Random;
+import java.util.*;
 
 public class BossListener implements Listener {
 
@@ -31,6 +34,13 @@ public class BossListener implements Listener {
         if (event.getEntity() instanceof LivingEntity victim) {
             ActiveBossInstance boss = bossManager.getActiveBoss(victim);
             if (boss != null) {
+                // Record damager player
+                if (event.getDamager() instanceof Player player) {
+                    boss.addDamager(player.getUniqueId());
+                } else if (event.getDamager() instanceof Projectile proj && proj.getShooter() instanceof Player shooter) {
+                    boss.addDamager(shooter.getUniqueId());
+                }
+
                 // Trigger on hit skills
                 for (CustomBoss.BossSkill skill : boss.getTemplate().getSkills()) {
                     if ("ON_HIT".equalsIgnoreCase(skill.trigger)) {
@@ -61,6 +71,27 @@ public class BossListener implements Listener {
         String killerName = killer != null ? killer.getName() : "Bohaterów";
 
         Bukkit.broadcastMessage("§6§l[AmonPack] §eBoss " + boss.getTemplate().getDisplayName() + " §6został pokonany przez §a" + killerName + "§6!");
+
+        // Collect all participants (damagers + nearby players within range)
+        Set<Player> participants = new HashSet<>();
+        if (killer != null) {
+            participants.add(killer);
+        }
+        for (UUID uuid : boss.getDamagers()) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null && p.isOnline()) {
+                participants.add(p);
+            }
+        }
+        double range = Math.max(35.0, boss.getTemplate().getFollowRange());
+        for (Player p : loc.getWorld().getPlayers()) {
+            if (p.getLocation().distance(loc) <= range) {
+                participants.add(p);
+            }
+        }
+
+        // Fire progression custom boss defeat event
+        Bukkit.getPluginManager().callEvent(new CustomBossDefeatEvent(boss.getTemplate(), (Mob) event.getEntity(), killer, participants));
 
         // Dropy
         for (CustomBoss.BossDrop drop : boss.getTemplate().getDrops()) {

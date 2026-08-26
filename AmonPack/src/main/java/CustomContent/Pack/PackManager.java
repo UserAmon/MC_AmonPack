@@ -61,9 +61,12 @@ public class PackManager {
     }
 
     private void loadConfig() {
-        File cfgFile = new File(AmonPackPlugin.plugin.getDataFolder(), "pack_config.yml");
+        File packFolder = new File(AmonPackPlugin.plugin.getDataFolder(), "pack");
+        if (!packFolder.exists()) packFolder.mkdirs();
+
+        File cfgFile = new File(packFolder, "pack_config.yml");
         if (!cfgFile.exists()) {
-            AmonPackPlugin.plugin.saveResource("pack_config.yml", false);
+            AmonPackPlugin.plugin.saveResource("pack/pack_config.yml", false);
         }
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(cfgFile);
         this.httpPort = cfg.getInt("PackServer.Port", 8085);
@@ -125,12 +128,15 @@ public class PackManager {
 
         for (String file : sampleFiles) {
             File target = new File(customDir, file);
-            try (InputStream in = AmonPackPlugin.plugin.getResource("custom/" + file)) {
-                if (in != null) {
+            InputStream in = AmonPackPlugin.plugin.getResource("pack/custom/" + file);
+            if (in == null) {
+                in = AmonPackPlugin.plugin.getResource("custom/" + file);
+            }
+            if (in != null) {
+                try {
                     Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (Exception e) {
-                Bukkit.getLogger().fine("[AmonPack] Note: Could not auto-export " + file);
+                    in.close();
+                } catch (Exception ignored) {}
             }
         }
     }

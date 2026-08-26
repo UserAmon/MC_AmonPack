@@ -29,15 +29,20 @@ public class DungBuildManager implements Listener {
     private static FileConfiguration playersConfig;
 
     public static void init() {
+        File dungDir = new File(AmonPackPlugin.plugin.getDataFolder(), "dungeons");
+        if (!dungDir.exists()) {
+            dungDir.mkdirs();
+        }
+
         if (configFile == null) {
-            configFile = new File(AmonPackPlugin.plugin.getDataFolder(), "dung_build.yml");
+            configFile = new File(dungDir, "dung_build.yml");
             if (!configFile.exists()) {
-                AmonPackPlugin.plugin.saveResource("dung_build.yml", false);
+                AmonPackPlugin.plugin.saveResource("dungeons/dung_build.yml", false);
             }
             config = YamlConfiguration.loadConfiguration(configFile);
         }
         if (playersFile == null) {
-            playersFile = new File(AmonPackPlugin.plugin.getDataFolder(), "dung_build_players.yml");
+            playersFile = new File(dungDir, "dung_build_players.yml");
             if (!playersFile.exists()) {
                 try {
                     playersFile.createNewFile();

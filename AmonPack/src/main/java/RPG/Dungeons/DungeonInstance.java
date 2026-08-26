@@ -1803,6 +1803,15 @@ public class DungeonInstance {
             }
         }
 
+        List<Player> completedPlayers = new ArrayList<>();
+        for (UUID uuid : players) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null && p.isOnline()) {
+                completedPlayers.add(p);
+            }
+        }
+        Bukkit.getPluginManager().callEvent(new RPG.Progression.event.DungeonCompleteEvent(this, template, completedPlayers));
+
         cleanupWorldAndBackups();
     }
 

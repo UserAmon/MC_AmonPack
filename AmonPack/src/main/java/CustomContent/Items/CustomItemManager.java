@@ -31,9 +31,12 @@ public class CustomItemManager {
 
     public void load() {
         items.clear();
-        File file = new File(AmonPackPlugin.plugin.getDataFolder(), "custom_items.yml");
+        File packFolder = new File(AmonPackPlugin.plugin.getDataFolder(), "pack");
+        if (!packFolder.exists()) packFolder.mkdirs();
+
+        File file = new File(packFolder, "custom_items.yml");
         if (!file.exists()) {
-            AmonPackPlugin.plugin.saveResource("custom_items.yml", false);
+            AmonPackPlugin.plugin.saveResource("pack/custom_items.yml", false);
         }
 
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);

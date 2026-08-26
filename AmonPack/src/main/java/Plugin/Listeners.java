@@ -806,6 +806,16 @@ public class Listeners implements Listener {
             if (Objects.equals(event.getInventory().getHolder(), CraftingMenager.CraftingGui)) {
                 event.setCancelled(true);
                 ItemMold mold = CraftingMenager.getItemMoldByItem(clickeditem);
+                if (mold == null) return;
+
+                if (RPG.Progression.ProgressionManager.getInstance() != null) {
+                    RPG.Progression.model.PlayerProgressionData progData = RPG.Progression.ProgressionManager.getInstance().getProgressionService().getPlayerData(p);
+                    if (progData != null && !RPG.Progression.ProgressionManager.getInstance().getRestrictionService().isAllowedCraftableMold(p, progData, mold.getWeaponID())) {
+                        p.closeInventory();
+                        return;
+                    }
+                }
+
                 List<ItemStack> requiredItems = mold.getItemsRequiredToShapeMold();
                 boolean hasAll = true;
                 for (ItemStack required : requiredItems) {

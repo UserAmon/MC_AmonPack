@@ -29,14 +29,19 @@ public class CustomBlockManager {
     public CustomBlockManager(PackManager packManager, CustomItemManager itemManager) {
         this.packManager = packManager;
         this.itemManager = itemManager;
-        this.storageFile = new File(AmonPackPlugin.plugin.getDataFolder(), "placed_blocks.yml");
+        File packFolder = new File(AmonPackPlugin.plugin.getDataFolder(), "pack");
+        if (!packFolder.exists()) packFolder.mkdirs();
+        this.storageFile = new File(packFolder, "placed_blocks.yml");
     }
 
     public void load() {
         customBlocks.clear();
-        File file = new File(AmonPackPlugin.plugin.getDataFolder(), "custom_blocks.yml");
+        File packFolder = new File(AmonPackPlugin.plugin.getDataFolder(), "pack");
+        if (!packFolder.exists()) packFolder.mkdirs();
+
+        File file = new File(packFolder, "custom_blocks.yml");
         if (!file.exists()) {
-            AmonPackPlugin.plugin.saveResource("custom_blocks.yml", false);
+            AmonPackPlugin.plugin.saveResource("pack/custom_blocks.yml", false);
         }
 
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);

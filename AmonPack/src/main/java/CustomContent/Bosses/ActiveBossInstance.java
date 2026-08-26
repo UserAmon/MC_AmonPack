@@ -19,6 +19,9 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class ActiveBossInstance {
@@ -28,6 +31,7 @@ public class ActiveBossInstance {
     private final UUID uuid;
     private final CustomBoss template;
     private final Mob entity;
+    private final Set<UUID> damagers = new HashSet<>();
     private ItemDisplay displayEntity;
     private BossBar bossBar;
     private BukkitTask task;
@@ -205,4 +209,14 @@ public class ActiveBossInstance {
     public UUID getUuid() { return uuid; }
     public CustomBoss getTemplate() { return template; }
     public Mob getEntity() { return entity; }
+
+    public void addDamager(UUID playerUuid) {
+        if (playerUuid != null) {
+            damagers.add(playerUuid);
+        }
+    }
+
+    public Set<UUID> getDamagers() {
+        return Collections.unmodifiableSet(damagers);
+    }
 }

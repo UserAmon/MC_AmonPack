@@ -534,5 +534,5 @@ final_delivery_requirements:
     - "Example configuration"
 
 important:
-  - "create seperate folder for it"
+  - "create seperate folder for it, in amonpackplugin.java create boolean variable that turns on/off every RPG mechanics apart from ProjektKorra abilities"
   

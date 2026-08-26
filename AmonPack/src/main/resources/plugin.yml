@@ -42,3 +42,7 @@ commands:
     usage: /<command>
     description: "Zarzadzanie customowymi modelami, itemami, blokami i bossami"
     aliases: [apack, amoncustom]
+  progression:
+    usage: /<command>
+    description: "Glowny system progresji etapow RPG"
+    aliases: [progress, quests, stage, zadania]

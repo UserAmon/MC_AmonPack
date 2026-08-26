@@ -1,0 +1,1407 @@
+# ===================================================================
+#             AMONPACK - KONFIGURACJA SYSTEMU SLOW PROGRESSION
+# ===================================================================
+# Każdy etap (Stage) zawiera zestaw wymaganych zadań (required: true).
+# Ukończenie wszystkich wymaganych zadań automatycznie odblokowuje kolejny etap.
+# ===================================================================
+
+stages:
+
+  WOODEN:
+    display_name: "&6&lEtap Drewniany"
+    description: "&7Początki przetrwania, zbieractwo, pierwsze rzemiosło i budowa obozu."
+    completion:
+      unlock: STONE
+      message: "&6&l[AmonPack] &a&lETAP DREWNIANY UKOŃCZONY! &eOdblokowano: &7Etap Kamienny"
+    exploration_biomes:
+      - Plains
+      - Forest
+      - Birch Forest
+      - Meadow
+    quests:
+      # --- Kategoria: CORE ---
+      wooden_break_wood:
+        title: "Wykop drewno x5"
+        description: "Zdobądź pierwsze pnie drzew, aby móc stworzyć stół rzemieślniczy."
+        category: CORE
+        objective_type: destroy_block
+        target: WOOD
+        amount: 5
+        required: true
+        icon: OAK_LOG
+        reward:
+          exp: 15
+      wooden_craft_crafting_table:
+        title: "Stwórz Stół Rzemieślniczy"
+        description: "Podstawowe narzędzie każdego wędrowca."
+        category: CORE
+        objective_type: craft_item
+        target: CRAFTING_TABLE
+        amount: 1
+        required: true
+        icon: CRAFTING_TABLE
+        reward:
+          exp: 20
+      wooden_craft_wooden_axe:
+        title: "Stwórz drewnianą siekierę"
+        description: "Przyspiesz ścinanie drzew."
+        category: CORE
+        objective_type: craft_item
+        target: WOODEN_AXE
+        amount: 1
+        required: true
+        icon: WOODEN_AXE
+        reward:
+          exp: 15
+      wooden_craft_wooden_pickaxe:
+        title: "Stwórz drewniany kilof"
+        description: "Narzędzie potrzebne do wykopania pierwszego bruku."
+        category: CORE
+        objective_type: craft_item
+        target: WOODEN_PICKAXE
+        amount: 1
+        required: true
+        icon: WOODEN_PICKAXE
+        reward:
+          exp: 15
+      wooden_craft_wooden_sword:
+        title: "Stwórz drewniany miecz"
+        description: "Podstawowa broń do samoobrony przed potworami nocy."
+        category: CORE
+        objective_type: craft_item
+        target: WOODEN_SWORD
+        amount: 1
+        required: true
+        icon: WOODEN_SWORD
+        reward:
+          exp: 15
+      wooden_craft_wooden_shovel:
+        title: "Stwórz drewnianą łopatę"
+        description: "Narzędzie do szybkiego kopania ziemi i żwiru."
+        category: CORE
+        objective_type: craft_item
+        target: WOODEN_SHOVEL
+        amount: 1
+        required: true
+        icon: WOODEN_SHOVEL
+        reward:
+          exp: 15
+      wooden_collect_wood_64:
+        title: "Zbierz drewno x64"
+        description: "Zgromadź zapas surowca na budowę schronienia."
+        category: CORE
+        objective_type: collect_item
+        target: WOOD
+        amount: 64
+        required: true
+        icon: OAK_WOOD
+        reward:
+          money: 50.0
+          exp: 30
+      wooden_plant_saplings:
+        title: "Zasadź sadzonki drzew x3"
+        description: "Dbaj o odnawianie lasu wokół swojej bazy."
+        category: CORE
+        objective_type: plant_crop
+        target: SAPLING
+        amount: 3
+        required: true
+        icon: OAK_SAPLING
+        reward:
+          exp: 20
+
+      # --- Kategoria: FARMING_HERBALISM ---
+      wooden_collect_wheat_seeds:
+        title: "Zbierz nasiona pszenicy x10"
+        description: "Ścinaj trawę, aby zdobyć nasiona pod uprawę."
+        category: FARMING_HERBALISM
+        objective_type: collect_item
+        target: WHEAT_SEEDS
+        amount: 10
+        required: true
+        icon: WHEAT_SEEDS
+        reward:
+          exp: 15
+      wooden_craft_wooden_hoe:
+        title: "Stwórz drewnianą motykę"
+        description: "Narzędzie do przygotowywania ziemi uprawnej."
+        category: FARMING_HERBALISM
+        objective_type: craft_item
+        target: WOODEN_HOE
+        amount: 1
+        required: true
+        icon: WOODEN_HOE
+        reward:
+          exp: 15
+      wooden_prepare_farmland:
+        title: "Przygotuj ziemię uprawną x10"
+        description: "Użyj motyki na blokach ziemi w pobliżu wody."
+        category: FARMING_HERBALISM
+        objective_type: place_block
+        target: FARMLAND
+        amount: 10
+        required: true
+        icon: FARMLAND
+        reward:
+          exp: 20
+      wooden_plant_wheat:
+        title: "Zasiej nasiona pszenicy x5"
+        description: "Rozpocznij własną uprawę żywności."
+        category: FARMING_HERBALISM
+        objective_type: plant_crop
+        target: WHEAT
+        amount: 5
+        required: true
+        icon: WHEAT_SEEDS
+        reward:
+          exp: 20
+      wooden_harvest_wheat:
+        title: "Zbierz dojrzałą pszenicę x5"
+        description: "Poczekaj aż plony dojrzeją i zbierz je."
+        category: FARMING_HERBALISM
+        objective_type: harvest_crop
+        target: WHEAT
+        amount: 5
+        required: true
+        icon: WHEAT
+        reward:
+          exp: 25
+      wooden_craft_bread:
+        title: "Upiecz chleb x3"
+        description: "Wytwórz pożywny chleb z zebranej pszenicy."
+        category: FARMING_HERBALISM
+        objective_type: craft_item
+        target: BREAD
+        amount: 3
+        required: true
+        icon: BREAD
+        reward:
+          exp: 20
+      wooden_eat_bread:
+        title: "Zjedz chleb x3"
+        description: "Zaspokój głód świeżo upieczonym chlebem."
+        category: FARMING_HERBALISM
+        objective_type: use_item
+        target: BREAD
+        amount: 3
+        required: true
+        icon: BREAD
+        reward:
+          exp: 15
+      wooden_craft_composter:
+        title: "Stwórz kompostownik"
+        description: "Używaj resztek roślinnych do tworzenia mączki kostnej."
+        category: FARMING_HERBALISM
+        objective_type: craft_item
+        target: COMPOSTER
+        amount: 1
+        required: true
+        icon: COMPOSTER
+        reward:
+          exp: 20
+      wooden_use_composter:
+        title: "Użyj kompostownika"
+        description: "Wrzuć materiał organiczny do kompostownika."
+        category: FARMING_HERBALISM
+        objective_type: use_block
+        target: COMPOSTER
+        amount: 1
+        required: true
+        icon: COMPOSTER
+        reward:
+          exp: 20
+      wooden_use_bonemeal:
+        title: "Użyj mączki kostnej na uprawie"
+        description: "Przyspiesz wzrost roślin za pomocą mączki."
+        category: FARMING_HERBALISM
+        objective_type: use_item
+        target: BONE_MEAL
+        amount: 1
+        required: true
+        icon: BONE_MEAL
+        reward:
+          exp: 15
+
+      # --- Kategoria: COOKING_STORAGE_SURVIVAL ---
+      wooden_craft_chest:
+        title: "Stwórz skrzynię"
+        description: "Miejsce na bezpieczne przechowywanie zebranych dóbr."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: craft_item
+        target: CHEST
+        amount: 1
+        required: true
+        icon: CHEST
+        reward:
+          exp: 20
+      wooden_mine_cobblestone:
+        title: "Wykop bruk x8"
+        description: "Wydobądź kamień pod budowę pieca."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: destroy_block
+        target: COBBLESTONE
+        amount: 8
+        required: true
+        icon: COBBLESTONE
+        reward:
+          exp: 20
+      wooden_craft_furnace:
+        title: "Stwórz piec"
+        description: "Piec do wytopu surowców i pieczenia potraw."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: craft_item
+        target: FURNACE
+        amount: 1
+        required: true
+        icon: FURNACE
+        reward:
+          exp: 25
+      wooden_obtain_coal:
+        title: "Zdobądź węgiel kamienny lub drzewny x8"
+        description: "Wydobądź węgiel lub wypal węgiel drzewny w piecu."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: collect_item
+        target: COAL
+        amount: 8
+        required: true
+        icon: COAL
+        reward:
+          exp: 20
+      wooden_cook_food:
+        title: "Upiecz jedzenie w piecu x4"
+        description: "Przygotuj ciepły posiłek, który da Ci więcej siły."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: cook_item
+        target: FOOD
+        amount: 4
+        required: true
+        icon: COOKED_BEEF
+        reward:
+          exp: 20
+      wooden_craft_campfire:
+        title: "Stwórz ognisko"
+        description: "Ognisko oświetli Twój obóz i pozwoli piec bez paliwa."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: craft_item
+        target: CAMPFIRE
+        amount: 1
+        required: true
+        icon: CAMPFIRE
+        reward:
+          exp: 20
+      wooden_use_campfire:
+        title: "Użyj ogniska"
+        description: "Połóż jedzenie na ruszcie ogniska."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: use_block
+        target: CAMPFIRE
+        amount: 1
+        required: true
+        icon: CAMPFIRE
+        reward:
+          exp: 15
+      wooden_craft_bed:
+        title: "Stwórz łóżko"
+        description: "Umożliwia przeczekanie nocy i wyznaczenie punktu odrodzenia."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: craft_item
+        target: WHITE_BED
+        amount: 1
+        required: true
+        icon: RED_BED
+        reward:
+          exp: 25
+      wooden_use_bed:
+        title: "Użyj łóżka"
+        description: "Połóż się spać w bezpiecznym schronieniu."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: use_block
+        target: BED
+        amount: 1
+        required: true
+        icon: RED_BED
+        reward:
+          exp: 20
+      wooden_gain_exp_5:
+        title: "Zdobądź 5 poziomów / punktów EXP"
+        description: "Doświadczenie zdobywasz z kopania, walki i rzemiosła."
+        category: COOKING_STORAGE_SURVIVAL
+        objective_type: gain_experience
+        target: EXP
+        amount: 5
+        required: true
+        icon: EXPERIENCE_BOTTLE
+        reward:
+          money: 25.0
+
+      # --- Kategoria: ANIMALS_FISHING ---
+      wooden_collect_seeds_2:
+        title: "Zbierz nasiona x2"
+        description: "Przydadzą się do zwabienia i rozmnażania kurczaków."
+        category: ANIMALS_FISHING
+        objective_type: collect_item
+        target: SEEDS
+        amount: 2
+        required: true
+        icon: WHEAT_SEEDS
+        reward:
+          exp: 10
+      wooden_breed_chickens:
+        title: "Rozmnażaj kurczaki"
+        description: "Nakarm dwa kurczaki nasionami, aby wyhodować pisklę."
+        category: ANIMALS_FISHING
+        objective_type: breed_entity
+        target: CHICKEN
+        amount: 1
+        required: true
+        icon: EGG
+        reward:
+          exp: 20
+      wooden_collect_wheat_animals:
+        title: "Zbierz pszenicę x2"
+        description: "Potrzebna do rozmnażania owiec i krów."
+        category: ANIMALS_FISHING
+        objective_type: collect_item
+        target: WHEAT
+        amount: 2
+        required: true
+        icon: WHEAT
+        reward:
+          exp: 10
+      wooden_breed_sheep:
+        title: "Rozmnażaj owce"
+        description: "Nakarm dwie owce pszenicą."
+        category: ANIMALS_FISHING
+        objective_type: breed_entity
+        target: SHEEP
+        amount: 1
+        required: true
+        icon: WHITE_WOOL
+        reward:
+          exp: 20
+      wooden_craft_fishing_rod:
+        title: "Stwórz wędkę"
+        description: "Narzędzie do połowu ryb i cennych skarbów z wody."
+        category: ANIMALS_FISHING
+        objective_type: craft_item
+        target: FISHING_ROD
+        amount: 1
+        required: true
+        icon: FISHING_ROD
+        reward:
+          exp: 20
+      wooden_catch_fish:
+        title: "Złów rybę"
+        description: "Zarzuć spławik do rzeki lub oceanu."
+        category: ANIMALS_FISHING
+        objective_type: catch_fish
+        target: FISH
+        amount: 1
+        required: true
+        icon: COD
+        reward:
+          exp: 25
+
+      # --- Kategoria: EXPLORATION ---
+      wooden_discover_plains:
+        title: "Odkryj Równiny (Plains)"
+        description: "Odwiedź otwarty biom trawiasty."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: PLAINS
+        amount: 1
+        required: true
+        icon: GRASS_BLOCK
+        reward:
+          exp: 25
+      wooden_discover_forest:
+        title: "Odkryj Las (Forest)"
+        description: "Zbadaj gęsty las pełen dębów i brzóz."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: FOREST
+        amount: 1
+        required: true
+        icon: OAK_SAPLING
+        reward:
+          exp: 25
+      wooden_discover_basic_biome:
+        title: "Odkryj Brzozowy Las lub Łąkę"
+        description: "Rozszerz mapę o dodatkowy podstawowy biom."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: BIRCH_FOREST,MEADOW
+        amount: 1
+        required: true
+        icon: BIRCH_SAPLING
+        reward:
+          exp: 25
+      wooden_travel_distance:
+        title: "Oddal się 150 bloków od punktu startu"
+        description: "Wyrusz na krótką ekspedycję po okolicy."
+        category: EXPLORATION
+        objective_type: travel_distance
+        target: DISTANCE
+        amount: 150
+        required: true
+        icon: COMPASS
+        reward:
+          money: 50.0
+          exp: 30
+
+      # --- Kategoria: COMBAT ---
+      wooden_kill_hostile_5:
+        title: "Pokonaj potwory nocy x5"
+        description: "Zlikwiduj zombie, szkielety lub pająki zagrażające Twojemu obozowi."
+        category: COMBAT
+        objective_type: kill_entity
+        target: HOSTILE
+        amount: 5
+        required: true
+        icon: ZOMBIE_HEAD
+        reward:
+          exp: 30
+      wooden_survive_night:
+        title: "Przetrwaj pierwszą noc"
+        description: "Przeżyj do wschodu słońca lub prześpij noc w łóżku."
+        category: COMBAT
+        objective_type: survive_night
+        target: NIGHT
+        amount: 1
+        required: true
+        icon: CLOCK
+        reward:
+          exp: 30
+      wooden_craft_leather_armor:
+        title: "Stwórz pełny skórzany pancerz"
+        description: "Wytwórz skórzany hełm, napierśnik, spodnie i buty."
+        category: COMBAT
+        objective_type: craft_item
+        target: ARMOR_SET_LEATHER
+        amount: 1
+        required: true
+        icon: LEATHER_CHESTPLATE
+        reward:
+          money: 50.0
+          exp: 40
+      wooden_gain_combat_exp:
+        title: "Zdobądź 10 punktów EXP w walce"
+        description: "Doświadczenie bojowe pozwoli Ci opanować pierwsze techniki walki."
+        category: COMBAT
+        objective_type: gain_experience
+        target: EXP
+        amount: 10
+        required: true
+        icon: EXPERIENCE_BOTTLE
+        reward:
+          exp: 20
+
+
+  STONE:
+    display_name: "&7&lEtap Kamienny"
+    description: "&7Rozwój osady, zorganizowane górnictwo i szersza eksploracja Overworldu."
+    completion:
+      unlock: IRON
+      message: "&6&l[AmonPack] &a&lETAP KAMIENNY UKOŃCZONY! &fOdblokowano: &fEtap Żelazny"
+    exploration_biomes:
+      - Taiga
+      - Dark Forest
+      - Savanna
+      - Swamp
+      - Jagged Peaks
+    quests:
+      stone_craft_tools:
+        title: "Stwórz kamienny kilof"
+        description: "Twardsze narzędzia pozwolą kopać głębiej i szybciej."
+        category: MINING
+        objective_type: craft_item
+        target: STONE_PICKAXE
+        amount: 1
+        required: true
+        icon: STONE_PICKAXE
+        reward:
+          exp: 30
+      stone_mine_cobblestone_128:
+        title: "Wykop bruk x128"
+        description: "Zgromadź kamień na fundamenty i fortyfikacje."
+        category: MINING
+        objective_type: destroy_block
+        target: COBBLESTONE
+        amount: 128
+        required: true
+        icon: COBBLESTONE
+        reward:
+          money: 100.0
+          exp: 50
+      stone_obtain_coal_16:
+        title: "Wydobądź węgiel x16"
+        description: "Paliwo do pieców i pochodni."
+        category: MINING
+        objective_type: collect_item
+        target: COAL
+        amount: 16
+        required: true
+        icon: COAL
+        reward:
+          exp: 40
+      stone_depth_40:
+        title: "Zejdź na poziom kopalni Y <= 40"
+        description: "Zbuduj szyb górniczy schodzący pod ziemię."
+        category: MINING
+        objective_type: mine_to_depth
+        target: "40"
+        amount: 1
+        required: true
+        icon: COMPASS
+        reward:
+          exp: 50
+
+      stone_expand_base:
+        title: "Postaw bloki budowlane x50"
+        description: "Rozbuduj mury i podłogi swojej bazy."
+        category: BUILDING_BASE
+        objective_type: place_block
+        target: STONE_BRICKS,COBBLESTONE,PLANKS
+        amount: 50
+        required: true
+        icon: STONE_BRICKS
+        reward:
+          exp: 40
+      stone_create_storage:
+        title: "Postaw skrzynie magazynowe x4"
+        description: "Zorganizuj profesjonalny magazyn surowców."
+        category: BUILDING_BASE
+        objective_type: place_block
+        target: CHEST
+        amount: 4
+        required: true
+        icon: CHEST
+        reward:
+          exp: 30
+      stone_utility_station:
+        title: "Stwórz przecinarkę do kamienia (Stonecutter)"
+        description: "Stacja ułatwiająca obróbkę bloków kamiennych."
+        category: BUILDING_BASE
+        objective_type: craft_item
+        target: STONECUTTER
+        amount: 1
+        required: true
+        icon: STONECUTTER
+        reward:
+          exp: 35
+
+      stone_harvest_crops_32:
+        title: "Zbierz plony z farmy x32"
+        description: "Zwiększ wydajność swoich pól uprawnych."
+        category: FARMING_HERBALISM
+        objective_type: harvest_crop
+        target: CROPS
+        amount: 32
+        required: true
+        icon: WHEAT
+        reward:
+          money: 75.0
+          exp: 40
+      stone_breed_animals_5:
+        title: "Rozmnażaj zwierzęta x5"
+        description: "Powiększ swoją hodowlę bydła lub owiec."
+        category: FARMING_HERBALISM
+        objective_type: breed_entity
+        target: ANIMALS
+        amount: 5
+        required: true
+        icon: COW_SPAWN_EGG
+        reward:
+          exp: 45
+      stone_cook_meat_16:
+        title: "Upiecz mięso x16"
+        description: "Zabezpiecz zapasy żywności na dalsze wyprawy."
+        category: FARMING_HERBALISM
+        objective_type: cook_item
+        target: MEAT
+        amount: 16
+        required: true
+        icon: COOKED_BEEF
+        reward:
+          exp: 35
+
+      stone_discover_taiga:
+        title: "Odkryj Tajgę (Taiga)"
+        description: "Zimny las iglasty ze świerkami."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: TAIGA
+        amount: 1
+        required: true
+        icon: SPRUCE_SAPLING
+        reward:
+          exp: 35
+      stone_discover_dark_forest:
+        title: "Odkryj Mroczny Las (Dark Forest)"
+        description: "Gęsty las z wielkimi grzybami."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: DARK_FOREST
+        amount: 1
+        required: true
+        icon: DARK_OAK_SAPLING
+        reward:
+          exp: 35
+      stone_discover_savanna:
+        title: "Odkryj Sawannę (Savanna)"
+        description: "Ciepły biom pełen akacji."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: SAVANNA
+        amount: 1
+        required: true
+        icon: ACACIA_SAPLING
+        reward:
+          exp: 35
+      stone_discover_swamp:
+        title: "Odkryj Bagna (Swamp)"
+        description: "Tajemnicze moczary porośnięte lianami."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: SWAMP
+        amount: 1
+        required: true
+        icon: LILY_PAD
+        reward:
+          exp: 35
+      stone_discover_mountain:
+        title: "Odkryj Pasmo Górskie (Jagged Peaks / Stony Peaks)"
+        description: "Wspinaj się na wysokie szczyty świata."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: JAGGED_PEAKS,STONY_PEAKS,FROZEN_PEAKS
+        amount: 1
+        required: true
+        icon: GOAT_HORN
+        reward:
+          exp: 40
+
+      stone_kill_hostile_15:
+        title: "Pokonaj potwory x15"
+        description: "Oczyść okolicę z niebezpiecznych wrogów."
+        category: COMBAT
+        objective_type: kill_entity
+        target: HOSTILE
+        amount: 15
+        required: true
+        icon: SKELETON_SKULL
+        reward:
+          exp: 45
+      stone_craft_stone_weapon:
+        title: "Stwórz kamienny miecz"
+        description: "Solidniejsza broń na przeciwników."
+        category: COMBAT
+        objective_type: craft_item
+        target: STONE_SWORD
+        amount: 1
+        required: true
+        icon: STONE_SWORD
+        reward:
+          exp: 25
+      stone_gain_exp_25:
+        title: "Zdobądź 25 punktów doświadczenia"
+        description: "Rozwijaj swoje umiejętności bojowe."
+        category: COMBAT
+        objective_type: gain_experience
+        target: EXP
+        amount: 25
+        required: true
+        icon: EXPERIENCE_BOTTLE
+        reward:
+          money: 50.0
+
+
+  IRON:
+    display_name: "&f&lEtap Żelazny"
+    description: "&7Zaawansowane rzemiosło, pierwsze dungeony i starożytni bossowie."
+    completion:
+      unlock: DIAMOND
+      message: "&6&l[AmonPack] &a&lETAP ŻELAZNY UKOŃCZONY! &bOdblokowano: &bEtap Diamentowy"
+    exploration_biomes:
+      - Desert
+      - Jungle
+      - Badlands
+      - Snowy Plains
+    quests:
+      iron_obtain_iron_ore:
+        title: "Wydobądź rudę żelaza x32"
+        description: "Główny surowiec ery żelaza."
+        category: MINING
+        objective_type: collect_item
+        target: IRON_ORE
+        amount: 32
+        required: true
+        icon: RAW_IRON
+        reward:
+          money: 100.0
+          exp: 60
+      iron_smelt_iron:
+        title: "Wytop sztabki żelaza x32"
+        description: "Przetop rudę w piecu na gotowe sztabki."
+        category: MINING
+        objective_type: smelt_item
+        target: IRON_INGOT
+        amount: 32
+        required: true
+        icon: IRON_INGOT
+        reward:
+          exp: 60
+      iron_craft_pickaxe:
+        title: "Stwórz żelazny kilof"
+        description: "Niezbędny do wydobycia złota, czerwonego kamienia i diamentów."
+        category: MINING
+        objective_type: craft_item
+        target: IRON_PICKAXE
+        amount: 1
+        required: true
+        icon: IRON_PICKAXE
+        reward:
+          exp: 50
+      iron_reach_deepslate:
+        title: "Zejdź na poziom Deepslate Y <= 0"
+        description: "Zejdź w najgłębsze i najniebezpieczniejsze warstwy ziemi."
+        category: MINING
+        objective_type: mine_to_depth
+        target: "0"
+        amount: 1
+        required: true
+        icon: DEEPSLATE
+        reward:
+          exp: 75
+
+      iron_complete_dungeon:
+        title: "Ukończ pierwszy Dungeon"
+        description: "Zbierz drużynę i pokonaj wyzwania w lochach AmonPack."
+        category: DUNGEONS
+        objective_type: complete_dungeon
+        target: ANY
+        amount: 1
+        required: true
+        icon: CHISELED_STONE_BRICKS
+        reward:
+          money: 250.0
+          exp: 150
+
+      iron_discover_desert:
+        title: "Odkryj Pustynię (Desert)"
+        description: "Piaszczyste wydmy i starożytne piramidy."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: DESERT
+        amount: 1
+        required: true
+        icon: SAND
+        reward:
+          exp: 50
+      iron_discover_jungle:
+        title: "Odkryj Dżunglę (Jungle)"
+        description: "Gęste tropiki z rzadką florą i fauną."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: JUNGLE
+        amount: 1
+        required: true
+        icon: JUNGLE_SAPLING
+        reward:
+          exp: 50
+      iron_discover_badlands:
+        title: "Odkryj Badlands (Mesa)"
+        description: "Czerwona terakota i bogate złoża złota."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: BADLANDS
+        amount: 1
+        required: true
+        icon: RED_SAND
+        reward:
+          exp: 60
+      iron_discover_snowy:
+        title: "Odkryj Śnieżne Równiny (Snowy Plains)"
+        description: "Mroźne krainy wiecznego lodu."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: SNOWY_PLAINS
+        amount: 1
+        required: true
+        icon: SNOWBALL
+        reward:
+          exp: 50
+
+      iron_defeat_first_boss:
+        title: "Pokonaj Starożytnego Ducha Ziemi"
+        description: "Pokonaj potężnego customowego bossa przywołanego przez zwój."
+        category: BOSSES
+        objective_type: defeat_boss
+        target: Spirit_Earth_2,CUSTOM_BOSS
+        amount: 1
+        required: true
+        icon: WITHER_SKELETON_SKULL
+        reward:
+          money: 500.0
+          exp: 300
+      iron_obtain_boss_drop:
+        title: "Zdobądź Odłamek Meteorytu z Bossa x2"
+        description: "Kosmiczny surowiec pozostawiony po pokonaniu Ducha Ziemi."
+        category: BOSSES
+        objective_type: collect_item
+        target: meteor_shard
+        amount: 2
+        required: true
+        icon: FLINT
+        reward:
+          exp: 100
+
+      iron_kill_hostile_25:
+        title: "Pokonaj potwory x25"
+        description: "Obrona przed zagrożeniami z podziemi."
+        category: COMBAT
+        objective_type: kill_entity
+        target: HOSTILE
+        amount: 25
+        required: true
+        icon: ZOMBIE_HEAD
+        reward:
+          exp: 60
+      iron_craft_full_armor:
+        title: "Stwórz pełny żelazny pancerz"
+        description: "Wykuj żelazny hełm, napierśnik, nogawice i buty."
+        category: COMBAT
+        objective_type: craft_item
+        target: ARMOR_SET_IRON
+        amount: 1
+        required: true
+        icon: IRON_CHESTPLATE
+        reward:
+          money: 100.0
+          exp: 80
+      iron_craft_weapon:
+        title: "Stwórz żelazny miecz"
+        description: "Ostra żelazna broń."
+        category: COMBAT
+        objective_type: craft_item
+        target: IRON_SWORD
+        amount: 1
+        required: true
+        icon: IRON_SWORD
+        reward:
+          exp: 40
+      iron_gain_exp_50:
+        title: "Zdobądź 50 punktów doświadczenia"
+        description: "Osiągnij wyższy poziom bojowy."
+        category: COMBAT
+        objective_type: gain_experience
+        target: EXP
+        amount: 50
+        required: true
+        icon: EXPERIENCE_BOTTLE
+        reward:
+          money: 75.0
+
+
+  DIAMOND:
+    display_name: "&b&lEtap Diamentowy"
+    description: "&7Pełne RPG, trudne dungeony, bossowie i przygotowanie do wejścia do Netheru."
+    completion:
+      unlock: NETHER
+      message: "&6&l[AmonPack] &a&lETAP DIAMENTOWY UKOŃCZONY! &cOdblokowano: &cEtap Netheru"
+    exploration_biomes:
+      - Cherry Grove
+      - Mangrove Swamp
+      - Deep Dark
+    quests:
+      diamond_find_diamonds:
+        title: "Wydobądź diamenty x8"
+        description: "Najcenniejszy minerał podziemi Overworldu."
+        category: MINING
+        objective_type: collect_item
+        target: DIAMOND
+        amount: 8
+        required: true
+        icon: DIAMOND
+        reward:
+          money: 200.0
+          exp: 100
+      diamond_craft_pickaxe:
+        title: "Stwórz diamentowy kilof"
+        description: "Klucz do wydobycia obsydianu pod portal do Netheru."
+        category: MINING
+        objective_type: craft_item
+        target: DIAMOND_PICKAXE
+        amount: 1
+        required: true
+        icon: DIAMOND_PICKAXE
+        reward:
+          exp: 80
+      diamond_obtain_obsidian:
+        title: "Wydobądź obsydian x10"
+        description: "Twarda skała wulkaniczna na ramę portalu."
+        category: MINING
+        objective_type: collect_item
+        target: OBSIDIAN
+        amount: 10
+        required: true
+        icon: OBSIDIAN
+        reward:
+          exp: 75
+
+      diamond_complete_dungeon:
+        title: "Ukończ zaawansowany Dungeon"
+        description: "Oczyść trudny loch i zdobądź legendarne łupy."
+        category: DUNGEONS
+        objective_type: complete_dungeon
+        target: ANY
+        amount: 1
+        required: true
+        icon: CHISELED_STONE_BRICKS
+        reward:
+          money: 400.0
+          exp: 200
+
+      diamond_discover_cherry_grove:
+        title: "Odkryj Wiśniowy Gaj (Cherry Grove)"
+        description: "Malowniczy różowy las na wzgórzach."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: CHERRY_GROVE
+        amount: 1
+        required: true
+        icon: CHERRY_SAPLING
+        reward:
+          exp: 70
+      diamond_discover_mangrove:
+        title: "Odkryj Namorzyny (Mangrove Swamp)"
+        description: "Błotnisty las tropikalny z korzeniami drzew mangrowych."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: MANGROVE_SWAMP
+        amount: 1
+        required: true
+        icon: MANGROVE_PROPAGULE
+        reward:
+          exp: 70
+      diamond_discover_deep_dark:
+        title: "Odkryj Deep Dark (Głęboki Mrok)"
+        description: "Pradawne podziemia z blokami Sculku."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: DEEP_DARK
+        amount: 1
+        required: true
+        icon: SCULK_SENSOR
+        reward:
+          exp: 100
+
+      diamond_defeat_bosses:
+        title: "Pokonaj customowych bossów x2"
+        description: "Udowodnij swoją potęgę w walce z władcami podziemi."
+        category: BOSSES
+        objective_type: defeat_boss
+        target: CUSTOM_BOSS
+        amount: 2
+        required: true
+        icon: WITHER_SKELETON_SKULL
+        reward:
+          money: 600.0
+          exp: 350
+
+      diamond_kill_strong_30:
+        title: "Pokonaj silne moby x30"
+        description: "Walcz z elitarnymi przeciwnikami w podziemiach."
+        category: COMBAT
+        objective_type: kill_entity
+        target: HOSTILE
+        amount: 30
+        required: true
+        icon: CREEPER_HEAD
+        reward:
+          exp: 90
+      diamond_craft_full_armor:
+        title: "Stwórz pełny diamentowy pancerz"
+        description: "Kompletny pancerz z diamentu."
+        category: COMBAT
+        objective_type: craft_item
+        target: ARMOR_SET_DIAMOND
+        amount: 1
+        required: true
+        icon: DIAMOND_CHESTPLATE
+        reward:
+          money: 250.0
+          exp: 150
+      diamond_craft_weapon:
+        title: "Stwórz diamentowy miecz"
+        description: "Potężna broń sieczna."
+        category: COMBAT
+        objective_type: craft_item
+        target: DIAMOND_SWORD
+        amount: 1
+        required: true
+        icon: DIAMOND_SWORD
+        reward:
+          exp: 60
+      diamond_gain_exp_100:
+        title: "Zdobądź 100 punktów doświadczenia"
+        description: "Przygotuj się na piekielne wyzwania."
+        category: COMBAT
+        objective_type: gain_experience
+        target: EXP
+        amount: 100
+        required: true
+        icon: EXPERIENCE_BOTTLE
+        reward:
+          money: 150.0
+
+
+  NETHER:
+    display_name: "&c&lEtap Netheru"
+    description: "&7Podbój piekielnego wymiaru, starożytne szczątki, Netherite i Wither."
+    completion:
+      unlock: END
+      message: "&6&l[AmonPack] &a&lETAP NETHERU UKOŃCZONY! &dOdblokowano: &dEtap Endu"
+    exploration_biomes:
+      - Nether Wastes
+      - Crimson Forest
+      - Warped Forest
+      - Soul Sand Valley
+      - Basalt Deltas
+    quests:
+      nether_discover_wastes:
+        title: "Odkryj Netherowe Pustkowia (Nether Wastes)"
+        description: "Podstawowy piekielny krajobraz z netherracku."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: NETHER_WASTES
+        amount: 1
+        required: true
+        icon: NETHERRACK
+        reward:
+          exp: 75
+      nether_discover_crimson:
+        title: "Odkryj Szkarłatny Las (Crimson Forest)"
+        description: "Czerwony las pełen hoglinów i piglinów."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: CRIMSON_FOREST
+        amount: 1
+        required: true
+        icon: CRIMSON_FUNGUS
+        reward:
+          exp: 75
+      nether_discover_warped:
+        title: "Odkryj Spaczony Las (Warped Forest)"
+        description: "Niebieski, spokojniejszy las z endermanami."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: WARPED_FOREST
+        amount: 1
+        required: true
+        icon: WARPED_FUNGUS
+        reward:
+          exp: 75
+      nether_discover_soulsand:
+        title: "Odkryj Dolinę Piasku Dusz (Soul Sand Valley)"
+        description: "Kraina błękitnych płomieni i szkieletów."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: SOUL_SAND_VALLEY
+        amount: 1
+        required: true
+        icon: SOUL_SAND
+        reward:
+          exp: 80
+      nether_discover_basalt:
+        title: "Odkryj Bazaltowe Delty (Basalt Deltas)"
+        description: "Wulkaniczne kolumny i jeziora lawy."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: BASALT_DELTAS
+        amount: 1
+        required: true
+        icon: BASALT
+        reward:
+          exp: 80
+      nether_obtain_blaze_rods:
+        title: "Zdobądź Płomienne Różdżki x10"
+        description: "Zdobądź różdżki z Płomienników w Twierdzy Netheru."
+        category: EXPLORATION
+        objective_type: collect_item
+        target: BLAZE_ROD
+        amount: 10
+        required: true
+        icon: BLAZE_ROD
+        reward:
+          money: 150.0
+          exp: 100
+
+      nether_obtain_ancient_debris:
+        title: "Wydobądź Starożytne Szczątki x4"
+        description: "Najrzadszy surowiec ukryty w głębi Netheru."
+        category: MINING
+        objective_type: collect_item
+        target: ANCIENT_DEBRIS
+        amount: 4
+        required: true
+        icon: ANCIENT_DEBRIS
+        reward:
+          money: 300.0
+          exp: 150
+      nether_craft_netherite_ingot:
+        title: "Wytwórz Sztabkę Netheritu"
+        description: "Połącz złom netheritowy ze złotem w stole rzemieślniczym."
+        category: MINING
+        objective_type: collect_item
+        target: NETHERITE_INGOT
+        amount: 1
+        required: true
+        icon: NETHERITE_INGOT
+        reward:
+          exp: 120
+      nether_craft_netherite_pickaxe:
+        title: "Stwórz Netheritowy Kilof"
+        description: "Ulepsz diamentowy kilof w stole kowalskim."
+        category: MINING
+        objective_type: craft_item
+        target: NETHERITE_PICKAXE
+        amount: 1
+        required: true
+        icon: NETHERITE_PICKAXE
+        reward:
+          exp: 100
+
+      nether_defeat_wither:
+        title: "Pokonaj Withera"
+        description: "Przyzwij i zgładź trójgłowego władcę ciemności."
+        category: BOSSES
+        objective_type: defeat_boss
+        target: WITHER
+        amount: 1
+        required: true
+        icon: NETHER_STAR
+        reward:
+          money: 1000.0
+          exp: 500
+
+      nether_kill_blazes:
+        title: "Pokonaj Płomienniki (Blazes) x20"
+        description: "Oczyść korytarze Twierdzy Netheru."
+        category: COMBAT
+        objective_type: kill_entity
+        target: BLAZE
+        amount: 20
+        required: true
+        icon: BLAZE_POWDER
+        reward:
+          exp: 100
+      nether_kill_wither_skeletons:
+        title: "Pokonaj Mroczne Szkielety x10"
+        description: "Zdobądź ich czaszki."
+        category: COMBAT
+        objective_type: kill_entity
+        target: WITHER_SKELETON
+        amount: 10
+        required: true
+        icon: WITHER_SKELETON_SKULL
+        reward:
+          exp: 100
+      nether_craft_netherite_armor:
+        title: "Stwórz pełny Netheritowy Pancerz"
+        description: "Najwyższa ochrona przed obrażeniami i ogniem."
+        category: COMBAT
+        objective_type: craft_item
+        target: ARMOR_SET_NETHERITE
+        amount: 1
+        required: true
+        icon: NETHERITE_CHESTPLATE
+        reward:
+          money: 500.0
+          exp: 300
+      nether_gain_exp_200:
+        title: "Zdobądź 200 punktów doświadczenia"
+        description: "Osiągnij mistrzostwo przed wkroczeniem do Kresu."
+        category: COMBAT
+        objective_type: gain_experience
+        target: EXP
+        amount: 200
+        required: true
+        icon: EXPERIENCE_BOTTLE
+        reward:
+          money: 250.0
+
+
+  END:
+    display_name: "&d&lEtap Endu"
+    description: "&7Ostateczna granica, walka ze Smokiem Kresu, Miasta Endu i Elytra."
+    completion:
+      unlock: END
+      message: "&6&l[AmonPack] &a&lGRATULACJE! &d&lUKOŃCZYŁEŚ WSZYSTKIE ETAPY GŁÓWNEJ PROGRESJI!"
+    exploration_biomes:
+      - The End
+      - End Highlands
+      - End Midlands
+      - Small End Islands
+    quests:
+      end_discover_end_islands:
+        title: "Odkryj Zewnętrzne Wyspy Endu (End Highlands)"
+        description: "Przejdź przez portal po pokonaniu smoka i zbadaj odległe wyspy."
+        category: EXPLORATION
+        objective_type: discover_biome
+        target: END_HIGHLANDS,END_MIDLANDS
+        amount: 1
+        required: true
+        icon: END_STONE
+        reward:
+          exp: 150
+      end_obtain_elytra:
+        title: "Zdobądź Elytrę"
+        description: "Zdobądź skrzydła ze statku w Mieście Endu."
+        category: EXPLORATION
+        objective_type: collect_item
+        target: ELYTRA
+        amount: 1
+        required: true
+        icon: ELYTRA
+        reward:
+          money: 1000.0
+          exp: 300
+      end_obtain_shulker_shells:
+        title: "Zdobądź Skorupy Shulkera x4"
+        description: "Materiały na przenośne skrzynie Shulker Box."
+        category: EXPLORATION
+        objective_type: collect_item
+        target: SHULKER_SHELL
+        amount: 4
+        required: true
+        icon: SHULKER_SHELL
+        reward:
+          exp: 150
+
+      end_defeat_ender_dragon:
+        title: "Pokonaj Smoka Kresu (Ender Dragon)"
+        description: "Zgładź pradawnego smoka strzegącego wymiaru Endu."
+        category: BOSSES
+        objective_type: defeat_boss
+        target: ENDER_DRAGON,DRAGON
+        amount: 1
+        required: true
+        icon: DRAGON_HEAD
+        reward:
+          money: 2500.0
+          exp: 1000
+          broadcast: "&6[AmonPack] &eGracz &a%player% &eprzeważył losy Kresu i zgładził Smoka!"
+
+      end_kill_endermen:
+        title: "Pokonaj Endermany x50"
+        description: "Zlikwiduj mieszkańców wymiaru Kresu."
+        category: COMBAT
+        objective_type: kill_entity
+        target: ENDERMAN
+        amount: 50
+        required: true
+        icon: ENDER_PEARL
+        reward:
+          exp: 150
+      end_kill_shulkers:
+        title: "Pokonaj Shulkery x10"
+        description: "Pokonaj obrońców Miast Endu."
+        category: COMBAT
+        objective_type: kill_entity
+        target: SHULKER
+        amount: 10
+        required: true
+        icon: SHULKER_BOX
+        reward:
+          exp: 150
+      end_gain_exp_500:
+        title: "Zdobądź 500 punktów doświadczenia"
+        description: "Osiągnij szczyt mistrzostwa."
+        category: COMBAT
+        objective_type: gain_experience
+        target: EXP
+        amount: 500
+        required: true
+        icon: EXPERIENCE_BOTTLE
+        reward:
+          money: 1000.0
+
+
+# ===================================================================
+#             RESTRYKCJE TREŚCI DLA POSZCZEGÓLNYCH ETAPÓW
+# ===================================================================
+restrictions:
+
+  # Przedmioty vanilla zablokowane poniżej podanego etapu:
+  items:
+    STONE_PICKAXE: STONE
+    STONE_SWORD: STONE
+    STONE_AXE: STONE
+    STONE_SHOVEL: STONE
+    STONE_HOE: STONE
+
+    IRON_PICKAXE: IRON
+    IRON_SWORD: IRON
+    IRON_AXE: IRON
+    IRON_SHOVEL: IRON
+    IRON_HOE: IRON
+    IRON_HELMET: IRON
+    IRON_CHESTPLATE: IRON
+    IRON_LEGGINGS: IRON
+    IRON_BOOTS: IRON
+    SHIELD: IRON
+
+    DIAMOND_PICKAXE: DIAMOND
+    DIAMOND_SWORD: DIAMOND
+    DIAMOND_AXE: DIAMOND
+    DIAMOND_SHOVEL: DIAMOND
+    DIAMOND_HOE: DIAMOND
+    DIAMOND_HELMET: DIAMOND
+    DIAMOND_CHESTPLATE: DIAMOND
+    DIAMOND_LEGGINGS: DIAMOND
+    DIAMOND_BOOTS: DIAMOND
+
+    NETHERITE_PICKAXE: NETHER
+    NETHERITE_SWORD: NETHER
+    NETHERITE_AXE: NETHER
+    NETHERITE_SHOVEL: NETHER
+    NETHERITE_HOE: NETHER
+    NETHERITE_HELMET: NETHER
+    NETHERITE_CHESTPLATE: NETHER
+    NETHERITE_LEGGINGS: NETHER
+    NETHERITE_BOOTS: NETHER
+
+    ELYTRA: END
+
+  # Bloki zablokowane do wykopania poniżej podanego etapu:
+  blocks:
+    IRON_ORE: STONE
+    DEEPSLATE_IRON_ORE: STONE
+    GOLD_ORE: IRON
+    DEEPSLATE_GOLD_ORE: IRON
+    DIAMOND_ORE: IRON
+    DEEPSLATE_DIAMOND_ORE: IRON
+    OBSIDIAN: DIAMOND
+    ANCIENT_DEBRIS: NETHER
+
+  # Customowe przedmioty (z CustomItemManager) zablokowane poniżej podanego etapu:
+  custom_items:
+    meteor_shard: IRON
+    meteor_axe: IRON
+    meteor_scythe: IRON
+    meteor_helmet: NETHER
+    meteor_chestplate: NETHER
+    meteor_leggings: NETHER
+    meteor_boots: NETHER
+
+  # Przepisy rzemieślnicze w kuźni (CraftingMenager mold_id):
+  craftable_molds:
+    meteor_scythe: IRON
+    meteor_axe: IRON
+    meteor_armor: NETHER
+
+  # Wymiary zablokowane przed osiągnięciem etapu:
+  dimensions:
+    NETHER: NETHER
+    THE_END: END

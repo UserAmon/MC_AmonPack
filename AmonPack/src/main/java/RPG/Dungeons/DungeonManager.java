@@ -70,8 +70,20 @@ public class DungeonManager implements Listener {
         if (files == null) return;
 
         for (File file : files) {
+            String fileName = file.getName().toLowerCase(Locale.ROOT);
+            // Ignorujemy pliki dokumentacji, konfiguracji ulepszeń i ogólnej konfiguracji lochów
+            if (fileName.startsWith("dokumentacja") || fileName.startsWith("dungeon_config")
+                    || fileName.startsWith("dung_build")) {
+                continue;
+            }
+
             try {
                 FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+                // Weryfikacja czy plik to faktyczny szablon lochu
+                if (!config.contains("schematic") && !config.contains("paste-location") && !config.contains("initial-encounter") && !config.contains("encounters")) {
+                    continue;
+                }
+
                 String id = file.getName().replace(".yml", "").replace(".yaml", "");
                 
                 String name = config.getString("name", id);
