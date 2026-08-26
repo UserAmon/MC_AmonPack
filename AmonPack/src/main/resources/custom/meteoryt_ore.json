@@ -2,14 +2,14 @@
 	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
 	"textures": {
-		"2": "amon:blocks/meteoryt_ore",
-		"particle": "amon:blocks/meteoryt_ore"
+		"2": "amonpack:block/meteoryt_ore",
+		"particle": "amonpack:block/meteoryt_ore"
 	},
 	"elements": [
 		{
 			"from": [0, 0, 0],
 			"to": [16, 16, 16],
-			"rotation": {"angle": 0, "axis": "y", "origin": [7.5, 8.5, 8.5]},
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
 			"faces": {
 				"north": {"uv": [0, 0, 16, 16], "texture": "#2"},
 				"east": {"uv": [0, 0, 16, 16], "texture": "#2"},
@@ -47,8 +47,11 @@
 			"rotation": [30, -135, 0],
 			"scale": [0.625, 0.625, 0.625]
 		},
+		"head": {
+			"scale": [1.002, 1.002, 1.002]
+		},
 		"fixed": {
-			"scale": [0.5, 0.5, 0.5]
+			"scale": [1.002, 1.002, 1.002]
 		}
 	}
 }

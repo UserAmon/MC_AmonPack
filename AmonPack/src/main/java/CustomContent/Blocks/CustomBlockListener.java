@@ -54,9 +54,8 @@ public class CustomBlockListener implements Listener {
         // Sprawdzenie wymaganego poziomu narzędzia
         int playerTier = getToolTier(tool.getType());
         if (playerTier < cb.getRequiredTier()) {
-            player.sendMessage("§c[AmonPack] Twoje narzędzie jest zbyt słabe, aby wydobyć ten surowiec!");
-            event.setDropItems(false);
-            blockManager.removeBlock(event.getBlock());
+            player.sendMessage("§c[AmonPack] Twoje narzędzie jest zbyt słabe, aby wydobyć ten surowiec (Wymagany: Tier " + cb.getRequiredTier() + "+)!");
+            event.setCancelled(true);
             return;
         }
 

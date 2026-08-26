@@ -59,6 +59,16 @@ items:
       - "&7Rzadki surowiec pozyskany z Rudy Meteorytu."
       - "&7Używany w kuźni do kucia potężnych broni i zbroi."
 
+  meteoryt_ore:
+    display_name: "&4&lRuda Meteorytu"
+    base_material: NOTE_BLOCK
+    model: "block/meteoryt_ore"
+    custom_model_data: 30001
+    unbreakable: true
+    lore:
+      - "&7Kosmiczna ruda o niezwykłej gęstości."
+      - "&7Postaw na ziemi i wykop żelaznym kilofem!"
+
   meteor_helmet:
     display_name: "&4&lHełm z Meteorytu"
     base_material: NETHERITE_HELMET

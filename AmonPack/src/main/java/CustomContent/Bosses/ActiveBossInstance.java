@@ -69,7 +69,8 @@ public class ActiveBossInstance {
             entity.getAttribute(Attribute.FOLLOW_RANGE).setBaseValue(template.getFollowRange());
         }
 
-        // Ukrycie bazowego moba (efekt niewidzialności bez cząsteczek)
+        // Ukrycie bazowego moba
+        entity.setInvisible(true);
         entity.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
     }
 
@@ -84,11 +85,10 @@ public class ActiveBossInstance {
                     item.setItemMeta(meta);
                 }
                 d.setItemStack(item);
-                d.setDisplayWidth((float) template.getScale());
-                d.setDisplayHeight((float) template.getScale());
+                d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
             });
         } catch (Throwable t) {
-            Bukkit.getLogger().fine("[AmonPack] Note: Custom DisplayEntity for boss fallback.");
+            Bukkit.getLogger().warning("[AmonPack] Nie udało się zespawnować ItemDisplay dla Bossa: " + t.getMessage());
         }
     }
 

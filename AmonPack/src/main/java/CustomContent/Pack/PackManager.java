@@ -28,13 +28,13 @@ public class PackManager {
     private PackHttpServer httpServer;
 
     private int httpPort = 8085;
-    private String hostAddress = "127.0.0.1";
+    private String hostAddress = "auto";
     private boolean autoSendOnJoin = true;
     private boolean forcePack = false;
     private String promptMessage = "§6§lAmonPack §7- Pobierz tekstury i modele 3D serwera!";
+    private String detectedPublicIp = null;
 
-    // Rejestr CustomModelData dla poszczególnych materiałów bazowych
-    // Format: MaterialName -> Map<CustomModelData, ModelPath (np. amonpack:item/meteor_scythe)>
+    // Rejestr CustomModelData: MaterialName -> Map<CustomModelData, ModelPath>
     private final Map<String, Map<Integer, String>> vanillaOverrides = new LinkedHashMap<>();
 
     public PackManager() {
@@ -74,8 +74,6 @@ public class PackManager {
         detectPublicIpAsync();
     }
 
-    private String detectedPublicIp = null;
-
     private void detectPublicIpAsync() {
         Bukkit.getScheduler().runTaskAsynchronously(AmonPackPlugin.plugin, () -> {
             String[] services = {
@@ -112,7 +110,6 @@ public class PackManager {
             packDir.mkdirs();
         }
 
-        // Kopiowanie wbudowanych zasobów z resources/custom/ do folderu pack/
         File customDir = new File(packDir, "custom");
         if (!customDir.exists()) {
             customDir.mkdirs();
@@ -128,14 +125,12 @@ public class PackManager {
 
         for (String file : sampleFiles) {
             File target = new File(customDir, file);
-            if (!target.exists()) {
-                try (InputStream in = AmonPackPlugin.plugin.getResource("custom/" + file)) {
-                    if (in != null) {
-                        Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    }
-                } catch (Exception e) {
-                    Bukkit.getLogger().fine("[AmonPack] Note: Could not auto-export " + file);
+            try (InputStream in = AmonPackPlugin.plugin.getResource("custom/" + file)) {
+                if (in != null) {
+                    Files.copy(in, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
+            } catch (Exception e) {
+                Bukkit.getLogger().fine("[AmonPack] Note: Could not auto-export " + file);
             }
         }
     }
@@ -154,81 +149,128 @@ public class PackManager {
             File mcmeta = new File(tempBuildDir, "pack.mcmeta");
             JsonObject mcMetaJson = new JsonObject();
             JsonObject packObj = new JsonObject();
-            packObj.addProperty("pack_format", 34); // 1.21
+            packObj.addProperty("pack_format", 34); // Kompatybilny z 1.21 - 1.21.x
             packObj.addProperty("description", "AmonPack Custom 3D Models & Textures");
             mcMetaJson.add("pack", packObj);
             try (FileWriter writer = new FileWriter(mcmeta, StandardCharsets.UTF_8)) {
                 writer.write(GSON.toJson(mcMetaJson));
             }
 
-            // 2. Struktura folderów
-            File assetsAmonModels = new File(tempBuildDir, "assets/amonpack/models/item");
-            File assetsAmonBlocks = new File(tempBuildDir, "assets/amonpack/models/block");
-            File assetsAmonBosses = new File(tempBuildDir, "assets/amonpack/models/boss");
-            File assetsAmonTextures = new File(tempBuildDir, "assets/amonpack/textures/item");
-            File assetsAmonBlockTextures = new File(tempBuildDir, "assets/amonpack/textures/block");
-            File assetsAmonBossTextures = new File(tempBuildDir, "assets/amonpack/textures/boss");
-            File assetsMinecraftModels = new File(tempBuildDir, "assets/minecraft/models/item");
+            // 2. Struktura katalogów w paczce
+            File amonpackModelsItem = new File(tempBuildDir, "assets/amonpack/models/item");
+            File amonpackModelsBlock = new File(tempBuildDir, "assets/amonpack/models/block");
+            File amonpackModelsBoss = new File(tempBuildDir, "assets/amonpack/models/boss");
 
-            assetsAmonModels.mkdirs();
-            assetsAmonBlocks.mkdirs();
-            assetsAmonBosses.mkdirs();
-            assetsAmonTextures.mkdirs();
-            assetsAmonBlockTextures.mkdirs();
-            assetsAmonBossTextures.mkdirs();
-            assetsMinecraftModels.mkdirs();
+            File amonpackTexItem = new File(tempBuildDir, "assets/amonpack/textures/item");
+            File amonpackTexBlock = new File(tempBuildDir, "assets/amonpack/textures/block");
+            File amonpackTexBoss = new File(tempBuildDir, "assets/amonpack/textures/boss");
 
-            // 3. Kopiowanie i konwersja plików z plugins/AmonPack/pack/custom/
+            File amonTexMining = new File(tempBuildDir, "assets/amon/textures/items/mining");
+            File amonTexBlocks = new File(tempBuildDir, "assets/amon/textures/blocks");
+            File amonTexItem = new File(tempBuildDir, "assets/amon/textures/item");
+            File amonTexBlock = new File(tempBuildDir, "assets/amon/textures/block");
+
+            File mcModelsItem = new File(tempBuildDir, "assets/minecraft/models/item");
+            File mcItems121 = new File(tempBuildDir, "assets/minecraft/items");
+
+            amonpackModelsItem.mkdirs();
+            amonpackModelsBlock.mkdirs();
+            amonpackModelsBoss.mkdirs();
+            amonpackTexItem.mkdirs();
+            amonpackTexBlock.mkdirs();
+            amonpackTexBoss.mkdirs();
+            amonTexMining.mkdirs();
+            amonTexBlocks.mkdirs();
+            amonTexItem.mkdirs();
+            amonTexBlock.mkdirs();
+            mcModelsItem.mkdirs();
+            mcItems121.mkdirs();
+
+            // 3. Kopiowanie i konwersja plików z folderu custom/
             File customDir = new File(packDir, "custom");
             if (customDir.exists() && customDir.isDirectory()) {
                 File[] files = customDir.listFiles();
                 if (files != null) {
+                    // Najpierw kopiujemy tekstury PNG
                     for (File f : files) {
                         String name = f.getName().toLowerCase(Locale.ROOT);
+                        if (name.endsWith(".png")) {
+                            byte[] pngBytes = Files.readAllBytes(f.toPath());
+                            Files.write(new File(amonpackTexItem, f.getName()).toPath(), pngBytes);
+                            Files.write(new File(amonpackTexBlock, f.getName()).toPath(), pngBytes);
+                            Files.write(new File(amonpackTexBoss, f.getName()).toPath(), pngBytes);
+                            Files.write(new File(amonTexMining, f.getName()).toPath(), pngBytes);
+                            Files.write(new File(amonTexBlocks, f.getName()).toPath(), pngBytes);
+                            Files.write(new File(amonTexItem, f.getName()).toPath(), pngBytes);
+                            Files.write(new File(amonTexBlock, f.getName()).toPath(), pngBytes);
+                        }
+                    }
+
+                    // Następnie przetwarzamy pliki .bbmodel oraz .json
+                    for (File f : files) {
+                        String name = f.getName().toLowerCase(Locale.ROOT);
+
                         if (name.endsWith(".bbmodel")) {
-                            // Konwersja .bbmodel
                             String baseName = f.getName().substring(0, f.getName().length() - 8);
                             boolean isBoss = baseName.toLowerCase(Locale.ROOT).contains("spirit") || baseName.toLowerCase(Locale.ROOT).contains("boss");
                             boolean isBlock = baseName.toLowerCase(Locale.ROOT).contains("ore") || baseName.toLowerCase(Locale.ROOT).contains("block");
 
-                            String texNamespace = isBoss ? "amonpack:boss/" + baseName : (isBlock ? "amonpack:block/" + baseName : "amonpack:item/" + baseName);
+                            String texCategory = isBoss ? "boss" : (isBlock ? "block" : "item");
+                            String texNamespace = "amonpack:" + texCategory + "/" + baseName;
+
                             try {
                                 BbmodelParser.ConversionResult result = BbmodelParser.convertBbmodel(f, texNamespace);
-                                File targetModelDir = isBoss ? assetsAmonBosses : (isBlock ? assetsAmonBlocks : assetsAmonModels);
+                                File targetModelDir = isBoss ? amonpackModelsBoss : (isBlock ? amonpackModelsBlock : amonpackModelsItem);
                                 File outModelFile = new File(targetModelDir, baseName + ".json");
                                 try (FileWriter fw = new FileWriter(outModelFile, StandardCharsets.UTF_8)) {
                                     fw.write(result.modelJson);
                                 }
 
-                                if (result.textureBytes != null && result.textureBytes.length > 0) {
-                                    File targetTexDir = isBoss ? assetsAmonBossTextures : (isBlock ? assetsAmonBlockTextures : assetsAmonTextures);
-                                    File outTex = new File(targetTexDir, baseName + ".png");
-                                    Files.write(outTex.toPath(), result.textureBytes);
+                                for (BbmodelParser.TextureData td : result.textures) {
+                                    if (td.bytes != null && td.bytes.length > 0) {
+                                        String texFileName = baseName + (td.id.equals("0") ? "" : "_" + td.id) + ".png";
+                                        File mainTexDir = isBoss ? amonpackTexBoss : (isBlock ? amonpackTexBlock : amonpackTexItem);
+                                        Files.write(new File(mainTexDir, texFileName).toPath(), td.bytes);
+                                        Files.write(new File(mainTexDir, td.fileName).toPath(), td.bytes);
+                                        Files.write(new File(amonTexMining, texFileName).toPath(), td.bytes);
+                                        Files.write(new File(amonTexBlocks, texFileName).toPath(), td.bytes);
+                                    }
                                 }
                             } catch (Exception e) {
                                 Bukkit.getLogger().warning("[AmonPack] Błąd konwersji .bbmodel " + f.getName() + ": " + e.getMessage());
                             }
                         } else if (name.endsWith(".json")) {
-                            // Plik JSON
                             String baseName = f.getName().substring(0, f.getName().length() - 5);
-                            boolean isBoss = baseName.contains("spirit") || baseName.contains("boss");
-                            boolean isBlock = baseName.contains("ore") || baseName.contains("block");
-                            File targetDir = isBoss ? assetsAmonBosses : (isBlock ? assetsAmonBlocks : assetsAmonModels);
-                            Files.copy(f.toPath(), new File(targetDir, f.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                        } else if (name.endsWith(".png")) {
-                            // Plik PNG
-                            String baseName = f.getName().substring(0, f.getName().length() - 4);
-                            boolean isBoss = baseName.contains("spirit") || baseName.contains("boss");
-                            boolean isBlock = baseName.contains("ore") || baseName.contains("block");
-                            File targetDir = isBoss ? assetsAmonBossTextures : (isBlock ? assetsAmonBlockTextures : assetsAmonTextures);
-                            Files.copy(f.toPath(), new File(targetDir, f.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            boolean isBoss = baseName.toLowerCase(Locale.ROOT).contains("spirit") || baseName.toLowerCase(Locale.ROOT).contains("boss");
+                            boolean isBlock = baseName.toLowerCase(Locale.ROOT).contains("ore") || baseName.toLowerCase(Locale.ROOT).contains("block");
+                            String category = isBoss ? "boss" : (isBlock ? "block" : "item");
+                            File targetDir = isBoss ? amonpackModelsBoss : (isBlock ? amonpackModelsBlock : amonpackModelsItem);
+
+                            try {
+                                String content = new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
+                                JsonObject jsonModel = JsonParser.parseString(content).getAsJsonObject();
+
+                                // Rewriting texture dictionary to guarantee 100% resolution
+                                if (jsonModel.has("textures") && jsonModel.get("textures").isJsonObject()) {
+                                    JsonObject origTex = jsonModel.getAsJsonObject("textures");
+                                    JsonObject rewrittenTex = new JsonObject();
+                                    for (Map.Entry<String, JsonElement> te : origTex.entrySet()) {
+                                        rewrittenTex.addProperty(te.getKey(), "amonpack:" + category + "/" + baseName);
+                                    }
+                                    rewrittenTex.addProperty("particle", "amonpack:" + category + "/" + baseName);
+                                    jsonModel.add("textures", rewrittenTex);
+                                }
+
+                                Files.write(new File(targetDir, f.getName()).toPath(), GSON.toJson(jsonModel).getBytes(StandardCharsets.UTF_8));
+                            } catch (Exception e) {
+                                Files.copy(f.toPath(), new File(targetDir, f.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            }
                         }
                     }
                 }
             }
 
-            // 4. Generowanie plików Minecraft Vanilla Item Overrides
-            // Domyślne mapowania dla przykładowych modeli jeśli nie zarejestrowane ręcznie
+            // 4. Rejestracja domyślnych modeli
             registerModelOverride("diamond_sword", 10001, "amonpack:item/meteor_scythe");
             registerModelOverride("diamond_axe", 10002, "amonpack:item/meteor_axe");
             registerModelOverride("flint", 10003, "amonpack:item/meteor_shard");
@@ -236,15 +278,29 @@ public class PackManager {
             registerModelOverride("note_block", 30001, "amonpack:block/meteoryt_ore");
             registerModelOverride("iron_nugget", 30001, "amonpack:block/meteoryt_ore");
 
+            // 5. Generowanie plików dla 1.14-1.21.1 ORAZ 1.21.2+ (assets/minecraft/models/item oraz assets/minecraft/items)
             for (Map.Entry<String, Map<Integer, String>> entry : vanillaOverrides.entrySet()) {
                 String mat = entry.getKey();
                 Map<Integer, String> cmdMap = entry.getValue();
 
+                boolean isWeapon = mat.contains("sword") || mat.contains("axe") || mat.contains("pickaxe") || mat.contains("shovel") || mat.contains("hoe");
+                boolean isBlock = mat.contains("note_block") || mat.contains("pumpkin") || mat.contains("ore") || mat.contains("stone");
+
+                // A. assets/minecraft/models/item/<mat>.json (1.14 - 1.21.1)
                 JsonObject modelRoot = new JsonObject();
-                modelRoot.addProperty("parent", "minecraft:item/handheld");
-                JsonObject textures = new JsonObject();
-                textures.addProperty("layer0", "minecraft:item/" + mat);
-                modelRoot.add("textures", textures);
+                if (isWeapon) {
+                    modelRoot.addProperty("parent", "minecraft:item/handheld");
+                    JsonObject textures = new JsonObject();
+                    textures.addProperty("layer0", "minecraft:item/" + mat);
+                    modelRoot.add("textures", textures);
+                } else if (isBlock) {
+                    modelRoot.addProperty("parent", "minecraft:block/" + mat);
+                } else {
+                    modelRoot.addProperty("parent", "minecraft:item/generated");
+                    JsonObject textures = new JsonObject();
+                    textures.addProperty("layer0", "minecraft:item/" + mat);
+                    modelRoot.add("textures", textures);
+                }
 
                 JsonArray overrides = new JsonArray();
                 for (Map.Entry<Integer, String> cmdEntry : cmdMap.entrySet()) {
@@ -257,13 +313,42 @@ public class PackManager {
                 }
                 modelRoot.add("overrides", overrides);
 
-                File outOverrideFile = new File(assetsMinecraftModels, mat + ".json");
+                File outOverrideFile = new File(mcModelsItem, mat + ".json");
                 try (FileWriter fw = new FileWriter(outOverrideFile, StandardCharsets.UTF_8)) {
                     fw.write(GSON.toJson(modelRoot));
                 }
+
+                // B. assets/minecraft/items/<mat>.json (1.21.2 - 1.21.4+)
+                JsonObject itemModelRoot = new JsonObject();
+                JsonObject rangeDispatch = new JsonObject();
+                rangeDispatch.addProperty("type", "minecraft:range_dispatch");
+                rangeDispatch.addProperty("property", "minecraft:custom_model_data");
+
+                JsonObject fallback = new JsonObject();
+                fallback.addProperty("type", "minecraft:model");
+                fallback.addProperty("model", isBlock ? "minecraft:block/" + mat : "minecraft:item/" + mat);
+                rangeDispatch.add("fallback", fallback);
+
+                JsonArray entries = new JsonArray();
+                for (Map.Entry<Integer, String> cmdEntry : cmdMap.entrySet()) {
+                    JsonObject entryObj = new JsonObject();
+                    entryObj.addProperty("threshold", cmdEntry.getKey());
+                    JsonObject mObj = new JsonObject();
+                    mObj.addProperty("type", "minecraft:model");
+                    mObj.addProperty("model", cmdEntry.getValue());
+                    entryObj.add("model", mObj);
+                    entries.add(entryObj);
+                }
+                rangeDispatch.add("entries", entries);
+                itemModelRoot.add("model", rangeDispatch);
+
+                File outItemDefFile = new File(mcItems121, mat + ".json");
+                try (FileWriter fw = new FileWriter(outItemDefFile, StandardCharsets.UTF_8)) {
+                    fw.write(GSON.toJson(itemModelRoot));
+                }
             }
 
-            // 5. Pakowanie do pliku ZIP
+            // 6. Pakowanie do ZIP
             if (!generatedZip.getParentFile().exists()) {
                 generatedZip.getParentFile().mkdirs();
             }
@@ -274,7 +359,7 @@ public class PackManager {
             zipDirectory(tempBuildDir, generatedZip);
             deleteDirectory(tempBuildDir);
 
-            // 6. Obliczanie SHA-1
+            // 7. Obliczanie SHA-1
             this.packHash = calculateSha1(generatedZip);
             this.packHashHex = bytesToHex(packHash);
 
@@ -315,7 +400,6 @@ public class PackManager {
     }
 
     private String resolveHost(Player player) {
-        // 1. Jeśli w configu ustawiono jawne IP/domenę inną niż auto/127.0.0.1/localhost
         if (hostAddress != null && !hostAddress.isEmpty()
                 && !hostAddress.equalsIgnoreCase("auto")
                 && !hostAddress.equalsIgnoreCase("127.0.0.1")
@@ -323,7 +407,6 @@ public class PackManager {
             return hostAddress;
         }
 
-        // 2. Jeśli gracz jest połączony na Paper/Purpur, sprawdź domenę/IP przez którą wszedł
         if (player != null && player.isOnline()) {
             try {
                 java.lang.reflect.Method m = player.getClass().getMethod("getVirtualHost");
@@ -337,13 +420,11 @@ public class PackManager {
             } catch (Throwable ignored) {}
         }
 
-        // 3. Sprawdź IP serwera z server.properties (Bukkit.getIp())
         String serverIp = Bukkit.getIp();
         if (serverIp != null && !serverIp.isEmpty() && !serverIp.equals("0.0.0.0") && !serverIp.equals("127.0.0.1")) {
             return serverIp;
         }
 
-        // 4. Użyj wykrytego publicznego IP
         if (detectedPublicIp != null && !detectedPublicIp.isEmpty()) {
             return detectedPublicIp;
         }

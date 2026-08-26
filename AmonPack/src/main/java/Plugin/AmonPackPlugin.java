@@ -501,6 +501,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		this.getServer().getPluginManager().registerEvents(new CustomContent.Blocks.CustomBlockListener(customBlockManager, customItemManager), this);
 		this.getServer().getPluginManager().registerEvents(new CustomContent.Blocks.OreWorldGenerator(customBlockManager), this);
 		this.getServer().getPluginManager().registerEvents(new CustomContent.Bosses.BossListener(bossManager, customItemManager), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Commands.DebugToolListener(packManager, customItemManager, customBlockManager, bossManager), this);
 
 		if (this.getCommand("amon") != null) {
 			CustomContent.Commands.AmonCommand amonCmd = new CustomContent.Commands.AmonCommand(packManager, customItemManager, customBlockManager, bossManager);

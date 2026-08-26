@@ -142,8 +142,7 @@ public class CustomBlockManager {
                     item.setItemMeta(meta);
                 }
                 d.setItemStack(item);
-                d.setDisplayWidth(1.002f);
-                d.setDisplayHeight(1.002f);
+                d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
             });
             activeDisplays.put(locKey(loc), display);
         } catch (Throwable ignored) {

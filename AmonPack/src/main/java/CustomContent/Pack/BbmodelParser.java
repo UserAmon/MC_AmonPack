@@ -3,56 +3,79 @@ package CustomContent.Pack;
 import com.google.gson.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.util.*;
 
 /**
  * Parser konwertujący modele Blockbench (.bbmodel) do formatu Minecraft Java (.json)
- * oraz wypakowujący zagnieżdżone tekstury PNG z Base64.
+ * z automatycznym skalowaniem współrzędnych UV do zakresu 0..16, ochroną limitu [-16.0, 32.0]
+ * oraz ekstrakcją wszystkich zagnieżdżonych tekstur.
  */
 public class BbmodelParser {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
+    public static class TextureData {
+        public String id;
+        public String fileName;
+        public byte[] bytes;
+        public double width;
+        public double height;
+
+        public TextureData(String id, String fileName, byte[] bytes, double width, double height) {
+            this.id = id;
+            this.fileName = fileName;
+            this.bytes = bytes;
+            this.width = width > 0 ? width : 16.0;
+            this.height = height > 0 ? height : 16.0;
+        }
+    }
+
     public static class ConversionResult {
         public String modelJson;
-        public byte[] textureBytes;
-        public String textureName;
+        public List<TextureData> textures = new ArrayList<>();
 
-        public ConversionResult(String modelJson, byte[] textureBytes, String textureName) {
+        public ConversionResult(String modelJson, List<TextureData> textures) {
             this.modelJson = modelJson;
-            this.textureBytes = textureBytes;
-            this.textureName = textureName;
+            this.textures = textures;
         }
     }
 
     /**
-     * Konwertuje plik .bbmodel do formatu modelu Minecraft JSON oraz ekstrahuje główną teksturę PNG.
+     * Konwertuje plik .bbmodel do formatu modelu Minecraft JSON oraz ekstrahuje wszystkie tekstury PNG.
      */
-    public static ConversionResult convertBbmodel(File bbmodelFile, String textureNamespacePath) throws Exception {
+    public static ConversionResult convertBbmodel(File bbmodelFile, String textureNamespaceBase) throws Exception {
         try (Reader reader = new InputStreamReader(new FileInputStream(bbmodelFile), StandardCharsets.UTF_8)) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
 
-            byte[] extractedTexture = null;
-            String textureFileName = bbmodelFile.getName().replace(".bbmodel", ".png");
+            List<TextureData> extractedTextures = new ArrayList<>();
+            Map<String, TextureData> textureMap = new HashMap<>();
 
-            // 1. Ekstrakcja tekstur
+            // 1. Ekstrakcja wszystkich tekstur z .bbmodel
             if (root.has("textures") && root.get("textures").isJsonArray()) {
                 JsonArray textures = root.getAsJsonArray("textures");
-                if (textures.size() > 0) {
-                    JsonObject firstTex = textures.get(0).getAsJsonObject();
-                    if (firstTex.has("name")) {
-                        textureFileName = firstTex.get("name").getAsString();
-                        if (!textureFileName.endsWith(".png")) {
-                            textureFileName += ".png";
-                        }
+                for (int i = 0; i < textures.size(); i++) {
+                    JsonObject texObj = textures.get(i).getAsJsonObject();
+                    String id = texObj.has("id") ? texObj.get("id").getAsString() : String.valueOf(i);
+                    String name = texObj.has("name") ? texObj.get("name").getAsString() : "texture_" + id + ".png";
+                    if (!name.endsWith(".png")) {
+                        name += ".png";
                     }
-                    if (firstTex.has("source") && !firstTex.get("source").isJsonNull()) {
-                        String source = firstTex.get("source").getAsString();
+
+                    double w = texObj.has("uv_width") ? texObj.get("uv_width").getAsDouble() : (texObj.has("width") ? texObj.get("width").getAsDouble() : 16.0);
+                    double h = texObj.has("uv_height") ? texObj.get("uv_height").getAsDouble() : (texObj.has("height") ? texObj.get("height").getAsDouble() : 16.0);
+
+                    byte[] bytes = null;
+                    if (texObj.has("source") && !texObj.get("source").isJsonNull()) {
+                        String source = texObj.get("source").getAsString();
                         if (source.contains("base64,")) {
                             String base64 = source.substring(source.indexOf("base64,") + 7);
-                            extractedTexture = Base64.getDecoder().decode(base64);
+                            bytes = Base64.getDecoder().decode(base64);
                         }
                     }
+
+                    TextureData td = new TextureData(id, name, bytes, w, h);
+                    extractedTextures.add(td);
+                    textureMap.put(id, td);
                 }
             }
 
@@ -62,15 +85,47 @@ public class BbmodelParser {
 
             // Textures dictionary
             JsonObject texturesObj = new JsonObject();
-            String texKey = textureNamespacePath;
-            if (texKey.endsWith(".png")) {
-                texKey = texKey.substring(0, texKey.length() - 4);
+            String baseTexKey = textureNamespaceBase;
+            if (baseTexKey.endsWith(".png")) {
+                baseTexKey = baseTexKey.substring(0, baseTexKey.length() - 4);
             }
-            texturesObj.addProperty("0", texKey);
-            texturesObj.addProperty("1", texKey);
-            texturesObj.addProperty("2", texKey);
-            texturesObj.addProperty("particle", texKey);
+
+            if (extractedTextures.isEmpty()) {
+                texturesObj.addProperty("0", baseTexKey);
+                texturesObj.addProperty("particle", baseTexKey);
+            } else {
+                for (TextureData td : extractedTextures) {
+                    String subTexKey = baseTexKey;
+                    if (extractedTextures.size() > 1 && !td.id.equals("0")) {
+                        subTexKey = baseTexKey + "_" + td.id;
+                    }
+                    texturesObj.addProperty(td.id, subTexKey);
+                }
+                texturesObj.addProperty("particle", baseTexKey);
+            }
             mcModel.add("textures", texturesObj);
+
+            // Obliczenie granic modelu dla ochrony limitu [-16.0, 32.0] w Minecraft Java
+            double maxY = -999;
+            double minY = 999;
+            if (root.has("elements") && root.get("elements").isJsonArray()) {
+                JsonArray srcElements = root.getAsJsonArray("elements");
+                for (JsonElement el : srcElements) {
+                    if (!el.isJsonObject()) continue;
+                    JsonObject srcObj = el.getAsJsonObject();
+                    if (srcObj.has("from") && srcObj.has("to")) {
+                        double fY = srcObj.getAsJsonArray("from").get(1).getAsDouble();
+                        double tY = srcObj.getAsJsonArray("to").get(1).getAsDouble();
+                        minY = Math.min(minY, Math.min(fY, tY));
+                        maxY = Math.max(maxY, Math.max(fY, tY));
+                    }
+                }
+            }
+
+            double shiftY = 0.0;
+            if (maxY > 32.0) {
+                shiftY = -(maxY - 32.0);
+            }
 
             // Elements
             if (root.has("elements") && root.get("elements").isJsonArray()) {
@@ -83,13 +138,36 @@ public class BbmodelParser {
 
                     JsonObject outObj = new JsonObject();
                     if (srcObj.has("name")) outObj.addProperty("name", srcObj.get("name").getAsString());
-                    if (srcObj.has("from")) outObj.add("from", srcObj.get("from"));
-                    if (srcObj.has("to")) outObj.add("to", srcObj.get("to"));
+
+                    // From i To z przesunięciem Y jeśli wymagane
+                    if (srcObj.has("from") && srcObj.get("from").isJsonArray()) {
+                        JsonArray f = srcObj.getAsJsonArray("from");
+                        JsonArray newF = new JsonArray();
+                        newF.add(clampCoord(f.get(0).getAsDouble()));
+                        newF.add(clampCoord(f.get(1).getAsDouble() + shiftY));
+                        newF.add(clampCoord(f.get(2).getAsDouble()));
+                        outObj.add("from", newF);
+                    }
+                    if (srcObj.has("to") && srcObj.get("to").isJsonArray()) {
+                        JsonArray t = srcObj.getAsJsonArray("to");
+                        JsonArray newT = new JsonArray();
+                        newT.add(clampCoord(t.get(0).getAsDouble()));
+                        newT.add(clampCoord(t.get(1).getAsDouble() + shiftY));
+                        newT.add(clampCoord(t.get(2).getAsDouble()));
+                        outObj.add("to", newT);
+                    }
 
                     // Rotation
                     if (srcObj.has("rotation") || srcObj.has("origin")) {
                         JsonObject rotObj = new JsonObject();
-                        if (srcObj.has("origin")) rotObj.add("origin", srcObj.get("origin"));
+                        if (srcObj.has("origin") && srcObj.get("origin").isJsonArray()) {
+                            JsonArray orig = srcObj.getAsJsonArray("origin");
+                            JsonArray newOrig = new JsonArray();
+                            newOrig.add(clampCoord(orig.get(0).getAsDouble()));
+                            newOrig.add(clampCoord(orig.get(1).getAsDouble() + shiftY));
+                            newOrig.add(clampCoord(orig.get(2).getAsDouble()));
+                            rotObj.add("origin", newOrig);
+                        }
                         if (srcObj.has("rotation") && srcObj.get("rotation").isJsonArray()) {
                             JsonArray rot = srcObj.getAsJsonArray("rotation");
                             if (rot.size() >= 3) {
@@ -122,8 +200,36 @@ public class BbmodelParser {
                             if (srcFaces.has(faceName)) {
                                 JsonObject srcFace = srcFaces.getAsJsonObject(faceName);
                                 JsonObject outFace = new JsonObject();
-                                if (srcFace.has("uv")) outFace.add("uv", srcFace.get("uv"));
-                                outFace.addProperty("texture", "#0");
+
+                                String texId = "0";
+                                if (srcFace.has("texture") && !srcFace.get("texture").isJsonNull()) {
+                                    texId = srcFace.get("texture").getAsString();
+                                    if (texId.startsWith("#")) texId = texId.substring(1);
+                                }
+                                outFace.addProperty("texture", "#" + texId);
+
+                                // Skalowanie UV do zakresu 0..16
+                                if (srcFace.has("uv") && srcFace.get("uv").isJsonArray()) {
+                                    JsonArray rawUv = srcFace.getAsJsonArray("uv");
+                                    if (rawUv.size() == 4) {
+                                        TextureData td = textureMap.get(texId);
+                                        double tw = (td != null && td.width > 0) ? td.width : 16.0;
+                                        double th = (td != null && td.height > 0) ? td.height : 16.0;
+
+                                        double u1 = (rawUv.get(0).getAsDouble() / tw) * 16.0;
+                                        double v1 = (rawUv.get(1).getAsDouble() / th) * 16.0;
+                                        double u2 = (rawUv.get(2).getAsDouble() / tw) * 16.0;
+                                        double v2 = (rawUv.get(3).getAsDouble() / th) * 16.0;
+
+                                        JsonArray scaledUv = new JsonArray();
+                                        scaledUv.add(Math.round(u1 * 1000.0) / 1000.0);
+                                        scaledUv.add(Math.round(v1 * 1000.0) / 1000.0);
+                                        scaledUv.add(Math.round(u2 * 1000.0) / 1000.0);
+                                        scaledUv.add(Math.round(v2 * 1000.0) / 1000.0);
+                                        outFace.add("uv", scaledUv);
+                                    }
+                                }
+
                                 if (srcFace.has("rotation")) outFace.addProperty("rotation", srcFace.get("rotation").getAsInt());
                                 outFaces.add(faceName, outFace);
                             }
@@ -164,11 +270,22 @@ public class BbmodelParser {
                 gui.add("scale", guiScale);
                 display.add("gui", gui);
 
+                JsonObject fixed = new JsonObject();
+                JsonArray fixedScale = new JsonArray(); fixedScale.add(1.0); fixedScale.add(1.0); fixedScale.add(1.0);
+                fixed.add("scale", fixedScale);
+                display.add("fixed", fixed);
+
                 mcModel.add("display", display);
             }
 
             String outputJson = GSON.toJson(mcModel);
-            return new ConversionResult(outputJson, extractedTexture, textureFileName);
+            return new ConversionResult(outputJson, extractedTextures);
         }
+    }
+
+    private static double clampCoord(double val) {
+        if (val < -16.0) return -16.0;
+        if (val > 32.0) return 32.0;
+        return Math.round(val * 1000.0) / 1000.0;
     }
 }

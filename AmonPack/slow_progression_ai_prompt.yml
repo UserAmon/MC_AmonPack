@@ -1,0 +1,538 @@
+project:
+  name: "Slow Progression"
+  type: "Minecraft RPG progression system"
+  context: >
+    The existing Minecraft plugin already contains custom bosses, dungeons,
+    and custom items. Implement a new slow-progression system without
+    duplicating or breaking those existing systems.
+
+ai_instruction: |
+  Implement the complete Slow Progression system described below.
+
+  First inspect the existing plugin architecture. Identify how bosses,
+  dungeons, custom items, player data, events, commands and configuration
+  are currently implemented. Integrate this system with them instead of
+  creating duplicate implementations.
+
+  The goal is to slow down normal Minecraft progression and divide the game
+  into meaningful stages. Each player progresses individually. To unlock a
+  new stage, the player completes required quests from the current stage.
+
+
+core_concept:
+  stage_order:
+    - WOODEN
+    - STONE
+    - IRON
+    - DIAMOND
+    - NETHER
+    - END
+
+  progression_rules:
+    - "Progression is individual per player."
+    - "Different players can be at different stages."
+    - "Each stage contains quest categories."
+    - "Required quests unlock the next stage."
+    - "Exploration is a core part of progression."
+    - "Each stage should introduce meaningful new gameplay."
+    - "Combat progression must include obtaining/crafting appropriate armor and weapons."
+    - "Bosses and dungeons should be important progression milestones."
+    - "Do not lock every vanilla item; restrict only progression-critical content."
+    - "Give clear feedback when a player attempts to use locked content."
+    - "All important values must be configurable."
+
+  categories:
+    - CORE
+    - FARMING_HERBALISM
+    - COOKING_STORAGE_SURVIVAL
+    - ANIMALS_FISHING
+    - MINING
+    - BUILDING_BASE
+    - EXPLORATION
+    - COMBAT
+    - DUNGEONS
+    - BOSSES
+
+  supported_objectives:
+    - destroy_block
+    - collect_item
+    - craft_item
+    - place_block
+    - use_item
+    - use_block
+    - harvest_crop
+    - plant_crop
+    - breed_entity
+    - catch_fish
+    - cook_item
+    - smelt_item
+    - kill_entity
+    - survive_night
+    - discover_biome
+    - discover_structure
+    - travel_distance
+    - mine_to_depth
+    - gain_experience
+    - complete_dungeon
+    - defeat_boss
+    - unlock_knowledge
+    - custom_objective
+
+stages:
+
+  WOODEN:
+    purpose: >
+      Teach the player basic survival: gathering, crafting, farming,
+      cooking, storage, camp preparation, animals, fishing, combat,
+      experience, exploration and surviving the first night.
+
+    required_quests:
+      CORE:
+        - "Destroy wood x5"
+        - "Craft a Crafting Table"
+        - "Craft a wooden axe"
+        - "Craft a wooden pickaxe"
+        - "Craft a wooden sword"
+        - "Craft a wooden shovel"
+        - "Collect wood x64"
+        - "Plant tree saplings"
+
+      FARMING_HERBALISM:
+        - "Collect wheat seeds x10"
+        - "Craft a wooden hoe"
+        - "Prepare farmland x10"
+        - "Plant wheat seeds"
+        - "Harvest wheat"
+        - "Craft bread"
+        - "Eat bread x3"
+        - "Craft a composter"
+        - "Use a composter"
+        - "Use bone meal on a crop"
+
+      COOKING_STORAGE_SURVIVAL:
+        - "Craft a chest"
+        - "Mine cobblestone x8"
+        - "Craft a furnace"
+        - "Obtain coal OR create charcoal"
+        - "Cook food in a furnace"
+        - "Craft a campfire"
+        - "Use a campfire"
+        - "Craft a bed"
+        - "Use a bed"
+        - "Gain experience x5"
+
+      ANIMALS_FISHING:
+        - "Collect seeds x2"
+        - "Breed chickens"
+        - "Collect wheat"
+        - "Breed sheep"
+        - "Craft a fishing rod"
+        - "Catch a fish"
+
+      EXPLORATION:
+        - "Discover Plains"
+        - "Discover Forest"
+        - "Discover one additional basic biome"
+        - "Travel a configurable distance from the starting/base area"
+      exploration_biomes:
+        - Plains
+        - Forest
+        - Birch Forest
+        - Meadow
+
+      COMBAT:
+        - "Kill aggressive mobs x5"
+        - "Survive the first night"
+        - "Craft a full leather armor set"
+        - "Gain combat experience / player experience x10"
+
+    completion:
+      unlock: STONE
+      message: "WOODEN STAGE COMPLETED - STONE UNLOCKED"
+
+  STONE:
+    purpose: >
+      Move from basic survival into settlement development, structured mining,
+      improved farming, combat and wider Overworld exploration.
+
+    required_quests:
+      MINING:
+        - "Craft stone tools"
+        - "Mine cobblestone x128"
+        - "Obtain coal x16"
+        - "Create/start a mine"
+        - "Reach a configurable mining depth"
+
+      BUILDING_BASE:
+        - "Expand the base"
+        - "Create additional storage"
+        - "Create a larger farm"
+        - "Create a sleeping area"
+        - "Create required basic utility stations"
+
+      FARMING_HERBALISM:
+        - "Harvest crops x32"
+        - "Breed animals x5"
+        - "Prepare a food supply"
+        - "Use bone meal x5"
+        - "Use composter x5"
+
+      EXPLORATION:
+        - "Discover Taiga"
+        - "Discover Dark Forest"
+        - "Discover Savanna"
+        - "Discover Swamp"
+        - "Discover a mountain biome"
+        - "Discover at least 5 new biomes"
+        - "Discover a basic structure"
+
+      COMBAT:
+        - "Kill aggressive mobs x15"
+        - "Kill a stronger hostile mob"
+        - "Craft a full armor set appropriate for the Stone stage"
+        - "Craft a basic Stone-stage weapon"
+        - "Gain experience x25"
+
+    completion:
+      unlock: IRON
+
+  IRON:
+    purpose: >
+      Begin advanced survival, deeper mining, first dungeons
+      and first custom bosses.
+
+    required_quests:
+      MINING:
+        - "Obtain iron ore"
+        - "Smelt iron"
+        - "Craft an iron pickaxe"
+        - "Expand the mine"
+        - "Reach deeper mining layers"
+        - "Discover additional ores"
+
+
+      DUNGEONS:
+        - "Discover the first dungeon"
+        - "Enter the first dungeon"
+        - "Complete the first dungeon"
+        - "Defeat the first dungeon mini-boss"
+
+      EXPLORATION:
+        - "Discover Desert"
+        - "Discover Jungle"
+        - "Discover Badlands"
+        - "Discover a snowy biome"
+        - "Discover at least 5 new biomes"
+        - "Discover an advanced structure"
+      exploration_biomes:
+        - Desert
+        - Jungle
+        - Badlands
+        - Snowy biomes
+        - Deep Dark
+
+      BOSSES:
+        - "Defeat the first custom boss"
+        - "Obtain the required boss drop"
+
+      COMBAT:
+        - "Kill aggressive mobs x25"
+        - "Kill stronger hostile mobs"
+        - "Craft full iron armor"
+        - "Craft an iron weapon"
+        - "Defeat the first mini-boss"
+        - "Gain experience x50"
+
+    completion:
+      unlock: DIAMOND
+
+  DIAMOND:
+    purpose: >
+      Transition from survival into full RPG progression
+      difficult dungeons, powerful bosses and preparation for the Nether.
+
+    required_quests:
+      MINING:
+        - "Find diamonds"
+        - "Craft a diamond pickaxe"
+        - "Obtain rare materials"
+
+
+      DUNGEONS:
+        - "Complete an advanced dungeon"
+        - "Defeat a dungeon boss"
+        - "Obtain rare or legendary dungeon loot"
+
+      EXPLORATION:
+        - "Discover Mushroom Fields"
+        - "Discover Mangrove Swamp"
+        - "Discover Cherry Grove"
+        - "Discover a rare/frozen ocean biome"
+        - "Discover Ocean Monument"
+        - "Discover Ancient City / Deep Dark"
+        - "Discover at least 5 rare biomes or structures"
+
+      BOSSES:
+        - "Defeat required custom bosses"
+        - "Obtain materials required for Nether progression"
+
+      COMBAT:
+        - "Kill strong mobs x30"
+        - "Defeat required bosses"
+        - "Craft full diamond armor"
+        - "Craft a diamond weapon"
+        - "Complete the required dungeon"
+        - "Gain experience x100"
+
+    completion:
+      unlock: NETHER
+
+  NETHER:
+    purpose: >
+      Treat the Nether as its own major progression layer instead of a short
+      step between Diamond and End.
+
+    required_quests:
+      EXPLORATION:
+        - "Enter the Nether"
+        - "Discover required Nether biomes"
+        - "Find a Nether Fortress"
+        - "Find a Bastion"
+        - "Obtain required Nether materials"
+        - "Explore required Nether regions"
+      exploration_biomes:
+        - Nether Wastes
+        - Crimson Forest
+        - Warped Forest
+        - Soul Sand Valley
+        - Basalt Deltas
+
+      MINING:
+        - "Discover Ancient Debris"
+        - "Obtain Netherite"
+        - "Craft Netherite equipment"
+
+      DUNGEONS:
+        - "Complete a Nether dungeon"
+        - "Obtain Nether dungeon loot"
+
+      BOSSES:
+        - "Defeat a Nether mini-boss"
+        - "Defeat the Nether dungeon boss"
+        - "Defeat the main Nether boss"
+        - "Obtain Infernal/Ancient Core or equivalent progression item"
+
+      COMBAT:
+        - "Kill Nether mobs"
+        - "Defeat a Nether mini-boss"
+        - "Craft full Netherite armor"
+        - "Craft a Netherite weapon"
+        - "Defeat the Nether Boss"
+        - "Gain experience x200"
+
+    completion:
+      unlock: END
+
+  END:
+    purpose: >
+      Finish vanilla progression and introduce the final major custom dungeons,
+      bosses and materials before Endgame.
+
+    required_quests:
+      EXPLORATION:
+        - "Enter the End"
+        - "Explore End islands"
+        - "Find an End City"
+        - "Obtain Elytra"
+        - "Obtain Shulker loot"
+        - "Discover required End structures or regions"
+
+      DUNGEONS:
+        - "Discover an End dungeon"
+        - "Complete the End dungeon"
+        - "Obtain End dungeon materials"
+
+      BOSSES:
+        - "Defeat the Ender Dragon"
+        - "Defeat required custom End bosses"
+        - "Defeat the final required End boss"
+
+      COMBAT:
+        - "Kill End mobs"
+        - "Defeat the Ender Dragon"
+        - "Defeat required End bosses"
+        - "Craft the full armor set appropriate for the End stage"
+        - "Craft an appropriate End-stage weapon"
+        - "Complete the End dungeon"
+        - "Gain experience x500"
+
+    completion:
+      unlock: ENDGAME
+
+progression_level:
+  description: >
+    Analyze current skills and levels mechanics, implement and merge it. For example as an objective
+    you can add an quest "reach lvl 10 in minig" use levels and skills and help Players
+    leran about them.
+
+exploration_system:
+  rules:
+    - "Biome discovery is tracked per player."
+    - "A biome counts when the player actually enters/discovers it."
+    - "Previously discovered biomes remain discovered permanently."
+    - "Each stage requires biomes appropriate to its progression level."
+    - "Custom biomes must be supported."
+    - "Structures can also be exploration objectives."
+    - "Do not require locked-dimension biomes before the relevant stage."
+
+multiplayer:
+  rules:
+    - "Every player has independent progression."
+    - "Players can cooperate despite being at different stages."
+    - "High-stage players must not automatically unlock low-stage progression."
+    - "Trading/item-transfer bypass rules should be configurable."
+
+world_progression:
+  future_support: >
+    Design the architecture so a future global World Age system can be added
+    without rewriting individual player progression.
+  example:
+    world_age: 3
+    active_stage: IRON
+
+ui:
+  requirements:
+    - "Show current stage."
+    - "Show progress toward the next stage."
+    - "Show quest categories and quest progress."
+    - "Clearly distinguish required and optional quests."
+    - "Show daily quests separately."
+    - "Show biome discoveries."
+    - "Show milestone completion."
+    - "Show newly unlocked stages."
+    - "Give useful feedback when attempting locked content."
+    - "Support configurable messages."
+    - "Provide GUI and/or commands for progression."
+
+persistence:
+  save:
+    - current_player_stage
+    - completed_quests
+    - quest_progress
+    - optional_quest_progress
+    - daily_quest_assignments
+    - daily_quest_completion
+    - discovered_biomes
+    - discovered_structures
+    - milestones
+    - knowledge_discoveries
+    - progression_level
+    - timestamps_and_cooldowns
+  requirements:
+    - "All data survives server restarts."
+    - "Quest progress must not be lost on crashes."
+    - "Use asynchronous storage/database operations where appropriate."
+
+configuration:
+  must_be_configurable:
+    - quest_objectives
+    - quest_amounts
+    - required_vs_optional
+    - quest_rewards
+    - stage_requirements
+    - biome_requirements
+    - structure_requirements
+    - boss_requirements
+    - dungeon_requirements
+    - experience_requirements
+    - daily_quest_pools
+    - daily_quest_count
+    - daily_quest_rewards
+    - messages
+    - stage_names
+    - stage_icons
+    - stage_colors
+    - content_restrictions
+
+integration:
+  bosses:
+    - "Use the existing boss implementation."
+    - "Do not create a duplicate boss system."
+    - "Listen for existing boss defeat/completion events."
+    - "Allow configured bosses to satisfy progression objectives."
+  dungeons:
+    - "Use the existing dungeon implementation."
+    - "Do not create a duplicate dungeon system."
+    - "Listen for existing dungeon completion events."
+    - "Allow configured dungeons to satisfy progression objectives."
+  custom_items:
+    - "Use the existing custom item implementation."
+    - "Allow custom items to be quest objectives or rewards."
+  customContent:
+    - "analyze it and implement in this"
+  RPF folder - crafting,levels and skill trees:
+    - "Analyze and merge it."
+suggested_architecture:
+  services:
+    - ProgressionService
+    - StageService
+    - QuestService
+    - QuestRegistry
+    - QuestProgressTracker
+    - DailyQuestService
+    - ExplorationService
+    - MilestoneService
+    - KnowledgeService
+    - RewardService
+    - ProgressionStorage
+  listeners:
+    - BlockBreakListener
+    - CraftListener
+    - SmeltListener
+    - EntityDeathListener
+    - PlayerInteractListener
+    - PlayerFishListener
+    - PlayerBreedListener
+    - PlayerMoveListener
+    - PlayerChangedWorldListener
+    - ExperienceListener
+    - BossProgressionListener
+    - DungeonProgressionListener
+    - DayChangeListener
+  commands:
+    - /progression
+    - /progress
+    - /quests
+    - /dailyquests
+    - /stage
+
+implementation_principles:
+  - "Slow progression without making gameplay tedious."
+  - "Every stage must feel meaningfully different."
+  - "Exploration should be as important as mining."
+  - "Combat gear progresses naturally with every stage."
+  - "Every stage requires appropriate armor as a combat gear check."
+  - "Bosses and dungeons are major progression milestones."
+  - "Daily quests improve replayability but are never mandatory."
+  - "Players must always understand what they need to do next."
+  - "Avoid unnecessary grinding."
+  - "Avoid hardcoding configurable values."
+  - "Keep the system modular and extensible."
+  - "Do not duplicate existing plugin functionality."
+
+final_delivery_requirements:
+  after_implementation_provide:
+    - "What was added"
+    - "Files/classes created or modified"
+    - "Configuration files added"
+    - "Database/data changes"
+    - "Commands"
+    - "Permissions"
+    - "Events/API hooks"
+    - "How to test every stage"
+    - "Known limitations"
+    - "Example configuration"
+
+important:
+  - "create seperate folder for it"
+  

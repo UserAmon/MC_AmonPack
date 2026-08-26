@@ -2,8 +2,8 @@
 	"format_version": "1.9.0",
 	"credit": "Made with Blockbench",
 	"textures": {
-		"4": "amon:items/mining/meteor_shard",
-		"particle": "amon:items/mining/meteor_shard"
+		"4": "amonpack:item/meteor_shard",
+		"particle": "amonpack:item/meteor_shard"
 	},
 	"elements": [
 		{

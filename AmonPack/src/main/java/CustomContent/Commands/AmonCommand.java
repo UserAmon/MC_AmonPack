@@ -10,6 +10,7 @@ import CustomContent.Pack.PackManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -58,6 +59,12 @@ public class AmonCommand implements CommandExecutor {
 
             case "pack":
                 handlePack(sender, args);
+                break;
+
+            case "debug":
+            case "inspect":
+            case "tool":
+                handleDebug(sender, args);
                 break;
 
             case "reload":
@@ -247,6 +254,31 @@ public class AmonCommand implements CommandExecutor {
         }
     }
 
+    private void handleDebug(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("§cKomenda debugu dostępna jest tylko dla graczy w grze.");
+            return;
+        }
+
+        if (args[0].equalsIgnoreCase("tool") || (args.length >= 2 && args[1].equalsIgnoreCase("tool"))) {
+            ItemStack tool = DebugToolListener.createDebugTool();
+            player.getInventory().addItem(tool);
+            player.sendMessage("§a[AmonPack] Otrzymałeś §eInspektor Modeli 3D §a(Blaze Rod). Kliknij nim PPM lub LPM na blok/moba lub trzymaj w ręce!");
+            return;
+        }
+
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item == null || item.getType() == Material.AIR) {
+            ItemStack tool = DebugToolListener.createDebugTool();
+            player.getInventory().addItem(tool);
+            player.sendMessage("§a[AmonPack] Nie trzymasz przedmiotu w ręce. Otrzymałeś §eInspektor Modeli 3D§a!");
+            return;
+        }
+
+        DebugToolListener listener = new DebugToolListener(packManager, itemManager, blockManager, bossManager);
+        listener.inspectItem(player, item);
+    }
+
     private void sendHelp(CommandSender sender) {
         sender.sendMessage("§6=== Komendy AmonPack Custom Content ===");
         sender.sendMessage(" §e/amon item give <gracz> <item_id> [ilość] §7- Przywołuje customowy przedmiot/broń");
@@ -257,6 +289,8 @@ public class AmonCommand implements CommandExecutor {
         sender.sendMessage(" §e/amon boss killall §7- Usuwa wszystkich bossów");
         sender.sendMessage(" §e/amon pack build §7- Kompiluje paczkę .bbmodel/.json do ZIP");
         sender.sendMessage(" §e/amon pack apply [gracz] §7- Wysyła paczkę graczowi");
+        sender.sendMessage(" §e/amon debug §7- Sprawdza CustomModelData trzymanego przedmiotu");
+        sender.sendMessage(" §e/amon debug tool §7- Daje różdżkę do badania modeli/bloków/bossów");
         sender.sendMessage(" §e/amon reload §7- Przeładowuje konfiguracje");
     }
 }
