@@ -17,6 +17,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import RPG.Progression.ProgressionManager;
+import RPG.Progression.model.ObjectiveType;
+
 import java.util.*;
 
 import static RPG.Gathering.MiningMenager.isNaturalBlock;
@@ -125,8 +131,204 @@ public class ForestMenager {
         }
     }
 
+    public static boolean isAxe(ItemStack item) {
+        if (item == null) return false;
+        String name = item.getType().name();
+        return name.endsWith("_AXE");
+    }
+
+    public static boolean isLog(Material mat) {
+        if (mat == null) return false;
+        String name = mat.name();
+        return name.endsWith("_LOG") || name.endsWith("_WOOD") || name.endsWith("_STEM") || name.endsWith("_HYPHAE");
+    }
+
+    public static boolean isLeaves(Material mat) {
+        if (mat == null) return false;
+        String name = mat.name();
+        return name.endsWith("_LEAVES") || name.endsWith("_WART_BLOCK") || mat == Material.SHROOMLIGHT || mat == Material.MANGROVE_ROOTS;
+    }
+
+    public static boolean isBuildingBlock(Material mat) {
+        if (mat == null || mat.isAir()) return false;
+        String name = mat.name();
+        return name.endsWith("_PLANKS") || name.endsWith("_STAIRS") || name.endsWith("_SLAB") ||
+                name.endsWith("_DOOR") || name.endsWith("_TRAPDOOR") || name.endsWith("_FENCE") ||
+                name.endsWith("_FENCE_GATE") || name.endsWith("_GLASS") || name.endsWith("_GLASS_PANE") ||
+                name.contains("STONE") || name.contains("BRICK") || name.contains("CONCRETE") ||
+                name.contains("TERRACOTTA") || name.contains("WOOL") || name.contains("CARPET") ||
+                mat == Material.CHEST || mat == Material.TRAPPED_CHEST || mat == Material.BARREL ||
+                mat == Material.FURNACE || mat == Material.BLAST_FURNACE || mat == Material.SMOKER ||
+                mat == Material.CRAFTING_TABLE || mat == Material.ANVIL || mat == Material.CHIPPED_ANVIL ||
+                mat == Material.DAMAGED_ANVIL || mat == Material.ENCHANTING_TABLE || mat == Material.BOOKSHELF ||
+                name.endsWith("_BED");
+    }
+
+    public static boolean isNaturalTree(Block startBlock) {
+        if (startBlock == null || !isLog(startBlock.getType())) return false;
+        if (!isNaturalBlock(startBlock)) return false;
+
+        Set<Block> logs = new HashSet<>();
+        Set<Block> leaves = new HashSet<>();
+        Queue<Block> queue = new LinkedList<>();
+
+        queue.add(startBlock);
+        logs.add(startBlock);
+
+        int maxLogs = 150;
+        int highestY = startBlock.getY();
+
+        while (!queue.isEmpty() && logs.size() <= maxLogs) {
+            Block current = queue.poll();
+            highestY = Math.max(highestY, current.getY());
+
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
+                        Block neighbor = current.getRelative(dx, dy, dz);
+                        Material nType = neighbor.getType();
+
+                        if (isBuildingBlock(nType)) {
+                            return false; // Adjacent to player structure
+                        }
+
+                        if (isLog(nType) && !logs.contains(neighbor)) {
+                            if (!isNaturalBlock(neighbor)) {
+                                return false; // Contains player placed logs
+                            }
+                            logs.add(neighbor);
+                            queue.add(neighbor);
+                        } else if (isLeaves(nType)) {
+                            leaves.add(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Tree must have leaves canopy near top
+        if (leaves.size() < 3) {
+            return false;
+        }
+
+        // Also check if leaves are positioned near the top of the trunk
+        boolean hasTopLeaves = false;
+        for (Block leaf : leaves) {
+            if (leaf.getY() >= highestY - 2) {
+                hasTopLeaves = true;
+                break;
+            }
+        }
+
+        return hasTopLeaves;
+    }
+
+    public static void onStartChopping(Player player, Block block) {
+        if (player == null || block == null) return;
+        if (isNaturalTree(block)) {
+            // Apply slight mining fatigue to simulate heavier effort of chopping entire tree
+            player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 45, 0, false, false, false));
+        }
+    }
+
+    public static boolean tryChopTreeAnimated(Player player, Block startBlock, ItemStack axe) {
+        if (player == null || startBlock == null) return false;
+        if (!isNaturalTree(startBlock)) return false;
+
+        // Remove mining fatigue immediately on break
+        player.removePotionEffect(PotionEffectType.MINING_FATIGUE);
+
+        // Collect all tree blocks
+        Set<Block> logs = new HashSet<>();
+        Set<Block> leaves = new HashSet<>();
+        Queue<Block> queue = new LinkedList<>();
+
+        queue.add(startBlock);
+        logs.add(startBlock);
+
+        while (!queue.isEmpty() && logs.size() <= 200) {
+            Block current = queue.poll();
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
+                        Block neighbor = current.getRelative(dx, dy, dz);
+                        Material nType = neighbor.getType();
+
+                        if (isLog(nType) && !logs.contains(neighbor)) {
+                            logs.add(neighbor);
+                            queue.add(neighbor);
+                        } else if (isLeaves(nType)) {
+                            leaves.add(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+
+        List<Block> sortedLogs = new ArrayList<>(logs);
+        sortedLogs.sort(Comparator.comparingInt(Block::getY));
+
+        List<Block> sortedLeaves = new ArrayList<>(leaves);
+        sortedLeaves.sort(Comparator.comparingInt(Block::getY));
+
+        int totalLogs = sortedLogs.size();
+
+        new BukkitRunnable() {
+            int logIndex = 0;
+            int leafIndex = 0;
+
+            @Override
+            public void run() {
+                if (logIndex < sortedLogs.size()) {
+                    int batch = Math.min(3, sortedLogs.size() - logIndex);
+                    for (int b = 0; b < batch; b++) {
+                        Block logBlock = sortedLogs.get(logIndex++);
+                        if (isLog(logBlock.getType())) {
+                            logBlock.getWorld().spawnParticle(Particle.BLOCK,
+                                    logBlock.getLocation().add(0.5, 0.5, 0.5), 10, 0.25, 0.25, 0.25, logBlock.getBlockData());
+                            logBlock.getWorld().playSound(logBlock.getLocation(), Sound.BLOCK_WOOD_BREAK, 0.8f, 1.0f);
+
+                            BreakBlockInternal(player, logBlock, true);
+
+                            // Quest progression update
+                            if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.DESTROY_BLOCK, "WOOD", 1);
+                                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.COLLECT_ITEM, "WOOD", 1);
+                            }
+                        }
+                    }
+                } else if (leafIndex < sortedLeaves.size()) {
+                    int batch = Math.min(8, sortedLeaves.size() - leafIndex);
+                    for (int b = 0; b < batch; b++) {
+                        Block leafBlock = sortedLeaves.get(leafIndex++);
+                        if (isLeaves(leafBlock.getType())) {
+                            leafBlock.getWorld().spawnParticle(Particle.BLOCK,
+                                    leafBlock.getLocation().add(0.5, 0.5, 0.5), 6, 0.2, 0.2, 0.2, leafBlock.getBlockData());
+                            leafBlock.breakNaturally();
+                        }
+                    }
+                } else {
+                    // Finished
+                    startBlock.getWorld().playSound(startBlock.getLocation(), Sound.BLOCK_GRASS_BREAK, 1.0f, 0.8f);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(AmonPackPlugin.plugin, 0L, 1L);
+
+        // Damage axe
+        if (axe != null && axe.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable dmgMeta) {
+            int damageToApply = Math.max(1, totalLogs / 2);
+            dmgMeta.setDamage(dmgMeta.getDamage() + damageToApply);
+            axe.setItemMeta(dmgMeta);
+        }
+
+        return true;
+    }
+
     public static boolean PlayerBreakBlock(Player player, Block block) {
-        return BreakBlockInternal(player, block,false);
+        return BreakBlockInternal(player, block, false);
     }
 
     private static boolean BreakBlockInternal(Player player, Block block, boolean Naturally) {
@@ -136,13 +338,12 @@ public class ForestMenager {
                     if (ForestBlocks.contains(block.getType())) {
                         List<ItemStack> Drops = new ArrayList<>();
                         int SkillPoints = (int) forest.GetExpByMaterial(block.getType());
-                        if(Naturally){
+                        if (Naturally) {
                             block.breakNaturally();
-                        }else {
+                        } else {
                             Drops.addAll(block.getDrops());
                             block.setType(Material.AIR);
                         }
-
 
                         double modifier = 1;
                         int extraLootChance = 0;
@@ -186,43 +387,6 @@ public class ForestMenager {
     }
 
     public static void ChopTree(Player player, Block startBlock, int maxBlocks) {
-        Set<Block> visited = new HashSet<>();
-        Queue<Block> queue = new LinkedList<>();
-        queue.add(startBlock);
-        visited.add(startBlock);
-
-        int chopped = 0;
-        Material logType = startBlock.getType();
-
-        while (!queue.isEmpty() && chopped < maxBlocks) {
-            Block current = queue.poll();
-
-            if (current.getType() == logType || current.getType().name().contains("LEAVES")) {
-                if (BreakBlockInternal(player, current,true)) {
-                    chopped++;
-                } else {
-                }
-            } else {
-                continue;
-            }
-
-            // Add neighbors
-            for (int x = -1; x <= 1; x++) {
-                for (int y = -1; y <= 1; y++) {
-                    for (int z = -1; z <= 1; z++) {
-                        if (x == 0 && y == 0 && z == 0)
-                            continue;
-
-                        Block relative = current.getRelative(x, y, z);
-                        if (!visited.contains(relative)
-                                && (relative.getType() == logType || relative.getType().name().contains("LEAVES"))) {
-                            visited.add(relative);
-                            queue.add(relative);
-                        }
-                    }
-                }
-            }
-        }
+        tryChopTreeAnimated(player, startBlock, player.getInventory().getItemInMainHand());
     }
-
 }

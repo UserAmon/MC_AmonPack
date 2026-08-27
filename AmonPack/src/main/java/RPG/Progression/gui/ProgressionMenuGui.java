@@ -101,12 +101,15 @@ public class ProgressionMenuGui implements InventoryHolder {
                 lore.add("§eKliknij, aby otworzyć zadania tego etapu!");
             } else {
                 lore.add("§c🔒 ETAP ZABLOKOWANY");
-                lore.add("§7Wymaga ukończenia: " + stage.getPrevious().getDisplayName());
+                lore.add("§7Wymaga ukończenia: " + (stage.getPrevious() != null ? stage.getPrevious().getDisplayName() : "poprzedniego etapu"));
                 lore.add("");
-                lore.add("§8Kliknij, aby podejrzeć przyszłe cele.");
+                lore.add("§cZadania tego etapu są ukryte do momentu awansu!");
             }
 
-            ItemStack stageItem = createItem(stage.getIconMaterial(), stage.getDisplayName(), lore);
+            Material iconMat = isLocked ? Material.GRAY_DYE : stage.getIconMaterial();
+            String title = isLocked ? ("§8🔒 §7" + ChatColor.stripColor(stage.getDisplayName()) + " §c[ZABLOKOWANY]") : stage.getDisplayName();
+
+            ItemStack stageItem = createItem(iconMat, title, lore);
             if (isCurrent || isCompleted) {
                 ItemMeta meta = stageItem.getItemMeta();
                 if (meta != null) {
@@ -144,6 +147,13 @@ public class ProgressionMenuGui implements InventoryHolder {
         for (int i = 0; i < stageSlots.length; i++) {
             if (slot == stageSlots[i]) {
                 StageType selected = stages[i];
+                StageType currentStage = data.getCurrentStage();
+                if (selected.getOrder() > currentStage.getOrder()) {
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
+                    player.sendMessage("§c[SlowProgression] Ten etap jest zablokowany! Musisz najpierw ukończyć obecny etap: " + currentStage.getDisplayName());
+                    return;
+                }
+
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
                 new StageDetailGui(player, data, selected).open();
                 return;

@@ -68,7 +68,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static boolean ENABLE_BENDING_ABILITIES = true;
 	public static boolean ENABLE_RPG_SYSTEMS = true;
 	public static boolean ENABLE_SLOW_PROGRESSION = ENABLE_RPG_SYSTEMS;
-	public static boolean ENABLE_DATABASE = false;
+	public static boolean ENABLE_DATABASE = true;
 	public static boolean ENABLE_SKILL_TREE = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
 	public static boolean ENABLE_DUNGEONS = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
 	public static boolean ENABLE_RPG_GATHERING = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
@@ -518,16 +518,23 @@ public class AmonPackPlugin extends JavaPlugin {
 		packManager.load();
 
 		this.getServer().getPluginManager().registerEvents(new CustomContent.Pack.PackListener(packManager), this);
-		this.getServer().getPluginManager().registerEvents(new CustomContent.Items.CustomItemListener(customItemManager), this);
-		this.getServer().getPluginManager().registerEvents(new CustomContent.Blocks.CustomBlockListener(customBlockManager, customItemManager), this);
-		this.getServer().getPluginManager().registerEvents(new CustomContent.Blocks.OreWorldGenerator(customBlockManager), this);
-		this.getServer().getPluginManager().registerEvents(new CustomContent.Bosses.BossListener(bossManager, customItemManager), this);
-		this.getServer().getPluginManager().registerEvents(new CustomContent.Commands.DebugToolListener(packManager, customItemManager, customBlockManager, bossManager), this);
+		this.getServer().getPluginManager()
+				.registerEvents(new CustomContent.Items.CustomItemListener(customItemManager), this);
+		this.getServer().getPluginManager().registerEvents(
+				new CustomContent.Blocks.CustomBlockListener(customBlockManager, customItemManager), this);
+		this.getServer().getPluginManager()
+				.registerEvents(new CustomContent.Blocks.OreWorldGenerator(customBlockManager), this);
+		this.getServer().getPluginManager()
+				.registerEvents(new CustomContent.Bosses.BossListener(bossManager, customItemManager), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Commands.DebugToolListener(packManager,
+				customItemManager, customBlockManager, bossManager), this);
 
 		if (this.getCommand("amon") != null) {
-			CustomContent.Commands.AmonCommand amonCmd = new CustomContent.Commands.AmonCommand(packManager, customItemManager, customBlockManager, bossManager);
+			CustomContent.Commands.AmonCommand amonCmd = new CustomContent.Commands.AmonCommand(packManager,
+					customItemManager, customBlockManager, bossManager);
 			this.getCommand("amon").setExecutor(amonCmd);
-			this.getCommand("amon").setTabCompleter(new CustomContent.Commands.AmonTabCompleter(customItemManager, customBlockManager, bossManager));
+			this.getCommand("amon").setTabCompleter(
+					new CustomContent.Commands.AmonTabCompleter(customItemManager, customBlockManager, bossManager));
 		}
 
 		// --- 8. SYSTEM SLOW PROGRESSION ---

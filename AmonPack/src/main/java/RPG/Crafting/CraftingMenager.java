@@ -1,10 +1,9 @@
 package RPG.Crafting;
 
+import CustomContent.Hooks.ItemsAdderHook;
 import RPG.Crafting.Objects.*;
 import RPG.Util.InventoryXHolder;
 import RPG.Levels.Objects.LevelSkill;
-import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
-import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import Plugin.AmonPackPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -19,18 +18,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static Plugin.AmonPackPlugin.FastEasyStack;
 import static Plugin.AmonPackPlugin.FastEasyStackWithLoreModelData;
+import static RPG.Crafting.Objects.ItemMold.*;
+import static RPG.Crafting.Objects.MagicEffects.*;
 
 public class CraftingMenager {
-    // listy broni, scrolli, pancerzy.
     public static List<CraftedWeapon> AllCraftableWeapons = new ArrayList<>();
     public static List<Craftable_Tool> AllTools = new ArrayList<>();
     public static List<Craftable_Armor> AllArmor = new ArrayList<>();
-    // AllMolds słuzy do szukania i łączenia itemów na podstawie mold_id
     public static List<ItemMold> AllMolds = new ArrayList<>();
     public static List<MagicEffects> AllMagicEffects = new ArrayList<>();
     public static List<Craftable_Item> AllCraftableItems = new ArrayList<>();
@@ -75,8 +71,8 @@ public class CraftingMenager {
     }
 
     public static void OpenMoldCrafting(Player player, int Category) {
-        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(CraftingGui,
-                CraftingGui.getSize(), CraftingGui.getTitle(), new FontImageWrapper("amonpack:bending_abilities_list"));
+        Inventory inv = ItemsAdderHook.createTexturedInventory(CraftingGui,
+                CraftingGui.getSize(), CraftingGui.getTitle(), "amonpack:bending_abilities_list");
         List<ItemMold> ChosenMolds = new ArrayList<>();
         switch (Category) {
             case 0:
@@ -92,7 +88,6 @@ public class CraftingMenager {
                 ChosenMolds.addAll(AllCraftableItems);
                 break;
         }
-        Inventory inv = inventory.getInternal();
         for (ItemMold mold : ChosenMolds) {
             ItemStack stack = mold.toItemStack();
             ItemMeta meta = stack.getItemMeta();
@@ -110,14 +105,13 @@ public class CraftingMenager {
             inv.addItem(stack);
         }
 
-        inventory.showInventory(player);
+        ItemsAdderHook.showTexturedInventory(player, CraftingGui, CraftingGui.getSize(), CraftingGui.getTitle(), "amonpack:bending_abilities_list", inv);
     }
 
     public static void OpenMagicEffectsGui(Player player, ItemStack item, ItemStack clickeditem) {
-        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(EffectsGui,
-                EffectsGui.getSize(), EffectsGui.getTitle(), new FontImageWrapper("amonpack:bending_abilities_list"));
+        Inventory inv = ItemsAdderHook.createTexturedInventory(EffectsGui,
+                EffectsGui.getSize(), EffectsGui.getTitle(), "amonpack:bending_abilities_list");
         ItemMold moldItem = getItemMoldByItem(item);
-        Inventory inv = inventory.getInternal();
 
         for (MagicEffects effect : moldItem.getAllowedMagicEffects()) {
             if (moldItem instanceof Craftable_Item && !effect.isItemEffect()) {
@@ -211,7 +205,7 @@ public class CraftingMenager {
             }
 
             inv.setItem(53, item);
-            inventory.showInventory(player);
+            ItemsAdderHook.showTexturedInventory(player, EffectsGui, EffectsGui.getSize(), EffectsGui.getTitle(), "amonpack:bending_abilities_list", inv);
             return;
         }
 
@@ -251,7 +245,7 @@ public class CraftingMenager {
         imeta.setLore(newLore);
         preview.setItemMeta(imeta);
         inv.setItem(53, preview);
-        inventory.showInventory(player);
+        ItemsAdderHook.showTexturedInventory(player, EffectsGui, EffectsGui.getSize(), EffectsGui.getTitle(), "amonpack:bending_abilities_list", inv);
     }
 
     public void ReloadConfig() {

@@ -96,37 +96,47 @@ public class StageDetailGui implements InventoryHolder {
             int slot = questSlots[i - startIndex];
 
             boolean completed = data.isQuestCompleted(quest.getId());
+            boolean unlocked = ProgressionManager.getInstance().getProgressionService().isQuestUnlocked(data, quest);
             int prog = data.getProgress(quest.getId());
             int req = quest.getRequiredAmount();
 
             List<String> lore = new ArrayList<>();
             lore.add("§8Kategoria: " + quest.getCategory().getDisplayName());
             lore.add("");
-            if (quest.getDescription() != null && !quest.getDescription().isEmpty()) {
-                lore.add("§7" + quest.getDescription());
-                lore.add("");
-            }
-
-            lore.add("§7Cel: §f" + quest.getTitle());
-            lore.add("§7Wymagana ilość: §e" + req);
-
-            if (quest.isRequired()) {
-                lore.add("§c✦ Zadanie Wymagane do Awansu");
-            } else {
-                lore.add("§a✧ Zadanie Opcjonalne");
-            }
-            lore.add("");
 
             if (completed) {
+                if (quest.getDescription() != null && !quest.getDescription().isEmpty()) {
+                    lore.add("§7" + quest.getDescription());
+                    lore.add("");
+                }
+                lore.add("§7Cel: §f" + quest.getTitle());
                 lore.add("§a§l✔ UKOŃCZONE");
-            } else {
+            } else if (unlocked) {
+                if (quest.getDescription() != null && !quest.getDescription().isEmpty()) {
+                    lore.add("§7" + quest.getDescription());
+                    lore.add("");
+                }
+                lore.add("§7Cel: §f" + quest.getTitle());
+                lore.add("§7Wymagana ilość: §e" + req);
+                lore.add("");
                 int displayProg = Math.min(prog, req);
                 lore.add("§e⏳ Status: §f" + displayProg + "§7/§e" + req);
                 lore.add("§f" + ProgressionMenuGui.buildProgressBar(displayProg, req, 8));
+            } else {
+                lore.add("§8🔒 §cTo zadanie jest jeszcze nieodkryte!");
+                lore.add("§7Ukończ wcześniejsze cele, aby je odblokować.");
+                lore.add("");
+                lore.add("§7Wymaga wcześniejszego ukończenia:");
+                for (String pId : quest.getPrerequisites()) {
+                    Quest pQuest = ProgressionManager.getInstance().getQuestRegistry().getQuest(pId);
+                    String pName = pQuest != null ? pQuest.getTitle() : pId;
+                    boolean pDone = data.isQuestCompleted(pId);
+                    lore.add(" " + (pDone ? "§a✔ " : "§c✖ ") + "§7" + pName);
+                }
             }
 
-            // Rewards
-            if (!quest.getReward().isEmpty()) {
+            // Rewards (only visible if unlocked or completed)
+            if ((unlocked || completed) && !quest.getReward().isEmpty()) {
                 lore.add("");
                 lore.add("§6§lNagrody:");
                 if (quest.getReward().getMoney() > 0) {
@@ -143,8 +153,20 @@ public class StageDetailGui implements InventoryHolder {
                 }
             }
 
-            Material iconMat = completed ? Material.LIME_DYE : (quest.getIcon() != null ? quest.getIcon() : Material.PAPER);
-            ItemStack questItem = ProgressionMenuGui.createItem(iconMat, (completed ? "§a✔ " : "§e") + quest.getTitle(), lore);
+            Material iconMat;
+            String questTitle;
+            if (completed) {
+                iconMat = Material.LIME_DYE;
+                questTitle = "§a✔ " + quest.getTitle();
+            } else if (unlocked) {
+                iconMat = (quest.getIcon() != null ? quest.getIcon() : Material.PAPER);
+                questTitle = "§e" + quest.getTitle();
+            } else {
+                iconMat = Material.GRAY_DYE;
+                questTitle = "§8🔒 ??? §8(Nieodkryte Zadanie)";
+            }
+
+            ItemStack questItem = ProgressionMenuGui.createItem(iconMat, questTitle, lore);
 
             if (completed) {
                 ItemMeta meta = questItem.getItemMeta();

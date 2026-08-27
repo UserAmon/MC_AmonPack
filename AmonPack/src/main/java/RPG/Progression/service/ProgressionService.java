@@ -71,6 +71,7 @@ public class ProgressionService {
         for (Quest quest : stageQuests) {
             if (quest.getObjectiveType() != type) continue;
             if (data.isQuestCompleted(quest.getId())) continue;
+            if (!isQuestUnlocked(data, quest)) continue;
 
             if (!matchesTarget(quest, type, target)) continue;
 
@@ -153,7 +154,26 @@ public class ProgressionService {
 
         // Crops alias
         if (qTarget.equalsIgnoreCase("CROP") || qTarget.equalsIgnoreCase("CROPS")) {
-            return t.equalsIgnoreCase("WHEAT") || t.equalsIgnoreCase("CARROTS") || t.equalsIgnoreCase("POTATOES") || t.equalsIgnoreCase("BEETROOTS");
+            return t.equalsIgnoreCase("WHEAT") || t.equalsIgnoreCase("CARROTS") || t.equalsIgnoreCase("CARROT")
+                    || t.equalsIgnoreCase("POTATOES") || t.equalsIgnoreCase("POTATO")
+                    || t.equalsIgnoreCase("BEETROOTS") || t.equalsIgnoreCase("BEETROOT")
+                    || t.equalsIgnoreCase("NETHER_WART") || t.equalsIgnoreCase("SWEET_BERRY_BUSH")
+                    || t.equalsIgnoreCase("SWEET_BERRIES") || t.equalsIgnoreCase("SUGAR_CANE")
+                    || t.equalsIgnoreCase("BAMBOO") || t.equalsIgnoreCase("PUMPKIN") || t.equalsIgnoreCase("MELON");
+        }
+
+        // Specific crops alias
+        if (qTarget.equalsIgnoreCase("WHEAT")) {
+            return t.equalsIgnoreCase("WHEAT") || t.equalsIgnoreCase("WHEAT_SEEDS");
+        }
+        if (qTarget.equalsIgnoreCase("CARROT") || qTarget.equalsIgnoreCase("CARROTS")) {
+            return t.equalsIgnoreCase("CARROT") || t.equalsIgnoreCase("CARROTS");
+        }
+        if (qTarget.equalsIgnoreCase("POTATO") || qTarget.equalsIgnoreCase("POTATOES")) {
+            return t.equalsIgnoreCase("POTATO") || t.equalsIgnoreCase("POTATOES") || t.equalsIgnoreCase("POISONOUS_POTATO");
+        }
+        if (qTarget.equalsIgnoreCase("BEETROOT") || qTarget.equalsIgnoreCase("BEETROOTS")) {
+            return t.equalsIgnoreCase("BEETROOT") || t.equalsIgnoreCase("BEETROOTS") || t.equalsIgnoreCase("BEETROOT_SEEDS");
         }
 
         // Fish alias
@@ -164,6 +184,11 @@ public class ProgressionService {
         // Meat/Food alias
         if (qTarget.equalsIgnoreCase("FOOD") || qTarget.equalsIgnoreCase("MEAT")) {
             return t.contains("BEEF") || t.contains("PORKCHOP") || t.contains("CHICKEN") || t.contains("MUTTON") || t.contains("RABBIT") || t.contains("FISH") || t.contains("BREAD");
+        }
+
+        // Coal / Charcoal alias
+        if (qTarget.equalsIgnoreCase("COAL") || qTarget.equalsIgnoreCase("CHARCOAL")) {
+            return t.equalsIgnoreCase("COAL") || t.equalsIgnoreCase("CHARCOAL") || t.equalsIgnoreCase("COAL_ORE") || t.equalsIgnoreCase("DEEPSLATE_COAL_ORE");
         }
 
         // Full armor set check aliases
@@ -216,6 +241,19 @@ public class ProgressionService {
         if (stageService.canAdvanceStage(data)) {
             stageService.advanceStage(player, data);
         }
+    }
+
+    public boolean isQuestUnlocked(PlayerProgressionData data, Quest quest) {
+        if (data == null || quest == null) return false;
+        if (quest.getStage() != data.getCurrentStage()) {
+            return data.getCurrentStage().getOrder() >= quest.getStage().getOrder();
+        }
+        for (String prereqId : quest.getPrerequisites()) {
+            if (!data.isQuestCompleted(prereqId)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public QuestRegistry getQuestRegistry() {

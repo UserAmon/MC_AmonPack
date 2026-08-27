@@ -19,8 +19,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
-import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
+import CustomContent.Hooks.ItemsAdderHook;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -227,9 +226,8 @@ public class PlayerLevelMenager {
 
     private static void OpenPlayerLevelWindow(PlayerLevel level) {
         if (level == null) return;
-        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(Holder1,
-                Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amonpack:first_gui"));
-        Inventory inv = inventory.getInternal();
+        Inventory inv = ItemsAdderHook.createTexturedInventory(Holder1,
+                Holder1.getSize(), Holder1.getTitle(), "amonpack:first_gui");
 
         FileConfiguration config = AmonPackPlugin.getLevelConfig();
         if (config == null || config.getConfigurationSection("AmonPack.Levels") == null) {
@@ -286,7 +284,7 @@ public class PlayerLevelMenager {
         }
         Player p = Bukkit.getPlayer(level.getPlayerName());
         if (p != null) {
-            inventory.showInventory(p);
+            ItemsAdderHook.showTexturedInventory(p, Holder1, Holder1.getSize(), Holder1.getTitle(), "amonpack:first_gui", inv);
         }
     }
 

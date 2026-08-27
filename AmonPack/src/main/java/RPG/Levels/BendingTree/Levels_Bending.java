@@ -1,9 +1,8 @@
 package RPG.Levels.BendingTree;
 
+import CustomContent.Hooks.ItemsAdderHook;
 import RPG.Levels.BendingTree.SkillTree_Ability;
 import com.projectkorra.projectkorra.Element;
-import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
-import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import Plugin.AmonPackPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -45,10 +44,9 @@ public class Levels_Bending {
         PlayerBendingBranch branch= AmonPackPlugin.levelsBending.GetBranchByPlayerName(name);
         if(branch==null)return;
         Element element=branch.getCurrentElement();
-        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BindingAbilitiesMenu,
-                BindingAbilitiesMenu.getSize(), BindingAbilitiesMenu.getTitle(), new FontImageWrapper("amonpack:bending_skills_binding")
+        Inventory inv = ItemsAdderHook.createTexturedInventory(BindingAbilitiesMenu,
+                BindingAbilitiesMenu.getSize(), BindingAbilitiesMenu.getTitle(), "amonpack:bending_skills_binding"
         );
-        Inventory inv = inventory.getInternal();
         int modelid=SkillTreeConfig.getInt("AmonPack.Menu." + element.getName().toString().toLowerCase() + ".Green");
         inv.setItem(4, FastEasyStack(Material.PAPER,AbilityName,modelid));
 
@@ -71,7 +69,7 @@ public class Levels_Bending {
             }
         }
         inv.setItem(8, FastEasyStack(Material.PAPER, ChatColor.RED+"Zamknij",10013));
-        inventory.showInventory(Bukkit.getPlayer(name));
+        ItemsAdderHook.showTexturedInventory(Bukkit.getPlayer(name), BindingAbilitiesMenu, BindingAbilitiesMenu.getSize(), BindingAbilitiesMenu.getTitle(), "amonpack:bending_skills_binding", inv);
     }
     public void OpenSkillTreeMenuByElement(Player p, int page){
 
@@ -82,12 +80,9 @@ public class Levels_Bending {
         ElementTree SelectedElement = GetElement(element);
 
         String ElementName = element.getName().toLowerCase();
-        //                Holder1.getSize(), Holder1.getTitle(), new FontImageWrapper("amon:first_gui")
-        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BendingSkillTree,
-                BendingSkillTree.getSize(), BendingSkillTree.getTitle(), new FontImageWrapper("amonpack:bending_skills_tree_"+ElementName)
+        Inventory inv = ItemsAdderHook.createTexturedInventory(BendingSkillTree,
+                BendingSkillTree.getSize(), BendingSkillTree.getTitle(), "amonpack:bending_skills_tree_"+ElementName
         );
-
-        Inventory inv = inventory.getInternal();
         playersBranch.setCurrentPage(page);
         for (SkillTree_Ability STA:SelectedElement.getAbilities()) {
             if (STA.isSkillUpgrade()) {
@@ -174,13 +169,12 @@ public class Levels_Bending {
         inv.setItem(53, FastEasyStack(Material.PAPER,ChatColor.RED + "Powrot",10013));
         inv.setItem(26, FastEasyStack(Material.PAPER,ChatColor.RED + "/\\",10011));
         inv.setItem(35, FastEasyStack(Material.PAPER,ChatColor.RED + "\\/",10012));
-        inventory.showInventory(Bukkit.getPlayer(p.getName()));
+        ItemsAdderHook.showTexturedInventory(Bukkit.getPlayer(p.getName()), BendingSkillTree, BendingSkillTree.getSize(), BendingSkillTree.getTitle(), "amonpack:bending_skills_tree_"+ElementName, inv);
     }
     public void OpenBendingSkillMenu(String name){
-        TexturedInventoryWrapper inventory = new TexturedInventoryWrapper(BendingSkillMenu,
-                BendingSkillMenu.getSize(), BendingSkillMenu.getTitle(), new FontImageWrapper("amonpack:bending_abilities_list")
+        Inventory inv = ItemsAdderHook.createTexturedInventory(BendingSkillMenu,
+                BendingSkillMenu.getSize(), BendingSkillMenu.getTitle(), "amonpack:bending_abilities_list"
         );
-        Inventory inv = inventory.getInternal();
 
         PlayerBendingBranch playersBranch = GetBranchByPlayerName(name);
         if(playersBranch==null)return;
@@ -210,7 +204,7 @@ public class Levels_Bending {
         CloseButton.setItemMeta(CloseMeta);
         inv.setItem(53, CloseButton);
         inv.setItem(45, FastEasyStack(Material.CHEST, ChatColor.DARK_PURPLE+"Drzewko Magii"));
-        inventory.showInventory(Bukkit.getPlayer(name));
+        ItemsAdderHook.showTexturedInventory(Bukkit.getPlayer(name), BendingSkillMenu, BendingSkillMenu.getSize(), BendingSkillMenu.getTitle(), "amonpack:bending_abilities_list", inv);
     }
 
     public void OpenSkillUpgradeMenu(Player p, String skillName) {
@@ -395,10 +389,9 @@ public class Levels_Bending {
         if (playersBranch == null) return;
 
         DungeonSkillMenuHolder holder = new DungeonSkillMenuHolder(54, ChatColor.DARK_PURPLE + "Dungeonowe Umiejętności");
-        dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper inventory = new dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper(
-                holder, 54, ChatColor.DARK_PURPLE + "Dungeonowe Umiejętności", new dev.lone.itemsadder.api.FontImages.FontImageWrapper("amonpack:bending_abilities_list")
+        Inventory inv = ItemsAdderHook.createTexturedInventory(
+                holder, 54, ChatColor.DARK_PURPLE + "Dungeonowe Umiejętności", "amonpack:bending_abilities_list"
         );
-        Inventory inv = inventory.getInternal();
 
         List<SkillTree_Ability> unlockedAbilities = new ArrayList<>();
         org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
@@ -448,7 +441,7 @@ public class Levels_Bending {
         }
         inv.setItem(53, CloseButton);
 
-        inventory.showInventory(Bukkit.getPlayer(name));
+        ItemsAdderHook.showTexturedInventory(Bukkit.getPlayer(name), holder, 54, ChatColor.DARK_PURPLE + "Dungeonowe Umiejętności", "amonpack:bending_abilities_list", inv);
     }
 
     public static class SkillUpgradeMenuHolder implements org.bukkit.inventory.InventoryHolder {

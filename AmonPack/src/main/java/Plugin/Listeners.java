@@ -24,6 +24,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -418,13 +419,34 @@ public class Listeners implements Listener {
          */
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockDamage(org.bukkit.event.block.BlockDamageEvent event) {
+        Player player = event.getPlayer();
+        if (player.getGameMode() == GameMode.CREATIVE) return;
+        Block b = event.getBlock();
+        ItemStack hand = player.getInventory().getItemInMainHand();
+
+        if (ForestMenager.isAxe(hand) && ForestMenager.isLog(b.getType())) {
+            ForestMenager.onStartChopping(player, b);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         if (player.getGameMode().equals(GameMode.CREATIVE)) {
             return;
         }
         Block b = event.getBlock();
+        ItemStack hand = player.getInventory().getItemInMainHand();
+
+        if (ForestMenager.isAxe(hand) && ForestMenager.isLog(b.getType())) {
+            if (ForestMenager.tryChopTreeAnimated(player, b, hand)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
         if (FarmMenager.CheckFarmBlock(b, player, false)
                 || MiningMenager.PlayerBreakBlock(player, b, event.getExpToDrop())
                 || ForestMenager.PlayerBreakBlock(player, b)) {

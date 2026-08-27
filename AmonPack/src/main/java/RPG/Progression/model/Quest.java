@@ -4,6 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Quest {
@@ -21,6 +22,7 @@ public class Quest {
     private final Material icon;
     private final int customModelData;
     private final List<String> additionalDetails = new ArrayList<>();
+    private final List<String> prerequisites = new ArrayList<>();
 
     public Quest(String id, StageType stage, QuestCategory category, String title, String description,
                  ObjectiveType objectiveType, String target, int requiredAmount, boolean required,
@@ -37,6 +39,16 @@ public class Quest {
         this.reward = reward != null ? reward : new QuestReward();
         this.icon = icon != null ? icon : Material.PAPER;
         this.customModelData = customModelData;
+    }
+
+    public List<String> getPrerequisites() {
+        return Collections.unmodifiableList(prerequisites);
+    }
+
+    public void addPrerequisite(String questId) {
+        if (questId != null && !questId.trim().isEmpty()) {
+            prerequisites.add(questId.trim().toLowerCase(java.util.Locale.ROOT));
+        }
     }
 
     public String getId() {

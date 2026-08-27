@@ -25,6 +25,8 @@ public class CustomBlockManager {
     private final PackManager packManager;
     private final CustomItemManager itemManager;
     private File storageFile;
+    private boolean isDirty = false;
+    private org.bukkit.scheduler.BukkitTask autoSaveTask;
 
     public CustomBlockManager(PackManager packManager, CustomItemManager itemManager) {
         this.packManager = packManager;
@@ -86,10 +88,26 @@ public class CustomBlockManager {
         }
 
         loadPlacedBlocks();
+
+        // Okresowy autosave co 60 sekund jeśli były modyfikacje
+        if (autoSaveTask != null) {
+            autoSaveTask.cancel();
+        }
+        autoSaveTask = Bukkit.getScheduler().runTaskTimerAsynchronously(AmonPackPlugin.plugin, () -> {
+            if (isDirty) {
+                savePlacedBlocksSync();
+            }
+        }, 1200L, 1200L);
     }
 
     public void unload() {
-        savePlacedBlocks();
+        if (autoSaveTask != null) {
+            autoSaveTask.cancel();
+            autoSaveTask = null;
+        }
+        if (isDirty) {
+            savePlacedBlocksSync();
+        }
         for (ItemDisplay display : activeDisplays.values()) {
             if (display != null && display.isValid()) {
                 display.remove();
@@ -99,16 +117,24 @@ public class CustomBlockManager {
     }
 
     public void placeBlock(Block block, String customBlockId) {
+        placeBlock(block, customBlockId, true, true);
+    }
+
+    public void placeBlock(Block block, String customBlockId, boolean applyPhysics, boolean saveImmediately) {
         CustomBlock cb = customBlocks.get(customBlockId.toLowerCase(Locale.ROOT));
         if (cb == null) return;
 
-        block.setType(cb.getBaseMaterial());
+        block.setType(cb.getBaseMaterial(), applyPhysics);
         String key = locKey(block.getLocation());
         placedBlocks.put(key, cb.getId());
+        isDirty = true;
 
         // Spawn visual ItemDisplay z modelem 3D
         spawnDisplay(block.getLocation(), cb);
-        savePlacedBlocks();
+
+        if (saveImmediately) {
+            savePlacedBlocksAsync();
+        }
     }
 
     public CustomBlock removeBlock(Block block) {
@@ -116,11 +142,12 @@ public class CustomBlockManager {
         String customBlockId = placedBlocks.remove(key);
         if (customBlockId == null) return null;
 
+        isDirty = true;
         ItemDisplay display = activeDisplays.remove(key);
         if (display != null && display.isValid()) {
             display.remove();
         }
-        savePlacedBlocks();
+        savePlacedBlocksAsync();
         return customBlocks.get(customBlockId.toLowerCase(Locale.ROOT));
     }
 
@@ -169,13 +196,19 @@ public class CustomBlockManager {
         }
     }
 
-    private void savePlacedBlocks() {
-        FileConfiguration cfg = new YamlConfiguration();
-        for (Map.Entry<String, String> entry : placedBlocks.entrySet()) {
-            cfg.set("blocks." + entry.getKey(), entry.getValue());
-        }
+    public void savePlacedBlocksAsync() {
+        Bukkit.getScheduler().runTaskAsynchronously(AmonPackPlugin.plugin, this::savePlacedBlocksSync);
+    }
+
+    private synchronized void savePlacedBlocksSync() {
         try {
+            FileConfiguration cfg = new YamlConfiguration();
+            Map<String, String> copy = new HashMap<>(placedBlocks);
+            for (Map.Entry<String, String> entry : copy.entrySet()) {
+                cfg.set("blocks." + entry.getKey(), entry.getValue());
+            }
             cfg.save(storageFile);
+            isDirty = false;
         } catch (Exception ignored) {}
     }
 

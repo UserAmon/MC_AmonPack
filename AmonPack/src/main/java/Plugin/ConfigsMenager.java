@@ -238,6 +238,8 @@ public class ConfigsMenager {
     }
 
     private void addDefaultMiningValues(FileConfiguration cfg) {
+        cfg.set("AmonPack.Mining.Enabled", true);
+        cfg.set("AmonPack.Mining.Worlds", List.of("world"));
 
         cfg.set("AmonPack.Mining.mine_1.World", "world");
 

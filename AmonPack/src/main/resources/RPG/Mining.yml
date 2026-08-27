@@ -1,0 +1,45 @@
+AmonPack:
+  Mining:
+    Enabled: true
+    Worlds:
+      - "world"
+    mine_1:
+      World: "world"
+      Loot:
+        COAL: 5
+        IRON_INGOT: 5
+        GOLD_INGOT: 5
+        ia:meteor_shard: 2
+        ia:basalt_shard: 5
+      Exp:
+        COAL_ORE: 1.5
+        IRON_ORE: 3.0
+        GOLD_ORE: 4.0
+      ItemsAdderExp:
+        ia:meteoryt_ore: 11.75
+        ia:basalt_ore: 6.5
+  ItemsAdderMining:
+    ia:meteoryt_ore: "ia:meteor_shard"
+    ia:basalt_ore: "ia:basalt_shard"
+  MiningBlocks:
+    - "COAL_ORE"
+    - "COPPER_ORE"
+    - "IRON_ORE"
+    - "GOLD_ORE"
+    - "REDSTONE_ORE"
+    - "EMERALD_ORE"
+    - "LAPIS_ORE"
+    - "DIAMOND_ORE"
+    - "GILDED_BLACKSTONE"
+    - "AMETHYST_CLUSTER"
+    - "BLOCK_OF_AMETHYST"
+    - "SMALL_AMETHYST_BUD"
+    - "MEDIUM_AMETHYST_BUD"
+    - "LARGE_AMETHYST_BUD"
+    - "STONE"
+    - "DEEPSLATE"
+    - "TUFF"
+    - "CALCITE"
+    - "BASALT"
+    - "NETHERRACK"
+    - "BLACKSTONE"

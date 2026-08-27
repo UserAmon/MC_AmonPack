@@ -17,6 +17,9 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import RPG.Progression.ProgressionManager;
+import RPG.Progression.model.ObjectiveType;
+
 import java.util.*;
 
 import static RPG.Gathering.MiningMenager.isNaturalBlock;
@@ -81,6 +84,12 @@ public class FarmMenager {
                             block.setBlockData(ageable);
                             AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
                                     (int) farm.GetExpByMaterial(type));
+
+                            if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "SWEET_BERRY_BUSH", 1);
+                                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", 1);
+                                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.COLLECT_ITEM, "SWEET_BERRIES", berries.getAmount());
+                            }
                             return true;
                         }
                     }
@@ -97,11 +106,19 @@ public class FarmMenager {
                         for (ItemStack item : b.getDrops()) {
                             Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
                             leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
+                            if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.COLLECT_ITEM, item.getType().name(), item.getAmount());
+                            }
                         }
                         b.setType(Material.AIR);
                     }
                     AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
                             1 + blocks.size());
+
+                    if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, type.name(), blocks.size());
+                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", blocks.size());
+                    }
                     return true;
                 }
                 if (ageableCrops.contains(type)) {
@@ -114,20 +131,36 @@ public class FarmMenager {
                     for (ItemStack item : block.getDrops()) {
                         Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
                         leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
+                        if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                            ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.COLLECT_ITEM, item.getType().name(), item.getAmount());
+                        }
                     }
                     block.setType(Material.AIR);
                     AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
                             (int) farm.GetExpByMaterial(type));
+
+                    if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, type.name(), 1);
+                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", 1);
+                    }
                     return true;
                 }
                 if (FarmBlocks.contains(type) && isNaturalBlock(block)) {
                     for (ItemStack item : block.getDrops()) {
                         Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
                         leftover.values().forEach(i -> block.getWorld().dropItemNaturally(player.getLocation(), i));
+                        if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                            ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.COLLECT_ITEM, item.getType().name(), item.getAmount());
+                        }
                     }
                     block.setType(Material.AIR);
                     AmonPackPlugin.getPlayerMenager().AddPoints(LevelSkill.SkillType.FARMING, player,
                             (int) farm.GetExpByMaterial(type));
+
+                    if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, type.name(), 1);
+                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", 1);
+                    }
                     return true;
                 }
             }

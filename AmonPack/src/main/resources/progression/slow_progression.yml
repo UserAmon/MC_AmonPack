@@ -40,6 +40,8 @@ stages:
         amount: 1
         required: true
         icon: CRAFTING_TABLE
+        depends_on:
+          - wooden_break_wood
         reward:
           exp: 20
       wooden_craft_wooden_axe:
@@ -51,6 +53,8 @@ stages:
         amount: 1
         required: true
         icon: WOODEN_AXE
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           exp: 15
       wooden_craft_wooden_pickaxe:
@@ -62,6 +66,8 @@ stages:
         amount: 1
         required: true
         icon: WOODEN_PICKAXE
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           exp: 15
       wooden_craft_wooden_sword:
@@ -73,6 +79,8 @@ stages:
         amount: 1
         required: true
         icon: WOODEN_SWORD
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           exp: 15
       wooden_craft_wooden_shovel:
@@ -84,6 +92,8 @@ stages:
         amount: 1
         required: true
         icon: WOODEN_SHOVEL
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           exp: 15
       wooden_collect_wood_64:
@@ -95,6 +105,8 @@ stages:
         amount: 64
         required: true
         icon: OAK_WOOD
+        depends_on:
+          - wooden_craft_wooden_axe
         reward:
           money: 50.0
           exp: 30
@@ -107,6 +119,8 @@ stages:
         amount: 3
         required: true
         icon: OAK_SAPLING
+        depends_on:
+          - wooden_collect_wood_64
         reward:
           exp: 20
 
@@ -120,6 +134,8 @@ stages:
         amount: 10
         required: true
         icon: WHEAT_SEEDS
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           exp: 15
       wooden_craft_wooden_hoe:
@@ -131,6 +147,8 @@ stages:
         amount: 1
         required: true
         icon: WOODEN_HOE
+        depends_on:
+          - wooden_collect_wheat_seeds
         reward:
           exp: 15
       wooden_prepare_farmland:
@@ -142,6 +160,8 @@ stages:
         amount: 10
         required: true
         icon: FARMLAND
+        depends_on:
+          - wooden_craft_wooden_hoe
         reward:
           exp: 20
       wooden_plant_wheat:
@@ -153,6 +173,8 @@ stages:
         amount: 5
         required: true
         icon: WHEAT_SEEDS
+        depends_on:
+          - wooden_prepare_farmland
         reward:
           exp: 20
       wooden_harvest_wheat:
@@ -164,6 +186,8 @@ stages:
         amount: 5
         required: true
         icon: WHEAT
+        depends_on:
+          - wooden_plant_wheat
         reward:
           exp: 25
       wooden_craft_bread:
@@ -175,6 +199,8 @@ stages:
         amount: 3
         required: true
         icon: BREAD
+        depends_on:
+          - wooden_harvest_wheat
         reward:
           exp: 20
       wooden_eat_bread:
@@ -186,6 +212,8 @@ stages:
         amount: 3
         required: true
         icon: BREAD
+        depends_on:
+          - wooden_craft_bread
         reward:
           exp: 15
       wooden_craft_composter:
@@ -197,6 +225,8 @@ stages:
         amount: 1
         required: true
         icon: COMPOSTER
+        depends_on:
+          - wooden_collect_wood_64
         reward:
           exp: 20
       wooden_use_composter:
@@ -208,6 +238,8 @@ stages:
         amount: 1
         required: true
         icon: COMPOSTER
+        depends_on:
+          - wooden_craft_composter
         reward:
           exp: 20
       wooden_use_bonemeal:
@@ -219,6 +251,8 @@ stages:
         amount: 1
         required: true
         icon: BONE_MEAL
+        depends_on:
+          - wooden_use_composter
         reward:
           exp: 15
 
@@ -232,6 +266,8 @@ stages:
         amount: 1
         required: true
         icon: CHEST
+        depends_on:
+          - wooden_collect_wood_64
         reward:
           exp: 20
       wooden_mine_cobblestone:
@@ -243,6 +279,8 @@ stages:
         amount: 8
         required: true
         icon: COBBLESTONE
+        depends_on:
+          - wooden_craft_wooden_pickaxe
         reward:
           exp: 20
       wooden_craft_furnace:
@@ -254,6 +292,8 @@ stages:
         amount: 1
         required: true
         icon: FURNACE
+        depends_on:
+          - wooden_mine_cobblestone
         reward:
           exp: 25
       wooden_obtain_coal:
@@ -261,10 +301,12 @@ stages:
         description: "Wydobądź węgiel lub wypal węgiel drzewny w piecu."
         category: COOKING_STORAGE_SURVIVAL
         objective_type: collect_item
-        target: COAL
+        target: COAL,CHARCOAL
         amount: 8
         required: true
         icon: COAL
+        depends_on:
+          - wooden_craft_wooden_pickaxe
         reward:
           exp: 20
       wooden_cook_food:
@@ -276,6 +318,8 @@ stages:
         amount: 4
         required: true
         icon: COOKED_BEEF
+        depends_on:
+          - wooden_craft_furnace
         reward:
           exp: 20
       wooden_craft_campfire:
@@ -287,6 +331,8 @@ stages:
         amount: 1
         required: true
         icon: CAMPFIRE
+        depends_on:
+          - wooden_collect_wood_64
         reward:
           exp: 20
       wooden_use_campfire:
@@ -298,6 +344,8 @@ stages:
         amount: 1
         required: true
         icon: CAMPFIRE
+        depends_on:
+          - wooden_craft_campfire
         reward:
           exp: 15
       wooden_craft_bed:
@@ -309,6 +357,8 @@ stages:
         amount: 1
         required: true
         icon: RED_BED
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           exp: 25
       wooden_use_bed:
@@ -320,6 +370,8 @@ stages:
         amount: 1
         required: true
         icon: RED_BED
+        depends_on:
+          - wooden_craft_bed
         reward:
           exp: 20
       wooden_gain_exp_5:
@@ -331,6 +383,8 @@ stages:
         amount: 5
         required: true
         icon: EXPERIENCE_BOTTLE
+        depends_on:
+          - wooden_craft_wooden_sword
         reward:
           money: 25.0
 
@@ -344,6 +398,8 @@ stages:
         amount: 2
         required: true
         icon: WHEAT_SEEDS
+        depends_on:
+          - wooden_collect_wheat_seeds
         reward:
           exp: 10
       wooden_breed_chickens:
@@ -355,6 +411,8 @@ stages:
         amount: 1
         required: true
         icon: EGG
+        depends_on:
+          - wooden_collect_seeds_2
         reward:
           exp: 20
       wooden_collect_wheat_animals:
@@ -366,6 +424,8 @@ stages:
         amount: 2
         required: true
         icon: WHEAT
+        depends_on:
+          - wooden_harvest_wheat
         reward:
           exp: 10
       wooden_breed_sheep:
@@ -377,6 +437,8 @@ stages:
         amount: 1
         required: true
         icon: WHITE_WOOL
+        depends_on:
+          - wooden_collect_wheat_animals
         reward:
           exp: 20
       wooden_craft_fishing_rod:
@@ -388,6 +450,8 @@ stages:
         amount: 1
         required: true
         icon: FISHING_ROD
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           exp: 20
       wooden_catch_fish:
@@ -399,6 +463,8 @@ stages:
         amount: 1
         required: true
         icon: COD
+        depends_on:
+          - wooden_craft_fishing_rod
         reward:
           exp: 25
 
@@ -412,6 +478,8 @@ stages:
         amount: 1
         required: true
         icon: GRASS_BLOCK
+        depends_on:
+          - wooden_craft_wooden_pickaxe
         reward:
           exp: 25
       wooden_discover_forest:
@@ -423,6 +491,8 @@ stages:
         amount: 1
         required: true
         icon: OAK_SAPLING
+        depends_on:
+          - wooden_craft_wooden_pickaxe
         reward:
           exp: 25
       wooden_discover_basic_biome:
@@ -434,6 +504,8 @@ stages:
         amount: 1
         required: true
         icon: BIRCH_SAPLING
+        depends_on:
+          - wooden_craft_wooden_pickaxe
         reward:
           exp: 25
       wooden_travel_distance:
@@ -445,6 +517,8 @@ stages:
         amount: 150
         required: true
         icon: COMPASS
+        depends_on:
+          - wooden_craft_wooden_pickaxe
         reward:
           money: 50.0
           exp: 30
@@ -459,6 +533,8 @@ stages:
         amount: 5
         required: true
         icon: ZOMBIE_HEAD
+        depends_on:
+          - wooden_craft_wooden_sword
         reward:
           exp: 30
       wooden_survive_night:
@@ -470,6 +546,8 @@ stages:
         amount: 1
         required: true
         icon: CLOCK
+        depends_on:
+          - wooden_craft_bed
         reward:
           exp: 30
       wooden_craft_leather_armor:
@@ -481,6 +559,8 @@ stages:
         amount: 1
         required: true
         icon: LEATHER_CHESTPLATE
+        depends_on:
+          - wooden_craft_crafting_table
         reward:
           money: 50.0
           exp: 40
@@ -493,6 +573,8 @@ stages:
         amount: 10
         required: true
         icon: EXPERIENCE_BOTTLE
+        depends_on:
+          - wooden_kill_hostile_5
         reward:
           exp: 20
 
@@ -530,6 +612,8 @@ stages:
         amount: 128
         required: true
         icon: COBBLESTONE
+        depends_on:
+          - stone_craft_tools
         reward:
           money: 100.0
           exp: 50
@@ -542,6 +626,8 @@ stages:
         amount: 16
         required: true
         icon: COAL
+        depends_on:
+          - stone_mine_cobblestone_128
         reward:
           exp: 40
       stone_depth_40:
@@ -553,6 +639,8 @@ stages:
         amount: 1
         required: true
         icon: COMPASS
+        depends_on:
+          - stone_obtain_coal_16
         reward:
           exp: 50
 
@@ -565,6 +653,8 @@ stages:
         amount: 50
         required: true
         icon: STONE_BRICKS
+        depends_on:
+          - stone_depth_40
         reward:
           exp: 40
       stone_create_storage:
@@ -576,6 +666,8 @@ stages:
         amount: 4
         required: true
         icon: CHEST
+        depends_on:
+          - stone_expand_base
         reward:
           exp: 30
       stone_utility_station:
@@ -587,6 +679,8 @@ stages:
         amount: 1
         required: true
         icon: STONECUTTER
+        depends_on:
+          - stone_create_storage
         reward:
           exp: 35
 
@@ -599,6 +693,8 @@ stages:
         amount: 32
         required: true
         icon: WHEAT
+        depends_on:
+          - stone_utility_station
         reward:
           money: 75.0
           exp: 40
@@ -611,6 +707,8 @@ stages:
         amount: 5
         required: true
         icon: COW_SPAWN_EGG
+        depends_on:
+          - stone_harvest_crops_32
         reward:
           exp: 45
       stone_cook_meat_16:
@@ -622,6 +720,8 @@ stages:
         amount: 16
         required: true
         icon: COOKED_BEEF
+        depends_on:
+          - stone_breed_animals_5
         reward:
           exp: 35
 
@@ -634,6 +734,8 @@ stages:
         amount: 1
         required: true
         icon: SPRUCE_SAPLING
+        depends_on:
+          - stone_cook_meat_16
         reward:
           exp: 35
       stone_discover_dark_forest:
@@ -645,6 +747,8 @@ stages:
         amount: 1
         required: true
         icon: DARK_OAK_SAPLING
+        depends_on:
+          - stone_discover_taiga
         reward:
           exp: 35
       stone_discover_savanna:
@@ -656,6 +760,8 @@ stages:
         amount: 1
         required: true
         icon: ACACIA_SAPLING
+        depends_on:
+          - stone_discover_dark_forest
         reward:
           exp: 35
       stone_discover_swamp:
@@ -667,6 +773,8 @@ stages:
         amount: 1
         required: true
         icon: LILY_PAD
+        depends_on:
+          - stone_discover_savanna
         reward:
           exp: 35
       stone_discover_mountain:
@@ -678,6 +786,8 @@ stages:
         amount: 1
         required: true
         icon: GOAT_HORN
+        depends_on:
+          - stone_discover_swamp
         reward:
           exp: 40
 
@@ -690,6 +800,8 @@ stages:
         amount: 15
         required: true
         icon: SKELETON_SKULL
+        depends_on:
+          - stone_discover_mountain
         reward:
           exp: 45
       stone_craft_stone_weapon:
@@ -701,6 +813,8 @@ stages:
         amount: 1
         required: true
         icon: STONE_SWORD
+        depends_on:
+          - stone_kill_hostile_15
         reward:
           exp: 25
       stone_gain_exp_25:
@@ -712,6 +826,8 @@ stages:
         amount: 25
         required: true
         icon: EXPERIENCE_BOTTLE
+        depends_on:
+          - stone_craft_stone_weapon
         reward:
           money: 50.0
 
@@ -749,6 +865,8 @@ stages:
         amount: 32
         required: true
         icon: IRON_INGOT
+        depends_on:
+          - iron_obtain_iron_ore
         reward:
           exp: 60
       iron_craft_pickaxe:
@@ -760,6 +878,8 @@ stages:
         amount: 1
         required: true
         icon: IRON_PICKAXE
+        depends_on:
+          - iron_smelt_iron
         reward:
           exp: 50
       iron_reach_deepslate:
@@ -771,6 +891,8 @@ stages:
         amount: 1
         required: true
         icon: DEEPSLATE
+        depends_on:
+          - iron_craft_pickaxe
         reward:
           exp: 75
 
@@ -783,6 +905,8 @@ stages:
         amount: 1
         required: true
         icon: CHISELED_STONE_BRICKS
+        depends_on:
+          - iron_reach_deepslate
         reward:
           money: 250.0
           exp: 150
@@ -796,6 +920,8 @@ stages:
         amount: 1
         required: true
         icon: SAND
+        depends_on:
+          - iron_complete_dungeon
         reward:
           exp: 50
       iron_discover_jungle:
@@ -807,6 +933,8 @@ stages:
         amount: 1
         required: true
         icon: JUNGLE_SAPLING
+        depends_on:
+          - iron_discover_desert
         reward:
           exp: 50
       iron_discover_badlands:
@@ -818,6 +946,8 @@ stages:
         amount: 1
         required: true
         icon: RED_SAND
+        depends_on:
+          - iron_discover_jungle
         reward:
           exp: 60
       iron_discover_snowy:
@@ -829,6 +959,8 @@ stages:
         amount: 1
         required: true
         icon: SNOWBALL
+        depends_on:
+          - iron_discover_badlands
         reward:
           exp: 50
 
@@ -841,6 +973,8 @@ stages:
         amount: 1
         required: true
         icon: WITHER_SKELETON_SKULL
+        depends_on:
+          - iron_discover_snowy
         reward:
           money: 500.0
           exp: 300
@@ -853,6 +987,8 @@ stages:
         amount: 2
         required: true
         icon: FLINT
+        depends_on:
+          - iron_defeat_first_boss
         reward:
           exp: 100
 
@@ -865,6 +1001,8 @@ stages:
         amount: 25
         required: true
         icon: ZOMBIE_HEAD
+        depends_on:
+          - iron_obtain_boss_drop
         reward:
           exp: 60
       iron_craft_full_armor:
@@ -876,6 +1014,8 @@ stages:
         amount: 1
         required: true
         icon: IRON_CHESTPLATE
+        depends_on:
+          - iron_kill_hostile_25
         reward:
           money: 100.0
           exp: 80
@@ -888,6 +1028,8 @@ stages:
         amount: 1
         required: true
         icon: IRON_SWORD
+        depends_on:
+          - iron_craft_full_armor
         reward:
           exp: 40
       iron_gain_exp_50:
@@ -899,6 +1041,8 @@ stages:
         amount: 50
         required: true
         icon: EXPERIENCE_BOTTLE
+        depends_on:
+          - iron_craft_weapon
         reward:
           money: 75.0
 
@@ -935,6 +1079,8 @@ stages:
         amount: 1
         required: true
         icon: DIAMOND_PICKAXE
+        depends_on:
+          - diamond_find_diamonds
         reward:
           exp: 80
       diamond_obtain_obsidian:
@@ -946,6 +1092,8 @@ stages:
         amount: 10
         required: true
         icon: OBSIDIAN
+        depends_on:
+          - diamond_craft_pickaxe
         reward:
           exp: 75
 
@@ -958,6 +1106,8 @@ stages:
         amount: 1
         required: true
         icon: CHISELED_STONE_BRICKS
+        depends_on:
+          - diamond_obtain_obsidian
         reward:
           money: 400.0
           exp: 200
@@ -971,6 +1121,8 @@ stages:
         amount: 1
         required: true
         icon: CHERRY_SAPLING
+        depends_on:
+          - diamond_complete_dungeon
         reward:
           exp: 70
       diamond_discover_mangrove:
@@ -982,6 +1134,8 @@ stages:
         amount: 1
         required: true
         icon: MANGROVE_PROPAGULE
+        depends_on:
+          - diamond_discover_cherry_grove
         reward:
           exp: 70
       diamond_discover_deep_dark:
@@ -993,6 +1147,8 @@ stages:
         amount: 1
         required: true
         icon: SCULK_SENSOR
+        depends_on:
+          - diamond_discover_mangrove
         reward:
           exp: 100
 
@@ -1005,6 +1161,8 @@ stages:
         amount: 2
         required: true
         icon: WITHER_SKELETON_SKULL
+        depends_on:
+          - diamond_discover_deep_dark
         reward:
           money: 600.0
           exp: 350
@@ -1018,6 +1176,8 @@ stages:
         amount: 30
         required: true
         icon: CREEPER_HEAD
+        depends_on:
+          - diamond_defeat_bosses
         reward:
           exp: 90
       diamond_craft_full_armor:
@@ -1029,6 +1189,8 @@ stages:
         amount: 1
         required: true
         icon: DIAMOND_CHESTPLATE
+        depends_on:
+          - diamond_kill_strong_30
         reward:
           money: 250.0
           exp: 150
@@ -1041,6 +1203,8 @@ stages:
         amount: 1
         required: true
         icon: DIAMOND_SWORD
+        depends_on:
+          - diamond_craft_full_armor
         reward:
           exp: 60
       diamond_gain_exp_100:
@@ -1052,6 +1216,8 @@ stages:
         amount: 100
         required: true
         icon: EXPERIENCE_BOTTLE
+        depends_on:
+          - diamond_craft_weapon
         reward:
           money: 150.0
 
@@ -1089,6 +1255,8 @@ stages:
         amount: 1
         required: true
         icon: CRIMSON_FUNGUS
+        depends_on:
+          - nether_discover_wastes
         reward:
           exp: 75
       nether_discover_warped:
@@ -1100,6 +1268,8 @@ stages:
         amount: 1
         required: true
         icon: WARPED_FUNGUS
+        depends_on:
+          - nether_discover_crimson
         reward:
           exp: 75
       nether_discover_soulsand:
@@ -1111,6 +1281,8 @@ stages:
         amount: 1
         required: true
         icon: SOUL_SAND
+        depends_on:
+          - nether_discover_warped
         reward:
           exp: 80
       nether_discover_basalt:
@@ -1122,6 +1294,8 @@ stages:
         amount: 1
         required: true
         icon: BASALT
+        depends_on:
+          - nether_discover_soulsand
         reward:
           exp: 80
       nether_obtain_blaze_rods:
@@ -1133,6 +1307,8 @@ stages:
         amount: 10
         required: true
         icon: BLAZE_ROD
+        depends_on:
+          - nether_discover_basalt
         reward:
           money: 150.0
           exp: 100
@@ -1146,6 +1322,8 @@ stages:
         amount: 4
         required: true
         icon: ANCIENT_DEBRIS
+        depends_on:
+          - nether_obtain_blaze_rods
         reward:
           money: 300.0
           exp: 150
@@ -1158,6 +1336,8 @@ stages:
         amount: 1
         required: true
         icon: NETHERITE_INGOT
+        depends_on:
+          - nether_obtain_ancient_debris
         reward:
           exp: 120
       nether_craft_netherite_pickaxe:
@@ -1169,6 +1349,8 @@ stages:
         amount: 1
         required: true
         icon: NETHERITE_PICKAXE
+        depends_on:
+          - nether_craft_netherite_ingot
         reward:
           exp: 100
 
@@ -1181,6 +1363,8 @@ stages:
         amount: 1
         required: true
         icon: NETHER_STAR
+        depends_on:
+          - nether_craft_netherite_pickaxe
         reward:
           money: 1000.0
           exp: 500
@@ -1194,6 +1378,8 @@ stages:
         amount: 20
         required: true
         icon: BLAZE_POWDER
+        depends_on:
+          - nether_defeat_wither
         reward:
           exp: 100
       nether_kill_wither_skeletons:
@@ -1205,6 +1391,8 @@ stages:
         amount: 10
         required: true
         icon: WITHER_SKELETON_SKULL
+        depends_on:
+          - nether_kill_blazes
         reward:
           exp: 100
       nether_craft_netherite_armor:
@@ -1216,6 +1404,8 @@ stages:
         amount: 1
         required: true
         icon: NETHERITE_CHESTPLATE
+        depends_on:
+          - nether_kill_wither_skeletons
         reward:
           money: 500.0
           exp: 300
@@ -1228,6 +1418,8 @@ stages:
         amount: 200
         required: true
         icon: EXPERIENCE_BOTTLE
+        depends_on:
+          - nether_craft_netherite_armor
         reward:
           money: 250.0
 
@@ -1264,6 +1456,8 @@ stages:
         amount: 1
         required: true
         icon: ELYTRA
+        depends_on:
+          - end_discover_end_islands
         reward:
           money: 1000.0
           exp: 300
@@ -1276,6 +1470,8 @@ stages:
         amount: 4
         required: true
         icon: SHULKER_SHELL
+        depends_on:
+          - end_obtain_elytra
         reward:
           exp: 150
 
@@ -1288,6 +1484,8 @@ stages:
         amount: 1
         required: true
         icon: DRAGON_HEAD
+        depends_on:
+          - end_obtain_shulker_shells
         reward:
           money: 2500.0
           exp: 1000
@@ -1302,6 +1500,8 @@ stages:
         amount: 50
         required: true
         icon: ENDER_PEARL
+        depends_on:
+          - end_defeat_ender_dragon
         reward:
           exp: 150
       end_kill_shulkers:
@@ -1313,6 +1513,8 @@ stages:
         amount: 10
         required: true
         icon: SHULKER_BOX
+        depends_on:
+          - end_kill_endermen
         reward:
           exp: 150
       end_gain_exp_500:
@@ -1324,6 +1526,8 @@ stages:
         amount: 500
         required: true
         icon: EXPERIENCE_BOTTLE
+        depends_on:
+          - end_kill_shulkers
         reward:
           money: 1000.0
 

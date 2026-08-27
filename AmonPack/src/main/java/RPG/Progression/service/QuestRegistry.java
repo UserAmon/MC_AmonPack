@@ -117,6 +117,18 @@ public class QuestRegistry {
                 Quest quest = new Quest(questId.toLowerCase(Locale.ROOT), stage, category, title, desc,
                         objectiveType, target, amount, required, reward, icon, cmd);
 
+                List<String> prereqs = qSec.getStringList("depends_on");
+                if (prereqs.isEmpty()) {
+                    String parent = qSec.getString("parent", qSec.getString("depends_on"));
+                    if (parent != null && !parent.trim().isEmpty()) {
+                        quest.addPrerequisite(parent.trim());
+                    }
+                } else {
+                    for (String p : prereqs) {
+                        quest.addPrerequisite(p);
+                    }
+                }
+
                 registerQuest(quest);
             }
         }
