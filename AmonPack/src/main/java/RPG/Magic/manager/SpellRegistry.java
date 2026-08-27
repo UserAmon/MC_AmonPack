@@ -25,6 +25,13 @@ public class SpellRegistry {
         registerSpell(new RPG.Magic.spells.air.BlowSpell());
         registerSpell(new RPG.Magic.spells.air.AirbladeSpell());
         registerSpell(new RPG.Magic.spells.air.AirVortexSpell());
+
+        registerSpell(new RPG.Magic.spells.lightning.LightningSpell());
+        registerSpell(new RPG.Magic.spells.lightning.ChainLightningSpell());
+
+        registerSpell(new RPG.Magic.spells.water.SplashSpell());
+        registerSpell(new RPG.Magic.spells.water.FreezeSpell());
+        registerSpell(new RPG.Magic.spells.water.EvaporateSpell());
     }
 
     public void registerSpell(Spell spell) {

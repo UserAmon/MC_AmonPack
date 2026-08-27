@@ -13,6 +13,13 @@
           "type": "minecraft:model",
           "model": "amonpack:magic/wand_fen"
         }
+      },
+      {
+        "threshold": 20004,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:magic/wand_water"
+        }
       }
     ]
   }

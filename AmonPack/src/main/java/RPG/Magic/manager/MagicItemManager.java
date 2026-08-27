@@ -80,16 +80,44 @@ public class MagicItemManager {
         updateTomeLore(item);
     }
 
+    public static boolean isMagicStaff(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        var meta = item.getItemMeta();
+        if (meta.hasDisplayName() && meta.getDisplayName().toLowerCase().contains("laska")) return true;
+        return meta.hasCustomModelData() && meta.getCustomModelData() == 20003;
+    }
+
+    public static boolean isWaterWand(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        var meta = item.getItemMeta();
+        if (meta.hasDisplayName() && (meta.getDisplayName().toLowerCase().contains("wody") || meta.getDisplayName().toLowerCase().contains("water"))) return true;
+        return meta.hasCustomModelData() && meta.getCustomModelData() == 20004;
+    }
+
     public static boolean isAirWand(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
-        if (item.getItemMeta().hasDisplayName() && (item.getItemMeta().getDisplayName().toLowerCase().contains("fen") || item.getItemMeta().getDisplayName().toLowerCase().contains("różdżka") || item.getItemMeta().getDisplayName().toLowerCase().contains("wand"))) {
-            return true;
-        }
-        return item.getItemMeta().hasCustomModelData() && item.getItemMeta().getCustomModelData() == 20002;
+        var meta = item.getItemMeta();
+        if (meta.hasDisplayName() && (meta.getDisplayName().toLowerCase().contains("fen") || meta.getDisplayName().toLowerCase().contains("powietrza"))) return true;
+        return meta.hasCustomModelData() && meta.getCustomModelData() == 20002;
+    }
+
+    public static boolean isMagicWand(ItemStack item) {
+        return isAirWand(item) || isWaterWand(item);
+    }
+
+    public static boolean isMagicTome(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        var meta = item.getItemMeta();
+        if (meta.hasDisplayName() && (meta.getDisplayName().toLowerCase().contains("tom") || meta.getDisplayName().toLowerCase().contains("tome") || meta.getDisplayName().toLowerCase().contains("księga"))) return true;
+        return meta.hasCustomModelData() && (meta.getCustomModelData() == 20001 || meta.getCustomModelData() == 10010);
     }
 
     public static String getPrimarySpellId(ItemStack item) {
-        String defaultSpell = isAirWand(item) ? "blow" : "fireblast";
+        String defaultSpell = "fireblast";
+        if (isAirWand(item)) defaultSpell = "blow";
+        else if (isWaterWand(item)) defaultSpell = "splash";
+        else if (isMagicStaff(item)) defaultSpell = "lightning";
+
         if (item == null || !item.hasItemMeta()) return defaultSpell;
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
         String id = pdc.get(SPELL_PRIMARY_KEY, PersistentDataType.STRING);
@@ -126,20 +154,31 @@ public class MagicItemManager {
         String primary = getPrimarySpellId(item);
         String secondary = getSecondarySpellId(item);
         Set<String> upgrades = getUpgrades(item);
-        boolean isAir = isAirWand(item);
 
         List<String> lore = new ArrayList<>();
-        if (isAir) {
+        if (isMagicStaff(item)) {
+            lore.add("§7Mistyczna laska przewodząca pioruny i energię burzy.");
+            lore.add("");
+            lore.add("§6✦ Poziom Laski: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills);
+            lore.add("§a✦ Zaklęcie (PPM - Ładowanie): §f" + formatSpellName(primary));
+        } else if (isWaterWand(item)) {
+            lore.add("§7Różdżka ukształtowana z czystego oceanicznego kryształu.");
+            lore.add("");
+            lore.add("§6✦ Poziom Różdżki: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills);
+            lore.add("§a✦ Zaklęcie (LPM): §f" + formatSpellName(primary));
+        } else if (isAirWand(item)) {
             lore.add("§7Mistyczna różdżka wiatru wykuta z esencji fenów.");
             lore.add("");
             lore.add("§6✦ Poziom Różdżki: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills);
+            lore.add("§a✦ Zaklęcie (LPM / Shift+LPM): §f" + formatSpellName(primary));
         } else {
             lore.add("§7Starożytna księga zawierająca pierwotne zaklęcia.");
             lore.add("");
             lore.add("§6✦ Poziom Tomu: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills);
+            lore.add("§a✦ Zaklęcie Główne (LPM): §f" + formatSpellName(primary));
+            lore.add("§b✦ Tkany Czar (Shift): §f" + (secondary.equalsIgnoreCase("none") ? "§8[Brak]" : formatSpellName(secondary)));
         }
-        lore.add("§a✦ Zaklęcie Główne (LPM): §f" + formatSpellName(primary));
-        lore.add("§b✦ Drugi Krąg (Shift+LPM): §f" + (secondary.equalsIgnoreCase("none") ? "§8[Brak]" : formatSpellName(secondary)));
+
         lore.add("");
         lore.add("§e✦ Ulepszenia: §f" + (upgrades.isEmpty() ? "§7Brak" : upgrades.size() + " aktywne"));
         lore.add("§d✦ PPM: §fOtwórz menu przypisywania czarów");
@@ -159,6 +198,11 @@ public class MagicItemManager {
             case "blow" -> "Blow";
             case "airblade" -> "Airblade";
             case "air_vortex" -> "Wir Powietrza";
+            case "lightning" -> "Lightning";
+            case "chain_lightning" -> "Chain Lightning";
+            case "splash" -> "Splash";
+            case "freeze" -> "Freeze";
+            case "evaporate" -> "Evaporate";
             default -> id;
         };
     }

@@ -13,6 +13,13 @@
           "type": "minecraft:model",
           "model": "amonpack:weapons/custom_bow"
         }
+      },
+      {
+        "threshold": 20003,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:magic/staff_lightning"
+        }
       }
     ]
   }

@@ -98,10 +98,6 @@ public class ElementStatusManager {
             loc.getWorld().spawnParticle(Particle.FLAME, loc, 50, 1.5, 0.5, 1.5, 0.1);
             loc.getWorld().spawnParticle(Particle.SWEEP_ATTACK, loc, 10, 1.0, 0.5, 1.0, 0.1);
 
-            if (caster != null) {
-                caster.sendMessage("§6§l✦ REAKCJA: PŁOMIENNY WIR! ✦ §fObszarowy podmuch ognia!");
-            }
-
             for (org.bukkit.entity.Entity nearby : victim.getWorld().getNearbyEntities(loc, 4.0, 4.0, 4.0)) {
                 if (nearby instanceof LivingEntity le && !nearby.equals(caster)) {
                     le.damage(5.0, caster);
@@ -119,10 +115,6 @@ public class ElementStatusManager {
             Location loc = victim.getLocation();
             victim.getWorld().strikeLightningEffect(loc);
             loc.getWorld().playSound(loc, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.5f);
-
-            if (caster != null) {
-                caster.sendMessage("§b§l⚡ REAKCJA: PORAŻENIE PRĄDEM! ⚡ §fŁańcuch piorunów poraził wrogów!");
-            }
 
             for (org.bukkit.entity.Entity nearby : victim.getWorld().getNearbyEntities(loc, 5.0, 5.0, 5.0)) {
                 if (nearby instanceof LivingEntity le && !nearby.equals(caster)) {
@@ -142,10 +134,6 @@ public class ElementStatusManager {
             Location loc = victim.getLocation().add(0, 1.0, 0);
             loc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc, 30, 0.8, 0.8, 0.8, 0.05);
             loc.getWorld().playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 1.0f);
-
-            if (caster != null) {
-                caster.sendMessage("§c§l♨ REAKCJA: PAROWANIE! ♨ §fWzmocnione obrażenia x1.5!");
-            }
         }
 
         // Zadanie obrażeń głównemu celowi

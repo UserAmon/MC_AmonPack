@@ -12,6 +12,18 @@
         "custom_model_data": 20001
       },
       "model": "amonpack:magic/tome_fire"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 20002
+      },
+      "model": "amonpack:magic/wand_fen"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 20004
+      },
+      "model": "amonpack:magic/wand_water"
     }
   ],
   "textures": {

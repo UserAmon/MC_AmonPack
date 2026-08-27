@@ -52,8 +52,22 @@ public abstract class Spell {
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis() + cooldownMs);
     }
 
-    public boolean cast(Player player, ManaManager manaManager) {
-        return cast(player, player.getInventory().getItemInMainHand(), manaManager);
+    public void sendCooldownActionBar(Player player) {
+        if (player == null) return;
+        player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c✦ Zaklęcie " + getName() + " §codnawia się: §e" + String.format("%.1f", getRemainingCooldown(player)) + "s"));
+    }
+
+    public void sendNoManaActionBar(Player player, int requiredMana, ManaManager manaManager) {
+        if (player == null) return;
+        player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c✦ Brak many! §7(Wymagane: §b" + requiredMana + " MP§7, Masz: §b" + (int) manaManager.getMana(player) + " MP§7)"));
+    }
+
+    public void sendActionBar(Player player, String message) {
+        if (player == null) return;
+        player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                net.md_5.bungee.api.chat.TextComponent.fromLegacyText(message));
     }
 
     public abstract boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager);

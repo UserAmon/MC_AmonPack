@@ -18,6 +18,8 @@ public class ManaManager {
     private final Map<String, Long> cooldowns = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastHudTimes = new ConcurrentHashMap<>();
 
+    private final Map<UUID, org.bukkit.boss.BossBar> manaBossBars = new ConcurrentHashMap<>();
+
     private double regenRatePerSecond = 2.0;
     private double defaultMaxMana = 100.0;
     private BukkitTask regenTask;
@@ -28,7 +30,7 @@ public class ManaManager {
     public void start() {
         if (regenTask != null) regenTask.cancel();
 
-        // Regeneracja many co 10 ticków (0.5 sekundy) -> +1.0 MP
+        // Regeneracja many co 10 ticków (0.5 sekundy) -> +1.0 MP + aktualizacja BossBara
         regenTask = Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 UUID uuid = player.getUniqueId();
@@ -38,6 +40,9 @@ public class ManaManager {
                 if (current < max) {
                     double next = Math.min(max, current + (regenRatePerSecond * 0.5));
                     currentMana.put(uuid, next);
+                    updateManaBossBar(player, next, max);
+                } else {
+                    removeManaBossBar(uuid);
                 }
             }
         }, 10L, 10L);
@@ -48,9 +53,49 @@ public class ManaManager {
             regenTask.cancel();
             regenTask = null;
         }
+        for (org.bukkit.boss.BossBar bar : manaBossBars.values()) {
+            bar.removeAll();
+        }
+        manaBossBars.clear();
         currentMana.clear();
         maxMana.clear();
         cooldowns.clear();
+    }
+
+    public void updateManaBossBar(Player player, double current, double max) {
+        if (player == null || !player.isOnline()) return;
+        UUID uuid = player.getUniqueId();
+        if (current >= max) {
+            removeManaBossBar(uuid);
+            return;
+        }
+
+        org.bukkit.boss.BossBar bar = manaBossBars.computeIfAbsent(uuid, k -> {
+            org.bukkit.boss.BossBar newBar = Bukkit.createBossBar(
+                    "§b✦ MANA", 
+                    org.bukkit.boss.BarColor.BLUE, 
+                    org.bukkit.boss.BarStyle.SOLID
+            );
+            newBar.addPlayer(player);
+            newBar.setVisible(true);
+            return newBar;
+        });
+
+        if (!bar.getPlayers().contains(player)) {
+            bar.addPlayer(player);
+        }
+
+        double progress = Math.max(0.0, Math.min(1.0, current / max));
+        bar.setProgress(progress);
+        bar.setTitle(String.format("§b✦ MANA: §f%.0f§7/§b%.0f MP §8(§e%.0f%%§8)", current, max, progress * 100));
+    }
+
+    public void removeManaBossBar(UUID uuid) {
+        org.bukkit.boss.BossBar bar = manaBossBars.remove(uuid);
+        if (bar != null) {
+            bar.removeAll();
+            bar.setVisible(false);
+        }
     }
 
     public double getMana(UUID uuid) {
@@ -84,7 +129,12 @@ public class ManaManager {
     public boolean consumeMana(UUID uuid, double amount) {
         double current = getMana(uuid);
         if (current < amount) return false;
-        currentMana.put(uuid, current - amount);
+        double next = current - amount;
+        currentMana.put(uuid, next);
+        Player p = Bukkit.getPlayer(uuid);
+        if (p != null && p.isOnline()) {
+            updateManaBossBar(p, next, getMaxMana(uuid));
+        }
         return true;
     }
 
@@ -95,7 +145,12 @@ public class ManaManager {
     public void restoreMana(UUID uuid, double amount) {
         double max = getMaxMana(uuid);
         double current = getMana(uuid);
-        currentMana.put(uuid, Math.min(max, current + amount));
+        double next = Math.min(max, current + amount);
+        currentMana.put(uuid, next);
+        Player p = Bukkit.getPlayer(uuid);
+        if (p != null && p.isOnline()) {
+            updateManaBossBar(p, next, max);
+        }
     }
 
     public boolean isOnCooldown(UUID uuid, String spellId) {

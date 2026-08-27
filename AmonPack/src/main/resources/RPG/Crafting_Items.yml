@@ -1050,3 +1050,53 @@ Craftable_Items:
         c1:
           Material: STICK
           Amount: 1
+
+  Staff_Lightning:
+    Material: BOW
+    Name: "§e§lLaska Błyskawic"
+    Custom_Model_ID: 20003
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: BLAZE_ROD
+          Amount: 2
+        m2:
+          Material: COPPER_INGOT
+          Amount: 6
+        m3:
+          Material: GLOWSTONE_DUST
+          Amount: 4
+    Item:
+      Lore:
+        l1: "§7Mistyczna laska przewodząca pioruny i energię burzy."
+        l2: "§e✦ PPM: §fŁadowanie i wystrzał czarów piorunów"
+        l3: "§d✦ Shift + PPM: §fOtwórz menu czarów"
+      Items_To_Craft:
+        c1:
+          Material: STICK
+          Amount: 2
+
+  Wand_Water:
+    Material: STICK
+    Name: "§9§lRóżdżka Wody"
+    Custom_Model_ID: 20004
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: STICK
+          Amount: 1
+        m2:
+          Material: PRISMARINE_SHARD
+          Amount: 6
+        m3:
+          Material: LAPIS_LAZULI
+          Amount: 8
+    Item:
+      Lore:
+        l1: "§7Różdżka ukształtowana z czystego oceanicznego kryształu."
+        l2: "§b✦ LPM: §fWystrzelenie Splash §8(20 MP, 2s cd)"
+        l3: "§d✦ PPM: §fOtwórz menu przypisywania czarów"
+      Items_To_Craft:
+        c1:
+          Material: STICK
+          Amount: 1

@@ -322,3 +322,27 @@ items:
     lore:
       - "&7Meteorytowy kilof kruszący najtwardsze rudy kosmiczne."
 
+  staff_lightning:
+    display_name: "&e&lLaska Błyskawic"
+    base_material: BOW
+    model: "magic/staff_lightning"
+    custom_model_data: 20003
+    unbreakable: true
+    lore:
+      - "&7Mistyczna laska przewodząca pioruny i energię burzy."
+      - ""
+      - "&e✦ PPM: &fŁadowanie i wystrzał czarów piorunów"
+      - "&d✦ Shift + PPM: &fOtwórz menu czarów"
+
+  wand_water:
+    display_name: "&9&lRóżdżka Wody"
+    base_material: STICK
+    model: "magic/wand_water"
+    custom_model_data: 20004
+    unbreakable: true
+    lore:
+      - "&7Różdżka ukształtowana z czystego oceanicznego kryształu."
+      - ""
+      - "&b✦ LPM: &fWystrzelenie Splash &8(20 MP, 2s cd)"
+      - "&d✦ PPM: &fOtwórz menu czarów"
+

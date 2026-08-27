@@ -34,12 +34,12 @@ public class AirbladeSpell extends Spell {
         double effectiveCd = hasCdRed ? Math.max(1.5, getCooldownSeconds() - 1.5) : getCooldownSeconds();
 
         if (isOnCooldown(player)) {
-            player.sendMessage("§cZaklęcie " + getName() + " §codnawia się (" + String.format("%.1f", getRemainingCooldown(player)) + "s)!");
+            sendCooldownActionBar(player);
             return false;
         }
 
         if (!manaManager.hasMana(player, effectiveMana)) {
-            player.sendMessage("§cBrak many! Wymagane: " + effectiveMana + " MP (" + manaManager.getMana(player) + "/" + manaManager.getMaxMana(player) + ")");
+            sendNoManaActionBar(player, effectiveMana, manaManager);
             return false;
         }
 

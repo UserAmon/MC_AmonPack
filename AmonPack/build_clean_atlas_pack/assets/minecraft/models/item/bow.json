@@ -6,6 +6,12 @@
         "custom_model_data": 10021
       },
       "model": "amonpack:weapons/custom_bow"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 20003
+      },
+      "model": "amonpack:magic/staff_lightning"
     }
   ],
   "textures": {

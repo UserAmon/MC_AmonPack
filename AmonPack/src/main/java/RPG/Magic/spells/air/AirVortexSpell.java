@@ -37,12 +37,12 @@ public class AirVortexSpell extends Spell {
         double effectiveCd = hasCdRed ? Math.max(3.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
 
         if (isOnCooldown(player)) {
-            player.sendMessage("§cZaklęcie " + getName() + " §codnawia się (" + String.format("%.1f", getRemainingCooldown(player)) + "s)!");
+            sendCooldownActionBar(player);
             return false;
         }
 
         if (!manaManager.hasMana(player, effectiveMana)) {
-            player.sendMessage("§cBrak many! Wymagane: " + effectiveMana + " MP (" + manaManager.getMana(player) + "/" + manaManager.getMaxMana(player) + ")");
+            sendNoManaActionBar(player, effectiveMana, manaManager);
             return false;
         }
 
@@ -173,7 +173,7 @@ public class AirVortexSpell extends Spell {
 
         private void releaseVortex() {
             if (!manaManager.hasMana(player, manaCost)) {
-                player.sendMessage("§cBrak many na uwolnienie wiru!");
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§c✦ Brak many na uwolnienie wiru!"));
                 return;
             }
 

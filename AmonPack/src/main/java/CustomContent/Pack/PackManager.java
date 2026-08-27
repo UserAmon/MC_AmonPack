@@ -185,15 +185,20 @@ public class PackManager {
 
             // Łuk (BOW)
             registerModelOverride("bow", 10021, "amonpack:weapons/custom_bow");
+            registerModelOverride("bow", 20003, "amonpack:magic/staff_lightning");
 
-            // Różdżka i magia (STICK, BOOK, ENCHANTED_BOOK)
+            // Różdżka i magia (STICK, BOOK, ENCHANTED_BOOK, PRISMARINE_SHARD)
             registerModelOverride("stick", 20002, "amonpack:magic/wand_fen");
+            registerModelOverride("stick", 20004, "amonpack:magic/wand_water");
+            registerModelOverride("prismarine_shard", 20004, "amonpack:magic/wand_water");
             registerModelOverride("book", 10010, "amonpack:magic/tome_fire");
             registerModelOverride("book", 20001, "amonpack:magic/tome_fire");
             registerModelOverride("book", 20002, "amonpack:magic/wand_fen");
+            registerModelOverride("book", 20004, "amonpack:magic/wand_water");
             registerModelOverride("enchanted_book", 10010, "amonpack:magic/tome_fire");
             registerModelOverride("enchanted_book", 20001, "amonpack:magic/tome_fire");
             registerModelOverride("enchanted_book", 20002, "amonpack:magic/wand_fen");
+            registerModelOverride("enchanted_book", 20004, "amonpack:magic/wand_water");
 
             // Przedmioty rzemieślnicze (PAPER, FLINT)
             registerModelOverride("paper", 10001, "amonpack:crafting/mold_empty");
