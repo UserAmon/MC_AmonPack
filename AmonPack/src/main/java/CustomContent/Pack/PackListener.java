@@ -35,6 +35,8 @@ public class PackListener implements Listener {
         Player player = event.getPlayer();
         PlayerResourcePackStatusEvent.Status status = event.getStatus();
 
+        Bukkit.getLogger().info("[AmonPack] Status pobierania ResourcePacka gracza " + player.getName() + ": " + status);
+
         if (status == PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED) {
             player.sendMessage("§a[AmonPack] §7Paczka zasobów i modeli 3D została pomyślnie załadowana!");
         } else if (status == PlayerResourcePackStatusEvent.Status.DECLINED) {

@@ -7,5 +7,5 @@ PackServer:
 
 ResourcePack:
   AutoSendOnJoin: true
-  ForcePack: false
+  ForcePack: true
   PromptMessage: "&6&lAmonPack &7- Załaduj autorskie modele 3D broni, zbroi, rud i bossów!"

@@ -444,6 +444,12 @@ public class PackManager {
             zipDirectory(tempBuildDir, generatedZip);
             deleteDirectory(tempBuildDir);
 
+            // Kopia do głównego folderu wtyczki dla wygody
+            try {
+                File rootZip = new File(AmonPackPlugin.plugin.getDataFolder(), "AmonPack_ResourcePack.zip");
+                Files.copy(generatedZip.toPath(), rootZip.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception ignored) {}
+
             // 7. Obliczanie SHA-1
             this.packHash = calculateSha1(generatedZip);
             this.packHashHex = bytesToHex(packHash);
@@ -464,6 +470,7 @@ public class PackManager {
         String url = getPackDownloadUrl(player);
         if (url != null && !url.isEmpty()) {
             try {
+                Bukkit.getLogger().info("[AmonPack] Wysyłanie ResourcePacka do gracza " + player.getName() + " (URL: " + url + ")");
                 if (packHash != null) {
                     player.setResourcePack(url, packHash, promptMessage, forcePack);
                 } else {
@@ -485,10 +492,7 @@ public class PackManager {
     }
 
     private String resolveHost(Player player) {
-        if (hostAddress != null && !hostAddress.isEmpty()
-                && !hostAddress.equalsIgnoreCase("auto")
-                && !hostAddress.equalsIgnoreCase("127.0.0.1")
-                && !hostAddress.equalsIgnoreCase("localhost")) {
+        if (hostAddress != null && !hostAddress.isEmpty() && !hostAddress.equalsIgnoreCase("auto")) {
             return hostAddress;
         }
 
@@ -498,8 +502,17 @@ public class PackManager {
                 Object vHostObj = m.invoke(player);
                 if (vHostObj instanceof InetSocketAddress isa && isa.getHostString() != null) {
                     String vHost = isa.getHostString();
-                    if (!vHost.isEmpty() && !vHost.equalsIgnoreCase("127.0.0.1") && !vHost.equalsIgnoreCase("localhost")) {
+                    if (!vHost.isEmpty() && !vHost.equals("0.0.0.0")) {
                         return vHost;
+                    }
+                }
+            } catch (Throwable ignored) {}
+
+            try {
+                if (player.getAddress() != null && player.getAddress().getAddress() != null) {
+                    String clientIp = player.getAddress().getAddress().getHostAddress();
+                    if (clientIp != null && (clientIp.equals("127.0.0.1") || clientIp.equals("0:0:0:0:0:0:0:1") || clientIp.startsWith("192.168.") || clientIp.startsWith("10."))) {
+                        return clientIp;
                     }
                 }
             } catch (Throwable ignored) {}
@@ -514,7 +527,7 @@ public class PackManager {
             return detectedPublicIp;
         }
 
-        return hostAddress != null && !hostAddress.isEmpty() && !hostAddress.equalsIgnoreCase("auto") ? hostAddress : "127.0.0.1";
+        return "127.0.0.1";
     }
 
     public boolean isAutoSendOnJoin() {

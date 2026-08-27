@@ -46,15 +46,25 @@ public class PackHttpServer {
 
                     exchange.getResponseHeaders().set("Content-Type", "application/zip");
                     exchange.getResponseHeaders().set("Content-Disposition", "attachment; filename=\"AmonPack_ResourcePack.zip\"");
+                    exchange.getResponseHeaders().set("Accept-Ranges", "bytes");
+                    exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+                    exchange.getResponseHeaders().set("Cache-Control", "no-cache, no-store, must-revalidate");
+
+                    if ("HEAD".equalsIgnoreCase(exchange.getRequestMethod())) {
+                        exchange.sendResponseHeaders(200, -1);
+                        return;
+                    }
+
                     exchange.sendResponseHeaders(200, packFile.length());
 
                     try (FileInputStream fis = new FileInputStream(packFile);
                          OutputStream os = exchange.getResponseBody()) {
-                        byte[] buffer = new byte[8192];
+                        byte[] buffer = new byte[16384];
                         int read;
                         while ((read = fis.read(buffer)) != -1) {
                             os.write(buffer, 0, read);
                         }
+                        os.flush();
                     }
                 }
             });
