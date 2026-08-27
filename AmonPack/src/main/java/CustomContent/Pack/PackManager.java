@@ -124,7 +124,13 @@ public class PackManager {
                 "meteor_scythe.bbmodel", "meteor_scythe.json", "meteor_scythe.png",
                 "meteor_shard.bbmodel", "meteor_shard.json", "meteor_shard.png",
                 "meteoryt_ore.bbmodel", "meteoryt_ore.json", "meteoryt_ore.png",
-                "magic_crafting_table.json", "magic_crafting_table.png"
+                "magic_crafting_table.json", "magic_crafting_table.png",
+                "arcane_altar.json", "arcane_altar.png",
+                "tome_fire.json", "tome_fire.png",
+                "wand_fen.json", "wand_fen.png",
+                "bone_sword.json", "bone_sword.png",
+                "custom_bow.json", "custom_bow.png",
+                "meteor_pickaxe.json", "meteor_pickaxe.png"
         };
 
         for (String file : sampleFiles) {
@@ -157,6 +163,10 @@ public class PackManager {
             JsonObject mcMetaJson = new JsonObject();
             JsonObject packObj = new JsonObject();
             packObj.addProperty("pack_format", 34); // Kompatybilny z 1.21 - 1.21.x
+            JsonObject supportedFormats = new JsonObject();
+            supportedFormats.addProperty("min_inclusive", 15);
+            supportedFormats.addProperty("max_inclusive", 55);
+            packObj.add("supported_formats", supportedFormats);
             packObj.addProperty("description", "AmonPack Custom 3D Models & Textures");
             mcMetaJson.add("pack", packObj);
             try (FileWriter writer = new FileWriter(mcmeta, StandardCharsets.UTF_8)) {
@@ -615,9 +625,52 @@ public class PackManager {
     }
 
     private void extractJarResources(String resourcePrefix, File targetDirectory) {
+        // Metoda 1: Bezpośrednie odczytanie ZipFile z pliku JAR wtyczki
+        try {
+            File pluginJar = null;
+            try {
+                java.lang.reflect.Method getFileMethod = org.bukkit.plugin.java.JavaPlugin.class.getDeclaredMethod("getFile");
+                getFileMethod.setAccessible(true);
+                pluginJar = (File) getFileMethod.invoke(AmonPackPlugin.plugin);
+            } catch (Throwable ignored) {}
+
+            if (pluginJar == null || !pluginJar.exists()) {
+                java.security.CodeSource src = AmonPackPlugin.class.getProtectionDomain().getCodeSource();
+                if (src != null && src.getLocation() != null) {
+                    pluginJar = new File(src.getLocation().toURI());
+                }
+            }
+
+            if (pluginJar != null && pluginJar.exists()) {
+                try (java.util.zip.ZipFile zf = new java.util.zip.ZipFile(pluginJar)) {
+                    java.util.Enumeration<? extends java.util.zip.ZipEntry> entries = zf.entries();
+                    while (entries.hasMoreElements()) {
+                        java.util.zip.ZipEntry e = entries.nextElement();
+                        String name = e.getName();
+                        if (name.startsWith(resourcePrefix) && !e.isDirectory()) {
+                            String relPath = name.substring(resourcePrefix.length());
+                            if (relPath.startsWith("/")) relPath = relPath.substring(1);
+                            File outFile = new File(targetDirectory, relPath);
+                            outFile.getParentFile().mkdirs();
+                            try (InputStream is = zf.getInputStream(e);
+                                 FileOutputStream fos = new FileOutputStream(outFile)) {
+                                byte[] buf = new byte[8192];
+                                int len;
+                                while ((len = is.read(buf)) > 0) {
+                                    fos.write(buf, 0, len);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // Metoda 2: Fallback na ZipInputStream
         try {
             java.security.CodeSource src = AmonPackPlugin.class.getProtectionDomain().getCodeSource();
-            if (src != null) {
+            if (src != null && src.getLocation() != null) {
                 java.net.URL jar = src.getLocation();
                 try (java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(jar.openStream())) {
                     java.util.zip.ZipEntry e;
@@ -629,7 +682,7 @@ public class PackManager {
                             File outFile = new File(targetDirectory, relPath);
                             outFile.getParentFile().mkdirs();
                             try (FileOutputStream fos = new FileOutputStream(outFile)) {
-                                byte[] buf = new byte[4096];
+                                byte[] buf = new byte[8192];
                                 int len;
                                 while ((len = zip.read(buf)) > 0) {
                                     fos.write(buf, 0, len);

@@ -116,7 +116,7 @@ public class CustomItemManager {
             packManager.registerModelOverride("enchanted_book", 20001, "amonpack:magic/tome_fire");
         }
 
-        // Rejestracja broni
+        // Rejestracja broni i narzędzi
         registerDefaultItem("boomerang", "§b§lBumerang", Material.WOODEN_SWORD, 10000, "amonpack:weapons/boomerang");
         registerDefaultItem("wachlarz", "§d§lŻelazny Wachlarz", Material.WOODEN_SWORD, 10001, "amonpack:weapons/wachlarz");
         registerDefaultItem("laska_aanga", "§e§lLaska Aanga", Material.WOODEN_SWORD, 10002, "amonpack:weapons/laska_aanga");
@@ -125,6 +125,12 @@ public class CustomItemManager {
         registerDefaultItem("msokka", "§9§lKosmiczny Miecz Sokki", Material.WOODEN_SWORD, 10005, "amonpack:weapons/msokka");
         registerDefaultItem("wlocznia_ognia", "§c§lWłócznia Ognia", Material.WOODEN_SWORD, 10006, "amonpack:weapons/wlocznia_ognia");
         registerDefaultItem("sztylet", "§8§lSztylet Cienia", Material.WOODEN_SWORD, 10007, "amonpack:weapons/sztylet");
+        registerDefaultItem("bone_sword", "§f§lKościany Miecz", Material.WOODEN_SWORD, 10020, "amonpack:weapons/bone_sword");
+        registerDefaultItem("custom_bow", "§6§lWzmocniony Długi Łuk", Material.BOW, 10021, "amonpack:weapons/custom_bow");
+        registerDefaultItem("meteor_pickaxe", "§4§lKilof z Meteorytu", Material.NETHERITE_PICKAXE, 10014, "amonpack:weapons/meteor_pickaxe");
+
+        // Rejestracja magii
+        registerDefaultItem("wand_fen", "§b§lRóżdżka Fenów", Material.STICK, 20002, "amonpack:magic/wand_fen");
 
         // Rejestracja rzemiosła
         registerDefaultItem("mold_empty", "§7§lPusta Forma", Material.PAPER, 10001, "amonpack:crafting/mold_empty");

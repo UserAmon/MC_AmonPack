@@ -113,27 +113,41 @@ public class MagicItemListener implements Listener {
     private boolean isMagicTome(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
 
-        if (MagicItemManager.isAirWand(item)) {
-            return true;
+        // Bloki nigdy nie są przedmiotami rzucającymi zaklęcia
+        if (item.getType() == Material.NOTE_BLOCK || item.getType() == Material.ENCHANTING_TABLE || item.getType().isBlock()) {
+            return false;
         }
 
         if (customItemManager != null) {
             String customId = customItemManager.getCustomItemId(item);
-            if (customId != null && (customId.contains("tome") || customId.contains("wand") || customId.contains("magic") || customId.contains("fen"))) {
-                return true;
+            if (customId != null) {
+                if (customId.equalsIgnoreCase("magic_crafting_table") || customId.equalsIgnoreCase("arcane_altar") || customId.contains("ore")) {
+                    return false;
+                }
+                if (customId.equalsIgnoreCase("tome_fire") || customId.equalsIgnoreCase("wand_fen") 
+                        || customId.startsWith("tome_") || customId.startsWith("wand_")) {
+                    return true;
+                }
             }
+        }
+
+        if (MagicItemManager.isAirWand(item)) {
+            return true;
         }
 
         var meta = item.getItemMeta();
         if (meta.hasCustomModelData()) {
             int cmd = meta.getCustomModelData();
-            if (cmd >= 20001 && cmd <= 29999) return true;
-            if (cmd == 10010) return true;
+            if (cmd == 20001 || cmd == 20002 || cmd == 10010) return true;
         }
 
         if (meta.hasDisplayName()) {
             String display = ChatColor.stripColor(meta.getDisplayName()).toLowerCase();
-            if (display.contains("tom") || display.contains("tome") || display.contains("księga") || display.contains("różdżka") || display.contains("wand") || display.contains("fen")) {
+            if (display.contains("stół") || display.contains("ołtarz") || display.contains("table") || display.contains("altar") || display.contains("ruda")) {
+                return false;
+            }
+            if (display.contains("tom ognia") || display.contains("tome of fire") || display.contains("księga czarów") 
+                    || display.contains("różdżka fenów") || display.contains("wand of the fae")) {
                 return true;
             }
         }
