@@ -279,15 +279,26 @@ public class PackManager {
             // Tworzenie aliasów katalogowych block <-> blocks, item <-> items, magic, weapons, crafting
             mirrorDirectory(new File(amonpackModels, "blocks"), new File(amonpackModels, "block"));
             mirrorDirectory(new File(amonpackModels, "block"), new File(amonpackModels, "blocks"));
+            mirrorDirectory(new File(amonpackModels, "crafting"), new File(amonpackModels, "item"));
+            mirrorDirectory(new File(amonpackModels, "weapons"), new File(amonpackModels, "item"));
+            mirrorDirectory(new File(amonpackModels, "magic"), new File(amonpackModels, "item"));
+            mirrorDirectory(new File(amonpackModels, "item"), new File(amonpackModels, "magic"));
+            mirrorDirectory(new File(amonpackModels, "item"), new File(amonpackModels, "weapons"));
+            mirrorDirectory(new File(amonpackModels, "item"), new File(amonpackModels, "crafting"));
+            mirrorDirectory(new File(amonpackModels, "item"), new File(amonpackModels, "block"));
+
             mirrorDirectory(new File(amonpackTex, "blocks"), new File(amonpackTex, "block"));
             mirrorDirectory(new File(amonpackTex, "block"), new File(amonpackTex, "blocks"));
-
-            mirrorDirectory(new File(amonpackModels, "crafting"), new File(amonpackModels, "item"));
             mirrorDirectory(new File(amonpackTex, "crafting"), new File(amonpackTex, "item"));
-            mirrorDirectory(new File(amonpackModels, "weapons"), new File(amonpackModels, "item"));
             mirrorDirectory(new File(amonpackTex, "weapons"), new File(amonpackTex, "item"));
-            mirrorDirectory(new File(amonpackModels, "magic"), new File(amonpackModels, "item"));
             mirrorDirectory(new File(amonpackTex, "magic"), new File(amonpackTex, "item"));
+            mirrorDirectory(new File(amonpackTex, "item"), new File(amonpackTex, "magic"));
+            mirrorDirectory(new File(amonpackTex, "item"), new File(amonpackTex, "weapons"));
+            mirrorDirectory(new File(amonpackTex, "item"), new File(amonpackTex, "crafting"));
+            mirrorDirectory(new File(amonpackTex, "item"), new File(amonpackTex, "block"));
+
+            // Normalizacja prefiksów "minecraft:" w modelach JSON
+            fixModelParentsRecursive(tempBuildDir);
 
             // Mirror textures do minecraft/textures
             copyDirectoryRecursive(amonpackTex, new File(tempBuildDir, "assets/minecraft/textures"));
@@ -302,6 +313,19 @@ public class PackManager {
             registerModelOverride("wooden_sword", 10005, "amonpack:weapons/msokka");
             registerModelOverride("wooden_sword", 10006, "amonpack:weapons/wlocznia_ognia");
             registerModelOverride("wooden_sword", 10007, "amonpack:weapons/sztylet");
+            registerModelOverride("wooden_sword", 10020, "amonpack:weapons/bone_sword");
+
+            // Łuk (BOW)
+            registerModelOverride("bow", 10021, "amonpack:weapons/custom_bow");
+
+            // Różdżka i magia (STICK, BOOK, ENCHANTED_BOOK)
+            registerModelOverride("stick", 20002, "amonpack:magic/wand_fen");
+            registerModelOverride("book", 10010, "amonpack:magic/tome_fire");
+            registerModelOverride("book", 20001, "amonpack:magic/tome_fire");
+            registerModelOverride("book", 20002, "amonpack:magic/wand_fen");
+            registerModelOverride("enchanted_book", 10010, "amonpack:magic/tome_fire");
+            registerModelOverride("enchanted_book", 20001, "amonpack:magic/tome_fire");
+            registerModelOverride("enchanted_book", 20002, "amonpack:magic/wand_fen");
 
             // Przedmioty rzemieślnicze (PAPER)
             registerModelOverride("paper", 10001, "amonpack:crafting/mold_empty");
@@ -310,15 +334,12 @@ public class PackManager {
             registerModelOverride("paper", 10004, "amonpack:crafting/basalt_shard");
             registerModelOverride("paper", 10005, "amonpack:crafting/firescroll");
 
-            // Magiczne przedmioty (BOOK & ENCHANTED_BOOK)
-            registerModelOverride("book", 10010, "amonpack:magic/tome_fire");
-            registerModelOverride("book", 20001, "amonpack:magic/tome_fire");
-            registerModelOverride("enchanted_book", 10010, "amonpack:magic/tome_fire");
-            registerModelOverride("enchanted_book", 20001, "amonpack:magic/tome_fire");
-
-            // Pozostałe narzędzia i zbroje
+            // Narzędzia i zbroje
             registerModelOverride("diamond_sword", 10001, "amonpack:item/meteor_scythe");
             registerModelOverride("diamond_axe", 10002, "amonpack:item/meteor_axe");
+            registerModelOverride("netherite_axe", 10002, "amonpack:item/meteor_axe");
+            registerModelOverride("diamond_pickaxe", 10014, "amonpack:weapons/meteor_pickaxe");
+            registerModelOverride("netherite_pickaxe", 10014, "amonpack:weapons/meteor_pickaxe");
             registerModelOverride("flint", 10003, "amonpack:crafting/meteor_shard");
             registerModelOverride("carved_pumpkin", 20001, "amonpack:boss/Spirit_Earth_2");
 
@@ -329,6 +350,8 @@ public class PackManager {
             registerModelOverride("iron_nugget", 30002, "amonpack:block/magic_crafting_table");
             registerModelOverride("note_block", 30003, "amonpack:block/basalt_ore");
             registerModelOverride("iron_nugget", 30003, "amonpack:block/basalt_ore");
+            registerModelOverride("note_block", 30004, "amonpack:block/arcane_altar");
+            registerModelOverride("iron_nugget", 30004, "amonpack:block/arcane_altar");
 
             // 5. Generowanie plików dla 1.14-1.21.1 ORAZ 1.21.2+ (assets/minecraft/models/item oraz assets/minecraft/items)
             for (Map.Entry<String, Map<Integer, String>> entry : vanillaOverrides.entrySet()) {
@@ -542,6 +565,37 @@ public class PackManager {
                 if (!destination.getParentFile().exists()) destination.getParentFile().mkdirs();
                 Files.copy(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception ignored) {}
+        }
+    }
+
+    private void fixModelParentsRecursive(File dir) {
+        if (!dir.exists()) return;
+        File[] files = dir.listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (f.isDirectory()) {
+                fixModelParentsRecursive(f);
+            } else if (f.getName().endsWith(".json")) {
+                try {
+                    String content = Files.readString(f.toPath(), StandardCharsets.UTF_8);
+                    boolean changed = false;
+                    if (content.contains("\"parent\": \"block/cube_all\"")) {
+                        content = content.replace("\"parent\": \"block/cube_all\"", "\"parent\": \"minecraft:block/cube_all\"");
+                        changed = true;
+                    }
+                    if (content.contains("\"parent\": \"item/handheld\"")) {
+                        content = content.replace("\"parent\": \"item/handheld\"", "\"parent\": \"minecraft:item/handheld\"");
+                        changed = true;
+                    }
+                    if (content.contains("\"parent\": \"item/generated\"")) {
+                        content = content.replace("\"parent\": \"item/generated\"", "\"parent\": \"minecraft:item/generated\"");
+                        changed = true;
+                    }
+                    if (changed) {
+                        Files.writeString(f.toPath(), content, StandardCharsets.UTF_8);
+                    }
+                } catch (Exception ignored) {}
+            }
         }
     }
 

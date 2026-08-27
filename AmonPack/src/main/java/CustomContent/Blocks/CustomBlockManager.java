@@ -351,6 +351,9 @@ public class CustomBlockManager {
 
     private synchronized void savePlacedBlocksSync() {
         try {
+            if (storageFile.getParentFile() != null && !storageFile.getParentFile().exists()) {
+                storageFile.getParentFile().mkdirs();
+            }
             FileConfiguration cfg = new YamlConfiguration();
             Map<String, String> copy = new HashMap<>(placedBlocks);
             for (Map.Entry<String, String> entry : copy.entrySet()) {
@@ -358,7 +361,9 @@ public class CustomBlockManager {
             }
             cfg.save(storageFile);
             isDirty = false;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("[AmonPack] Błąd zapisu placed_blocks.yml: " + e.getMessage());
+        }
     }
 
     public Map<String, CustomBlock> getAllCustomBlocks() {

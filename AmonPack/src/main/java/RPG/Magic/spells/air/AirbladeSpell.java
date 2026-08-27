@@ -26,11 +26,12 @@ public class AirbladeSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "airblade_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
+        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "airblade_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasWidth = MagicItemManager.hasUpgrade(tomeItem, "airblade_width");
 
-        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(1.5, getCooldownSeconds() - 1.0) : getCooldownSeconds();
+        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 15) : getManaCost();
+        double effectiveCd = hasCdRed ? Math.max(1.5, getCooldownSeconds() - 1.5) : getCooldownSeconds();
 
         if (isOnCooldown(player)) {
             player.sendMessage("§cZaklęcie " + getName() + " §codnawia się (" + String.format("%.1f", getRemainingCooldown(player)) + "s)!");

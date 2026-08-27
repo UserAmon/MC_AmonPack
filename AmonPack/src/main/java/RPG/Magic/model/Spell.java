@@ -31,6 +31,7 @@ public abstract class Spell {
     public SpellElement getElement() { return element; }
     public int getManaCost() { return manaCost; }
     public double getCooldownSeconds() { return cooldownSeconds; }
+    public String getDescription() { return "Magiczne zaklęcie żywiołu " + element.name(); }
 
     public boolean isOnCooldown(Player player) {
         if (player == null) return false;

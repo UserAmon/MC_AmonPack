@@ -251,7 +251,7 @@ public class ArcaneAltarGui implements InventoryHolder {
             }
         } else if (slot == 15) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.2f);
-            player.openInventory(new SpellUpgradeTreeGui(player, mainHandItem, spellRegistry, manaManager).getInventory());
+            player.openInventory(new SpellSelectUpgradeGui(player, mainHandItem, spellRegistry, manaManager).getInventory());
         }
     }
 

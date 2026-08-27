@@ -1,6 +1,6 @@
 {
 	"credit": "AmonPack Custom Magical Workbench",
-	"parent": "block/cube_all",
+	"parent": "minecraft:block/cube_all",
 	"textures": {
 		"all": "amonpack:block/magic_crafting_table",
 		"particle": "amonpack:block/magic_crafting_table"

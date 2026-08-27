@@ -22,11 +22,12 @@ public class FlashPointSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "flashpoint_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
+        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "flashpoint_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasRadius = MagicItemManager.hasUpgrade(tomeItem, "flashpoint_radius");
 
-        int effectiveMana = hasManaRed ? Math.max(20, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 1.0) : getCooldownSeconds();
+        int effectiveMana = hasManaRed ? Math.max(20, getManaCost() - 20) : getManaCost();
+        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
 
         if (isOnCooldown(player)) {
             player.sendMessage("§cZaklęcie " + getName() + " §codnawia się (" + String.format("%.1f", getRemainingCooldown(player)) + "s)!");

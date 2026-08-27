@@ -1,6 +1,6 @@
 {
   "credit": "Made by AmonPack",
-  "parent": "block/cube_all",
+  "parent": "minecraft:block/cube_all",
   "textures": {
     "all": "amonpack:block/arcane_altar",
     "particle": "amonpack:block/arcane_altar"

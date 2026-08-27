@@ -103,27 +103,37 @@ public class MagicItemListener implements Listener {
             gui.handleClick(event);
         } else if (event.getInventory().getHolder() instanceof SpellUpgradeTreeGui gui) {
             gui.handleClick(event);
+        } else if (event.getInventory().getHolder() instanceof SpellSelectUpgradeGui gui) {
+            gui.handleClick(event);
+        } else if (event.getInventory().getHolder() instanceof SingleSpellUpgradeGui gui) {
+            gui.handleClick(event);
         }
     }
 
     private boolean isMagicTome(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
 
+        if (MagicItemManager.isAirWand(item)) {
+            return true;
+        }
+
         if (customItemManager != null) {
             String customId = customItemManager.getCustomItemId(item);
-            if (customId != null && (customId.equalsIgnoreCase("tome_fire") || customId.contains("tome"))) {
+            if (customId != null && (customId.contains("tome") || customId.contains("wand") || customId.contains("magic") || customId.contains("fen"))) {
                 return true;
             }
         }
 
         var meta = item.getItemMeta();
-        if (meta.hasCustomModelData() && (meta.getCustomModelData() == 20001 || meta.getCustomModelData() == 10010)) {
-            return true;
+        if (meta.hasCustomModelData()) {
+            int cmd = meta.getCustomModelData();
+            if (cmd >= 20001 && cmd <= 29999) return true;
+            if (cmd == 10010) return true;
         }
 
         if (meta.hasDisplayName()) {
-            String display = ChatColor.stripColor(meta.getDisplayName());
-            if (display.contains("Tom Ognia") || display.contains("Tome of Fire") || display.contains("Księga Czarów")) {
+            String display = ChatColor.stripColor(meta.getDisplayName()).toLowerCase();
+            if (display.contains("tom") || display.contains("tome") || display.contains("księga") || display.contains("różdżka") || display.contains("wand") || display.contains("fen")) {
                 return true;
             }
         }

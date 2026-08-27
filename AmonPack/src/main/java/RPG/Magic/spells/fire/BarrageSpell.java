@@ -23,11 +23,13 @@ public class BarrageSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "barrage_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
+        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "barrage_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasCount = MagicItemManager.hasUpgrade(tomeItem, "barrage_count");
+        int maxShots = hasCount ? 6 : 4;
 
-        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 1.0) : getCooldownSeconds();
+        int effectiveMana = hasManaRed ? Math.max(20, getManaCost() - 20) : getManaCost();
+        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
 
         if (isOnCooldown(player)) {
             player.sendMessage("§cZaklęcie " + getName() + " §codnawia się (" + String.format("%.1f", getRemainingCooldown(player)) + "s)!");
@@ -47,7 +49,7 @@ public class BarrageSpell extends Spell {
 
             @Override
             public void run() {
-                if (count++ >= 4 || !player.isOnline()) {
+                if (count++ >= maxShots || !player.isOnline()) {
                     cancel();
                     return;
                 }

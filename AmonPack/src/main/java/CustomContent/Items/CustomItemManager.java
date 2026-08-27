@@ -305,7 +305,38 @@ public class CustomItemManager {
 
     public String getCustomItemId(ItemStack stack) {
         if (stack == null || !stack.hasItemMeta()) return null;
-        return stack.getItemMeta().getPersistentDataContainer().get(ITEM_KEY, PersistentDataType.STRING);
+        String id = stack.getItemMeta().getPersistentDataContainer().get(ITEM_KEY, PersistentDataType.STRING);
+        if (id != null && !id.isEmpty()) return id;
+
+        var meta = stack.getItemMeta();
+        if (meta.hasCustomModelData()) {
+            int cmd = meta.getCustomModelData();
+            if (cmd == 30001) return "meteoryt_ore";
+            if (cmd == 30002) return "magic_crafting_table";
+            if (cmd == 30003) return "basalt_ore";
+            if (cmd == 30004) return "arcane_altar";
+            if (cmd == 20001) return "tome_fire";
+            if (cmd == 20002) return "wand_fen";
+            if (cmd == 10020) return "bone_sword";
+            if (cmd == 10021) return "custom_bow";
+            if (cmd == 10014) return "meteor_pickaxe";
+            if (cmd == 10002) return "meteor_axe";
+        }
+
+        if (meta.hasDisplayName()) {
+            String name = ChatColor.stripColor(meta.getDisplayName()).toLowerCase();
+            if (name.contains("magiczny stół") || name.contains("magic crafting")) return "magic_crafting_table";
+            if (name.contains("ołtarz arkanów") || name.contains("arcane altar")) return "arcane_altar";
+            if (name.contains("ruda meteorytu")) return "meteoryt_ore";
+            if (name.contains("ruda bazaltu")) return "basalt_ore";
+            if (name.contains("tom ognia")) return "tome_fire";
+            if (name.contains("różdżka") || name.contains("fen") || name.contains("wand")) return "wand_fen";
+            if (name.contains("kościany miecz")) return "bone_sword";
+            if (name.contains("długi łuk") || name.contains("custom bow")) return "custom_bow";
+            if (name.contains("meteorytowy kilof")) return "meteor_pickaxe";
+            if (name.contains("meteorytowy topór")) return "meteor_axe";
+        }
+        return null;
     }
 
     public Map<String, CustomItem> getAllItems() {

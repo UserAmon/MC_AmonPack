@@ -29,8 +29,9 @@ public class BlowSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "blow_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
+        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "blow_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasPower = MagicItemManager.hasUpgrade(tomeItem, "blow_power");
 
         int effectiveMana = hasManaRed ? Math.max(10, getManaCost() - 10) : getManaCost();
         double effectiveCd = hasCdRed ? Math.max(1.0, getCooldownSeconds() - 1.0) : getCooldownSeconds();
@@ -97,10 +98,12 @@ public class BlowSpell extends Spell {
                         hit.add(target);
 
                         // Silny odrzut w kierunku pocisku
-                        Vector knockback = fDir.clone().multiply(1.4).setY(0.45);
+                        double kbMult = hasPower ? 2.1 : 1.4;
+                        double dmg = hasPower ? 8.0 : 5.0;
+                        Vector knockback = fDir.clone().multiply(kbMult).setY(0.45);
                         target.setVelocity(knockback);
 
-                        ElementStatusManager.triggerDamageAndReaction(player, target, 5.0, SpellElement.AIR, tomeItem);
+                        ElementStatusManager.triggerDamageAndReaction(player, target, dmg, SpellElement.AIR, tomeItem);
                         current.getWorld().playSound(current, Sound.ENTITY_BAT_TAKEOFF, 1.2f, 0.8f);
                         current.getWorld().spawnParticle(Particle.EXPLOSION, current, 1);
                         cancel();

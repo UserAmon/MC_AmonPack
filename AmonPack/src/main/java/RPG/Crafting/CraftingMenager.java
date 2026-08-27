@@ -90,16 +90,24 @@ public class CraftingMenager {
             case 2:
                 ChosenMolds.addAll(AllTools);
                 break;
-            case 3:
+            case 3: // Przedmioty
                 for (Craftable_Item ci : AllCraftableItems) {
-                    if (ci.getItemMaterial() != Material.BOOK && !ci.getItemName().toLowerCase().contains("tom") && !ci.getItemName().toLowerCase().contains("tome")) {
+                    String name = ci.getItemName().toLowerCase();
+                    boolean isMagic = ci.getItemMaterial() == Material.BOOK 
+                            || (ci.getCustomModelID() != null && ci.getCustomModelID() >= 20000 && ci.getCustomModelID() < 30000)
+                            || name.contains("tom") || name.contains("tome") || name.contains("różdżka") || name.contains("wand") || name.contains("fen");
+                    if (!isMagic) {
                         ChosenMolds.add(ci);
                     }
                 }
                 break;
-            case 4:
+            case 4: // Magia
                 for (Craftable_Item ci : AllCraftableItems) {
-                    if (ci.getItemMaterial() == Material.BOOK || ci.getItemName().toLowerCase().contains("tom") || ci.getItemName().toLowerCase().contains("tome")) {
+                    String name = ci.getItemName().toLowerCase();
+                    boolean isMagic = ci.getItemMaterial() == Material.BOOK 
+                            || (ci.getCustomModelID() != null && ci.getCustomModelID() >= 20000 && ci.getCustomModelID() < 30000)
+                            || name.contains("tom") || name.contains("tome") || name.contains("różdżka") || name.contains("wand") || name.contains("fen");
+                    if (isMagic) {
                         ChosenMolds.add(ci);
                     }
                 }

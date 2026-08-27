@@ -23,11 +23,12 @@ public class FireCircleSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "fire_circle_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
+        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "fire_circle_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasBarrier = MagicItemManager.hasUpgrade(tomeItem, "fire_circle_barrier");
 
-        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 1.0) : getCooldownSeconds();
+        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 15) : getManaCost();
+        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
 
         if (isOnCooldown(player)) {
             player.sendMessage("§cZaklęcie " + getName() + " §codnawia się (" + String.format("%.1f", getRemainingCooldown(player)) + "s)!");

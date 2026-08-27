@@ -26,10 +26,10 @@ public class FireBlastSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
-        boolean hasMultiCast = MagicItemManager.hasUpgrade(tomeItem, "multi_cast");
-        boolean hasFireChain = MagicItemManager.hasUpgrade(tomeItem, "fire_chain");
+        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "fireblast_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
+        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "fireblast_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasMultiCast = MagicItemManager.hasUpgrade(tomeItem, "fireblast_multi") || MagicItemManager.hasUpgrade(tomeItem, "multi_cast");
+        boolean hasFireChain = MagicItemManager.hasUpgrade(tomeItem, "fireblast_chain") || MagicItemManager.hasUpgrade(tomeItem, "fire_chain");
 
         int effectiveMana = hasManaRed ? Math.max(10, getManaCost() - 10) : getManaCost();
         double effectiveCd = hasCdRed ? Math.max(1.0, getCooldownSeconds() - 1.0) : getCooldownSeconds();

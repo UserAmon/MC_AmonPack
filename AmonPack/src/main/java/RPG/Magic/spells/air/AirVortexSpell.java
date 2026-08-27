@@ -30,11 +30,11 @@ public class AirVortexSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
+        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "air_vortex_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
+        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "air_vortex_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
 
-        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 1.0) : getCooldownSeconds();
+        int effectiveMana = hasManaRed ? Math.max(20, getManaCost() - 15) : getManaCost();
+        double effectiveCd = hasCdRed ? Math.max(3.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
 
         if (isOnCooldown(player)) {
             player.sendMessage("§cZaklęcie " + getName() + " §codnawia się (" + String.format("%.1f", getRemainingCooldown(player)) + "s)!");
@@ -187,13 +187,17 @@ public class AirVortexSpell extends Spell {
             targetLoc.getWorld().playSound(targetLoc, Sound.ITEM_ELYTRA_FLYING, 1.5f, 0.8f);
             targetLoc.getWorld().playSound(targetLoc, Sound.ENTITY_PHANTOM_SWOOP, 1.2f, 1.4f);
 
-            // Wir działający przez 4 sekundy (80 ticków)
+            boolean hasRadius = MagicItemManager.hasUpgrade(tomeItem, "air_vortex_radius");
+            int maxTicks = hasRadius ? 120 : 80;
+            double pullRadius = hasRadius ? 12.0 : 8.0;
+
+            // Wir działający przez 4-6 sekund
             new BukkitRunnable() {
                 int ticks = 0;
 
                 @Override
                 public void run() {
-                    if (ticks++ > 80) {
+                    if (ticks++ > maxTicks) {
                         targetLoc.getWorld().playSound(targetLoc, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.8f);
                         targetLoc.getWorld().spawnParticle(Particle.EXPLOSION, targetLoc, 2);
                         cancel();
@@ -201,7 +205,7 @@ public class AirVortexSpell extends Spell {
                     }
 
                     // Cząsteczki wiru
-                    double radius = 3.5;
+                    double radius = hasRadius ? 5.0 : 3.5;
                     for (int i = 0; i < 4; i++) {
                         double angle = (ticks * 0.35) + (i * Math.PI * 0.5);
                         double x = Math.cos(angle) * radius * (1.0 - (ticks % 20) * 0.04);
@@ -212,10 +216,10 @@ public class AirVortexSpell extends Spell {
                         targetLoc.getWorld().spawnParticle(Particle.SWEEP_ATTACK, pLoc, 1, 0, 0, 0, 0);
                     }
 
-                    // Przyciąganie wrogów w promieniu 8 bloków i nakładanie Stanu Powietrza
-                    for (org.bukkit.entity.Entity e : targetLoc.getWorld().getNearbyEntities(targetLoc, 8.0, 5.0, 8.0)) {
+                    // Przyciąganie wrogów i nakładanie Stanu Powietrza
+                    for (org.bukkit.entity.Entity e : targetLoc.getWorld().getNearbyEntities(targetLoc, pullRadius, 6.0, pullRadius)) {
                         if (e instanceof LivingEntity target && !e.equals(player)) {
-                            Vector pull = targetLoc.toVector().subtract(target.getLocation().toVector()).normalize().multiply(0.45).setY(0.2);
+                            Vector pull = targetLoc.toVector().subtract(target.getLocation().toVector()).normalize().multiply(0.5).setY(0.25);
                             target.setVelocity(pull);
                             ElementStatusManager.applyElementStatus(target, SpellElement.AIR, 6.0);
                         }
