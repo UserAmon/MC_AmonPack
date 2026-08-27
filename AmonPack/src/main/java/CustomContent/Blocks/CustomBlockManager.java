@@ -87,6 +87,20 @@ public class CustomBlockManager {
             }
         }
 
+        if (!customBlocks.containsKey("magic_crafting_table")) {
+            CustomBlock tableBlock = new CustomBlock("magic_crafting_table", "§d§lMagiczny Stół Warsztatowy", Material.NOTE_BLOCK, 30002);
+            tableBlock.setHardness(2.5);
+            tableBlock.setRequiredTool("PICKAXE");
+            tableBlock.setRequiredTier(0);
+            tableBlock.setDropCustomItemId("magic_crafting_table");
+            tableBlock.setDropMin(1);
+            tableBlock.setDropMax(1);
+            tableBlock.setExp(5.0);
+            tableBlock.setGenerateInWorld(false);
+            customBlocks.put("magic_crafting_table", tableBlock);
+            packManager.registerModelOverride("note_block", 30002, "amonpack:block/magic_crafting_table");
+        }
+
         loadPlacedBlocks();
 
         // Okresowy autosave co 60 sekund jeśli były modyfikacje

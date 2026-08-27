@@ -76,6 +76,10 @@ public class ProgressionManager {
         if (defStream != null) {
             YamlConfiguration defCfg = YamlConfiguration.loadConfiguration(new InputStreamReader(defStream, StandardCharsets.UTF_8));
             config.setDefaults(defCfg);
+            config.options().copyDefaults(true);
+            try {
+                config.save(configFile);
+            } catch (Exception ignored) {}
         }
 
         // 2. Init storage

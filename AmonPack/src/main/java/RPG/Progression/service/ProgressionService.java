@@ -46,6 +46,7 @@ public class ProgressionService {
         if (player == null) return;
         PlayerProgressionData data = storage.loadPlayer(player.getUniqueId(), player.getName());
         playerDataMap.put(player.getUniqueId(), data);
+        checkRetroactiveObjectives(player, data);
     }
 
     public void unloadPlayer(Player player) {
@@ -197,6 +198,26 @@ public class ProgressionService {
             return t.equalsIgnoreCase(armorType);
         }
 
+        // Biome discover aliases
+        if (type == ObjectiveType.DISCOVER_BIOME) {
+            String cleanQ = qTarget.replace(" ", "_").toUpperCase(Locale.ROOT);
+            String cleanT = t.replace(" ", "_").toUpperCase(Locale.ROOT);
+            if (cleanQ.equalsIgnoreCase(cleanT) || cleanQ.contains(cleanT) || cleanT.contains(cleanQ)) return true;
+            if (cleanQ.contains(",")) {
+                for (String part : cleanQ.split(",")) {
+                    String p = part.trim();
+                    if (cleanT.equalsIgnoreCase(p) || cleanT.contains(p) || p.contains(cleanT)) return true;
+                }
+            }
+            if (cleanQ.contains("BIRCH") && cleanT.contains("BIRCH")) return true;
+            if (cleanQ.contains("MEADOW") && cleanT.contains("MEADOW")) return true;
+            if (cleanQ.contains("TAIGA") && cleanT.contains("TAIGA")) return true;
+            if (cleanQ.contains("SWAMP") && cleanT.contains("SWAMP")) return true;
+            if (cleanQ.contains("SAVANNA") && cleanT.contains("SAVANNA")) return true;
+            if (cleanQ.contains("DARK_FOREST") && cleanT.contains("DARK_FOREST")) return true;
+            if (cleanQ.contains("PEAKS") && cleanT.contains("PEAKS")) return true;
+        }
+
         return false;
     }
 
@@ -237,9 +258,30 @@ public class ProgressionService {
         player.sendMessage("§a§l✔ [UKOŃCZONO ZADANIE] §e" + quest.getTitle() + " §8(§b" + completedReq + "§7/§b" + totalReq + " wymaganych§8)");
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.4f);
 
+        // Check if newly unlocked quests can be retroactively completed (e.g. already discovered biomes)
+        checkRetroactiveObjectives(player, data);
+
         // Check if all required quests for the stage are completed
         if (stageService.canAdvanceStage(data)) {
             stageService.advanceStage(player, data);
+        }
+    }
+
+    public void checkRetroactiveObjectives(Player player, PlayerProgressionData data) {
+        if (player == null || data == null) return;
+        List<Quest> stageQuests = questRegistry.getQuestsForStage(data.getCurrentStage());
+        for (Quest q : stageQuests) {
+            if (data.isQuestCompleted(q.getId())) continue;
+            if (!isQuestUnlocked(data, q)) continue;
+
+            if (q.getObjectiveType() == ObjectiveType.DISCOVER_BIOME) {
+                for (String discoveredBiome : data.getDiscoveredBiomes()) {
+                    if (matchesTarget(q, ObjectiveType.DISCOVER_BIOME, discoveredBiome)) {
+                        completeQuest(player, data, q);
+                        break;
+                    }
+                }
+            }
         }
     }
 

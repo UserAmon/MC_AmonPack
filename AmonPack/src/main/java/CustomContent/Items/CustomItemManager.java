@@ -83,6 +83,21 @@ public class CustomItemManager {
                 packManager.registerModelOverride(mat.name(), cmd, modelPath);
             }
         }
+
+        // Gwarancja obecności Magicznego Stołu Warsztatowego
+        if (!items.containsKey("magic_crafting_table")) {
+            CustomItem tableItem = new CustomItem("magic_crafting_table", "§d§lMagiczny Stół Warsztatowy", Material.NOTE_BLOCK, 30002);
+            tableItem.setUnbreakable(true);
+            tableItem.setLore(List.of(
+                    "§7Nasycony mistyczną energią stół rzemieślniczy.",
+                    "§7Pozwala na wykuwanie form, pancerzy i broni.",
+                    "",
+                    "§e✦ Kliknij PPM po postawieniu, aby otworzyć magiczne rzemiosło!"
+            ));
+            items.put("magic_crafting_table", tableItem);
+            packManager.registerModelOverride("note_block", 30002, "amonpack:block/magic_crafting_table");
+        }
+
         registerRecipes();
     }
 
@@ -93,16 +108,46 @@ public class CustomItemManager {
         } catch (Throwable ignored) {}
 
         ItemStack tableItem = createItemStack("magic_crafting_table");
-        if (tableItem != null) {
+        if (tableItem == null) {
+            tableItem = createDefaultMagicCraftingTable();
+        }
+
+        try {
             org.bukkit.inventory.ShapedRecipe recipe = new org.bukkit.inventory.ShapedRecipe(tableRecipeKey, tableItem);
             recipe.shape("PPP", "CCC", "CCC");
             recipe.setIngredient('P', Material.PAPER);
             recipe.setIngredient('C', Material.COBBLESTONE);
             Bukkit.addRecipe(recipe);
+        } catch (Throwable t) {
+            Bukkit.getLogger().warning("[AmonPack] Błąd rejestracji receptury magic_crafting_table: " + t.getMessage());
         }
     }
 
+    public ItemStack createDefaultMagicCraftingTable() {
+        ItemStack stack = new ItemStack(Material.NOTE_BLOCK);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName("§d§lMagiczny Stół Warsztatowy");
+            meta.setCustomModelData(30002);
+            meta.setUnbreakable(true);
+            meta.setLore(List.of(
+                    "§7Nasycony mistyczną energią stół rzemieślniczy.",
+                    "§7Pozwala na wykuwanie form, pancerzy i broni.",
+                    "",
+                    "§e✦ Kliknij PPM po postawieniu, aby otworzyć magiczne rzemiosło!"
+            ));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
+            meta.getPersistentDataContainer().set(ITEM_KEY, PersistentDataType.STRING, "magic_crafting_table");
+            stack.setItemMeta(meta);
+        }
+        return stack;
+    }
+
     public ItemStack createItemStack(String itemId) {
+        if (itemId == null) return null;
+        if (itemId.equalsIgnoreCase("magic_crafting_table") && !items.containsKey("magic_crafting_table")) {
+            return createDefaultMagicCraftingTable();
+        }
         CustomItem customItem = items.get(itemId.toLowerCase(Locale.ROOT));
         if (customItem == null) return null;
 

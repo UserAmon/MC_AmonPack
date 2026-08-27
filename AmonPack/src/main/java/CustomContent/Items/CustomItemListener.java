@@ -2,6 +2,7 @@ package CustomContent.Items;
 
 import Plugin.AmonPackPlugin;
 import org.bukkit.Color;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
@@ -10,6 +11,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -22,6 +25,37 @@ public class CustomItemListener implements Listener {
 
     public CustomItemListener(CustomItemManager itemManager) {
         this.itemManager = itemManager;
+    }
+
+    @EventHandler
+    public void onPrepareCraft(PrepareItemCraftEvent event) {
+        CraftingInventory inv = event.getInventory();
+        ItemStack[] matrix = inv.getMatrix();
+        if (matrix == null || matrix.length < 9) return;
+
+        // Sprawdź czy 3 papier na górze i 6 bruku na dole
+        boolean isPaperTop = true;
+        for (int i = 0; i < 3; i++) {
+            if (matrix[i] == null || matrix[i].getType() != Material.PAPER) {
+                isPaperTop = false;
+                break;
+            }
+        }
+        boolean isCobbleBottom = true;
+        for (int i = 3; i < 9; i++) {
+            if (matrix[i] == null || matrix[i].getType() != Material.COBBLESTONE) {
+                isCobbleBottom = false;
+                break;
+            }
+        }
+
+        if (isPaperTop && isCobbleBottom) {
+            ItemStack result = itemManager.createItemStack("magic_crafting_table");
+            if (result == null) {
+                result = itemManager.createDefaultMagicCraftingTable();
+            }
+            inv.setResult(result);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

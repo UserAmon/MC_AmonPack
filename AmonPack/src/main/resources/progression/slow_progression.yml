@@ -693,9 +693,22 @@ stages:
         required: true
         icon: ENCHANTING_TABLE
         depends_on:
-          - stone_create_storage
+          - stone_craft_tools
         reward:
           exp: 40
+      stone_craft_fire_tome:
+        title: "Wytwórz Tom Ognia"
+        description: "Użyj Magicznego Stołu Warsztatowego, aby stworzyć swój pierwszy tom magii ognia."
+        category: COMBAT
+        objective_type: craft_item
+        target: tome_fire
+        amount: 1
+        required: true
+        icon: WRITABLE_BOOK
+        depends_on:
+          - stone_craft_magic_crafting_table
+        reward:
+          exp: 50
 
       stone_harvest_crops_32:
         title: "Zbierz plony z farmy x32"

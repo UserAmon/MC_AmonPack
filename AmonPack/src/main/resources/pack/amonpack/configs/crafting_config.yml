@@ -1,0 +1,38 @@
+info:
+  namespace: amonpack
+items:
+  forma_pusta:
+    enabled: true
+    display_name: Pusta Forma
+    resource:
+      material: PAPER
+      generate: false
+      model_path: crafting/mold_empty
+  forma_full:
+    enabled: true
+    display_name: Napełniona Forma
+    resource:
+      material: PAPER
+      generate: false
+      model_path: crafting/mold_full
+  basalt_shard:
+    enabled: true
+    display_name: Odłamek Bazaltu
+    resource:
+      material: PAPER
+      generate: false
+      model_path: crafting/basalt_shard
+  meteor_shard:
+    enabled: true
+    display_name: Odłamek Meteorytu
+    resource:
+      material: PAPER
+      generate: false
+      model_path: crafting/meteor_shard
+  fire_scroll:
+    enabled: true
+    display_name: Zwój Ognia
+    resource:
+      material: PAPER
+      generate: false
+      model_path: crafting/firescroll

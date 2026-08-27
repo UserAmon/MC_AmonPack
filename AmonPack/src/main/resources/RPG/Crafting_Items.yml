@@ -906,3 +906,31 @@ Craftable_Items:
     Item:
       Lore:
         l1: §7Zwój przyzywający potężnego bossa.
+
+  Tome_Fire:
+    Material: BOOK
+    Name: §c§lTom Ognia
+    Custom_Model_ID: 20001
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: PAPER
+          Amount: 3
+        m2:
+          Material: BLAZE_POWDER
+          Amount: 2
+        m3:
+          Material: FIRE_CHARGE
+          Amount: 1
+      AllowedMagicEffects:
+      - Fire_Damage_Boost
+      - Fire_Aspect
+    Item:
+      Lore:
+        l1: §7Starożytna księga zawierająca pierwotne zaklęcia płomieni.
+        l2: §6✦ LPM: §fWystrzelenie Fireblast §8(40 MP, 4s cd)
+        l3: §d✦ PPM: §fOtwórz menu przypisywania czarów
+      Items_To_Craft:
+        c1:
+          Material: BOOK
+          Amount: 1

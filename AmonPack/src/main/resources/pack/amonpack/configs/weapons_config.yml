@@ -1,0 +1,59 @@
+info:
+  namespace: amonpack
+items:
+  boomerang:
+    enabled: true
+    display_name: Boomerang
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/boomerang
+  wachlarz:
+    enabled: true
+    display_name: Wachlarz Wojowniczek Kyoshi
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/wachlarz
+  laska_aanga:
+    enabled: true
+    display_name: Laska Powietrza
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/laska_aanga
+  bamboo:
+    enabled: true
+    display_name: Bambusowa Pałka
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/bambus
+  earth_hammer:
+    enabled: true
+    display_name: Młot Ziemi
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/earth_hammer
+  msokka:
+    enabled: true
+    display_name: Miecz Sokki
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/msokka
+  fspear:
+    enabled: true
+    display_name: Włócznia Ognia
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/wlocznia_ognia
+  dagger:
+    enabled: true
+    display_name: Sztylet
+    resource:
+      material: WOODEN_SWORD
+      generate: false
+      model_path: weapons/sztylet

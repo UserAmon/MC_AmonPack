@@ -82,6 +82,8 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static CustomContent.Blocks.CustomBlockManager customBlockManager;
 	public static CustomContent.Bosses.BossManager bossManager;
 	public static RPG.Progression.ProgressionManager progressionManager;
+	public static RPG.Magic.manager.ManaManager manaManager;
+	public static RPG.Magic.manager.SpellRegistry spellRegistry;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -537,6 +539,13 @@ public class AmonPackPlugin extends JavaPlugin {
 					new CustomContent.Commands.AmonTabCompleter(customItemManager, customBlockManager, bossManager));
 		}
 
+		// --- 7. SYSTEM MAGII I MANY ---
+		spellRegistry = new RPG.Magic.manager.SpellRegistry();
+		manaManager = new RPG.Magic.manager.ManaManager();
+		manaManager.start();
+		this.getServer().getPluginManager().registerEvents(
+				new RPG.Magic.listener.MagicItemListener(spellRegistry, manaManager, customItemManager), this);
+
 		// --- 8. SYSTEM SLOW PROGRESSION ---
 		if (ENABLE_SLOW_PROGRESSION) {
 			progressionManager = new RPG.Progression.ProgressionManager();
@@ -549,6 +558,9 @@ public class AmonPackPlugin extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		try {
+			if (manaManager != null) {
+				manaManager.stop();
+			}
 			if (ENABLE_SLOW_PROGRESSION && progressionManager != null) {
 				progressionManager.unload();
 			}

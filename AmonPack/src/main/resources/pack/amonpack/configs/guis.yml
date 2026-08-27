@@ -1,0 +1,190 @@
+info:
+  namespace: amonpack
+font_images:
+  first_gui:
+    path: "amonpack:gui/generalbending_menu.png"
+    y_position: 40 ##wiecej-> gui jest wyzej
+  bending_abilities_list:
+    path: "amonpack:gui/generalbending_menu.png"
+    y_position: 47
+  bending_skills_tree_water:
+    path: "amonpack:gui/water_menu.png"
+    y_position: 47
+  bending_skills_tree_earth:
+    path: "amonpack:gui/earth_menu.png"
+    y_position: 47
+  bending_skills_tree_fire:
+    path: "amonpack:gui/fire_menu.png"
+    y_position: 47
+  bending_skills_tree_air:
+    path: "amonpack:gui/air_menu.png"
+    y_position: 47
+  bending_skills_binding:
+    path: "amonpack:gui/bind_menu.png"
+    y_position: 47
+  crafting_menu:
+    path: "amonpack:gui/generalbending_menu.png"
+    y_position: 47
+  smithing_menu:
+    path: "amonpack:gui/smithmenu.png"
+    y_position: 47
+items:
+  skull_sword:
+    enabled: true
+    display_name: Miecz Kości
+    resource:
+      material: DIAMOND_SWORD
+      generate: false
+      model_path: gui/sword-in-skull
+  page_up:
+    enabled: true
+    display_name: page_up
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/pageup
+  page_down:
+    enabled: true
+    display_name: page_down
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/pagedown
+  close:
+    enabled: true
+    display_name: close
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/cancel
+  fire_path:
+    enabled: true
+    display_name: fire_path
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/fire/firepath
+  fire_skill_1:
+    enabled: true
+    display_name: fire_skill_1
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/fire/fireskill1
+  fire_skill_2:
+    enabled: true
+    display_name: fire_skill_2
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/fire/fireskill2
+  fire_skill_3:
+    enabled: true
+    display_name: fire_skill_3
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/fire/fireskill3
+  water_path:
+    enabled: true
+    display_name: water_path
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/water/waterpath
+  water_skill_1:
+    enabled: true
+    display_name: water_skill_1
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/water/waterskill1
+  water_skill_2:
+    enabled: true
+    display_name: water_skill_2
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/water/waterskill2
+  water_skill_3:
+    enabled: true
+    display_name: water_skill_3
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/water/waterskill3
+  air_path:
+    enabled: true
+    display_name: air_path
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/air/airpath
+  air_skill_1:
+    enabled: true
+    display_name: air_skill_1
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/air/airskill1
+  air_skill_2:
+    enabled: true
+    display_name: air_skill_2
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/air/airskill2
+  air_skill_3:
+    enabled: true
+    display_name: air_skill_3
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/air/airskill3
+  earth_path:
+    enabled: true
+    display_name: earth_path
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/earth/earthpath
+  earth_skill_1:
+    enabled: true
+    display_name: earth_skill_1
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/earth/earthskill1
+  earth_skill_2:
+    enabled: true
+    display_name: earth_skill_2
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/earth/earthskill2
+  earth_skill_3:
+    enabled: true
+    display_name: earth_skill_3
+    resource:
+      material: PAPER
+      generate: true
+      textures:
+        - gui/earth/earthskill3

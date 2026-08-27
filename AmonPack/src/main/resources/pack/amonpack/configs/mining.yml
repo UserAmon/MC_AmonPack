@@ -1,0 +1,113 @@
+info:
+  namespace: amonpack
+items:
+  basalt_ore:
+    enabled: true
+    display_name: Ruda Bazaltu
+    resource:
+      material: PAPER
+      generate: false
+      model_path: blocks/basalt_ore
+    specific_properties:
+      block:
+        placed_model:
+          type: REAL_NOTE
+          break_particles: BLOCK
+        drop_when_mined: false
+        light_level: 4
+        break_tools_blacklist:
+        - WOODEN_PICKAXE
+        - STONE_PICKAXE
+        break_tools_whitelist:
+        - DIAMOND_PICKAXE
+        - PICKAXE
+        - pickaxe
+        hardness: 3
+        blast_resistance: 5
+        no_explosion: false
+        sound:
+          break:
+            name: block.deepslate.break
+            volume: 1
+            pitch: 0.9
+          place:
+            name: block.deepslate.place
+            volume: 1
+            pitch: 0.9
+  meteoryt_ore:
+    enabled: true
+    display_name: Ruda Meteorytu
+    resource:
+      material: PAPER
+      generate: false
+      model_path: blocks/meteoryt_ore
+    specific_properties:
+      block:
+        placed_model:
+          type: REAL_NOTE
+          break_particles: BLOCK
+        drop_when_mined: false
+        light_level: 13
+        break_tools_blacklist:
+        - WOODEN_PICKAXE
+        - IRON_PICKAXE
+        - COPPER_PICKAXE
+        - STONE_PICKAXE
+        break_tools_whitelist:
+        - DIAMOND_PICKAXE
+        - PICKAXE
+        - pickaxe
+        hardness: 5
+        blast_resistance: 5
+        no_explosion: false
+        sound:
+          break:
+            name: block.deepslate.break
+            volume: 1
+            pitch: 0.9
+          place:
+            name: block.deepslate.place
+            volume: 1
+            pitch: 0.9
+worlds_populators:
+  basalt_ore:
+    block: amonpack:basalt_ore
+    worlds:
+    - world
+    replaceable_blocks:
+    - STONE
+    - ANDESITE
+    - GRANITE
+    - DIORITE
+    - COBBLESTONE
+    - GRAVEL
+    - COAL_ORE
+    - COPPER_ORE
+    - SMOOTH_BASALT
+    - BASALT
+    chunk_chance: 100.0
+    max_height: 210
+    min_height: 45
+    vein_blocks: 6
+    chunk_veins: 12
+  meteoryt_ore:
+    block: amonpack:meteoryt_ore
+    worlds:
+    - world
+    replaceable_blocks:
+    - STONE
+    - ANDESITE
+    - GRANITE
+    - COBBLESTONE
+    - DEEPSLATE
+    - BLACKSTONE
+    - GRAVEL
+    - COAL_ORE
+    - COPPER_ORE
+    - SMOOTH_BASALT
+    - BASALT
+    chunk_chance: 80.0
+    max_height: 35
+    min_height: -64
+    vein_blocks: 4
+    chunk_veins: 4

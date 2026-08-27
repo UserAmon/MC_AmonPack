@@ -11,6 +11,21 @@ items:
       - ""
       - "&e✦ Kliknij PPM po postawieniu, aby otworzyć magiczne rzemiosło!"
 
+  tome_fire:
+    display_name: "&c&lTom Ognia"
+    base_material: BOOK
+    model: "magic/tome_fire"
+    custom_model_data: 20001
+    unbreakable: true
+    lore:
+      - "&7Starożytna księga zawierająca pierwotne zaklęcia płomieni."
+      - ""
+      - "&6✦ LPM: &fWystrzelenie aktywnego czaru &7(np. Fireblast)"
+      - "&e✦ Shift + LPM: &fRzucenie zaklęcia drugiego kręgu"
+      - "&d✦ PPM: &fOtwórz menu zaklęć i przypisz czary"
+      - ""
+      - "&b✦ Koszt Fireblast: &f40 MP &8| &eCooldown: &f4.0s"
+
   meteor_scythe:
     display_name: "&4&lKosa z Meteorytu"
     base_material: DIAMOND_SWORD
