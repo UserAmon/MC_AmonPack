@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/handheld",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 10001
+      },
+      "model": "amonpack:item/meteor_scythe"
+    }
+  ],
+  "textures": {
+    "layer0": "minecraft:item/diamond_sword"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 10003
+      },
+      "model": "amonpack:crafting/meteor_shard"
+    }
+  ],
+  "textures": {
+    "layer0": "minecraft:item/flint"
+  }
+}

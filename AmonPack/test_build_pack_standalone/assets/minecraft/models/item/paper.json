@@ -1,0 +1,38 @@
+{
+  "parent": "minecraft:item/generated",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 10001
+      },
+      "model": "amonpack:crafting/mold_empty"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10002
+      },
+      "model": "amonpack:crafting/mold_full"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10003
+      },
+      "model": "amonpack:crafting/meteor_shard"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10004
+      },
+      "model": "amonpack:crafting/basalt_shard"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10005
+      },
+      "model": "amonpack:crafting/firescroll"
+    }
+  ],
+  "textures": {
+    "layer0": "minecraft:item/paper"
+  }
+}

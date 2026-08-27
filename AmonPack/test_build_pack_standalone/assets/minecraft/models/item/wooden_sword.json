@@ -1,0 +1,62 @@
+{
+  "parent": "minecraft:item/handheld",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 10000
+      },
+      "model": "amonpack:weapons/boomerang"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10001
+      },
+      "model": "amonpack:weapons/wachlarz"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10002
+      },
+      "model": "amonpack:weapons/laska_aanga"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10003
+      },
+      "model": "amonpack:weapons/bambus"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10004
+      },
+      "model": "amonpack:weapons/earth_hammer"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10005
+      },
+      "model": "amonpack:weapons/msokka"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10006
+      },
+      "model": "amonpack:weapons/wlocznia_ognia"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10007
+      },
+      "model": "amonpack:weapons/sztylet"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10020
+      },
+      "model": "amonpack:weapons/bone_sword"
+    }
+  ],
+  "textures": {
+    "layer0": "minecraft:item/wooden_sword"
+  }
+}

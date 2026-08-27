@@ -1,0 +1,29 @@
+{
+  "parent": "minecraft:block/note_block",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 30001
+      },
+      "model": "amonpack:block/meteoryt_ore"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 30002
+      },
+      "model": "amonpack:block/magic_crafting_table"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 30003
+      },
+      "model": "amonpack:block/basalt_ore"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 30004
+      },
+      "model": "amonpack:block/arcane_altar"
+    }
+  ]
+}

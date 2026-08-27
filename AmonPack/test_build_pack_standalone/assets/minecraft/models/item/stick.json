@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/handheld",
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 20002
+      },
+      "model": "amonpack:magic/wand_fen"
+    }
+  ],
+  "textures": {
+    "layer0": "minecraft:item/stick"
+  }
+}
