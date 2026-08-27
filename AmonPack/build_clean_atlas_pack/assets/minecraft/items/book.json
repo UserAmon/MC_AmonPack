@@ -1,0 +1,26 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/book"
+    },
+    "entries": [
+      {
+        "threshold": 10010,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:magic/tome_fire"
+        }
+      },
+      {
+        "threshold": 20001,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:magic/tome_fire"
+        }
+      }
+    ]
+  }
+}

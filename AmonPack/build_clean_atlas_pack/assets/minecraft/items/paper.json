@@ -1,0 +1,47 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "minecraft:item/paper"
+    },
+    "entries": [
+      {
+        "threshold": 10001,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:crafting/mold_empty"
+        }
+      },
+      {
+        "threshold": 10002,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:crafting/mold_full"
+        }
+      },
+      {
+        "threshold": 10003,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:crafting/meteor_shard"
+        }
+      },
+      {
+        "threshold": 10004,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:crafting/basalt_shard"
+        }
+      },
+      {
+        "threshold": 10005,
+        "model": {
+          "type": "minecraft:model",
+          "model": "amonpack:crafting/firescroll"
+        }
+      }
+    ]
+  }
+}

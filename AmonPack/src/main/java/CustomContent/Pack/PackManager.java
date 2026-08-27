@@ -144,10 +144,28 @@ public class PackManager {
             File amonpackModels = new File(tempBuildDir, "assets/amonpack/models");
             File amonpackTex = new File(tempBuildDir, "assets/amonpack/textures");
             File mcModelsItem = new File(tempBuildDir, "assets/minecraft/models/item");
+            File mcAtlases = new File(tempBuildDir, "assets/minecraft/atlases");
 
             amonpackModels.mkdirs();
             amonpackTex.mkdirs();
             mcModelsItem.mkdirs();
+            mcAtlases.mkdirs();
+
+            // 2b. Atlas tekstur dla Minecraft 1.19.3 - 1.21.4+ (rejestracja wszystkich folderów w atlasie spriteów)
+            JsonObject atlasRoot = new JsonObject();
+            JsonArray sources = new JsonArray();
+            String[] atlasDirs = {"item", "block", "weapons", "magic", "crafting", "gui"};
+            for (String d : atlasDirs) {
+                JsonObject srcObj = new JsonObject();
+                srcObj.addProperty("type", "directory");
+                srcObj.addProperty("source", d);
+                srcObj.addProperty("prefix", d + "/");
+                sources.add(srcObj);
+            }
+            atlasRoot.add("sources", sources);
+            try (FileWriter writer = new FileWriter(new File(mcAtlases, "blocks.json"), StandardCharsets.UTF_8)) {
+                writer.write(GSON.toJson(atlasRoot));
+            }
 
             // 3. Wyodrębnienie czystych modeli i tekstur wprost z JAR (pack/amonpack)
             extractJarResources("pack/amonpack/textures", amonpackTex);
@@ -202,7 +220,10 @@ public class PackManager {
             registerModelOverride("note_block", 30004, "amonpack:block/arcane_altar");
             registerModelOverride("iron_nugget", 30004, "amonpack:block/arcane_altar");
 
-            // 5. Generowanie plików assets/minecraft/models/item/<mat>.json
+            File mcItems = new File(tempBuildDir, "assets/minecraft/items");
+            mcItems.mkdirs();
+
+            // 5. Generowanie plików assets/minecraft/models/item/<mat>.json ORAZ assets/minecraft/items/<mat>.json
             for (Map.Entry<String, Map<Integer, String>> entry : vanillaOverrides.entrySet()) {
                 String mat = entry.getKey();
                 Map<Integer, String> cmdMap = entry.getValue();
@@ -210,6 +231,7 @@ public class PackManager {
                 boolean isWeapon = mat.contains("sword") || mat.contains("axe") || mat.contains("pickaxe") || mat.contains("shovel") || mat.contains("hoe") || mat.contains("bow") || mat.contains("stick");
                 boolean isBlock = mat.contains("note_block");
 
+                // Format A: 1.14 - 1.21.1 (models/item/<mat>.json)
                 JsonObject modelRoot = new JsonObject();
                 if (isWeapon) {
                     modelRoot.addProperty("parent", "minecraft:item/handheld");
@@ -239,6 +261,35 @@ public class PackManager {
                 File outOverrideFile = new File(mcModelsItem, mat + ".json");
                 try (FileWriter fw = new FileWriter(outOverrideFile, StandardCharsets.UTF_8)) {
                     fw.write(GSON.toJson(modelRoot));
+                }
+
+                // Format B: 1.21.2 - 1.21.4+ (items/<mat>.json)
+                JsonObject itemDefRoot = new JsonObject();
+                JsonObject rangeDispatch = new JsonObject();
+                rangeDispatch.addProperty("type", "minecraft:range_dispatch");
+                rangeDispatch.addProperty("property", "minecraft:custom_model_data");
+
+                JsonObject fallback = new JsonObject();
+                fallback.addProperty("type", "minecraft:model");
+                fallback.addProperty("model", isBlock ? "minecraft:block/" + mat : "minecraft:item/" + mat);
+                rangeDispatch.add("fallback", fallback);
+
+                JsonArray entriesList = new JsonArray();
+                for (Map.Entry<Integer, String> cmdEntry : cmdMap.entrySet()) {
+                    JsonObject entryObj = new JsonObject();
+                    entryObj.addProperty("threshold", cmdEntry.getKey());
+                    JsonObject modelObj = new JsonObject();
+                    modelObj.addProperty("type", "minecraft:model");
+                    modelObj.addProperty("model", cmdEntry.getValue());
+                    entryObj.add("model", modelObj);
+                    entriesList.add(entryObj);
+                }
+                rangeDispatch.add("entries", entriesList);
+                itemDefRoot.add("model", rangeDispatch);
+
+                File outItemDefFile = new File(mcItems, mat + ".json");
+                try (FileWriter fw = new FileWriter(outItemDefFile, StandardCharsets.UTF_8)) {
+                    fw.write(GSON.toJson(itemDefRoot));
                 }
             }
 
