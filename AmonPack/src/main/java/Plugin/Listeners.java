@@ -850,6 +850,19 @@ public class Listeners implements Listener {
                     }
                 }
                 if (hasAll) {
+                    if (mold.getAllowedMagicEffects() == null || mold.getAllowedMagicEffects().isEmpty()) {
+                        if (CraftingMenager.HaveItems(p, true, requiredItems)) {
+                            mold.Craft(p, new ArrayList<>(), mold.toItemStack(), true, 0);
+                            p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);
+                            p.sendMessage(ChatColor.GREEN + "Pomyślnie wytworzono: " + mold.getItemName());
+                            p.closeInventory();
+                        } else {
+                            p.closeInventory();
+                            p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString()
+                                    + "Nie posiadasz wymaganych przedmiotów do stworzenia tego przedmiotu!");
+                        }
+                        return;
+                    }
                     CraftingMenager.OpenMagicEffectsGui(p, clickeditem, null);
                 } else {
                     p.closeInventory();

@@ -1,0 +1,87 @@
+magic:
+  elements:
+    FIRE:
+      name: "§cOgień"
+      icon: "🔥"
+      status_duration: 6
+    WATER:
+      name: "§bWoda"
+      icon: "💧"
+      status_duration: 6
+    AIR:
+      name: "§fPowietrze"
+      icon: "💨"
+      status_duration: 6
+    EARTH:
+      name: "§aZiemia"
+      icon: "🌱"
+      status_duration: 6
+    LIGHTNING:
+      name: "§ePiorun"
+      icon: "⚡"
+      status_duration: 6
+
+  items:
+    tome_fire:
+      display_name: "§c§lTom Ognia"
+      element: "FIRE"
+      levels:
+        1:
+          name: "§6Poziom I (Nowicjusz Płomieni)"
+          unlocked_primary:
+            - "fireblast"
+          unlocked_secondary: []
+        2:
+          name: "§6Poziom II (Adept Ognia)"
+          req_kills: 5
+          req_exp_levels: 5
+          # req_stage: 2
+          # req_skill_level: 5
+          req_items:
+            - material: "BLAZE_POWDER"
+              amount: 2
+            - material: "FIRE_CHARGE"
+              amount: 1
+          unlocked_primary:
+            - "fireblast"
+            - "blazing"
+          unlocked_secondary:
+            - "fire_circle"
+        3:
+          name: "§6Poziom III (Mistrz Płomieni)"
+          req_kills: 15
+          req_exp_levels: 10
+          req_items:
+            - material: "BLAZE_ROD"
+              amount: 4
+            - material: "MAGMA_BLOCK"
+              amount: 2
+          unlocked_primary:
+            - "fireblast"
+            - "blazing"
+            - "flashpoint"
+          unlocked_secondary:
+            - "fire_circle"
+            - "barrage"
+
+      upgrades:
+        mana_reduction:
+          name: "§bEfektywność Many"
+          desc: "Zmniejsza koszt many zaklęć o 10 MP."
+          cost_exp: 5
+          max_level: 1
+        cooldown_reduction:
+          name: "§eSzybki Rzut"
+          desc: "Skraca czas odnowienia zaklęć o 1.0s."
+          cost_exp: 5
+          max_level: 1
+        multi_cast:
+          name: "§6Wielokrotny Pocisk"
+          desc: "Wystrzeliwuje 2 pociski jednocześnie w lekkim rozrzucie."
+          cost_exp: 8
+          max_level: 1
+        fire_chain:
+          name: "§4Ognisty Łańcuch (Fire Blast)"
+          desc: "Trafienie wroga w Stanie Ognia sprawia, że Fire Blast odbija się do 3 kolejnych wrogów w promieniu 8 bloków."
+          cost_exp: 10
+          max_level: 1

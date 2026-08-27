@@ -57,8 +57,16 @@ public class ManaManager {
         return currentMana.getOrDefault(uuid, defaultMaxMana);
     }
 
+    public double getMana(Player player) {
+        return player != null ? getMana(player.getUniqueId()) : defaultMaxMana;
+    }
+
     public double getMaxMana(UUID uuid) {
         return maxMana.getOrDefault(uuid, defaultMaxMana);
+    }
+
+    public double getMaxMana(Player player) {
+        return player != null ? getMaxMana(player.getUniqueId()) : defaultMaxMana;
     }
 
     public void setMana(UUID uuid, double mana) {
@@ -69,11 +77,19 @@ public class ManaManager {
         return getMana(uuid) >= amount;
     }
 
+    public boolean hasMana(Player player, double amount) {
+        return player != null && hasMana(player.getUniqueId(), amount);
+    }
+
     public boolean consumeMana(UUID uuid, double amount) {
         double current = getMana(uuid);
         if (current < amount) return false;
         currentMana.put(uuid, current - amount);
         return true;
+    }
+
+    public boolean consumeMana(Player player, double amount) {
+        return player != null && consumeMana(player.getUniqueId(), amount);
     }
 
     public void restoreMana(UUID uuid, double amount) {

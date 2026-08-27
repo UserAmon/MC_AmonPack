@@ -136,6 +136,7 @@ public class CustomItemManager {
         // Rejestracja bloków
         registerDefaultItem("meteoryt_ore", "§4§lRuda Meteorytu", Material.NOTE_BLOCK, 30001, "amonpack:block/meteoryt_ore");
         registerDefaultItem("basalt_ore", "§8§lRuda Bazaltu", Material.NOTE_BLOCK, 30003, "amonpack:block/basalt_ore");
+        registerDefaultItem("arcane_altar", "§5§lOłtarz Arkanów", Material.NOTE_BLOCK, 30004, "amonpack:block/arcane_altar");
 
         registerRecipes();
     }
@@ -152,8 +153,10 @@ public class CustomItemManager {
 
     public void registerRecipes() {
         NamespacedKey tableRecipeKey = new NamespacedKey(AmonPackPlugin.plugin, "magic_crafting_table_recipe");
+        NamespacedKey altarRecipeKey = new NamespacedKey(AmonPackPlugin.plugin, "arcane_altar_recipe");
         try {
             Bukkit.removeRecipe(tableRecipeKey);
+            Bukkit.removeRecipe(altarRecipeKey);
         } catch (Throwable ignored) {}
 
         ItemStack tableItem = createItemStack("magic_crafting_table");
@@ -169,6 +172,34 @@ public class CustomItemManager {
             Bukkit.addRecipe(recipe);
         } catch (Throwable t) {
             Bukkit.getLogger().warning("[AmonPack] Błąd rejestracji receptury magic_crafting_table: " + t.getMessage());
+        }
+
+        ItemStack altarItem = createItemStack("arcane_altar");
+        if (altarItem == null) {
+            altarItem = new ItemStack(Material.NOTE_BLOCK);
+            ItemMeta meta = altarItem.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("§5§lOłtarz Arkanów");
+                meta.setCustomModelData(30004);
+                meta.setLore(List.of(
+                        "§7Mistyczny ołtarz służący do ulepszania magicznych ksiąg i rozwijania zaklęć.",
+                        "",
+                        "§e✦ Kliknij PPM po postawieniu, aby ulepszać tomy i magię!"
+                ));
+                altarItem.setItemMeta(meta);
+            }
+        }
+
+        try {
+            org.bukkit.inventory.ShapedRecipe altarRecipe = new org.bukkit.inventory.ShapedRecipe(altarRecipeKey, altarItem);
+            altarRecipe.shape("DBD", "OPO", "OOO");
+            altarRecipe.setIngredient('D', Material.DIAMOND);
+            altarRecipe.setIngredient('B', Material.BOOK);
+            altarRecipe.setIngredient('P', Material.BLAZE_POWDER);
+            altarRecipe.setIngredient('O', Material.OBSIDIAN);
+            Bukkit.addRecipe(altarRecipe);
+        } catch (Throwable t) {
+            Bukkit.getLogger().warning("[AmonPack] Błąd rejestracji receptury arcane_altar: " + t.getMessage());
         }
     }
 

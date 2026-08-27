@@ -922,9 +922,6 @@ Craftable_Items:
         m3:
           Material: FIRE_CHARGE
           Amount: 1
-      AllowedMagicEffects:
-      - Fire_Damage_Boost
-      - Fire_Aspect
     Item:
       Lore:
         l1: "§7Starożytna księga zawierająca pierwotne zaklęcia płomieni."

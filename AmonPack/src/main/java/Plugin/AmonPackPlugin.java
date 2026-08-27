@@ -56,7 +56,7 @@ import com.projectkorra.projectkorra.ability.CoreAbility;
 import static Abilities.Bending.SoundAbility.StartDeafnessTimer;
 
 public class AmonPackPlugin extends JavaPlugin {
-	public static Plugin plugin;
+	public static AmonPackPlugin plugin;
 	public static boolean BuildingOnArenas;
 	public static SQLite sqlite;
 	private static Element BladesElement;
@@ -543,6 +543,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		spellRegistry = new RPG.Magic.manager.SpellRegistry();
 		manaManager = new RPG.Magic.manager.ManaManager();
 		manaManager.start();
+		RPG.Magic.elements.ElementStatusManager.init();
 		this.getServer().getPluginManager().registerEvents(
 				new RPG.Magic.listener.MagicItemListener(spellRegistry, manaManager, customItemManager), this);
 
@@ -971,6 +972,14 @@ public class AmonPackPlugin extends JavaPlugin {
 		} catch (Exception e) {
 			getLogger().warning("Dynamiczne skanowanie folderu dungeons w JAR nie powiodło się: " + e.getMessage());
 		}
+	}
+
+	public RPG.Magic.manager.SpellRegistry getSpellRegistry() {
+		return spellRegistry;
+	}
+
+	public RPG.Magic.manager.ManaManager getManaManager() {
+		return manaManager;
 	}
 
 }

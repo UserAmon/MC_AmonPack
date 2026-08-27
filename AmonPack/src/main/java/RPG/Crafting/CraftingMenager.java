@@ -63,8 +63,8 @@ public class CraftingMenager {
                 1001);
 
         ItemStack Tomes = FastEasyStackWithLoreModelData(Material.BOOK,
-                ChatColor.GOLD + " Magiczne Tomy",
-                List.of(ChatColor.DARK_GREEN + "Kliknij mnie aby otworzyć menu z wyborem Ksiąg Magii"),
+                ChatColor.GOLD + " Magia",
+                List.of(ChatColor.DARK_GREEN + "Kliknij mnie aby otworzyć menu z wyborem Magii i Tomów"),
                 20001);
 
         inv.setItem(0, Weapon);
@@ -91,16 +91,17 @@ public class CraftingMenager {
                 ChosenMolds.addAll(AllTools);
                 break;
             case 3:
-                ChosenMolds.addAll(AllCraftableItems);
+                for (Craftable_Item ci : AllCraftableItems) {
+                    if (ci.getItemMaterial() != Material.BOOK && !ci.getItemName().toLowerCase().contains("tom") && !ci.getItemName().toLowerCase().contains("tome")) {
+                        ChosenMolds.add(ci);
+                    }
+                }
                 break;
             case 4:
                 for (Craftable_Item ci : AllCraftableItems) {
                     if (ci.getItemMaterial() == Material.BOOK || ci.getItemName().toLowerCase().contains("tom") || ci.getItemName().toLowerCase().contains("tome")) {
                         ChosenMolds.add(ci);
                     }
-                }
-                if (ChosenMolds.isEmpty()) {
-                    ChosenMolds.addAll(AllCraftableItems);
                 }
                 break;
         }

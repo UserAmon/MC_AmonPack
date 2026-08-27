@@ -5,6 +5,7 @@ public enum SpellElement {
     WATER("§bWoda", "§b💧"),
     EARTH("§aZiemia", "§a🌱"),
     AIR("§fPowietrze", "§f💨"),
+    LIGHTNING("§ePiorun", "§e⚡"),
     ARCANE("§dArkana", "§d🔮"),
     DARK("§8Ciemność", "§8🌑"),
     LIGHT("§eŚwiatłość", "§e✨");

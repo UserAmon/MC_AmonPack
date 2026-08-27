@@ -1,30 +1,25 @@
 package RPG.Magic.gui;
 
-import Plugin.AmonPackPlugin;
+import RPG.Magic.manager.MagicItemManager;
 import RPG.Magic.manager.ManaManager;
 import RPG.Magic.manager.SpellRegistry;
 import RPG.Magic.model.Spell;
-import RPG.Magic.model.SpellElement;
 import RPG.Progression.gui.ProgressionMenuGui;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class TomeSpellGui implements InventoryHolder {
-
-    public static final NamespacedKey SPELL_PRIMARY_KEY = new NamespacedKey(AmonPackPlugin.plugin, "magic_primary_spell");
-    public static final NamespacedKey SPELL_SECONDARY_KEY = new NamespacedKey(AmonPackPlugin.plugin, "magic_secondary_spell");
 
     private final Player player;
     private final ItemStack tomeItem;
@@ -37,7 +32,7 @@ public class TomeSpellGui implements InventoryHolder {
         this.tomeItem = tomeItem;
         this.spellRegistry = spellRegistry;
         this.manaManager = manaManager;
-        this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_RED + "✦ TOM OGNIA: ZAKLĘCIA ✦");
+        this.inventory = Bukkit.createInventory(this, 45, ChatColor.DARK_RED + "✦ TOM OGNIA: ZAKLĘCIA ✦");
         buildGui();
     }
 
@@ -45,160 +40,83 @@ public class TomeSpellGui implements InventoryHolder {
         inventory.clear();
 
         ItemStack filler = ProgressionMenuGui.createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null);
-        for (int i = 0; i < 27; i++) {
+        for (int i = 0; i < 45; i++) {
             inventory.setItem(i, filler);
         }
 
-        String primaryId = getPrimarySpellId(tomeItem);
-        String secondaryId = getSecondarySpellId(tomeItem);
+        int level = MagicItemManager.getTomeLevel(tomeItem);
+        int kills = MagicItemManager.getTomeKills(tomeItem);
+        String primaryId = MagicItemManager.getPrimarySpellId(tomeItem);
+        String secondaryId = MagicItemManager.getSecondarySpellId(tomeItem);
+        Set<String> upgrades = MagicItemManager.getUpgrades(tomeItem);
 
         Spell primary = spellRegistry.getSpell(primaryId);
         Spell secondary = spellRegistry.getSpell(secondaryId);
 
-        // Slot 4: Tome Info
-        List<String> tomeLore = List.of(
-                "§7Potężna księga nasycona magią płomieni.",
-                "",
-                "§6Główne Zaklęcie (LPM): " + (primary != null ? primary.getName() : "§8[Brak]"),
-                "§eDrugi Krąg (Shift+LPM): " + (secondary != null ? secondary.getName() : "§8[Brak]"),
-                "",
-                "§bTwoja Mana: §f" + (int) manaManager.getMana(player.getUniqueId()) + "/" + (int) manaManager.getMaxMana(player.getUniqueId()) + " MP"
-        );
-        inventory.setItem(4, ProgressionMenuGui.createItem(Material.BOOK, "§c§lTom Ognia", tomeLore));
+        // --- RZĄD 1 (Slot 4: Info Tomu) ---
+        List<String> tomeLore = new ArrayList<>();
+        tomeLore.add("§7Starożytna księga zawierająca pierwotne zaklęcia.");
+        tomeLore.add("");
+        tomeLore.add("§6✦ Poziom Tomu: §e" + level + " §7(Ulepsz w §5Ołtarzu Arkanów§7)");
+        tomeLore.add("§c⚔ Zabójstwa Magią: §f" + kills);
+        tomeLore.add("§b✦ Aktualna Mana: §f" + manaManager.getMana(player) + "/" + manaManager.getMaxMana(player) + " MP");
+        tomeLore.add("§e✦ Aktywne Ulepszenia: §f" + (upgrades.isEmpty() ? "§7Brak" : upgrades.size()));
+        inventory.setItem(4, ProgressionMenuGui.createItem(Material.WRITABLE_BOOK, "§c§l✦ TOM OGNIA ✦", tomeLore));
 
-        // Slot 11: Primary Spell Slot (LPM)
+        // --- RZĄD 2: PUSTY (pozostają panele) ---
+
+        // --- RZĄD 3: TYLKO DWIE RZECZY (Slot 20: LPM, Slot 24: Shift+LPM) ---
+        // Slot 20: Główne Zaklęcie (LPM)
         List<String> primaryLore = new ArrayList<>();
         if (primary != null) {
-            primaryLore.add("§7Aktualnie przypisane zaklęcie do §fLPM§7:");
-            primaryLore.add(" " + primary.getName());
-            primaryLore.add(" §7Koszt: §b" + primary.getManaCost() + " MP");
-            primaryLore.add(" §7Cooldown: §e" + primary.getCooldownSeconds() + "s");
+            primaryLore.add("§8Przypisane Zaklęcie:");
+            primaryLore.add("§c§l" + primary.getName());
+            primaryLore.add("§b✦ Koszt: §f" + primary.getManaCost() + " MP §8| §eOdnowienie: §f" + String.format("%.1f", primary.getCooldownSeconds()) + "s");
             primaryLore.add("");
-            primaryLore.add("§7" + primary.getDescription());
+            primaryLore.add("§e✦ Kliknij, aby zmienić zaklęcie LPM!");
         } else {
-            primaryLore.add("§7Brak przypisanego czaru.");
-            primaryLore.add("§eKliknij zaklęcie poniżej, aby przypisać!");
+            primaryLore.add("§7Brak przypisanego zaklęcia.");
+            primaryLore.add("§e✦ Kliknij, aby wybrać zaklęcie!");
         }
-        inventory.setItem(11, ProgressionMenuGui.createItem(Material.BLAZE_POWDER, "§6§l✦ Główne Zaklęcie (LPM)", primaryLore));
+        inventory.setItem(20, ProgressionMenuGui.createItem(Material.FIRE_CHARGE, "§c§l[ ✦ GŁÓWNE ZAKLĘCIE (LPM) ]", primaryLore));
 
-        // Slot 13: Secondary Spell Slot (Shift+LPM)
-        List<String> secLore = new ArrayList<>();
-        if (secondary != null) {
-            secLore.add("§7Aktualnie przypisane zaklęcie do §fShift+LPM§7:");
-            secLore.add(" " + secondary.getName());
-            secLore.add(" §7Koszt: §b" + secondary.getManaCost() + " MP");
-            secLore.add(" §7Cooldown: §e" + secondary.getCooldownSeconds() + "s");
-            secLore.add("");
-            secLore.add("§7" + secondary.getDescription());
+        // Slot 24: Drugi Krąg (Shift+LPM)
+        List<String> secondaryLore = new ArrayList<>();
+        if (secondary != null && !secondaryId.equalsIgnoreCase("none")) {
+            secondaryLore.add("§8Przypisane Zaklęcie:");
+            secondaryLore.add("§6§l" + secondary.getName());
+            secondaryLore.add("§b✦ Koszt: §f" + secondary.getManaCost() + " MP §8| §eOdnowienie: §f" + String.format("%.1f", secondary.getCooldownSeconds()) + "s");
+            secondaryLore.add("");
+            secondaryLore.add("§e✦ Kliknij, aby zmienić zaklęcie Drugiego Kręgu!");
         } else {
-            secLore.add("§7Brak przypisanego czaru drugiego kręgu.");
-            secLore.add("§eKliknij Shift + LPM na zaklęcie poniżej, aby przypisać!");
+            secondaryLore.add("§7Brak przypisanego zaklęcia Drugiego Kręgu.");
+            secondaryLore.add("§e✦ Kliknij, aby wybrać zaklęcie Shift+LPM!");
         }
-        inventory.setItem(13, ProgressionMenuGui.createItem(Material.MAGMA_CREAM, "§e§l✧ Drugi Krąg (Shift+LPM)", secLore));
+        inventory.setItem(24, ProgressionMenuGui.createItem(Material.MAGMA_CREAM, "§6§l[ ✧ DRUGI KRĄG (SHIFT+LPM) ]", secondaryLore));
 
-        // Slot 15: Spell Tree Info
-        List<String> treeLore = List.of(
-                "§7Kolejne potężniejsze zaklęcia",
-                "§7będą odblokowywane w dedykowanym",
-                "§7drzewku magii tego tomu!",
-                "",
-                "§aStatus: Aktywny Krąg Magii Ognia I"
-        );
-        inventory.setItem(15, ProgressionMenuGui.createItem(Material.FIRE_CHARGE, "§c§lDrzewko Magii Ognia", treeLore));
+        // --- RZĄD 4: PUSTY (pozostają panele) ---
 
-        // Available Fire Spells in bottom row (Slots 20-24)
-        List<Spell> fireSpells = spellRegistry.getSpellsByElement(SpellElement.FIRE);
-        int slot = 20;
-        for (Spell s : fireSpells) {
-            if (slot > 24) break;
-
-            boolean isPrim = s.getId().equalsIgnoreCase(primaryId);
-            boolean isSec = s.getId().equalsIgnoreCase(secondaryId);
-
-            List<String> sLore = new ArrayList<>();
-            sLore.add("§8Żywioł: " + s.getElement().getDisplayName());
-            sLore.add("§7Koszt Many: §b" + s.getManaCost() + " MP");
-            sLore.add("§7Czas Odnowienia: §e" + s.getCooldownSeconds() + "s");
-            sLore.add("");
-            sLore.add("§7" + s.getDescription());
-            sLore.add("");
-            if (isPrim) {
-                sLore.add("§a§l✔ PRZYPISANO JAKO GŁÓWNY CZAR (LPM)");
-            } else if (isSec) {
-                sLore.add("§e§l✔ PRZYPISANO JAKO DRUGI KRĄG (Shift+LPM)");
-            } else {
-                sLore.add("§6LPM §7- Przypisz do głównego slotu");
-                sLore.add("§eShift+LPM §7- Przypisz do drugiego kręgu");
-            }
-
-            Material icon = isPrim ? Material.FIRE_CHARGE : (isSec ? Material.MAGMA_CREAM : Material.BLAZE_POWDER);
-            inventory.setItem(slot++, ProgressionMenuGui.createItem(icon, s.getName(), sLore));
-        }
-
-        // Close button (Slot 26)
-        inventory.setItem(26, ProgressionMenuGui.createItem(Material.BARRIER, "§c§lZamknij", null));
+        // --- RZĄD 5: Zamknięcie (Slot 40) ---
+        inventory.setItem(40, ProgressionMenuGui.createItem(Material.BARRIER, "§c§lZamknij", List.of("§7Kliknij, aby zamknąć menu.")));
     }
 
     public void handleClick(InventoryClickEvent event) {
         event.setCancelled(true);
         int slot = event.getRawSlot();
-        if (slot < 0 || slot >= 27) return;
 
-        if (slot == 26) {
+        if (slot == 40) {
             player.closeInventory();
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.8f, 1.0f);
             return;
         }
 
-        // Kliknięcie w zaklęcie (slot 20-24)
-        if (slot >= 20 && slot <= 24) {
-            List<Spell> fireSpells = spellRegistry.getSpellsByElement(SpellElement.FIRE);
-            int index = slot - 20;
-            if (index >= 0 && index < fireSpells.size()) {
-                Spell selected = fireSpells.get(index);
-                if (event.isShiftClick()) {
-                    setSecondarySpellId(tomeItem, selected.getId());
-                    player.sendMessage("§a[Tom Ognia] Przypisano czar §e" + selected.getName() + " §ado §fDrugiego Kręgu (Shift+LPM)§a!");
-                } else {
-                    setPrimarySpellId(tomeItem, selected.getId());
-                    player.sendMessage("§a[Tom Ognia] Przypisano czar §e" + selected.getName() + " §ado §fGłównego Slotu (LPM)§a!");
-                }
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.3f);
-                buildGui();
-            }
+        if (slot == 20) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.2f);
+            player.openInventory(new PrimarySpellSelectGui(player, tomeItem, spellRegistry, manaManager).getInventory());
+        } else if (slot == 24) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.2f);
+            player.openInventory(new SecondarySpellSelectGui(player, tomeItem, spellRegistry, manaManager).getInventory());
         }
-    }
-
-    public static String getPrimarySpellId(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return "fireblast";
-        String id = item.getItemMeta().getPersistentDataContainer().get(SPELL_PRIMARY_KEY, PersistentDataType.STRING);
-        return id != null ? id : "fireblast";
-    }
-
-    public static void setPrimarySpellId(ItemStack item, String spellId) {
-        if (item == null) return;
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.getPersistentDataContainer().set(SPELL_PRIMARY_KEY, PersistentDataType.STRING, spellId);
-            item.setItemMeta(meta);
-        }
-    }
-
-    public static String getSecondarySpellId(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return null;
-        return item.getItemMeta().getPersistentDataContainer().get(SPELL_SECONDARY_KEY, PersistentDataType.STRING);
-    }
-
-    public static void setSecondarySpellId(ItemStack item, String spellId) {
-        if (item == null) return;
-        ItemMeta meta = item.getItemMeta();
-        if (meta != null) {
-            meta.getPersistentDataContainer().set(SPELL_SECONDARY_KEY, PersistentDataType.STRING, spellId);
-            item.setItemMeta(meta);
-        }
-    }
-
-    public void open() {
-        player.openInventory(inventory);
     }
 
     @Override

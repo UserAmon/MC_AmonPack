@@ -17,6 +17,10 @@ public class SpellRegistry {
     public void loadDefaults() {
         spells.clear();
         registerSpell(new FireBlastSpell());
+        registerSpell(new RPG.Magic.spells.fire.BlazingSpell());
+        registerSpell(new RPG.Magic.spells.fire.FlashPointSpell());
+        registerSpell(new RPG.Magic.spells.fire.FireCircleSpell());
+        registerSpell(new RPG.Magic.spells.fire.BarrageSpell());
     }
 
     public void registerSpell(Spell spell) {

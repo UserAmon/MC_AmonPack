@@ -53,25 +53,44 @@ public class CustomBlockListener implements Listener {
         }
     }
 
+    @EventHandler
+    public void onChunkLoad(org.bukkit.event.world.ChunkLoadEvent event) {
+        blockManager.restoreChunkDisplays(event.getChunk());
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (event.getClickedBlock() == null) return;
 
-        CustomBlock cb = blockManager.getCustomBlock(event.getClickedBlock());
+        org.bukkit.block.Block block = event.getClickedBlock();
+        CustomBlock cb = blockManager.getCustomBlock(block);
         if (cb != null && cb.getId().equalsIgnoreCase("magic_crafting_table")) {
             event.setCancelled(true);
             Player player = event.getPlayer();
-            Location loc = event.getClickedBlock().getLocation().add(0.5, 1.0, 0.5);
+            Location loc = block.getLocation().add(0.5, 1.0, 0.5);
 
             player.playSound(loc, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);
             player.spawnParticle(Particle.ENCHANT, loc, 20, 0.4, 0.4, 0.4, 0.5);
 
+            blockManager.ensureDisplay(block.getLocation(), cb);
             CraftingMenager.OpenMoldCategory(player);
 
             if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
                 ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.USE_BLOCK, "magic_crafting_table", 1);
             }
+        } else if (cb != null && cb.getId().equalsIgnoreCase("arcane_altar")) {
+            event.setCancelled(true);
+            Player player = event.getPlayer();
+            Location loc = block.getLocation().add(0.5, 1.0, 0.5);
+
+            player.playSound(loc, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);
+            player.spawnParticle(Particle.ENCHANT, loc, 25, 0.4, 0.4, 0.4, 0.5);
+
+            blockManager.ensureDisplay(block.getLocation(), cb);
+
+            ItemStack handItem = player.getInventory().getItemInMainHand();
+            player.openInventory(new RPG.Magic.gui.ArcaneAltarGui(player, handItem, AmonPackPlugin.plugin.getSpellRegistry(), AmonPackPlugin.plugin.getManaManager()).getInventory());
         }
     }
 

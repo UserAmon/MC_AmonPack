@@ -1,7 +1,8 @@
 package RPG.Magic.listener;
 
 import CustomContent.Items.CustomItemManager;
-import RPG.Magic.gui.TomeSpellGui;
+import RPG.Magic.gui.*;
+import RPG.Magic.manager.MagicItemManager;
 import RPG.Magic.manager.ManaManager;
 import RPG.Magic.manager.SpellRegistry;
 import RPG.Magic.model.Spell;
@@ -38,12 +39,21 @@ public class MagicItemListener implements Listener {
 
         if (!isMagicTome(item)) return;
 
+        // Jeśli gracz klika w blok Ołtarza Arkanów lub Magicznego Stołu, pozwalamy zadziałać CustomBlockListener
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
+            org.bukkit.block.Block b = event.getClickedBlock();
+            if (b.getType() == Material.NOTE_BLOCK || b.getType() == Material.ENCHANTING_TABLE) {
+                // Jeśli to interakcja z blokiem specjalnym, CustomBlockListener zajmie się otwarciem Ołtarza lub Stołu
+                return;
+            }
+        }
+
         Player player = event.getPlayer();
         Action action = event.getAction();
 
         if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
-            new TomeSpellGui(player, item, spellRegistry, manaManager).open();
+            player.openInventory(new TomeSpellGui(player, item, spellRegistry, manaManager).getInventory());
             return;
         }
 
@@ -52,17 +62,19 @@ public class MagicItemListener implements Listener {
 
             String spellId;
             if (player.isSneaking()) {
-                spellId = TomeSpellGui.getSecondarySpellId(item);
-                if (spellId == null) {
-                    spellId = TomeSpellGui.getPrimarySpellId(item);
+                spellId = MagicItemManager.getSecondarySpellId(item);
+                if (spellId == null || spellId.equalsIgnoreCase("none")) {
+                    spellId = MagicItemManager.getPrimarySpellId(item);
                 }
             } else {
-                spellId = TomeSpellGui.getPrimarySpellId(item);
+                spellId = MagicItemManager.getPrimarySpellId(item);
             }
 
             Spell spell = spellRegistry.getSpell(spellId);
             if (spell != null) {
-                spell.cast(player, manaManager);
+                spell.cast(player, item, manaManager);
+            } else {
+                player.sendMessage("§cBrak przypisanego zaklęcia!");
             }
         }
     }
@@ -72,9 +84,9 @@ public class MagicItemListener implements Listener {
         Player player = event.getPlayer();
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
         if (newItem != null && isMagicTome(newItem)) {
-            String spellId = TomeSpellGui.getPrimarySpellId(newItem);
+            String spellId = MagicItemManager.getPrimarySpellId(newItem);
             Spell spell = spellRegistry.getSpell(spellId);
-            String name = spell != null ? spell.getName() : "Fireblast";
+            String name = spell != null ? spell.getName() : "Fire Blast";
             manaManager.sendManaBarHud(player, name);
         }
     }
@@ -82,6 +94,14 @@ public class MagicItemListener implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getInventory().getHolder() instanceof TomeSpellGui gui) {
+            gui.handleClick(event);
+        } else if (event.getInventory().getHolder() instanceof PrimarySpellSelectGui gui) {
+            gui.handleClick(event);
+        } else if (event.getInventory().getHolder() instanceof SecondarySpellSelectGui gui) {
+            gui.handleClick(event);
+        } else if (event.getInventory().getHolder() instanceof ArcaneAltarGui gui) {
+            gui.handleClick(event);
+        } else if (event.getInventory().getHolder() instanceof SpellUpgradeTreeGui gui) {
             gui.handleClick(event);
         }
     }

@@ -101,7 +101,24 @@ public class CustomBlockManager {
             packManager.registerModelOverride("note_block", 30002, "amonpack:block/magic_crafting_table");
         }
 
+        if (!customBlocks.containsKey("arcane_altar")) {
+            CustomBlock altarBlock = new CustomBlock("arcane_altar", "§5§lOłtarz Arkanów", Material.NOTE_BLOCK, 30004);
+            altarBlock.setHardness(3.0);
+            altarBlock.setRequiredTool("PICKAXE");
+            altarBlock.setRequiredTier(0);
+            altarBlock.setDropCustomItemId("arcane_altar");
+            altarBlock.setDropMin(1);
+            altarBlock.setDropMax(1);
+            altarBlock.setExp(10.0);
+            altarBlock.setGenerateInWorld(false);
+            customBlocks.put("arcane_altar", altarBlock);
+            packManager.registerModelOverride("note_block", 30004, "amonpack:block/arcane_altar");
+        }
+
         loadPlacedBlocks();
+
+        // Przywrócenie ItemDisplays dla załadowanych światów 1s po starcie
+        Bukkit.getScheduler().runTaskLater(AmonPackPlugin.plugin, this::restoreAllDisplays, 20L);
 
         // Okresowy autosave co 60 sekund jeśli były modyfikacje
         if (autoSaveTask != null) {
@@ -154,6 +171,12 @@ public class CustomBlockManager {
     public CustomBlock removeBlock(Block block) {
         String key = locKey(block.getLocation());
         String customBlockId = placedBlocks.remove(key);
+        if (customBlockId == null) {
+            customBlockId = findPlacedBlockId(block.getLocation());
+            if (customBlockId != null) {
+                placedBlocks.remove(locKey(block.getLocation()));
+            }
+        }
         if (customBlockId == null) return null;
 
         isDirty = true;
@@ -161,6 +184,15 @@ public class CustomBlockManager {
         if (display != null && display.isValid()) {
             display.remove();
         }
+
+        // Usuń ewentualne pozostałe displaye na tym bloku
+        Location center = block.getLocation().add(0.5, 0.5, 0.5);
+        for (org.bukkit.entity.Entity e : block.getWorld().getNearbyEntities(center, 0.6, 0.6, 0.6)) {
+            if (e instanceof ItemDisplay || e.getScoreboardTags().contains("amonpack_custom_block")) {
+                e.remove();
+            }
+        }
+
         savePlacedBlocksAsync();
         return customBlocks.get(customBlockId.toLowerCase(Locale.ROOT));
     }
@@ -169,6 +201,9 @@ public class CustomBlockManager {
         if (block == null) return null;
         String key = locKey(block.getLocation());
         String id = placedBlocks.get(key);
+        if (id == null) {
+            id = findPlacedBlockId(block.getLocation());
+        }
         if (id == null) return null;
         return customBlocks.get(id.toLowerCase(Locale.ROOT));
     }
@@ -177,9 +212,25 @@ public class CustomBlockManager {
         return getCustomBlock(block) != null;
     }
 
-    private void spawnDisplay(Location loc, CustomBlock cb) {
+    public void ensureDisplay(Location loc, CustomBlock cb) {
+        String key = locKey(loc);
+        ItemDisplay display = activeDisplays.get(key);
+        if (display == null || !display.isValid()) {
+            spawnDisplay(loc, cb);
+        }
+    }
+
+    public void spawnDisplay(Location loc, CustomBlock cb) {
+        if (loc.getWorld() == null) return;
         try {
             Location center = loc.getBlock().getLocation().add(0.5, 0.5, 0.5);
+            // Usunięcie starych lub zdublowanych bytów
+            for (org.bukkit.entity.Entity e : loc.getWorld().getNearbyEntities(center, 0.6, 0.6, 0.6)) {
+                if (e instanceof ItemDisplay || e.getScoreboardTags().contains("amonpack_custom_block")) {
+                    e.remove();
+                }
+            }
+
             ItemDisplay display = loc.getWorld().spawn(center, ItemDisplay.class, d -> {
                 ItemStack item = new ItemStack(cb.getBaseMaterial());
                 var meta = item.getItemMeta();
@@ -189,10 +240,94 @@ public class CustomBlockManager {
                 }
                 d.setItemStack(item);
                 d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+                d.setTransformation(new org.bukkit.util.Transformation(
+                        new org.joml.Vector3f(0f, 0f, 0f),
+                        new org.joml.AxisAngle4f(0f, 0f, 0f, 1f),
+                        new org.joml.Vector3f(1.002f, 1.002f, 1.002f),
+                        new org.joml.AxisAngle4f(0f, 0f, 0f, 1f)
+                ));
+                d.addScoreboardTag("amonpack_custom_block");
+                d.addScoreboardTag("amonpack_id:" + cb.getId());
+                d.setPersistent(true);
             });
             activeDisplays.put(locKey(loc), display);
         } catch (Throwable ignored) {
         }
+    }
+
+    public void restoreAllDisplays() {
+        for (Map.Entry<String, String> entry : placedBlocks.entrySet()) {
+            String[] parts = entry.getKey().split(",");
+            if (parts.length >= 4) {
+                org.bukkit.World w = Bukkit.getWorld(parts[0]);
+                if (w != null) {
+                    try {
+                        int x = Integer.parseInt(parts[1]);
+                        int y = Integer.parseInt(parts[2]);
+                        int z = Integer.parseInt(parts[3]);
+                        if (w.isChunkLoaded(x >> 4, z >> 4)) {
+                            CustomBlock cb = customBlocks.get(entry.getValue().toLowerCase(Locale.ROOT));
+                            if (cb != null) {
+                                Location loc = new Location(w, x, y, z);
+                                if (loc.getBlock().getType() == cb.getBaseMaterial()) {
+                                    spawnDisplay(loc, cb);
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+    }
+
+    public void restoreChunkDisplays(org.bukkit.Chunk chunk) {
+        if (chunk == null) return;
+        String wName = chunk.getWorld().getName();
+        int cx = chunk.getX();
+        int cz = chunk.getZ();
+
+        for (Map.Entry<String, String> entry : placedBlocks.entrySet()) {
+            String[] parts = entry.getKey().split(",");
+            if (parts.length >= 4 && parts[0].equalsIgnoreCase(wName)) {
+                try {
+                    int x = Integer.parseInt(parts[1]);
+                    int y = Integer.parseInt(parts[2]);
+                    int z = Integer.parseInt(parts[3]);
+                    if ((x >> 4) == cx && (z >> 4) == cz) {
+                        CustomBlock cb = customBlocks.get(entry.getValue().toLowerCase(Locale.ROOT));
+                        if (cb != null) {
+                            Location loc = new Location(chunk.getWorld(), x, y, z);
+                            if (loc.getBlock().getType() == cb.getBaseMaterial()) {
+                                spawnDisplay(loc, cb);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    private String findPlacedBlockId(Location loc) {
+        if (loc == null || loc.getWorld() == null) return null;
+        int x = loc.getBlockX();
+        int y = loc.getBlockY();
+        int z = loc.getBlockZ();
+        String wName = loc.getWorld().getName();
+
+        for (Map.Entry<String, String> entry : placedBlocks.entrySet()) {
+            String[] parts = entry.getKey().split(",");
+            if (parts.length >= 4 && parts[0].equalsIgnoreCase(wName)) {
+                try {
+                    int px = Integer.parseInt(parts[1]);
+                    int py = Integer.parseInt(parts[2]);
+                    int pz = Integer.parseInt(parts[3]);
+                    if (px == x && py == y && pz == z) {
+                        return entry.getValue();
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+        return null;
     }
 
     private String locKey(Location loc) {

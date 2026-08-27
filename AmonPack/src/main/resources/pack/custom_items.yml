@@ -265,3 +265,14 @@ items:
     unbreakable: true
     lore:
       - "&7Wulkaniczna ruda nasycona minerałami."
+
+  arcane_altar:
+    display_name: "&5&lOłtarz Arkanów"
+    base_material: NOTE_BLOCK
+    model: "block/arcane_altar"
+    custom_model_data: 30004
+    unbreakable: true
+    lore:
+      - "&7Mistyczny ołtarz służący do ulepszania magicznych ksiąg i rozwijania zaklęć."
+      - ""
+      - "&e✦ Kliknij PPM po postawieniu, aby ulepszać tomy i magię!"
