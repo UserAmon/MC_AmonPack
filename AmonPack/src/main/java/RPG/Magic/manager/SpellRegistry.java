@@ -21,6 +21,10 @@ public class SpellRegistry {
         registerSpell(new RPG.Magic.spells.fire.FlashPointSpell());
         registerSpell(new RPG.Magic.spells.fire.FireCircleSpell());
         registerSpell(new RPG.Magic.spells.fire.BarrageSpell());
+
+        registerSpell(new RPG.Magic.spells.air.BlowSpell());
+        registerSpell(new RPG.Magic.spells.air.AirbladeSpell());
+        registerSpell(new RPG.Magic.spells.air.AirVortexSpell());
     }
 
     public void registerSpell(Spell spell) {

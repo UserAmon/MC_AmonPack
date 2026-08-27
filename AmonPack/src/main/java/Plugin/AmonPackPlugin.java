@@ -502,6 +502,7 @@ public class AmonPackPlugin extends JavaPlugin {
 
 		if (ENABLE_SKILL_TREE || ENABLE_RPG_GATHERING || ENABLE_DUNGEONS) {
 			this.getServer().getPluginManager().registerEvents(new Listeners(), this);
+			this.getServer().getPluginManager().registerEvents(new RPG.Crafting.BowMagicEffectsListener(), this);
 		}
 
 		if (ENABLE_ARMOR_EFFECTS) {

@@ -44,18 +44,24 @@ public class PrimarySpellSelectGui implements InventoryHolder {
 
         int tomeLevel = MagicItemManager.getTomeLevel(tomeItem);
         String currentPrimary = MagicItemManager.getPrimarySpellId(tomeItem);
+        boolean isAir = MagicItemManager.isAirWand(tomeItem);
 
-        // 1. Fire Blast (Level 1+) -> Slot 11
-        inventory.setItem(11, createSpellItem("fireblast", 1, tomeLevel, currentPrimary.equalsIgnoreCase("fireblast"), Material.FIRE_CHARGE));
-
-        // 2. Blazing (Level 2+) -> Slot 13
-        inventory.setItem(13, createSpellItem("blazing", 2, tomeLevel, currentPrimary.equalsIgnoreCase("blazing"), Material.BLAZE_POWDER));
-
-        // 3. FlashPoint (Level 3+) -> Slot 15
-        inventory.setItem(15, createSpellItem("flashpoint", 3, tomeLevel, currentPrimary.equalsIgnoreCase("flashpoint"), Material.LAVA_BUCKET));
+        if (isAir) {
+            // 1. Blow (Level 1+) -> Slot 11
+            inventory.setItem(11, createSpellItem("blow", 1, tomeLevel, currentPrimary.equalsIgnoreCase("blow"), Material.FEATHER));
+            // 2. Airblade (Level 2+) -> Slot 13
+            inventory.setItem(13, createSpellItem("airblade", 2, tomeLevel, currentPrimary.equalsIgnoreCase("airblade"), Material.IRON_SWORD));
+        } else {
+            // 1. Fire Blast (Level 1+) -> Slot 11
+            inventory.setItem(11, createSpellItem("fireblast", 1, tomeLevel, currentPrimary.equalsIgnoreCase("fireblast"), Material.FIRE_CHARGE));
+            // 2. Blazing (Level 2+) -> Slot 13
+            inventory.setItem(13, createSpellItem("blazing", 2, tomeLevel, currentPrimary.equalsIgnoreCase("blazing"), Material.BLAZE_POWDER));
+            // 3. FlashPoint (Level 3+) -> Slot 15
+            inventory.setItem(15, createSpellItem("flashpoint", 3, tomeLevel, currentPrimary.equalsIgnoreCase("flashpoint"), Material.LAVA_BUCKET));
+        }
 
         // Powrót -> Slot 18
-        inventory.setItem(18, ProgressionMenuGui.createItem(Material.ARROW, "§e◀ Powrót do menu tomu", List.of("§7Kliknij, aby wrócić.")));
+        inventory.setItem(18, ProgressionMenuGui.createItem(Material.ARROW, "§e◀ Powrót do menu", List.of("§7Kliknij, aby wrócić.")));
     }
 
     private ItemStack createSpellItem(String spellId, int requiredLevel, int currentLevel, boolean isAssigned, Material activeMat) {
@@ -64,18 +70,18 @@ public class PrimarySpellSelectGui implements InventoryHolder {
 
         boolean unlocked = currentLevel >= requiredLevel;
         Material mat = unlocked ? activeMat : Material.GRAY_DYE;
-        String name = (unlocked ? "§c§l" : "§7§l") + spell.getName();
+        String name = (unlocked ? "§b§l" : "§7§l") + spell.getName();
 
         List<String> lore = new ArrayList<>();
-        lore.add("§8Żywioł: §c" + spell.getElement().name());
+        lore.add("§8Żywioł: §f" + spell.getElement().name());
         lore.add("§b✦ Koszt: §f" + spell.getManaCost() + " MP §8| §eOdnowienie: §f" + String.format("%.1f", spell.getCooldownSeconds()) + "s");
-        lore.add("§8Wymagany Poziom Tomu: §e" + requiredLevel);
+        lore.add("§8Wymagany Poziom Przedmiotu: §e" + requiredLevel);
         lore.add("");
 
         if (!unlocked) {
             lore.add("§c🔒 Zablokowane!");
-            lore.add("§7Wymaga Tomu na Poziomie §e" + requiredLevel + "§7.");
-            lore.add("§7Ulepsz tom w §5Ołtarzu Arkanów§7!");
+            lore.add("§7Wymaga Poziomu §e" + requiredLevel + "§7.");
+            lore.add("§7Ulepsz przedmiot w §5Ołtarzu Arkanów§7!");
         } else if (isAssigned) {
             lore.add("§a✔ Aktualnie przypisane do LPM");
         } else {
@@ -95,6 +101,27 @@ public class PrimarySpellSelectGui implements InventoryHolder {
         }
 
         int tomeLevel = MagicItemManager.getTomeLevel(tomeItem);
+        boolean isAir = MagicItemManager.isAirWand(tomeItem);
+
+        if (isAir) {
+            if (slot == 11) {
+                MagicItemManager.setPrimarySpellId(tomeItem, "blow");
+                player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.2f);
+                player.sendMessage("§aPrzypisano zaklęcie §bBlow §ado LPM!");
+                player.openInventory(new TomeSpellGui(player, tomeItem, spellRegistry, manaManager).getInventory());
+            } else if (slot == 13) {
+                if (tomeLevel >= 2) {
+                    MagicItemManager.setPrimarySpellId(tomeItem, "airblade");
+                    player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, 1.0f, 1.2f);
+                    player.sendMessage("§aPrzypisano zaklęcie §fAirblade §ado LPM!");
+                    player.openInventory(new TomeSpellGui(player, tomeItem, spellRegistry, manaManager).getInventory());
+                } else {
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    player.sendMessage("§cTo zaklęcie wymaga Poziomu II!");
+                }
+            }
+            return;
+        }
 
         if (slot == 11) {
             MagicItemManager.setPrimarySpellId(tomeItem, "fireblast");

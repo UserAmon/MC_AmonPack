@@ -1,4 +1,42 @@
 MagicEffects:
+  Bow_Triple_Shot:
+    Name: "§6[🏹] Potrójny Strzał"
+    Lore:
+      l1: "§7Wystrzelenie 1 strzały wystrzeliwuje 3 na raz w rozrzucie."
+    IsMajor: false
+    Cost:
+      c1:
+        Material: ARROW
+        Amount: 16
+      c2:
+        Material: FEATHER
+        Amount: 8
+  #
+  Bow_Piercing_Arrows:
+    Name: "§b[🏹] Przeszywające Strzały"
+    Lore:
+      l1: "§7Strzały przeszywają wrogów na wylot."
+    IsMajor: true
+    Cost:
+      c1:
+        Material: FLINT
+        Amount: 10
+      c2:
+        Material: IRON_INGOT
+        Amount: 4
+  #
+  Bow_Pin_Arrows:
+    Name: "§c[🏹] Grotowe Zakotwiczenie"
+    Lore:
+      l1: "§7Strzały tkwią we wrogach. Każda wbita strzała zwiększa otrzymywane obrażenia o 15%."
+    IsMajor: true
+    Cost:
+      c1:
+        Material: ARROW
+        Amount: 32
+      c2:
+        Material: STRING
+        Amount: 8
   # #####BASIC
   Monster_Hunter:
     Name: §c[⚔] Łowca Potworów
@@ -774,16 +812,74 @@ Craftable_Weapons:
         c1:
           Material: STICK
           Amount: 2
+  #
+  bone_sword:
+    Material: WOODEN_SWORD
+    Name: "§f§lKościany Miecz"
+    Custom_Model_ID: 10020
+    Base_Damage: 4
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: BONE
+          Amount: 3
+        m2:
+          Material: LEATHER
+          Amount: 1
+        m3:
+          Material: STICK
+          Amount: 1
+      AllowedMagicEffects:
+      - Monster_Hunter
+      - Knockback
+      - Looting
+      - Experience
+      - Midas
+    Item:
+      Lore:
+        l1: "§7Wykuty z prastarych kości bestii."
+      Items_To_Craft:
+        c1:
+          Material: BONE
+          Amount: 3
+  #
+  wooden_bow:
+    Material: BOW
+    Name: "§6§lWzmocniony Długi Łuk"
+    Custom_Model_ID: 10021
+    Base_Damage: 5
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: STICK
+          Amount: 3
+        m2:
+          Material: STRING
+          Amount: 3
+      AllowedMagicEffects:
+      - Bow_Triple_Shot
+      - Bow_Piercing_Arrows
+      - Bow_Pin_Arrows
+      - Monster_Hunter
+      - Looting
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Potężny łuk kompozytowy o wielkim zasięgu."
+      Items_To_Craft:
+        c1:
+          Material: BOW
+          Amount: 1
 # ###Tools
 Craftable_Tools:
   meteorite_pickaxe:
     Material: NETHERITE_PICKAXE
-    Name: §2Kilof z Meteorytu
-    Custom_Model_ID: 10000
+    Name: "§4§lKilof z Meteorytu"
+    Custom_Model_ID: 10014
     Mold:
       Items_To_Craft:
         m1:
-          Material: NETHERITE_INGOT
+          Material: FLINT
           Amount: 3
         m2:
           Material: STICK
@@ -795,19 +891,19 @@ Craftable_Tools:
       - Experience
     Item:
       Lore:
-        l1: §7Wykuty z kosmicznego metalu.
+        l1: "§cMeteorytowy kilof kruszący najtwardsze skały kosmiczne."
       Items_To_Craft:
         c1:
-          Material: STICK
-          Amount: 2
+          Material: DIAMOND_PICKAXE
+          Amount: 1
   meteorite_axe:
     Material: NETHERITE_AXE
-    Name: §2Topór z Meteorytu
-    Custom_Model_ID: 10001
+    Name: "§4§lTopór z Meteorytu"
+    Custom_Model_ID: 10002
     Mold:
       Items_To_Craft:
         m1:
-          Material: NETHERITE_INGOT
+          Material: FLINT
           Amount: 3
         m2:
           Material: STICK
@@ -819,11 +915,11 @@ Craftable_Tools:
       - Experience
     Item:
       Lore:
-        l1: §7Ostrze z gwiezdnego pyłu.
+        l1: "§cOstrze z meteorytowego stopu."
       Items_To_Craft:
         c1:
-          Material: STICK
-          Amount: 2
+          Material: DIAMOND_AXE
+          Amount: 1
 # ##armor
 Craftable_Armor:
   crystal_helmet:
@@ -930,4 +1026,27 @@ Craftable_Items:
       Items_To_Craft:
         c1:
           Material: BOOK
+          Amount: 1
+
+  Wand_Fen:
+    Material: STICK
+    Name: "§b§lRóżdżka Fenów"
+    Custom_Model_ID: 20002
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: STICK
+          Amount: 1
+        m2:
+          Material: ROTTEN_FLESH
+          Amount: 10
+    Item:
+      Lore:
+        l1: "§7Mistyczna różdżka wiatru wykuta z esencji fenów."
+        l2: "§b✦ LPM: §fWystrzelenie Blow §8(25 MP, 2.5s cd)"
+        l3: "§f✦ Shift+LPM: §fZaklęcia Wiatru / Wir Powietrza"
+        l4: "§d✦ PPM: §fOtwórz menu przypisywania czarów"
+      Items_To_Craft:
+        c1:
+          Material: STICK
           Amount: 1

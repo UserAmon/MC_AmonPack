@@ -276,3 +276,49 @@ items:
       - "&7Mistyczny ołtarz służący do ulepszania magicznych ksiąg i rozwijania zaklęć."
       - ""
       - "&e✦ Kliknij PPM po postawieniu, aby ulepszać tomy i magię!"
+
+  wand_fen:
+    display_name: "&b&lRóżdżka Fenów"
+    base_material: STICK
+    model: "magic/wand_fen"
+    custom_model_data: 20002
+    unbreakable: true
+    lore:
+      - "&7Mistyczna różdżka wiatru wykuta z esencji fenów."
+      - ""
+      - "&b✦ LPM: &fWystrzelenie Blow &8(25 MP, 2.5s cd)"
+      - "&f✦ Shift + LPM: &fZaklęcia Wiatru / Wir Powietrza"
+      - "&d✦ PPM: &fOtwórz menu zaklęć"
+
+  bone_sword:
+    display_name: "&f&lKościany Miecz"
+    base_material: WOODEN_SWORD
+    model: "weapons/bone_sword"
+    custom_model_data: 10020
+    unbreakable: true
+    stats:
+      attack_damage: 7.0
+      attack_speed: 1.6
+    lore:
+      - "&7Wykuty z prastarych kości bestii."
+      - "&7Obsługuje magiczne runy i ulepszenia."
+
+  custom_bow:
+    display_name: "&6&lWzmocniony Długi Łuk"
+    base_material: BOW
+    model: "weapons/custom_bow"
+    custom_model_data: 10021
+    unbreakable: true
+    lore:
+      - "&7Potężny łuk kompozytowy o wielkim zasięgu."
+      - "&7Obsługuje specjalne efekty strzałów."
+
+  meteor_pickaxe:
+    display_name: "&4&lKilof z Meteorytu"
+    base_material: NETHERITE_PICKAXE
+    model: "weapons/meteor_pickaxe"
+    custom_model_data: 10014
+    unbreakable: true
+    lore:
+      - "&7Meteorytowy kilof kruszący najtwardsze rudy kosmiczne."
+

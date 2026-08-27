@@ -32,7 +32,8 @@ public class TomeSpellGui implements InventoryHolder {
         this.tomeItem = tomeItem;
         this.spellRegistry = spellRegistry;
         this.manaManager = manaManager;
-        this.inventory = Bukkit.createInventory(this, 45, ChatColor.DARK_RED + "✦ TOM OGNIA: ZAKLĘCIA ✦");
+        boolean isAir = MagicItemManager.isAirWand(tomeItem);
+        this.inventory = Bukkit.createInventory(this, 45, isAir ? ChatColor.DARK_AQUA + "✦ RÓŻDŻKA FENÓW: ZAKLĘCIA ✦" : ChatColor.DARK_RED + "✦ TOM OGNIA: ZAKLĘCIA ✦");
         buildGui();
     }
 
@@ -49,19 +50,30 @@ public class TomeSpellGui implements InventoryHolder {
         String primaryId = MagicItemManager.getPrimarySpellId(tomeItem);
         String secondaryId = MagicItemManager.getSecondarySpellId(tomeItem);
         Set<String> upgrades = MagicItemManager.getUpgrades(tomeItem);
+        boolean isAir = MagicItemManager.isAirWand(tomeItem);
 
         Spell primary = spellRegistry.getSpell(primaryId);
         Spell secondary = spellRegistry.getSpell(secondaryId);
 
-        // --- RZĄD 1 (Slot 4: Info Tomu) ---
+        // --- RZĄD 1 (Slot 4: Info Przedmiotu) ---
         List<String> tomeLore = new ArrayList<>();
-        tomeLore.add("§7Starożytna księga zawierająca pierwotne zaklęcia.");
-        tomeLore.add("");
-        tomeLore.add("§6✦ Poziom Tomu: §e" + level + " §7(Ulepsz w §5Ołtarzu Arkanów§7)");
-        tomeLore.add("§c⚔ Zabójstwa Magią: §f" + kills);
-        tomeLore.add("§b✦ Aktualna Mana: §f" + manaManager.getMana(player) + "/" + manaManager.getMaxMana(player) + " MP");
-        tomeLore.add("§e✦ Aktywne Ulepszenia: §f" + (upgrades.isEmpty() ? "§7Brak" : upgrades.size()));
-        inventory.setItem(4, ProgressionMenuGui.createItem(Material.WRITABLE_BOOK, "§c§l✦ TOM OGNIA ✦", tomeLore));
+        if (isAir) {
+            tomeLore.add("§7Mistyczna różdżka wiatru wykuta z esencji fenów.");
+            tomeLore.add("");
+            tomeLore.add("§6✦ Poziom Różdżki: §e" + level + " §7(Ulepsz w §5Ołtarzu Arkanów§7)");
+            tomeLore.add("§c⚔ Zabójstwa Magią: §f" + kills);
+            tomeLore.add("§b✦ Aktualna Mana: §f" + manaManager.getMana(player) + "/" + manaManager.getMaxMana(player) + " MP");
+            tomeLore.add("§e✦ Aktywne Ulepszenia: §f" + (upgrades.isEmpty() ? "§7Brak" : upgrades.size()));
+            inventory.setItem(4, ProgressionMenuGui.createItem(Material.FEATHER, "§b§l✦ RÓŻDŻKA FENÓW ✦", tomeLore));
+        } else {
+            tomeLore.add("§7Starożytna księga zawierająca pierwotne zaklęcia.");
+            tomeLore.add("");
+            tomeLore.add("§6✦ Poziom Tomu: §e" + level + " §7(Ulepsz w §5Ołtarzu Arkanów§7)");
+            tomeLore.add("§c⚔ Zabójstwa Magią: §f" + kills);
+            tomeLore.add("§b✦ Aktualna Mana: §f" + manaManager.getMana(player) + "/" + manaManager.getMaxMana(player) + " MP");
+            tomeLore.add("§e✦ Aktywne Ulepszenia: §f" + (upgrades.isEmpty() ? "§7Brak" : upgrades.size()));
+            inventory.setItem(4, ProgressionMenuGui.createItem(Material.WRITABLE_BOOK, "§c§l✦ TOM OGNIA ✦", tomeLore));
+        }
 
         // --- RZĄD 2: PUSTY (pozostają panele) ---
 

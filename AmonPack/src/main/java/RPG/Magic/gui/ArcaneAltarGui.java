@@ -42,6 +42,7 @@ public class ArcaneAltarGui implements InventoryHolder {
         }
 
         boolean isTome = isMagicItem(mainHandItem);
+        boolean isAir = MagicItemManager.isAirWand(mainHandItem);
 
         // Slot 4: Info o trzymanym przedmiocie
         if (isTome) {
@@ -49,7 +50,7 @@ public class ArcaneAltarGui implements InventoryHolder {
             int kills = MagicItemManager.getTomeKills(mainHandItem);
             List<String> lore = List.of(
                     "§7Aktualnie trzymany przedmiot magiczny:",
-                    "§c§l" + (mainHandItem.hasItemMeta() && mainHandItem.getItemMeta().hasDisplayName() ? mainHandItem.getItemMeta().getDisplayName() : "Tom Magii"),
+                    "§c§l" + (mainHandItem.hasItemMeta() && mainHandItem.getItemMeta().hasDisplayName() ? mainHandItem.getItemMeta().getDisplayName() : (isAir ? "Różdżka Fenów" : "Tom Magii")),
                     "",
                     "§6✦ Poziom: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills,
                     "§a✔ Gotowy do ulepszenia lub rozwoju czarów!"
@@ -57,7 +58,7 @@ public class ArcaneAltarGui implements InventoryHolder {
             inventory.setItem(4, ProgressionMenuGui.createItem(mainHandItem.getType(), "§5§l✦ UMIESZCZONY PRZEDMIOT ✦", lore));
         } else {
             List<String> lore = List.of(
-                    "§cTrzymaj w głównej dłoni magiczny tom (np. Tom Ognia),",
+                    "§cTrzymaj w głównej dłoni magiczny przedmiot (np. Tom Ognia lub Różdżkę Fenów),",
                     "§caby móc korzystać z funkcji Ołtarza Arkanów!"
             );
             inventory.setItem(4, ProgressionMenuGui.createItem(Material.BARRIER, "§c§lBrak Magicznego Przedmiotu", lore));
@@ -69,54 +70,76 @@ public class ArcaneAltarGui implements InventoryHolder {
             int kills = MagicItemManager.getTomeKills(mainHandItem);
             List<String> upgradeLore = new ArrayList<>();
 
-            if (level == 1) {
-                upgradeLore.add("§7Awansuj swój tom na §6Poziom II (Adept Ognia)§7.");
-                upgradeLore.add("§7Odblokowuje zaklęcia: §cBlazing §7oraz §6Fire Circle§7.");
-                upgradeLore.add("");
-                upgradeLore.add("§eWymagania awansu:");
-                upgradeLore.add((kills >= 5 ? "§a✔" : "§c❌") + " §7Wymagane zabójstwa magią: §f" + kills + "/5");
-                upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_POWDER), 2) ? "§a✔" : "§c❌") + " §72x Płomienny Proszek (Blaze Powder)");
-                upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.FIRE_CHARGE), 1) ? "§a✔" : "§c❌") + " §71x Ognista Kula (Fire Charge)");
-                upgradeLore.add((player.getLevel() >= 5 ? "§a✔" : "§c❌") + " §75 Poziomów Doświadczenia (EXP)");
-                // upgradeLore.add("§8# Wymagany Stage: 2 (Dla testu wyłączone)");
-                // upgradeLore.add("§8# Wymagany Skill Level: 5 (Dla testu wyłączone)");
-                upgradeLore.add("");
-                boolean canUpgrade = kills >= 5 && player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_POWDER), 2) && player.getInventory().containsAtLeast(new ItemStack(Material.FIRE_CHARGE), 1) && player.getLevel() >= 5;
-                if (canUpgrade) {
-                    upgradeLore.add("§a✦ Kliknij, aby ulepszyć tom do Poziomu II!");
+            if (isAir) {
+                if (level == 1) {
+                    upgradeLore.add("§7Awansuj różdżkę na §bPoziom II (Władca Wichrów)§7.");
+                    upgradeLore.add("§7Odblokowuje zaklęcia: §fAirblade §7oraz §bWir Powietrza§7.");
+                    upgradeLore.add("");
+                    upgradeLore.add("§eWymagania awansu:");
+                    upgradeLore.add((kills >= 5 ? "§a✔" : "§c❌") + " §7Wymagane zabójstwa magią: §f" + kills + "/5");
+                    upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.ROTTEN_FLESH), 10) ? "§a✔" : "§c❌") + " §710x Zgniłe Mięso");
+                    upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.FEATHER), 4) ? "§a✔" : "§c❌") + " §74x Pióro");
+                    upgradeLore.add((player.getLevel() >= 5 ? "§a✔" : "§c❌") + " §75 Poziomów Doświadczenia (EXP)");
+                    upgradeLore.add("");
+                    boolean canUpgrade = kills >= 5 && player.getInventory().containsAtLeast(new ItemStack(Material.ROTTEN_FLESH), 10) && player.getInventory().containsAtLeast(new ItemStack(Material.FEATHER), 4) && player.getLevel() >= 5;
+                    if (canUpgrade) {
+                        upgradeLore.add("§a✦ Kliknij, aby ulepszyć różdżkę do Poziomu II!");
+                    } else {
+                        upgradeLore.add("§c❌ Nie spełniasz wszystkich wymagań!");
+                    }
+                    inventory.setItem(11, ProgressionMenuGui.createItem(Material.ANVIL, "§b§l[ ✦ ULEPSZ RÓŻDŻKĘ -> POZIOM II ]", upgradeLore));
                 } else {
-                    upgradeLore.add("§c❌ Nie spełniasz wszystkich wymagań!");
+                    upgradeLore.add("§aTen przedmiot osiągnął już maksymalny poziom mistrzostwa!");
+                    inventory.setItem(11, ProgressionMenuGui.createItem(Material.NETHER_STAR, "§a§l[ ✦ MAKSYMALNY POZIOM ✦ ]", upgradeLore));
                 }
-                inventory.setItem(11, ProgressionMenuGui.createItem(Material.ANVIL, "§6§l[ ✦ ULEPSZ PRZEDMIOT -> POZIOM II ]", upgradeLore));
-            } else if (level == 2) {
-                upgradeLore.add("§7Awansuj swój tom na §6Poziom III (Mistrz Płomieni)§7.");
-                upgradeLore.add("§7Odblokowuje zaklęcia: §4FlashPoint §7oraz §cBarrage§7.");
-                upgradeLore.add("");
-                upgradeLore.add("§eWymagania awansu:");
-                upgradeLore.add((kills >= 15 ? "§a✔" : "§c❌") + " §7Wymagane zabójstwa magią: §f" + kills + "/15");
-                upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_ROD), 4) ? "§a✔" : "§c❌") + " §74x Płomienna Różdżka (Blaze Rod)");
-                upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.MAGMA_BLOCK), 2) ? "§a✔" : "§c❌") + " §72x Blok Magmy");
-                upgradeLore.add((player.getLevel() >= 10 ? "§a✔" : "§c❌") + " §710 Poziomów Doświadczenia (EXP)");
-                upgradeLore.add("");
-                boolean canUpgrade = kills >= 15 && player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_ROD), 4) && player.getInventory().containsAtLeast(new ItemStack(Material.MAGMA_BLOCK), 2) && player.getLevel() >= 10;
-                if (canUpgrade) {
-                    upgradeLore.add("§a✦ Kliknij, aby ulepszyć tom do Poziomu III!");
-                } else {
-                    upgradeLore.add("§c❌ Nie spełniasz wszystkich wymagań!");
-                }
-                inventory.setItem(11, ProgressionMenuGui.createItem(Material.NETHER_STAR, "§6§l[ ✦ ULEPSZ PRZEDMIOT -> POZIOM III ]", upgradeLore));
             } else {
-                upgradeLore.add("§aTen przedmiot osiągnął już maksymalny poziom mistrzostwa!");
-                inventory.setItem(11, ProgressionMenuGui.createItem(Material.NETHER_STAR, "§a§l[ ✦ MAKSYMALNY POZIOM ✦ ]", upgradeLore));
+                if (level == 1) {
+                    upgradeLore.add("§7Awansuj swój tom na §6Poziom II (Adept Ognia)§7.");
+                    upgradeLore.add("§7Odblokowuje zaklęcia: §cBlazing §7oraz §6Fire Circle§7.");
+                    upgradeLore.add("");
+                    upgradeLore.add("§eWymagania awansu:");
+                    upgradeLore.add((kills >= 5 ? "§a✔" : "§c❌") + " §7Wymagane zabójstwa magią: §f" + kills + "/5");
+                    upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_POWDER), 2) ? "§a✔" : "§c❌") + " §72x Płomienny Proszek (Blaze Powder)");
+                    upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.FIRE_CHARGE), 1) ? "§a✔" : "§c❌") + " §71x Ognista Kula (Fire Charge)");
+                    upgradeLore.add((player.getLevel() >= 5 ? "§a✔" : "§c❌") + " §75 Poziomów Doświadczenia (EXP)");
+                    upgradeLore.add("");
+                    boolean canUpgrade = kills >= 5 && player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_POWDER), 2) && player.getInventory().containsAtLeast(new ItemStack(Material.FIRE_CHARGE), 1) && player.getLevel() >= 5;
+                    if (canUpgrade) {
+                        upgradeLore.add("§a✦ Kliknij, aby ulepszyć tom do Poziomu II!");
+                    } else {
+                        upgradeLore.add("§c❌ Nie spełniasz wszystkich wymagań!");
+                    }
+                    inventory.setItem(11, ProgressionMenuGui.createItem(Material.ANVIL, "§6§l[ ✦ ULEPSZ PRZEDMIOT -> POZIOM II ]", upgradeLore));
+                } else if (level == 2) {
+                    upgradeLore.add("§7Awansuj swój tom na §6Poziom III (Mistrz Płomieni)§7.");
+                    upgradeLore.add("§7Odblokowuje zaklęcia: §4FlashPoint §7oraz §cBarrage§7.");
+                    upgradeLore.add("");
+                    upgradeLore.add("§eWymagania awansu:");
+                    upgradeLore.add((kills >= 15 ? "§a✔" : "§c❌") + " §7Wymagane zabójstwa magią: §f" + kills + "/15");
+                    upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_ROD), 4) ? "§a✔" : "§c❌") + " §74x Płomienna Różdżka (Blaze Rod)");
+                    upgradeLore.add((player.getInventory().containsAtLeast(new ItemStack(Material.MAGMA_BLOCK), 2) ? "§a✔" : "§c❌") + " §72x Blok Magmy");
+                    upgradeLore.add((player.getLevel() >= 10 ? "§a✔" : "§c❌") + " §710 Poziomów Doświadczenia (EXP)");
+                    upgradeLore.add("");
+                    boolean canUpgrade = kills >= 15 && player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_ROD), 4) && player.getInventory().containsAtLeast(new ItemStack(Material.MAGMA_BLOCK), 2) && player.getLevel() >= 10;
+                    if (canUpgrade) {
+                        upgradeLore.add("§a✦ Kliknij, aby ulepszyć tom do Poziomu III!");
+                    } else {
+                        upgradeLore.add("§c❌ Nie spełniasz wszystkich wymagań!");
+                    }
+                    inventory.setItem(11, ProgressionMenuGui.createItem(Material.NETHER_STAR, "§6§l[ ✦ ULEPSZ PRZEDMIOT -> POZIOM III ]", upgradeLore));
+                } else {
+                    upgradeLore.add("§aTen przedmiot osiągnął już maksymalny poziom mistrzostwa!");
+                    inventory.setItem(11, ProgressionMenuGui.createItem(Material.NETHER_STAR, "§a§l[ ✦ MAKSYMALNY POZIOM ✦ ]", upgradeLore));
+                }
             }
         } else {
-            inventory.setItem(11, ProgressionMenuGui.createItem(Material.GRAY_DYE, "§7[ Ulepsz Przedmiot - Wymagany Tom ]", List.of("§7Włóż lub trzymaj tom w dłoni.")));
+            inventory.setItem(11, ProgressionMenuGui.createItem(Material.GRAY_DYE, "§7[ Ulepsz Przedmiot - Wymagany Magiczny Przedmiot ]", List.of("§7Włóż lub trzymaj przedmiot w dłoni.")));
         }
 
         // Slot 15: [ ROZWIJAJ MAGIĘ ]
         if (isTome) {
             List<String> treeLore = List.of(
-                    "§7Otwiera drzewko ulepszeń zaklęć tego tomu.",
+                    "§7Otwiera drzewko ulepszeń zaklęć tego przedmiotu.",
                     "§7Pozwala na zakup trwałych ulepszeń:",
                     "§b✦ Mniejszy koszt many (-10 MP)",
                     "§e✦ Mniejszy cooldown (-1.0s)",
@@ -127,7 +150,7 @@ public class ArcaneAltarGui implements InventoryHolder {
             );
             inventory.setItem(15, ProgressionMenuGui.createItem(Material.ENCHANTING_TABLE, "§d§l[ ✧ ROZWIJAJ MAGIĘ ✧ ]", treeLore));
         } else {
-            inventory.setItem(15, ProgressionMenuGui.createItem(Material.GRAY_DYE, "§7[ Rozwijaj Magię - Wymagany Tom ]", List.of("§7Włóż lub trzymaj tom w dłoni.")));
+            inventory.setItem(15, ProgressionMenuGui.createItem(Material.GRAY_DYE, "§7[ Rozwijaj Magię - Wymagany Magiczny Przedmiot ]", List.of("§7Włóż lub trzymaj przedmiot w dłoni.")));
         }
 
         // Slot 22: Zamknij
@@ -136,8 +159,10 @@ public class ArcaneAltarGui implements InventoryHolder {
 
     private boolean isMagicItem(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return false;
+        if (MagicItemManager.isAirWand(item)) return true;
         if (item.getType() == Material.BOOK || item.getType() == Material.ENCHANTED_BOOK) return true;
-        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && (item.getItemMeta().getDisplayName().toLowerCase().contains("tom") || item.getItemMeta().getDisplayName().toLowerCase().contains("tome"))) return true;
+        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && (item.getItemMeta().getDisplayName().toLowerCase().contains("tom") || item.getItemMeta().getDisplayName().toLowerCase().contains("tome") || item.getItemMeta().getDisplayName().toLowerCase().contains("różdżka") || item.getItemMeta().getDisplayName().toLowerCase().contains("fen"))) return true;
+        if (item.hasItemMeta() && item.getItemMeta().hasCustomModelData() && (item.getItemMeta().getCustomModelData() == 20001 || item.getItemMeta().getCustomModelData() == 20002)) return true;
         return false;
     }
 
@@ -156,6 +181,32 @@ public class ArcaneAltarGui implements InventoryHolder {
         if (slot == 11) {
             int level = MagicItemManager.getTomeLevel(mainHandItem);
             int kills = MagicItemManager.getTomeKills(mainHandItem);
+            boolean isAir = MagicItemManager.isAirWand(mainHandItem);
+
+            if (isAir) {
+                if (level == 1) {
+                    boolean hasItems = player.getInventory().containsAtLeast(new ItemStack(Material.ROTTEN_FLESH), 10) && player.getInventory().containsAtLeast(new ItemStack(Material.FEATHER), 4);
+                    boolean hasExp = player.getLevel() >= 5;
+                    if (kills >= 5 && hasItems && hasExp) {
+                        player.getInventory().removeItem(new ItemStack(Material.ROTTEN_FLESH, 10));
+                        player.getInventory().removeItem(new ItemStack(Material.FEATHER, 4));
+                        player.setLevel(player.getLevel() - 5);
+
+                        MagicItemManager.setTomeLevel(mainHandItem, 2);
+
+                        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.2f);
+                        player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.0f);
+                        player.sendMessage("§6§l✦ AWANS! §aTwoja Różdżka Fenów została ulepszona na §bPoziom II (Władca Wichrów)§a!");
+                        player.sendMessage("§dOdblokowano nowe zaklęcia: §fAirblade §doraz §bWir Powietrza§d!");
+
+                        buildGui();
+                    } else {
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                        player.sendMessage("§cNie spełniasz wymagań do ulepszenia różdżki!");
+                    }
+                }
+                return;
+            }
 
             if (level == 1) {
                 boolean hasItems = player.getInventory().containsAtLeast(new ItemStack(Material.BLAZE_POWDER), 2) && player.getInventory().containsAtLeast(new ItemStack(Material.FIRE_CHARGE), 1);

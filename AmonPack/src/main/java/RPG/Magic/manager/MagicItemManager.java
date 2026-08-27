@@ -80,11 +80,20 @@ public class MagicItemManager {
         updateTomeLore(item);
     }
 
+    public static boolean isAirWand(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        if (item.getItemMeta().hasDisplayName() && (item.getItemMeta().getDisplayName().toLowerCase().contains("fen") || item.getItemMeta().getDisplayName().toLowerCase().contains("różdżka") || item.getItemMeta().getDisplayName().toLowerCase().contains("wand"))) {
+            return true;
+        }
+        return item.getItemMeta().hasCustomModelData() && item.getItemMeta().getCustomModelData() == 20002;
+    }
+
     public static String getPrimarySpellId(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return "fireblast";
+        String defaultSpell = isAirWand(item) ? "blow" : "fireblast";
+        if (item == null || !item.hasItemMeta()) return defaultSpell;
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
         String id = pdc.get(SPELL_PRIMARY_KEY, PersistentDataType.STRING);
-        return (id != null && !id.isEmpty()) ? id : "fireblast";
+        return (id != null && !id.isEmpty()) ? id : defaultSpell;
     }
 
     public static void setPrimarySpellId(ItemStack item, String spellId) {
@@ -117,11 +126,18 @@ public class MagicItemManager {
         String primary = getPrimarySpellId(item);
         String secondary = getSecondarySpellId(item);
         Set<String> upgrades = getUpgrades(item);
+        boolean isAir = isAirWand(item);
 
         List<String> lore = new ArrayList<>();
-        lore.add("§7Starożytna księga zawierająca pierwotne zaklęcia.");
-        lore.add("");
-        lore.add("§6✦ Poziom Tomu: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills);
+        if (isAir) {
+            lore.add("§7Mistyczna różdżka wiatru wykuta z esencji fenów.");
+            lore.add("");
+            lore.add("§6✦ Poziom Różdżki: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills);
+        } else {
+            lore.add("§7Starożytna księga zawierająca pierwotne zaklęcia.");
+            lore.add("");
+            lore.add("§6✦ Poziom Tomu: §e" + level + " §8| §c⚔ Zabójstwa: §f" + kills);
+        }
         lore.add("§a✦ Zaklęcie Główne (LPM): §f" + formatSpellName(primary));
         lore.add("§b✦ Drugi Krąg (Shift+LPM): §f" + (secondary.equalsIgnoreCase("none") ? "§8[Brak]" : formatSpellName(secondary)));
         lore.add("");
@@ -133,13 +149,16 @@ public class MagicItemManager {
         item.setItemMeta(meta);
     }
 
-    private static String formatSpellName(String id) {
+    public static String formatSpellName(String id) {
         return switch (id.toLowerCase()) {
             case "fireblast" -> "Fire Blast";
             case "blazing" -> "Blazing";
             case "flashpoint" -> "FlashPoint";
             case "fire_circle" -> "Fire Circle";
             case "barrage" -> "Barrage";
+            case "blow" -> "Blow";
+            case "airblade" -> "Airblade";
+            case "air_vortex" -> "Wir Powietrza";
             default -> id;
         };
     }
