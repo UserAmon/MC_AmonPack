@@ -2,6 +2,7 @@ package CustomContent.Items;
 
 import CustomContent.Pack.PackManager;
 import Plugin.AmonPackPlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -81,6 +82,23 @@ public class CustomItemManager {
                 }
                 packManager.registerModelOverride(mat.name(), cmd, modelPath);
             }
+        }
+        registerRecipes();
+    }
+
+    public void registerRecipes() {
+        NamespacedKey tableRecipeKey = new NamespacedKey(AmonPackPlugin.plugin, "magic_crafting_table_recipe");
+        try {
+            Bukkit.removeRecipe(tableRecipeKey);
+        } catch (Throwable ignored) {}
+
+        ItemStack tableItem = createItemStack("magic_crafting_table");
+        if (tableItem != null) {
+            org.bukkit.inventory.ShapedRecipe recipe = new org.bukkit.inventory.ShapedRecipe(tableRecipeKey, tableItem);
+            recipe.shape("PPP", "CCC", "CCC");
+            recipe.setIngredient('P', Material.PAPER);
+            recipe.setIngredient('C', Material.COBBLESTONE);
+            Bukkit.addRecipe(recipe);
         }
     }
 

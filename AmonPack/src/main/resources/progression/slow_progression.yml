@@ -682,7 +682,20 @@ stages:
         depends_on:
           - stone_create_storage
         reward:
-          exp: 35
+          exp: 25
+      stone_craft_magic_crafting_table:
+        title: "Stwórz Magiczny Stół Warsztatowy"
+        description: "Ułóż 3 kartki papieru na górze i 6 bloków bruku na dole, aby stworzyć stół do wykuwania form i artefaktów."
+        category: BUILDING_BASE
+        objective_type: craft_item
+        target: magic_crafting_table
+        amount: 1
+        required: true
+        icon: ENCHANTING_TABLE
+        depends_on:
+          - stone_create_storage
+        reward:
+          exp: 40
 
       stone_harvest_crops_32:
         title: "Zbierz plony z farmy x32"

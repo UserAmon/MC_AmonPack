@@ -123,7 +123,8 @@ public class PackManager {
                 "meteor_axe.bbmodel", "meteor_axe.json", "meteor_axe.png",
                 "meteor_scythe.bbmodel", "meteor_scythe.json", "meteor_scythe.png",
                 "meteor_shard.bbmodel", "meteor_shard.json", "meteor_shard.png",
-                "meteoryt_ore.bbmodel", "meteoryt_ore.json", "meteoryt_ore.png"
+                "meteoryt_ore.bbmodel", "meteoryt_ore.json", "meteoryt_ore.png",
+                "magic_crafting_table.json", "magic_crafting_table.png"
         };
 
         for (String file : sampleFiles) {
@@ -283,6 +284,7 @@ public class PackManager {
             registerModelOverride("carved_pumpkin", 20001, "amonpack:boss/Spirit_Earth_2");
             registerModelOverride("note_block", 30001, "amonpack:block/meteoryt_ore");
             registerModelOverride("iron_nugget", 30001, "amonpack:block/meteoryt_ore");
+            registerModelOverride("note_block", 30002, "amonpack:block/magic_crafting_table");
 
             // 5. Generowanie plików dla 1.14-1.21.1 ORAZ 1.21.2+ (assets/minecraft/models/item oraz assets/minecraft/items)
             for (Map.Entry<String, Map<Integer, String>> entry : vanillaOverrides.entrySet()) {

@@ -14,6 +14,12 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 
+import RPG.Crafting.CraftingMenager;
+import RPG.Progression.ProgressionManager;
+import RPG.Progression.model.ObjectiveType;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
+
 import java.util.Random;
 
 public class CustomBlockListener implements Listener {
@@ -38,7 +44,33 @@ public class CustomBlockListener implements Listener {
                 CustomBlock match = blockManager.getAllCustomBlocks().get(customItemId);
                 if (match != null) {
                     blockManager.placeBlock(event.getBlock(), match.getId());
+
+                    if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                        ProgressionManager.getInstance().getProgressionService().handleObjective(event.getPlayer(), ObjectiveType.PLACE_BLOCK, match.getId(), 1);
+                    }
                 }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getClickedBlock() == null) return;
+
+        CustomBlock cb = blockManager.getCustomBlock(event.getClickedBlock());
+        if (cb != null && cb.getId().equalsIgnoreCase("magic_crafting_table")) {
+            event.setCancelled(true);
+            Player player = event.getPlayer();
+            Location loc = event.getClickedBlock().getLocation().add(0.5, 1.0, 0.5);
+
+            player.playSound(loc, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);
+            player.spawnParticle(Particle.ENCHANT, loc, 20, 0.4, 0.4, 0.4, 0.5);
+
+            CraftingMenager.OpenMoldCategory(player);
+
+            if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
+                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.USE_BLOCK, "magic_crafting_table", 1);
             }
         }
     }

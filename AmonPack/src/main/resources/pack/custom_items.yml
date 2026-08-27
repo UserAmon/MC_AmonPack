@@ -1,4 +1,16 @@
 items:
+  magic_crafting_table:
+    display_name: "&d&lMagiczny Stół Warsztatowy"
+    base_material: NOTE_BLOCK
+    model: "block/magic_crafting_table"
+    custom_model_data: 30002
+    unbreakable: true
+    lore:
+      - "&7Nasycony mistyczną energią stół rzemieślniczy."
+      - "&7Pozwala na wykuwanie form, pancerzy i broni."
+      - ""
+      - "&e✦ Kliknij PPM po postawieniu, aby otworzyć magiczne rzemiosło!"
+
   meteor_scythe:
     display_name: "&4&lKosa z Meteorytu"
     base_material: DIAMOND_SWORD

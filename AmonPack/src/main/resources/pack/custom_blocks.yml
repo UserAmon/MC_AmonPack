@@ -1,4 +1,20 @@
 blocks:
+  magic_crafting_table:
+    display_name: "&d&lMagiczny Stół Warsztatowy"
+    base_material: NOTE_BLOCK
+    model: "block/magic_crafting_table"
+    custom_model_data: 30002
+    hardness: 2.5
+    required_tool: "PICKAXE"
+    required_tier: 0 # Dowolny kilof (drewniany+)
+    drops:
+      custom_item: "magic_crafting_table"
+      min: 1
+      max: 1
+      exp: 5.0
+    generation:
+      enabled: false
+
   meteoryt_ore:
     display_name: "&4&lRuda Meteorytu"
     base_material: NOTE_BLOCK

@@ -53,6 +53,15 @@ public class ProgressionCraftListener implements Listener {
         // 2. Trigger CRAFT_ITEM objective
         progressionService.handleObjective(player, ObjectiveType.CRAFT_ITEM, matName, amount);
 
+        // Custom Item Check
+        if (Plugin.AmonPackPlugin.customItemManager != null) {
+            String customId = Plugin.AmonPackPlugin.customItemManager.getCustomItemId(result);
+            if (customId != null) {
+                progressionService.handleObjective(player, ObjectiveType.CRAFT_ITEM, customId, amount);
+                progressionService.handleObjective(player, ObjectiveType.CRAFT_ITEM, "custom:" + customId, amount);
+            }
+        }
+
         // Armor set check
         checkArmorSetCraft(player, matName);
     }
