@@ -64,4 +64,8 @@ public class CustomItem {
     public void setEffectDuration(int effectDuration) { this.effectDuration = effectDuration; }
     public double getEffectValue() { return effectValue; }
     public void setEffectValue(double effectValue) { this.effectValue = effectValue; }
+
+    private String model;
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
 }

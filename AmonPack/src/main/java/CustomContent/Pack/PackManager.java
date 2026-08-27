@@ -176,7 +176,13 @@ public class PackManager {
             mcItems121.mkdirs();
             mcTexGui.mkdirs();
 
-            // Kopiowanie pełnego drzewa amonpack (textures i models)
+            // A. Wyodrębnienie wszystkich zasobów wbudowanych w JAR (pack/amonpack oraz pack/custom)
+            extractJarResources("pack/amonpack/textures", amonpackTex);
+            extractJarResources("pack/amonpack/models", amonpackModels);
+            extractJarResources("pack/custom", new File(packDir, "custom"));
+            extractJarResources("pack/amonpack/textures", new File(tempBuildDir, "assets/minecraft/textures"));
+
+            // B. Kopiowanie z lokalnego folderu amonpack na dysku serwera (jeśli istnieje)
             File amonpackDir = new File(AmonPackPlugin.plugin.getDataFolder(), "amonpack");
             if (!amonpackDir.exists()) {
                 amonpackDir = new File(AmonPackPlugin.plugin.getDataFolder().getParentFile().getParentFile(), "amonpack");
@@ -185,14 +191,12 @@ public class PackManager {
                 amonpackDir = new File("amonpack");
             }
 
-            // Kopiuj tekstury z folderu amonpack/textures
             File amonTexSrc = new File(amonpackDir, "textures");
             if (amonTexSrc.exists() && amonTexSrc.isDirectory()) {
                 copyDirectoryRecursive(amonTexSrc, amonpackTex);
                 copyDirectoryRecursive(amonTexSrc, new File(tempBuildDir, "assets/minecraft/textures"));
             }
 
-            // Kopiuj modele z folderu amonpack/models
             File amonModelsSrc = new File(amonpackDir, "models");
             if (amonModelsSrc.exists() && amonModelsSrc.isDirectory()) {
                 copyDirectoryRecursive(amonModelsSrc, amonpackModels);
@@ -272,11 +276,21 @@ public class PackManager {
                 }
             }
 
-            // Tworzenie aliasów katalogowych block <-> blocks, item <-> items
+            // Tworzenie aliasów katalogowych block <-> blocks, item <-> items, magic, weapons, crafting
             mirrorDirectory(new File(amonpackModels, "blocks"), new File(amonpackModels, "block"));
+            mirrorDirectory(new File(amonpackModels, "block"), new File(amonpackModels, "blocks"));
             mirrorDirectory(new File(amonpackTex, "blocks"), new File(amonpackTex, "block"));
+            mirrorDirectory(new File(amonpackTex, "block"), new File(amonpackTex, "blocks"));
+
             mirrorDirectory(new File(amonpackModels, "crafting"), new File(amonpackModels, "item"));
             mirrorDirectory(new File(amonpackTex, "crafting"), new File(amonpackTex, "item"));
+            mirrorDirectory(new File(amonpackModels, "weapons"), new File(amonpackModels, "item"));
+            mirrorDirectory(new File(amonpackTex, "weapons"), new File(amonpackTex, "item"));
+            mirrorDirectory(new File(amonpackModels, "magic"), new File(amonpackModels, "item"));
+            mirrorDirectory(new File(amonpackTex, "magic"), new File(amonpackTex, "item"));
+
+            // Mirror textures do minecraft/textures
+            copyDirectoryRecursive(amonpackTex, new File(tempBuildDir, "assets/minecraft/textures"));
 
             // 4. Rejestracja modeli z konfiguracji i domyślnych modeli
             // Broń (WOODEN_SWORD)
@@ -543,6 +557,36 @@ public class PackManager {
                     } catch (Exception ignored) {}
                 }
             }
+        }
+    }
+
+    private void extractJarResources(String resourcePrefix, File targetDirectory) {
+        try {
+            java.security.CodeSource src = AmonPackPlugin.class.getProtectionDomain().getCodeSource();
+            if (src != null) {
+                java.net.URL jar = src.getLocation();
+                try (java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(jar.openStream())) {
+                    java.util.zip.ZipEntry e;
+                    while ((e = zip.getNextEntry()) != null) {
+                        String name = e.getName();
+                        if (name.startsWith(resourcePrefix) && !e.isDirectory()) {
+                            String relPath = name.substring(resourcePrefix.length());
+                            if (relPath.startsWith("/")) relPath = relPath.substring(1);
+                            File outFile = new File(targetDirectory, relPath);
+                            outFile.getParentFile().mkdirs();
+                            try (FileOutputStream fos = new FileOutputStream(outFile)) {
+                                byte[] buf = new byte[4096];
+                                int len;
+                                while ((len = zip.read(buf)) > 0) {
+                                    fos.write(buf, 0, len);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("[AmonPack] Błąd wyodrębniania zasobów z JAR (" + resourcePrefix + "): " + e.getMessage());
         }
     }
 

@@ -148,3 +148,120 @@ items:
       - "&7Lekkie i twarde buty meteorytowe."
       - " &9🛡 Pancerz: &f+4.0"
       - " &b✦ Prędkość ruchu: &f+5%"
+
+  boomerang:
+    display_name: "&b&lBumerang"
+    base_material: WOODEN_SWORD
+    model: "weapons/boomerang"
+    custom_model_data: 10000
+    unbreakable: true
+    lore:
+      - "&7Tradycyjna broń miotana plemienia wody."
+
+  wachlarz:
+    display_name: "&d&lŻelazny Wachlarz"
+    base_material: WOODEN_SWORD
+    model: "weapons/wachlarz"
+    custom_model_data: 10001
+    unbreakable: true
+    lore:
+      - "&7Elegancka i zabójcza broń Wojowniczek Kyoshi."
+
+  laska_aanga:
+    display_name: "&e&lLaska Aanga"
+    base_material: WOODEN_SWORD
+    model: "weapons/laska_aanga"
+    custom_model_data: 10002
+    unbreakable: true
+    lore:
+      - "&7Mistyczna laska magów powietrza pozwalająca na szybowanie."
+
+  bambus:
+    display_name: "&a&lKij Bambusowy"
+    base_material: WOODEN_SWORD
+    model: "weapons/bambus"
+    custom_model_data: 10003
+    unbreakable: true
+    lore:
+      - "&7Lekki i elastyczny kij treningowy."
+
+  earth_hammer:
+    display_name: "&6&lMłot Ziemi"
+    base_material: WOODEN_SWORD
+    model: "weapons/earth_hammer"
+    custom_model_data: 10004
+    unbreakable: true
+    lore:
+      - "&7Masywny młot bojowy magów ziemi kruszący skały."
+
+  msokka:
+    display_name: "&9&lKosmiczny Miecz Sokki"
+    base_material: WOODEN_SWORD
+    model: "weapons/msokka"
+    custom_model_data: 10005
+    unbreakable: true
+    lore:
+      - "&7Niezwykły czarny miecz wykuty z meteorytu przez Sokkę."
+
+  wlocznia_ognia:
+    display_name: "&c&lWłócznia Ognia"
+    base_material: WOODEN_SWORD
+    model: "weapons/wlocznia_ognia"
+    custom_model_data: 10006
+    unbreakable: true
+    lore:
+      - "&7Ognista włócznia gwardii Narodu Ognia."
+
+  sztylet:
+    display_name: "&8&lSztylet Cienia"
+    base_material: WOODEN_SWORD
+    model: "weapons/sztylet"
+    custom_model_data: 10007
+    unbreakable: true
+    lore:
+      - "&7Zabójczo ostry sztylet skrytobójców."
+
+  mold_empty:
+    display_name: "&7&lPusta Forma"
+    base_material: PAPER
+    model: "crafting/mold_empty"
+    custom_model_data: 10001
+    unbreakable: true
+    lore:
+      - "&7Czysta forma rzemieślnicza do wykuwania przedmiotów."
+
+  mold_full:
+    display_name: "&6&lWypełniona Forma"
+    base_material: PAPER
+    model: "crafting/mold_full"
+    custom_model_data: 10002
+    unbreakable: true
+    lore:
+      - "&7Gotowa forma nasycona magią i surowcami."
+
+  basalt_shard:
+    display_name: "&8&lOdłamek Bazaltu"
+    base_material: PAPER
+    model: "crafting/basalt_shard"
+    custom_model_data: 10004
+    unbreakable: true
+    lore:
+      - "&7Twardy, wulkaniczny odłamek bazaltowy."
+
+  firescroll:
+    display_name: "&c&lZwój Płomieni"
+    base_material: PAPER
+    model: "crafting/firescroll"
+    custom_model_data: 10005
+    unbreakable: true
+    lore:
+      - "&7Starożytny zwój zawierający sekrety magii ognia."
+
+  basalt_ore:
+    display_name: "&8&lRuda Bazaltu"
+    base_material: NOTE_BLOCK
+    model: "block/basalt_ore"
+    custom_model_data: 30003
+    unbreakable: true
+    lore:
+      - "&7Wulkaniczna ruda nasycona minerałami."

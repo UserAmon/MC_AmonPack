@@ -909,7 +909,7 @@ Craftable_Items:
 
   Tome_Fire:
     Material: BOOK
-    Name: §c§lTom Ognia
+    Name: "§c§lTom Ognia"
     Custom_Model_ID: 20001
     Mold:
       Items_To_Craft:
@@ -927,9 +927,9 @@ Craftable_Items:
       - Fire_Aspect
     Item:
       Lore:
-        l1: §7Starożytna księga zawierająca pierwotne zaklęcia płomieni.
-        l2: §6✦ LPM: §fWystrzelenie Fireblast §8(40 MP, 4s cd)
-        l3: §d✦ PPM: §fOtwórz menu przypisywania czarów
+        l1: "§7Starożytna księga zawierająca pierwotne zaklęcia płomieni."
+        l2: "§6✦ LPM: §fWystrzelenie Fireblast §8(40 MP, 4s cd)"
+        l3: "§d✦ PPM: §fOtwórz menu przypisywania czarów"
       Items_To_Craft:
         c1:
           Material: BOOK

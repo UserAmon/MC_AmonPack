@@ -151,6 +151,18 @@ public class ItemMold {
         return weaponID;
     }
 
+    public String getItemName() {
+        return ItemName;
+    }
+
+    public Material getItemMaterial() {
+        return ItemMaterial;
+    }
+
+    public Integer getCustomModelID() {
+        return CustomModelID;
+    }
+
     public List<ItemStack> getItemsRequiredToShapeMold() {
         return ItemsRequiredToShapeMold;
     }

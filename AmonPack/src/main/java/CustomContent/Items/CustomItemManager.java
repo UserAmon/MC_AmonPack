@@ -98,7 +98,56 @@ public class CustomItemManager {
             packManager.registerModelOverride("note_block", 30002, "amonpack:block/magic_crafting_table");
         }
 
+        // Gwarancja obecności Tomu Ognia
+        if (!items.containsKey("tome_fire")) {
+            CustomItem tome = new CustomItem("tome_fire", "§c§lTom Ognia", Material.BOOK, 20001);
+            tome.setUnbreakable(true);
+            tome.setLore(List.of(
+                    "§7Starożytna księga zawierająca pierwotne zaklęcia płomieni.",
+                    "",
+                    "§6✦ LPM: §fWystrzelenie aktywnego czaru §7(np. Fireblast)",
+                    "§e✦ Shift + LPM: §fRzucenie zaklęcia drugiego kręgu",
+                    "§d✦ PPM: §fOtwórz menu zaklęć i przypisz czary",
+                    "",
+                    "§b✦ Koszt Fireblast: §f40 MP §8| §eCooldown: §f4.0s"
+            ));
+            items.put("tome_fire", tome);
+            packManager.registerModelOverride("book", 20001, "amonpack:magic/tome_fire");
+            packManager.registerModelOverride("enchanted_book", 20001, "amonpack:magic/tome_fire");
+        }
+
+        // Rejestracja broni
+        registerDefaultItem("boomerang", "§b§lBumerang", Material.WOODEN_SWORD, 10000, "amonpack:weapons/boomerang");
+        registerDefaultItem("wachlarz", "§d§lŻelazny Wachlarz", Material.WOODEN_SWORD, 10001, "amonpack:weapons/wachlarz");
+        registerDefaultItem("laska_aanga", "§e§lLaska Aanga", Material.WOODEN_SWORD, 10002, "amonpack:weapons/laska_aanga");
+        registerDefaultItem("bambus", "§a§lKij Bambusowy", Material.WOODEN_SWORD, 10003, "amonpack:weapons/bambus");
+        registerDefaultItem("earth_hammer", "§6§lMłot Ziemi", Material.WOODEN_SWORD, 10004, "amonpack:weapons/earth_hammer");
+        registerDefaultItem("msokka", "§9§lKosmiczny Miecz Sokki", Material.WOODEN_SWORD, 10005, "amonpack:weapons/msokka");
+        registerDefaultItem("wlocznia_ognia", "§c§lWłócznia Ognia", Material.WOODEN_SWORD, 10006, "amonpack:weapons/wlocznia_ognia");
+        registerDefaultItem("sztylet", "§8§lSztylet Cienia", Material.WOODEN_SWORD, 10007, "amonpack:weapons/sztylet");
+
+        // Rejestracja rzemiosła
+        registerDefaultItem("mold_empty", "§7§lPusta Forma", Material.PAPER, 10001, "amonpack:crafting/mold_empty");
+        registerDefaultItem("mold_full", "§6§lWypełniona Forma", Material.PAPER, 10002, "amonpack:crafting/mold_full");
+        registerDefaultItem("meteor_shard", "§4§lOdłamek Meteorytu", Material.PAPER, 10003, "amonpack:crafting/meteor_shard");
+        registerDefaultItem("basalt_shard", "§8§lOdłamek Bazaltu", Material.PAPER, 10004, "amonpack:crafting/basalt_shard");
+        registerDefaultItem("firescroll", "§c§lZwój Płomieni", Material.PAPER, 10005, "amonpack:crafting/firescroll");
+
+        // Rejestracja bloków
+        registerDefaultItem("meteoryt_ore", "§4§lRuda Meteorytu", Material.NOTE_BLOCK, 30001, "amonpack:block/meteoryt_ore");
+        registerDefaultItem("basalt_ore", "§8§lRuda Bazaltu", Material.NOTE_BLOCK, 30003, "amonpack:block/basalt_ore");
+
         registerRecipes();
+    }
+
+    private void registerDefaultItem(String id, String name, Material mat, int cmd, String modelPath) {
+        if (!items.containsKey(id)) {
+            CustomItem ci = new CustomItem(id, name, mat, cmd);
+            ci.setModel(modelPath);
+            ci.setUnbreakable(true);
+            items.put(id, ci);
+        }
+        packManager.registerModelOverride(mat.name(), cmd, modelPath);
     }
 
     public void registerRecipes() {
@@ -143,10 +192,36 @@ public class CustomItemManager {
         return stack;
     }
 
+    public ItemStack createDefaultTomeFire() {
+        ItemStack stack = new ItemStack(Material.BOOK);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName("§c§lTom Ognia");
+            meta.setCustomModelData(20001);
+            meta.setUnbreakable(true);
+            meta.setLore(List.of(
+                    "§7Starożytna księga zawierająca pierwotne zaklęcia płomieni.",
+                    "",
+                    "§6✦ LPM: §fWystrzelenie aktywnego czaru §7(np. Fireblast)",
+                    "§e✦ Shift + LPM: §fRzucenie zaklęcia drugiego kręgu",
+                    "§d✦ PPM: §fOtwórz menu zaklęć i przypisz czary",
+                    "",
+                    "§b✦ Koszt Fireblast: §f40 MP §8| §eCooldown: §f4.0s"
+            ));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
+            meta.getPersistentDataContainer().set(ITEM_KEY, PersistentDataType.STRING, "tome_fire");
+            stack.setItemMeta(meta);
+        }
+        return stack;
+    }
+
     public ItemStack createItemStack(String itemId) {
         if (itemId == null) return null;
         if (itemId.equalsIgnoreCase("magic_crafting_table") && !items.containsKey("magic_crafting_table")) {
             return createDefaultMagicCraftingTable();
+        }
+        if (itemId.equalsIgnoreCase("tome_fire") && !items.containsKey("tome_fire")) {
+            return createDefaultTomeFire();
         }
         CustomItem customItem = items.get(itemId.toLowerCase(Locale.ROOT));
         if (customItem == null) return null;

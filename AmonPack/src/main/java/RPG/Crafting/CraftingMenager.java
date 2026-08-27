@@ -62,10 +62,16 @@ public class CraftingMenager {
                 List.of(ChatColor.DARK_GREEN + "Kliknij mnie aby otworzyć menu z wyborem Przedmiotów"),
                 1001);
 
-        inv.setItem(1, Weapon);
-        inv.setItem(3, Tool);
-        inv.setItem(5, Armor);
-        inv.setItem(7, Items);
+        ItemStack Tomes = FastEasyStackWithLoreModelData(Material.BOOK,
+                ChatColor.GOLD + " Magiczne Tomy",
+                List.of(ChatColor.DARK_GREEN + "Kliknij mnie aby otworzyć menu z wyborem Ksiąg Magii"),
+                20001);
+
+        inv.setItem(0, Weapon);
+        inv.setItem(2, Tool);
+        inv.setItem(4, Armor);
+        inv.setItem(6, Items);
+        inv.setItem(8, Tomes);
 
         player.openInventory(inv);
     }
@@ -86,6 +92,16 @@ public class CraftingMenager {
                 break;
             case 3:
                 ChosenMolds.addAll(AllCraftableItems);
+                break;
+            case 4:
+                for (Craftable_Item ci : AllCraftableItems) {
+                    if (ci.getItemMaterial() == Material.BOOK || ci.getItemName().toLowerCase().contains("tom") || ci.getItemName().toLowerCase().contains("tome")) {
+                        ChosenMolds.add(ci);
+                    }
+                }
+                if (ChosenMolds.isEmpty()) {
+                    ChosenMolds.addAll(AllCraftableItems);
+                }
                 break;
         }
         for (ItemMold mold : ChosenMolds) {

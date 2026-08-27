@@ -46,18 +46,22 @@ public class AmonCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
         switch (sub) {
             case "item":
+            case "items":
                 handleItem(sender, args);
                 break;
 
             case "block":
+            case "blocks":
                 handleBlock(sender, args);
                 break;
 
             case "boss":
+            case "bosses":
                 handleBoss(sender, args);
                 break;
 
             case "pack":
+            case "resourcepack":
                 handlePack(sender, args);
                 break;
 
