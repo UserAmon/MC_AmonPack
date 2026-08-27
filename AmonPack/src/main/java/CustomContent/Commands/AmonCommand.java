@@ -94,9 +94,9 @@ public class AmonCommand implements CommandExecutor {
         }
 
         if (args[1].equalsIgnoreCase("list")) {
-            sender.sendMessage("§6=== Dostępne Customowe Przedmioty ===");
+            sender.sendMessage("§6=== Dostępne Customowe Przedmioty (CustomModelData) ===");
             for (CustomItem ci : itemManager.getAllItems().values()) {
-                sender.sendMessage(" §7- §e" + ci.getId() + " §7(" + ci.getDisplayName() + "§7)");
+                sender.sendMessage(" §7- §e" + ci.getId() + " §8| §f" + ci.getBaseMaterial().name() + " §8| §6CMD: §a" + ci.getCustomModelData() + " §7(" + ci.getDisplayName() + "§7)");
             }
             return;
         }
@@ -136,9 +136,9 @@ public class AmonCommand implements CommandExecutor {
         }
 
         if (args[1].equalsIgnoreCase("list")) {
-            sender.sendMessage("§6=== Dostępne Customowe Bloki ===");
+            sender.sendMessage("§6=== Dostępne Customowe Bloki (CustomModelData) ===");
             for (CustomBlock cb : blockManager.getAllCustomBlocks().values()) {
-                sender.sendMessage(" §7- §e" + cb.getId() + " §7(" + cb.getDisplayName() + "§7)");
+                sender.sendMessage(" §7- §e" + cb.getId() + " §8| §f" + cb.getBaseMaterial().name() + " §8| §6CMD: §a" + cb.getCustomModelData() + " §7(" + cb.getDisplayName() + "§7)");
             }
             return;
         }
