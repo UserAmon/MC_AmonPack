@@ -353,17 +353,19 @@ public class Listeners implements Listener {
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack item = player.getInventory().getItemInMainHand();
 
-            Craftable_Tool c_tool = CraftingMenager.getCraftedToolByItem(item);
-            if (c_tool != null) {
-                c_tool.Effects(item, player, event.getClickedBlock());
-            }
-            Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
-            if (craftItem != null) {
-                if (craftItem.getWeaponID().equals("1000") || craftItem.getDisplayName().contains("Zwój Przyzwania")) {
+            if (!RPG.Magic.manager.MagicItemManager.isMagicItem(item)) {
+                Craftable_Tool c_tool = CraftingMenager.getCraftedToolByItem(item);
+                if (c_tool != null) {
+                    c_tool.Effects(item, player, event.getClickedBlock());
+                }
+                Craftable_Item craftItem = CraftingMenager.getCraftableItemByItem(item);
+                if (craftItem != null) {
+                    if (craftItem.getWeaponID().equals("1000") || craftItem.getDisplayName().contains("Zwój Przyzwania")) {
+                        return;
+                    }
+                    craftItem.Use(player);
                     return;
                 }
-                craftItem.Use(player);
-                return;
             }
         }
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
@@ -850,7 +852,7 @@ public class Listeners implements Listener {
                     }
                 }
                 if (hasAll) {
-                    if (mold.getAllowedMagicEffects() == null || mold.getAllowedMagicEffects().isEmpty()) {
+                    if (mold.getAllowedMagicEffects() == null || mold.getAllowedMagicEffects().isEmpty() || CraftingMenager.isMagicMold(mold)) {
                         if (CraftingMenager.HaveItems(p, true, requiredItems)) {
                             mold.Craft(p, new ArrayList<>(), mold.toItemStack(), true, 0);
                             p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.2f);

@@ -20,21 +20,33 @@ public class Craftable_Item extends ItemMold {
 
     public void Use(Player player) {
         ItemStack item = player.getInventory().getItemInMainHand();
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
-        }
+        if (item == null || item.getType() == Material.AIR) return;
 
-        List<MagicEffects> itemEffects = RPG.Crafting.CraftingMenager.getEffectsFromItem(item);
-        if (itemEffects.isEmpty()) {
+        // Przedmioty magiczne (Tomy, Różdżki, Laski) nigdy nie są niszczone przy kliknięciu
+        if (RPG.Magic.manager.MagicItemManager.isMagicItem(item)) {
             return;
         }
 
+        List<MagicEffects> itemEffects = RPG.Crafting.CraftingMenager.getEffectsFromItem(item);
+        if (itemEffects == null || itemEffects.isEmpty()) {
+            return;
+        }
+
+        boolean hasItemEffect = false;
         for (MagicEffects effect : itemEffects) {
-            if (effect.isItemEffect()) {
+            if (effect != null && effect.isItemEffect()) {
+                hasItemEffect = true;
                 effect.ExecuteOnUse(player);
                 player.sendMessage(ChatColor.GREEN + "Użyłeś przedmiotu: " + getDisplayName());
+            }
+        }
+
+        // Usuwamy tylko jeśli przedmiot faktycznie wykonał efekt zużywalny
+        if (hasItemEffect) {
+            if (item.getAmount() > 1) {
+                item.setAmount(item.getAmount() - 1);
+            } else {
+                player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
             }
         }
     }

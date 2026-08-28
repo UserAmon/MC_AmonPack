@@ -108,9 +108,13 @@ public class FireBlastSpell extends Spell {
         LivingEntity chainTarget = null;
         boolean wasInFireStatus = false;
 
+        double totalDmg = getBaseDamage();
+        double directDmg = totalDmg * 0.6;
+        double aoeDmg = totalDmg * 0.4;
+
         if (directHit != null && directHit.isValid() && !directHit.isDead()) {
             wasInFireStatus = ElementStatusManager.hasElementStatus(directHit, SpellElement.FIRE);
-            ElementStatusManager.triggerDamageAndReaction(player, directHit, 6.0, SpellElement.FIRE, tomeItem);
+            ElementStatusManager.triggerDamageAndReaction(player, directHit, directDmg, SpellElement.FIRE, tomeItem);
             directHit.setFireTicks(80);
             if (wasInFireStatus) chainTarget = directHit;
         }
@@ -121,7 +125,7 @@ public class FireBlastSpell extends Spell {
                     wasInFireStatus = true;
                     if (chainTarget == null) chainTarget = target;
                 }
-                ElementStatusManager.triggerDamageAndReaction(player, target, 4.0, SpellElement.FIRE, tomeItem);
+                ElementStatusManager.triggerDamageAndReaction(player, target, aoeDmg, SpellElement.FIRE, tomeItem);
                 target.setFireTicks(60);
                 hitEntities.add(target);
             }

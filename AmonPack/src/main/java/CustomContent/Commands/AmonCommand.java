@@ -71,12 +71,22 @@ public class AmonCommand implements CommandExecutor {
                 handleDebug(sender, args);
                 break;
 
+            case "magic":
+                if (args.length > 1 && args[1].equalsIgnoreCase("reload")) {
+                    Plugin.AmonPackPlugin.plugin.loadMagicConfig();
+                    sender.sendMessage("§a[AmonPack] Przeładowano konfigurację magii (zaklęcia, obrażenia, koszty many, cooldowny i ulepszenia).");
+                } else {
+                    sender.sendMessage("§6Użycie: §f/amon magic reload");
+                }
+                break;
+
             case "reload":
                 packManager.load();
                 itemManager.load();
                 blockManager.load();
                 bossManager.load();
-                sender.sendMessage("§a[AmonPack] Przeładowano wszystkie konfiguracje, modele i zasoby.");
+                Plugin.AmonPackPlugin.plugin.loadMagicConfig();
+                sender.sendMessage("§a[AmonPack] Przeładowano wszystkie konfiguracje, magię, modele i zasoby.");
                 break;
 
             default:

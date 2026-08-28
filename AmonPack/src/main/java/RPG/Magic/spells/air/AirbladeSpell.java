@@ -82,7 +82,7 @@ public class AirbladeSpell extends Spell {
                             hit.add(target);
                             Vector push = fDir.clone().multiply(0.8).setY(0.3);
                             target.setVelocity(push);
-                            ElementStatusManager.triggerDamageAndReaction(player, target, 7.0, SpellElement.AIR, tomeItem);
+                            ElementStatusManager.triggerDamageAndReaction(player, target, getBaseDamage(), SpellElement.AIR, tomeItem);
                         }
                     }
                 }

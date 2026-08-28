@@ -95,7 +95,7 @@ public class BarrageSpell extends Spell {
 
                 for (org.bukkit.entity.Entity e : current.getWorld().getNearbyEntities(current, 0.7, 0.7, 0.7)) {
                     if (e instanceof LivingEntity target && !e.equals(player)) {
-                        ElementStatusManager.triggerDamageAndReaction(player, target, 4.5, SpellElement.FIRE, tomeItem);
+                        ElementStatusManager.triggerDamageAndReaction(player, target, getBaseDamage(), SpellElement.FIRE, tomeItem);
                         target.setFireTicks(60);
                         current.getWorld().spawnParticle(Particle.EXPLOSION, current, 1);
                         cancel();

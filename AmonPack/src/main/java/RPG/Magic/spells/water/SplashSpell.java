@@ -168,7 +168,7 @@ public class SplashSpell extends Spell {
                     for (org.bukkit.entity.Entity e : currentLoc.getWorld().getNearbyEntities(currentLoc, 1.2, 1.2, 1.2)) {
                         if (e instanceof LivingEntity target && !e.equals(player)) {
                             cancel();
-                            ElementStatusManager.triggerDamageAndReaction(player, target, 7.0, SpellElement.WATER, tomeItem);
+                            ElementStatusManager.triggerDamageAndReaction(player, target, getBaseDamage(), SpellElement.WATER, tomeItem);
                             target.setVelocity(dir.clone().multiply(0.6).setY(0.3));
                             target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 1.0f, 1.2f);
                             target.getWorld().spawnParticle(Particle.SPLASH, target.getLocation().add(0, 1, 0), 30, 0.4, 0.4, 0.4, 0.1);

@@ -109,7 +109,7 @@ public class LightningSpell extends Spell {
 
                     for (org.bukkit.entity.Entity e : strikeLoc.getWorld().getNearbyEntities(strikeLoc, 4.0, 4.0, 4.0)) {
                         if (e instanceof LivingEntity le && !e.equals(player)) {
-                            ElementStatusManager.triggerDamageAndReaction(player, le, 12.0, SpellElement.LIGHTNING, tomeItem);
+                            ElementStatusManager.triggerDamageAndReaction(player, le, getBaseDamage(), SpellElement.LIGHTNING, tomeItem);
                         }
                     }
                 }

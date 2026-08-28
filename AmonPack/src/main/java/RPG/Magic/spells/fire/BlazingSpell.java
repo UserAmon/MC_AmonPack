@@ -77,7 +77,7 @@ public class BlazingSpell extends Spell {
                     for (org.bukkit.entity.Entity e : pLoc.getWorld().getNearbyEntities(pLoc, 0.8, 1.2, 0.8)) {
                         if (e instanceof LivingEntity target && !e.equals(player) && !hit.contains(target)) {
                             hit.add(target);
-                            ElementStatusManager.triggerDamageAndReaction(player, target, 7.5, SpellElement.FIRE, tomeItem);
+                            ElementStatusManager.triggerDamageAndReaction(player, target, getBaseDamage(), SpellElement.FIRE, tomeItem);
                             target.setFireTicks(100);
                         }
                     }

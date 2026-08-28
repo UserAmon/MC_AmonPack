@@ -113,7 +113,8 @@ public class ChainLightningSpell extends Spell {
         Set<LivingEntity> hitEntities = new HashSet<>();
         hitEntities.add(firstTarget);
 
-        ElementStatusManager.triggerDamageAndReaction(caster, firstTarget, 8.0, SpellElement.LIGHTNING, tomeItem);
+        double baseDmg = getBaseDamage();
+        ElementStatusManager.triggerDamageAndReaction(caster, firstTarget, baseDmg, SpellElement.LIGHTNING, tomeItem);
         firstTarget.getWorld().playSound(firstTarget.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1.0f, 1.8f);
 
         LivingEntity current = firstTarget;
@@ -138,7 +139,7 @@ public class ChainLightningSpell extends Spell {
             hitEntities.add(nextTarget);
             // Wizualny promień błyskawicy łączący cele
             drawLightningBeam(current.getLocation().add(0, 1.0, 0), nextTarget.getLocation().add(0, 1.0, 0));
-            ElementStatusManager.triggerDamageAndReaction(caster, nextTarget, 6.0, SpellElement.LIGHTNING, tomeItem);
+            ElementStatusManager.triggerDamageAndReaction(caster, nextTarget, baseDmg * 0.75, SpellElement.LIGHTNING, tomeItem);
             nextTarget.getWorld().playSound(nextTarget.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 0.8f, 1.6f);
 
             // Jeśli trafił w moba stojącego w wodzie
@@ -159,7 +160,7 @@ public class ChainLightningSpell extends Spell {
 
         for (org.bukkit.entity.Entity e : loc.getWorld().getNearbyEntities(loc, 6.0, 4.0, 6.0)) {
             if (e instanceof LivingEntity le && !e.equals(caster)) {
-                ElementStatusManager.triggerDamageAndReaction(caster, le, 10.0, SpellElement.LIGHTNING, tomeItem);
+                ElementStatusManager.triggerDamageAndReaction(caster, le, getBaseDamage() * 1.2, SpellElement.LIGHTNING, tomeItem);
                 le.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 2));
             }
         }

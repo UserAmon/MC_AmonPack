@@ -63,7 +63,7 @@ public class FireCircleSpell extends Spell {
             if (e instanceof LivingEntity target && !e.equals(player)) {
                 Vector push = target.getLocation().toVector().subtract(player.getLocation().toVector()).normalize().multiply(1.2).setY(0.4);
                 target.setVelocity(push);
-                ElementStatusManager.triggerDamageAndReaction(player, target, 6.5, SpellElement.FIRE, tomeItem);
+                ElementStatusManager.triggerDamageAndReaction(player, target, getBaseDamage(), SpellElement.FIRE, tomeItem);
                 target.setFireTicks(100);
             }
         }

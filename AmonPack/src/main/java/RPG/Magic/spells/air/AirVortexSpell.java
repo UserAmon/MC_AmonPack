@@ -200,6 +200,11 @@ public class AirVortexSpell extends Spell {
                     if (ticks++ > maxTicks) {
                         targetLoc.getWorld().playSound(targetLoc, Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.8f);
                         targetLoc.getWorld().spawnParticle(Particle.EXPLOSION, targetLoc, 2);
+                        for (org.bukkit.entity.Entity e : targetLoc.getWorld().getNearbyEntities(targetLoc, pullRadius, 6.0, pullRadius)) {
+                            if (e instanceof LivingEntity target && !e.equals(player)) {
+                                ElementStatusManager.triggerDamageAndReaction(player, target, spell != null ? spell.getBaseDamage() : 12.0, SpellElement.AIR, tomeItem);
+                            }
+                        }
                         cancel();
                         return;
                     }

@@ -92,22 +92,14 @@ public class CraftingMenager {
                 break;
             case 3: // Przedmioty
                 for (Craftable_Item ci : AllCraftableItems) {
-                    String name = ci.getItemName().toLowerCase();
-                    boolean isMagic = ci.getItemMaterial() == Material.BOOK 
-                            || (ci.getCustomModelID() != null && ci.getCustomModelID() >= 20000 && ci.getCustomModelID() < 30000)
-                            || name.contains("tom") || name.contains("tome") || name.contains("różdżka") || name.contains("wand") || name.contains("fen");
-                    if (!isMagic) {
+                    if (!isMagicMold(ci)) {
                         ChosenMolds.add(ci);
                     }
                 }
                 break;
             case 4: // Magia
                 for (Craftable_Item ci : AllCraftableItems) {
-                    String name = ci.getItemName().toLowerCase();
-                    boolean isMagic = ci.getItemMaterial() == Material.BOOK 
-                            || (ci.getCustomModelID() != null && ci.getCustomModelID() >= 20000 && ci.getCustomModelID() < 30000)
-                            || name.contains("tom") || name.contains("tome") || name.contains("różdżka") || name.contains("wand") || name.contains("fen");
-                    if (isMagic) {
+                    if (isMagicMold(ci)) {
                         ChosenMolds.add(ci);
                     }
                 }
@@ -409,10 +401,9 @@ public class CraftingMenager {
                             }
                         }
                     }
-                    CraftedWeapon w = new CraftedWeapon("" + IdCounter, ItemToShapeMold, DisplayName, material,
+                    CraftedWeapon w = new CraftedWeapon(WeaponName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects, BaseDmg);
                     AllCraftableWeapons.add(w);
-                    IdCounter++;
                 }
             }
         } catch (Exception e) {
@@ -420,7 +411,6 @@ public class CraftingMenager {
         }
 
         try {
-            int IdCounter = 100;
             if (Config.getConfigurationSection("Craftable_Tools") != null) {
                 for (String ToolName : Objects.requireNonNull(Config.getConfigurationSection("Craftable_Tools"))
                         .getKeys(false)) {
@@ -475,10 +465,9 @@ public class CraftingMenager {
                         }
                     }
 
-                    Craftable_Tool tool = new Craftable_Tool("" + IdCounter, ItemToShapeMold, DisplayName, material,
+                    Craftable_Tool tool = new Craftable_Tool(ToolName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects);
                     AllTools.add(tool);
-                    IdCounter++;
                 }
             }
         } catch (Exception e) {
@@ -486,7 +475,6 @@ public class CraftingMenager {
         }
 
         try {
-            int IdCounter = 200;
             if (Config.getConfigurationSection("Craftable_Armor") != null) {
                 for (String ArmorName : Objects.requireNonNull(Config.getConfigurationSection("Craftable_Armor"))
                         .getKeys(false)) {
@@ -546,10 +534,9 @@ public class CraftingMenager {
                         }
                     }
 
-                    Craftable_Armor armor = new Craftable_Armor("" + IdCounter, ItemToShapeMold, DisplayName, material,
+                    Craftable_Armor armor = new Craftable_Armor(ArmorName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects, DmgReduction);
                     AllArmor.add(armor);
-                    IdCounter++;
                 }
             }
         } catch (Exception e) {
@@ -557,7 +544,6 @@ public class CraftingMenager {
         }
 
         try {
-            int IdCounter = 1000;
             if (Config.getConfigurationSection("Craftable_Items") != null) {
                 for (String ItemName : Objects.requireNonNull(Config.getConfigurationSection("Craftable_Items"))
                         .getKeys(false)) {
@@ -587,7 +573,11 @@ public class CraftingMenager {
                     }
 
                     List<MagicEffects> AllowedEffects = new ArrayList<>();
-                    if (!Config.getStringList(MoldPath + "AllowedMagicEffects").isEmpty()) {
+                    boolean isMagicItem = (CustomModelId != null && CustomModelId >= 20000 && CustomModelId < 30000)
+                            || ItemName.toLowerCase().contains("tome") || ItemName.toLowerCase().contains("wand") || ItemName.toLowerCase().contains("staff")
+                            || DisplayName.toLowerCase().contains("tom") || DisplayName.toLowerCase().contains("różdżka") || DisplayName.toLowerCase().contains("laska");
+
+                    if (Config.contains(MoldPath + "AllowedMagicEffects")) {
                         for (String effectId : Config.getStringList(MoldPath + "AllowedMagicEffects")) {
                             for (MagicEffects effect : AllMagicEffects) {
                                 if (effect.getName().equalsIgnoreCase(effectId)) {
@@ -596,7 +586,7 @@ public class CraftingMenager {
                                 }
                             }
                         }
-                    } else {
+                    } else if (!isMagicItem) {
                         AllowedEffects.addAll(AllMagicEffects);
                     }
 
@@ -612,10 +602,9 @@ public class CraftingMenager {
                         }
                     }
 
-                    Craftable_Item craftItem = new Craftable_Item("" + IdCounter, ItemToShapeMold, DisplayName,
+                    Craftable_Item craftItem = new Craftable_Item(ItemName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName,
                             material, ItemLoreList, CustomModelId, AllowedEffects);
                     AllCraftableItems.add(craftItem);
-                    IdCounter++;
                 }
             }
         } catch (Exception e) {
@@ -869,4 +858,14 @@ public class CraftingMenager {
         return null;
     }
 
+    public static boolean isMagicMold(ItemMold mold) {
+        if (mold == null) return false;
+        String wid = mold.getWeaponID().toLowerCase(java.util.Locale.ROOT);
+        String name = mold.getItemName().toLowerCase(java.util.Locale.ROOT);
+        int cmd = mold.getCustomModelID() != null ? mold.getCustomModelID() : 0;
+        return (cmd >= 20000 && cmd < 30000)
+                || wid.startsWith("tome_") || wid.startsWith("wand_") || wid.startsWith("staff_")
+                || wid.contains("tome") || wid.contains("wand") || wid.contains("staff")
+                || name.contains("tom") || name.contains("różdżka") || name.contains("laska");
+    }
 }

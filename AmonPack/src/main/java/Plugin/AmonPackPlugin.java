@@ -224,6 +224,9 @@ public class AmonPackPlugin extends JavaPlugin {
 			RPG.Progression.ProgressionManager.getInstance().reload();
 		}
 
+		// 8. Przeładowanie Magii (Zaklęcia, Koszty Many, Cooldowny, Ulepszenia)
+		loadMagicConfig();
+
 		getLogger().info("Pełny reload konfiguracji oraz instancji AmonPack zakończony sukcesem!");
 	}
 
@@ -272,6 +275,7 @@ public class AmonPackPlugin extends JavaPlugin {
 				"pack/custom_items.yml",
 				"pack/custom_blocks.yml",
 				"pack/custom_bosses.yml",
+				"pack/magic_config.yml",
 				"progression/slow_progression.yml",
 				"RPG/Levels.yml",
 				"RPG/skilltree.yml",
@@ -545,6 +549,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		manaManager = new RPG.Magic.manager.ManaManager();
 		manaManager.start();
 		RPG.Magic.elements.ElementStatusManager.init();
+		loadMagicConfig();
 		this.getServer().getPluginManager().registerEvents(
 				new RPG.Magic.listener.MagicItemListener(spellRegistry, manaManager, customItemManager), this);
 
@@ -555,6 +560,28 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 
 		System.out.println("Amonpack Załadowany!");
+	}
+
+	public static FileConfiguration magicConfig;
+	private static File magicConfigFile;
+
+	public void loadMagicConfig() {
+		try {
+			if (magicConfigFile == null) {
+				magicConfigFile = new File(getDataFolder(), "pack/magic_config.yml");
+			}
+			if (!magicConfigFile.exists()) {
+				magicConfigFile.getParentFile().mkdirs();
+				saveResource("pack/magic_config.yml", false);
+			}
+			magicConfig = YamlConfiguration.loadConfiguration(magicConfigFile);
+			if (spellRegistry != null) {
+				spellRegistry.loadConfig(magicConfig);
+			}
+			getLogger().info("Pomyślnie załadowano konfigurację magii z pack/magic_config.yml!");
+		} catch (Exception e) {
+			getLogger().warning("Błąd podczas ładowania magic_config.yml: " + e.getMessage());
+		}
 	}
 
 	@Override

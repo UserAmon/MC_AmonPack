@@ -228,6 +228,41 @@ public class PackManager {
             File mcItems = new File(tempBuildDir, "assets/minecraft/items");
             mcItems.mkdirs();
 
+            // 4b. Blockstates dla natywnego renderowania bloków w świecie gry (NOTE_BLOCK)
+            File mcBlockstates = new File(tempBuildDir, "assets/minecraft/blockstates");
+            mcBlockstates.mkdirs();
+            JsonObject blockstatesRoot = new JsonObject();
+            JsonObject variants = new JsonObject();
+
+            JsonObject defaultModel = new JsonObject();
+            defaultModel.addProperty("model", "minecraft:block/note_block");
+            variants.add("", defaultModel);
+
+            JsonObject tableModel = new JsonObject();
+            tableModel.addProperty("model", "amonpack:block/magic_crafting_table");
+            variants.add("instrument=bass,note=1,powered=false", tableModel);
+            variants.add("instrument=bass,note=1,powered=true", tableModel);
+
+            JsonObject meteorModel = new JsonObject();
+            meteorModel.addProperty("model", "amonpack:block/meteoryt_ore");
+            variants.add("instrument=bass,note=2,powered=false", meteorModel);
+            variants.add("instrument=bass,note=2,powered=true", meteorModel);
+
+            JsonObject basaltModel = new JsonObject();
+            basaltModel.addProperty("model", "amonpack:block/basalt_ore");
+            variants.add("instrument=bass,note=3,powered=false", basaltModel);
+            variants.add("instrument=bass,note=3,powered=true", basaltModel);
+
+            JsonObject altarModel = new JsonObject();
+            altarModel.addProperty("model", "amonpack:block/arcane_altar");
+            variants.add("instrument=bass,note=4,powered=false", altarModel);
+            variants.add("instrument=bass,note=4,powered=true", altarModel);
+
+            blockstatesRoot.add("variants", variants);
+            try (FileWriter writer = new FileWriter(new File(mcBlockstates, "note_block.json"), StandardCharsets.UTF_8)) {
+                writer.write(GSON.toJson(blockstatesRoot));
+            }
+
             // 5. Generowanie plików assets/minecraft/models/item/<mat>.json ORAZ assets/minecraft/items/<mat>.json
             for (Map.Entry<String, Map<Integer, String>> entry : vanillaOverrides.entrySet()) {
                 String mat = entry.getKey();

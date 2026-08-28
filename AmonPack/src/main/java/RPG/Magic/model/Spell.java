@@ -12,26 +12,40 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class Spell {
 
     protected final String id;
-    protected final String name;
+    protected String name;
     protected final SpellElement element;
-    protected final int manaCost;
-    protected final double cooldownSeconds;
+    protected int manaCost;
+    protected double cooldownSeconds;
+    protected double baseDamage;
+    protected String description;
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
 
     public Spell(String id, String name, SpellElement element, int manaCost, double cooldownSeconds) {
+        this(id, name, element, manaCost, cooldownSeconds, 10.0);
+    }
+
+    public Spell(String id, String name, SpellElement element, int manaCost, double cooldownSeconds, double baseDamage) {
         this.id = id;
         this.name = name;
         this.element = element;
         this.manaCost = manaCost;
         this.cooldownSeconds = cooldownSeconds;
+        this.baseDamage = baseDamage;
+        this.description = "Magiczne zaklęcie żywiołu " + element.name();
     }
 
     public String getId() { return id; }
     public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
     public SpellElement getElement() { return element; }
     public int getManaCost() { return manaCost; }
+    public void setManaCost(int manaCost) { this.manaCost = manaCost; }
     public double getCooldownSeconds() { return cooldownSeconds; }
-    public String getDescription() { return "Magiczne zaklęcie żywiołu " + element.name(); }
+    public void setCooldownSeconds(double cooldownSeconds) { this.cooldownSeconds = cooldownSeconds; }
+    public double getBaseDamage() { return baseDamage; }
+    public void setBaseDamage(double baseDamage) { this.baseDamage = baseDamage; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
     public boolean isOnCooldown(Player player) {
         if (player == null) return false;

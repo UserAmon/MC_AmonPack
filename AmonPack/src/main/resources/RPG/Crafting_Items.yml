@@ -1018,6 +1018,7 @@ Craftable_Items:
         m3:
           Material: FIRE_CHARGE
           Amount: 1
+      AllowedMagicEffects: []
     Item:
       Lore:
         l1: "§7Starożytna księga zawierająca pierwotne zaklęcia płomieni."
@@ -1040,6 +1041,7 @@ Craftable_Items:
         m2:
           Material: ROTTEN_FLESH
           Amount: 10
+      AllowedMagicEffects: []
     Item:
       Lore:
         l1: "§7Mistyczna różdżka wiatru wykuta z esencji fenów."
@@ -1066,6 +1068,7 @@ Craftable_Items:
         m3:
           Material: GLOWSTONE_DUST
           Amount: 4
+      AllowedMagicEffects: []
     Item:
       Lore:
         l1: "§7Mistyczna laska przewodząca pioruny i energię burzy."
@@ -1091,6 +1094,7 @@ Craftable_Items:
         m3:
           Material: LAPIS_LAZULI
           Amount: 8
+      AllowedMagicEffects: []
     Item:
       Lore:
         l1: "§7Różdżka ukształtowana z czystego oceanicznego kryształu."

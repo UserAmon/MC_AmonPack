@@ -71,13 +71,13 @@ public class FlashPointSpell extends Spell {
         targetLoc.getWorld().spawnParticle(Particle.LAVA, targetLoc, 20, 0.5, 0.5, 0.5, 0.1);
 
         if (directHit != null && directHit.isValid()) {
-            ElementStatusManager.triggerDamageAndReaction(player, directHit, 10.0, SpellElement.FIRE, tomeItem);
+            ElementStatusManager.triggerDamageAndReaction(player, directHit, getBaseDamage(), SpellElement.FIRE, tomeItem);
             directHit.setFireTicks(120);
         }
 
         for (org.bukkit.entity.Entity e : targetLoc.getWorld().getNearbyEntities(targetLoc, 3.5, 3.5, 3.5)) {
             if (e instanceof LivingEntity target && !e.equals(player) && (directHit == null || !e.equals(directHit))) {
-                ElementStatusManager.triggerDamageAndReaction(player, target, 7.0, SpellElement.FIRE, tomeItem);
+                ElementStatusManager.triggerDamageAndReaction(player, target, getBaseDamage() * 0.7, SpellElement.FIRE, tomeItem);
                 target.setFireTicks(80);
             }
         }

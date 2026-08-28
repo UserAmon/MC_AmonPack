@@ -132,7 +132,7 @@ public class FreezeSpell extends Spell {
 
                             for (org.bukkit.entity.Entity e : center.getWorld().getNearbyEntities(center, 5.5, 3.0, 5.5)) {
                                 if (e instanceof LivingEntity le && !e.equals(player)) {
-                                    ElementStatusManager.triggerDamageAndReaction(player, le, 8.0, SpellElement.WATER, tomeItem);
+                                    ElementStatusManager.triggerDamageAndReaction(player, le, getBaseDamage(), SpellElement.WATER, tomeItem);
                                     le.getWorld().spawnParticle(Particle.SNOWFLAKE, le.getLocation().add(0, 1, 0), 20, 0.3, 0.3, 0.3, 0.05);
                                 }
                             }

@@ -99,7 +99,7 @@ public class BlowSpell extends Spell {
 
                         // Silny odrzut w kierunku pocisku
                         double kbMult = hasPower ? 2.1 : 1.4;
-                        double dmg = hasPower ? 8.0 : 5.0;
+                        double dmg = hasPower ? getBaseDamage() * 1.5 : getBaseDamage();
                         Vector knockback = fDir.clone().multiply(kbMult).setY(0.45);
                         target.setVelocity(knockback);
 

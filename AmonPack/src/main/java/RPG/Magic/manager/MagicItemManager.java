@@ -112,6 +112,10 @@ public class MagicItemManager {
         return meta.hasCustomModelData() && (meta.getCustomModelData() == 20001 || meta.getCustomModelData() == 10010);
     }
 
+    public static boolean isMagicItem(ItemStack item) {
+        return isMagicStaff(item) || isMagicWand(item) || isMagicTome(item);
+    }
+
     public static String getPrimarySpellId(ItemStack item) {
         String defaultSpell = "fireblast";
         if (isAirWand(item)) defaultSpell = "blow";

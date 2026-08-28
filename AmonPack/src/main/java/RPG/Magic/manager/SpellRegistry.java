@@ -58,4 +58,31 @@ public class SpellRegistry {
         }
         return list;
     }
+
+    public void loadConfig(org.bukkit.configuration.file.FileConfiguration cfg) {
+        if (cfg == null) return;
+        org.bukkit.configuration.ConfigurationSection sec = cfg.getConfigurationSection("magic.spells");
+        if (sec == null) return;
+
+        for (String key : sec.getKeys(false)) {
+            Spell spell = getSpell(key);
+            if (spell != null) {
+                if (sec.contains(key + ".name")) {
+                    spell.setName(sec.getString(key + ".name"));
+                }
+                if (sec.contains(key + ".mana_cost")) {
+                    spell.setManaCost(sec.getInt(key + ".mana_cost"));
+                }
+                if (sec.contains(key + ".cooldown")) {
+                    spell.setCooldownSeconds(sec.getDouble(key + ".cooldown"));
+                }
+                if (sec.contains(key + ".damage")) {
+                    spell.setBaseDamage(sec.getDouble(key + ".damage"));
+                }
+                if (sec.contains(key + ".description")) {
+                    spell.setDescription(sec.getString(key + ".description"));
+                }
+            }
+        }
+    }
 }

@@ -46,7 +46,7 @@ public class ItemMold {
 
     public void Craft(Player player, List<MagicEffects> ListOfEffects, ItemStack mold, boolean CraftIntoItem,
             double damage) {
-        if (mold == null || !mold.hasItemMeta() || mold.getType() != Material.PAPER)
+        if (mold == null || !mold.hasItemMeta())
             return;
         List<MagicEffects> ExistingEffects = new ArrayList<>();
         List<String> EffectsLore = new ArrayList<>(ItemLore);
@@ -56,7 +56,9 @@ public class ItemMold {
         if (data != null && !data.isEmpty()) {
             ExistingEffects.addAll(MagicEffects.deserializeList(data));
         }
-        player.getInventory().remove(mold);
+        if (mold.getType() == Material.PAPER) {
+            player.getInventory().remove(mold);
+        }
 
         ExistingEffects.addAll(ListOfEffects);
         if (!ExistingEffects.isEmpty()) {
@@ -84,6 +86,23 @@ public class ItemMold {
         MoldMeta.setLore(EffectsLore);
         NewMold.setItemMeta(MoldMeta);
         player.getInventory().addItem(NewMold);
+
+        // Powiadomienie systemu progresji o wytworzeniu przedmiotu
+        if (CraftIntoItem && RPG.Progression.ProgressionManager.getInstance() != null) {
+            var service = RPG.Progression.ProgressionManager.getInstance().getProgressionService();
+            if (service != null) {
+                service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, weaponID, 1);
+                service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, weaponID.toLowerCase(java.util.Locale.ROOT), 1);
+                service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, ItemMaterial.name(), 1);
+                if (AmonPackPlugin.customItemManager != null) {
+                    String customId = AmonPackPlugin.customItemManager.getCustomItemId(NewMold);
+                    if (customId != null) {
+                        service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, customId, 1);
+                        service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, "custom:" + customId, 1);
+                    }
+                }
+            }
+        }
     }
 
     public ItemStack addEffectsToItem(ItemStack item, List<MagicEffects> effects) {

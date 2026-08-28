@@ -151,11 +151,28 @@ public class CustomBlockManager {
         placeBlock(block, customBlockId, true, true);
     }
 
+    public static int getNoteForCustomBlock(String customBlockId) {
+        if (customBlockId == null) return 0;
+        return switch (customBlockId.toLowerCase(Locale.ROOT)) {
+            case "magic_crafting_table" -> 1;
+            case "meteoryt_ore" -> 2;
+            case "basalt_ore" -> 3;
+            case "arcane_altar" -> 4;
+            default -> 0;
+        };
+    }
+
     public void placeBlock(Block block, String customBlockId, boolean applyPhysics, boolean saveImmediately) {
         CustomBlock cb = customBlocks.get(customBlockId.toLowerCase(Locale.ROOT));
         if (cb == null) return;
 
         block.setType(cb.getBaseMaterial(), applyPhysics);
+        if (block.getBlockData() instanceof org.bukkit.block.data.type.NoteBlock nb) {
+            nb.setInstrument(org.bukkit.Instrument.BASS_GUITAR);
+            nb.setNote(new org.bukkit.Note(getNoteForCustomBlock(cb.getId())));
+            block.setBlockData(nb, false);
+        }
+
         String key = locKey(block.getLocation());
         placedBlocks.put(key, cb.getId());
         isDirty = true;
@@ -297,7 +314,13 @@ public class CustomBlockManager {
                         CustomBlock cb = customBlocks.get(entry.getValue().toLowerCase(Locale.ROOT));
                         if (cb != null) {
                             Location loc = new Location(chunk.getWorld(), x, y, z);
-                            if (loc.getBlock().getType() == cb.getBaseMaterial()) {
+                            Block b = loc.getBlock();
+                            if (b.getType() == cb.getBaseMaterial()) {
+                                if (b.getBlockData() instanceof org.bukkit.block.data.type.NoteBlock nb) {
+                                    nb.setInstrument(org.bukkit.Instrument.BASS_GUITAR);
+                                    nb.setNote(new org.bukkit.Note(getNoteForCustomBlock(cb.getId())));
+                                    b.setBlockData(nb, false);
+                                }
                                 spawnDisplay(loc, cb);
                             }
                         }

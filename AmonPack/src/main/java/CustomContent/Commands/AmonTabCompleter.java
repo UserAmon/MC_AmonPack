@@ -31,7 +31,7 @@ public class AmonTabCompleter implements TabCompleter {
         List<String> list = new ArrayList<>();
 
         if (args.length == 1) {
-            return filter(Arrays.asList("item", "block", "boss", "pack", "debug", "reload"), args[0]);
+            return filter(Arrays.asList("item", "block", "boss", "pack", "debug", "magic", "reload"), args[0]);
         }
 
         if (args.length == 2) {
@@ -41,6 +41,7 @@ public class AmonTabCompleter implements TabCompleter {
             if (sub.equals("boss")) return filter(Arrays.asList("spawn", "killall", "list"), args[1]);
             if (sub.equals("pack")) return filter(Arrays.asList("build", "apply", "url"), args[1]);
             if (sub.equals("debug")) return filter(Arrays.asList("tool"), args[1]);
+            if (sub.equals("magic")) return filter(Arrays.asList("reload"), args[1]);
         }
 
         if (args.length == 3) {
