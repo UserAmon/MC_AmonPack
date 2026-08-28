@@ -222,7 +222,10 @@ public class PackManager {
             registerModelOverride("stone_hoe", 10026, "amonpack:tools/basalt_hoe");
             registerModelOverride("leather_helmet", 20010, "amonpack:armor/air_wizard_hat");
             registerModelOverride("leather_boots", 20011, "amonpack:armor/thief_boots");
+            registerModelOverride("leather_horse_armor", 30101, "amonpack:boss/Spirit_Earth_2");
+            registerModelOverride("leather_horse_armor", 30102, "amonpack:boss/skeleton_king");
             registerModelOverride("carved_pumpkin", 30101, "amonpack:boss/Spirit_Earth_2");
+            registerModelOverride("carved_pumpkin", 30102, "amonpack:boss/skeleton_king");
 
             // Bloki (NOTE_BLOCK & IRON_NUGGET)
             registerModelOverride("note_block", 30001, "amonpack:block/meteoryt_ore");
@@ -278,7 +281,7 @@ public class PackManager {
                 Map<Integer, String> cmdMap = entry.getValue();
 
                 boolean isWeapon = mat.contains("sword") || mat.contains("axe") || mat.contains("pickaxe") || mat.contains("shovel") || mat.contains("hoe") || mat.contains("bow") || mat.contains("stick");
-                boolean isBlock = mat.contains("note_block");
+                boolean isBlock = mat.contains("note_block") || mat.contains("carved_pumpkin");
 
                 // Format A: 1.14 - 1.21.1 (models/item/<mat>.json)
                 JsonObject modelRoot = new JsonObject();

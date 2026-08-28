@@ -48,3 +48,45 @@ bosses:
         min: 4
         max: 8
     exp: 400
+
+  skeleton_king:
+    display_name: "&c&lKról Szkieletów"
+    base_entity: WITHER_SKELETON
+    model:
+      model_path: "boss/skeleton_king"
+      custom_model_data: 30102
+      scale: 2.4
+    stats:
+      max_health: 750.0
+      attack_damage: 18.0
+      movement_speed: 0.32
+      knockback_resistance: 1.0
+      follow_range: 45.0
+    boss_bar:
+      enabled: true
+      title: "&c&lKról Szkieletów &7- &c{health}&7/&c{max_health} HP"
+      color: RED
+      style: SEGMENTED_12
+      range: 45.0
+    skills:
+      - trigger: TIMER
+        interval_seconds: 6
+        ability: "LightningStrike"
+        range: 18.0
+        announcement: "&c[Król Szkieletów] &4Płońcie w gniewie umarłych!"
+      - trigger: HEALTH_BELOW
+        health_percent: 50.0
+        ability: "FireCircle"
+        announcement: "&c[Król Szkieletów] &6Otchłań pochłonie wasze dusze!"
+      - trigger: ON_HIT
+        ability: "SoulBurn"
+    drops:
+      - custom_item: "meteor_scythe"
+        chance: 0.85
+        min: 1
+        max: 1
+      - custom_item: "meteor_shard"
+        chance: 1.0
+        min: 8
+        max: 16
+    exp: 600

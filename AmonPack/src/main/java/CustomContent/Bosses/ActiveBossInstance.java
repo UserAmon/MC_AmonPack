@@ -32,7 +32,7 @@ public class ActiveBossInstance {
     private final CustomBoss template;
     private final Mob entity;
     private final Set<UUID> damagers = new HashSet<>();
-    private ItemDisplay displayEntity;
+    private final BossModelRenderer renderer;
     private BossBar bossBar;
     private BukkitTask task;
 
@@ -44,7 +44,7 @@ public class ActiveBossInstance {
         this.uuid = entity.getUniqueId();
 
         setupEntity();
-        setupModelDisplay();
+        this.renderer = new BossModelRenderer(template, entity);
         setupBossBar();
         startTask();
     }
@@ -78,38 +78,6 @@ public class ActiveBossInstance {
         entity.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
     }
 
-    private void setupModelDisplay() {
-        // 1. Spróbuj podpiąć model przez ModelEngine (jeśli włączony na serwerze)
-        boolean attachedME = CustomContent.Hooks.ModelEngineHook.attachModel(entity, template.getId());
-        if (attachedME) {
-            return;
-        }
-
-        // 2. Fallback: Natywny ItemDisplay z resourcepacka
-        try {
-            Location loc = entity.getLocation();
-            this.displayEntity = loc.getWorld().spawn(loc, ItemDisplay.class, d -> {
-                ItemStack item = new ItemStack(Material.CARVED_PUMPKIN);
-                ItemMeta meta = item.getItemMeta();
-                if (meta != null) {
-                    meta.setCustomModelData(template.getCustomModelData());
-                    item.setItemMeta(meta);
-                }
-                d.setItemStack(item);
-                d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
-                float sc = (float) Math.max(0.5, template.getScale());
-                d.setTransformation(new org.bukkit.util.Transformation(
-                        new org.joml.Vector3f(0f, 0f, 0f),
-                        new org.joml.AxisAngle4f(0f, 0f, 1f, 0f),
-                        new org.joml.Vector3f(sc, sc, sc),
-                        new org.joml.AxisAngle4f(0f, 0f, 1f, 0f)
-                ));
-            });
-        } catch (Throwable t) {
-            Bukkit.getLogger().warning("[AmonPack] Nie udało się zespawnować ItemDisplay dla Bossa: " + t.getMessage());
-        }
-    }
-
     private void setupBossBar() {
         if (template.isBossBarEnabled()) {
             this.bossBar = Bukkit.createBossBar(
@@ -133,10 +101,9 @@ public class ActiveBossInstance {
 
                 tickCounter++;
 
-                // 1. Synchronizacja modelu 3D z pozycją i obrotem moba
-                if (displayEntity != null && displayEntity.isValid()) {
-                    Location loc = entity.getLocation().clone().add(0, 0.2, 0);
-                    displayEntity.teleport(loc);
+                // 1. Synchronizacja i animacja modelu 3D (Render Engine)
+                if (renderer != null) {
+                    renderer.tick();
                 }
 
                 // 2. Aktualizacja paska BossBar
@@ -169,6 +136,9 @@ public class ActiveBossInstance {
                                 if (skill.announcement != null && !skill.announcement.isEmpty()) {
                                     broadcastNearby(skill.announcement);
                                 }
+                                if (renderer != null) {
+                                    renderer.playCastAnimation();
+                                }
                                 BossSkillExecutor.executeSkill(entity, skill.ability, skill.range);
                             }
                         } else if ("HEALTH_BELOW".equalsIgnoreCase(skill.trigger) && !skill.executed) {
@@ -177,6 +147,9 @@ public class ActiveBossInstance {
                                 skill.executed = true;
                                 if (skill.announcement != null && !skill.announcement.isEmpty()) {
                                     broadcastNearby(skill.announcement);
+                                }
+                                if (renderer != null) {
+                                    renderer.playCastAnimation();
                                 }
                                 BossSkillExecutor.executeSkill(entity, skill.ability, skill.range);
                             }
@@ -210,9 +183,8 @@ public class ActiveBossInstance {
             task.cancel();
             task = null;
         }
-        if (displayEntity != null && displayEntity.isValid()) {
-            displayEntity.remove();
-            displayEntity = null;
+        if (renderer != null) {
+            renderer.remove();
         }
         if (bossBar != null) {
             bossBar.removeAll();
@@ -223,6 +195,7 @@ public class ActiveBossInstance {
     public UUID getUuid() { return uuid; }
     public CustomBoss getTemplate() { return template; }
     public Mob getEntity() { return entity; }
+    public BossModelRenderer getRenderer() { return renderer; }
 
     public void addDamager(UUID playerUuid) {
         if (playerUuid != null) {

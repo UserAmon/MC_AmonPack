@@ -31,9 +31,20 @@ public class BossListener implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onBossDamage(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof LivingEntity damager) {
+            ActiveBossInstance attackingBoss = bossManager.getActiveBoss(damager);
+            if (attackingBoss != null && attackingBoss.getRenderer() != null) {
+                attackingBoss.getRenderer().playAttackAnimation();
+            }
+        }
+
         if (event.getEntity() instanceof LivingEntity victim) {
             ActiveBossInstance boss = bossManager.getActiveBoss(victim);
             if (boss != null) {
+                if (boss.getRenderer() != null) {
+                    boss.getRenderer().playHurtAnimation();
+                }
+
                 // Record damager player
                 if (event.getDamager() instanceof Player player) {
                     boss.addDamager(player.getUniqueId());
@@ -48,6 +59,9 @@ public class BossListener implements Listener {
                             if (skill.announcement != null && !skill.announcement.isEmpty()) {
                                 Bukkit.broadcastMessage(skill.announcement);
                             }
+                            if (boss.getRenderer() != null) {
+                                boss.getRenderer().playAttackAnimation();
+                            }
                             BossSkillExecutor.executeSkill(boss.getEntity(), skill.ability, skill.range);
                         }
                     }
@@ -60,6 +74,10 @@ public class BossListener implements Listener {
     public void onBossDeath(EntityDeathEvent event) {
         ActiveBossInstance boss = bossManager.getActiveBoss(event.getEntity());
         if (boss == null) return;
+
+        if (boss.getRenderer() != null) {
+            boss.getRenderer().playDeathAnimation();
+        }
 
         event.getDrops().clear();
         event.setDroppedExp(boss.getTemplate().getExpDrop());

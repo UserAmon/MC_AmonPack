@@ -105,6 +105,7 @@ public class BossManager {
                 // Rejestracja w packu
                 String modelKey = cb.getModelPath();
                 if (!modelKey.startsWith("amonpack:")) modelKey = "amonpack:" + modelKey;
+                packManager.registerModelOverride("leather_horse_armor", cb.getCustomModelData(), modelKey);
                 packManager.registerModelOverride("carved_pumpkin", cb.getCustomModelData(), modelKey);
             }
         }
