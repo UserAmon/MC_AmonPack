@@ -922,11 +922,57 @@ Craftable_Tools:
           Amount: 1
 # ##armor
 Craftable_Armor:
+  leather_hat:
+    Material: LEATHER_HELMET
+    Name: "§b§lCzapka Czarodzieja Powietrza"
+    Custom_Model_ID: 0
+    Armor: 1.0
+    Mana_Reduction_Percent: 0.33
+    Mana_Element: "AIR"
+    Cooldown_Reduction_Percent: 0.33
+    Cooldown_Element: "AIR"
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: FEATHER
+          Amount: 5
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Lekkie nakrycie głowy nasycone esencją wiatru."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_HELMET
+          Amount: 1
+  thief_boots:
+    Material: LEATHER_BOOTS
+    Name: "§8§lButy Złodzieja"
+    Custom_Model_ID: 0
+    Armor: 1.0
+    Speed_Increase_Percent: 0.10
+    Cooldown_Reduction_Flat: 0.5
+    Cooldown_Element: "ALL"
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 4
+        m2:
+          Material: FEATHER
+          Amount: 2
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Lekkie i ciche obuwie sprzyjające zwinności."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_BOOTS
+          Amount: 1
   crystal_helmet:
     Material: IRON_HELMET
     Name: §2Kryształowy Hełm z Omashu
     Custom_Model_ID: 0
-    Dmg_Reduction: 0.5
+    Armor: 3.0
     Mold:
       Items_To_Craft:
         m1:
@@ -944,7 +990,7 @@ Craftable_Armor:
     Material: DIAMOND_CHESTPLATE
     Name: §aZbroja Strażnika Ziemi
     Custom_Model_ID: 0
-    Dmg_Reduction: 1.5
+    Armor: 8.0
     Mold:
       Items_To_Craft:
         m1:

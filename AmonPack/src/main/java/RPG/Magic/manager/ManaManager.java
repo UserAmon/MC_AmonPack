@@ -119,19 +119,23 @@ public class ManaManager {
     }
 
     public boolean hasMana(UUID uuid, double amount) {
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null && player.getGameMode() == org.bukkit.GameMode.CREATIVE) return true;
         return getMana(uuid) >= amount;
     }
 
     public boolean hasMana(Player player, double amount) {
+        if (player != null && player.getGameMode() == org.bukkit.GameMode.CREATIVE) return true;
         return player != null && hasMana(player.getUniqueId(), amount);
     }
 
     public boolean consumeMana(UUID uuid, double amount) {
+        Player p = Bukkit.getPlayer(uuid);
+        if (p != null && p.getGameMode() == org.bukkit.GameMode.CREATIVE) return true;
         double current = getMana(uuid);
         if (current < amount) return false;
         double next = current - amount;
         currentMana.put(uuid, next);
-        Player p = Bukkit.getPlayer(uuid);
         if (p != null && p.isOnline()) {
             updateManaBossBar(p, next, getMaxMana(uuid));
         }
@@ -139,6 +143,7 @@ public class ManaManager {
     }
 
     public boolean consumeMana(Player player, double amount) {
+        if (player != null && player.getGameMode() == org.bukkit.GameMode.CREATIVE) return true;
         return player != null && consumeMana(player.getUniqueId(), amount);
     }
 

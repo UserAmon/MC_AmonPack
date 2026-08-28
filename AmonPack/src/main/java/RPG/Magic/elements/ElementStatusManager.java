@@ -81,6 +81,10 @@ public class ElementStatusManager {
     }
 
     public static void triggerDamageAndReaction(Player caster, LivingEntity victim, double damage, SpellElement attackElement, ItemStack tomeItem) {
+        triggerDamageAndReaction(caster, victim, damage, attackElement, tomeItem, false);
+    }
+
+    public static void triggerDamageAndReaction(Player caster, LivingEntity victim, double damage, SpellElement attackElement, ItemStack tomeItem, boolean ignoreArmor) {
         if (victim == null || !victim.isValid() || victim.isDead()) return;
 
         double finalDamage = damage;
@@ -100,6 +104,9 @@ public class ElementStatusManager {
 
             for (org.bukkit.entity.Entity nearby : victim.getWorld().getNearbyEntities(loc, 4.0, 4.0, 4.0)) {
                 if (nearby instanceof LivingEntity le && !nearby.equals(caster)) {
+                    if (ignoreArmor && le instanceof Player p) {
+                        p.setMetadata("magic_ignore_armor", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, true));
+                    }
                     le.damage(5.0, caster);
                     le.setFireTicks(80);
                 }
@@ -118,6 +125,9 @@ public class ElementStatusManager {
 
             for (org.bukkit.entity.Entity nearby : victim.getWorld().getNearbyEntities(loc, 5.0, 5.0, 5.0)) {
                 if (nearby instanceof LivingEntity le && !nearby.equals(caster)) {
+                    if (ignoreArmor && le instanceof Player p) {
+                        p.setMetadata("magic_ignore_armor", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, true));
+                    }
                     le.damage(7.0, caster);
                     le.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1));
                 }
@@ -137,6 +147,9 @@ public class ElementStatusManager {
         }
 
         // Zadanie obrażeń głównemu celowi
+        if (ignoreArmor && victim instanceof Player p) {
+            p.setMetadata("magic_ignore_armor", new org.bukkit.metadata.FixedMetadataValue(AmonPackPlugin.plugin, true));
+        }
         victim.damage(finalDamage, caster);
 
         if (!reactionTriggered) {

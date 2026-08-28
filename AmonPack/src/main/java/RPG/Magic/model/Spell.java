@@ -66,6 +66,92 @@ public abstract class Spell {
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis() + cooldownMs);
     }
 
+    public int getEffectiveMana(ItemStack tomeItem) {
+        return getEffectiveMana(null, tomeItem);
+    }
+
+    public int getEffectiveMana(Player player, ItemStack tomeItem) {
+        double mana = getManaCost();
+        if (tomeItem != null && RPG.Magic.manager.MagicItemManager.hasUpgrade(tomeItem, getId() + "_mana")) {
+            int reduction = getUpgradeManaReduction(getId() + "_mana");
+            mana = mana - reduction;
+        }
+        if (player != null) {
+            double percentRed = RPG.Crafting.Objects.CustomArmorManager.getPlayerManaReductionPercent(player, getElement());
+            if (percentRed > 0) {
+                mana = mana * (1.0 - percentRed);
+            }
+            double flatRed = RPG.Crafting.Objects.CustomArmorManager.getPlayerManaReductionFlat(player, getElement());
+            if (flatRed > 0) {
+                mana = mana - flatRed;
+            }
+        }
+        return Math.max(5, (int) Math.round(mana));
+    }
+
+    public double getEffectiveCooldown(ItemStack tomeItem) {
+        return getEffectiveCooldown(null, tomeItem);
+    }
+
+    public double getEffectiveCooldown(Player player, ItemStack tomeItem) {
+        double cd = getCooldownSeconds();
+        if (tomeItem != null && RPG.Magic.manager.MagicItemManager.hasUpgrade(tomeItem, getId() + "_cd")) {
+            double reduction = getUpgradeCooldownReduction(getId() + "_cd");
+            cd = cd - reduction;
+        }
+        if (player != null) {
+            double percentRed = RPG.Crafting.Objects.CustomArmorManager.getPlayerCooldownReductionPercent(player, getElement());
+            if (percentRed > 0) {
+                cd = cd * (1.0 - percentRed);
+            }
+            double flatRed = RPG.Crafting.Objects.CustomArmorManager.getPlayerCooldownReductionFlat(player, getElement());
+            if (flatRed > 0) {
+                cd = cd - flatRed;
+            }
+        }
+        return Math.max(1.0, cd);
+    }
+
+    public static int getUpgradeManaReduction(String upgradeKey) {
+        org.bukkit.configuration.file.FileConfiguration cfg = Plugin.AmonPackPlugin.magicConfig;
+        if (cfg != null && cfg.contains("magic.upgrades." + upgradeKey + ".mana_reduction")) {
+            return cfg.getInt("magic.upgrades." + upgradeKey + ".mana_reduction");
+        }
+        return 10;
+    }
+
+    public static double getUpgradeCooldownReduction(String upgradeKey) {
+        org.bukkit.configuration.file.FileConfiguration cfg = Plugin.AmonPackPlugin.magicConfig;
+        if (cfg != null && cfg.contains("magic.upgrades." + upgradeKey + ".cooldown_reduction")) {
+            return cfg.getDouble("magic.upgrades." + upgradeKey + ".cooldown_reduction");
+        }
+        return 1.0;
+    }
+
+    public boolean checkAndConsumeCost(Player player, ItemStack tomeItem, ManaManager manaManager) {
+        if (isOnCooldown(player)) {
+            sendCooldownActionBar(player);
+            return false;
+        }
+
+        if (player.getGameMode() == org.bukkit.GameMode.CREATIVE) {
+            double effectiveCd = getEffectiveCooldown(player, tomeItem);
+            setCooldown(player, (long) (effectiveCd * 1000));
+            return true;
+        }
+
+        int effectiveMana = getEffectiveMana(player, tomeItem);
+        if (!manaManager.hasMana(player, effectiveMana)) {
+            sendNoManaActionBar(player, effectiveMana, manaManager);
+            return false;
+        }
+
+        manaManager.consumeMana(player, effectiveMana);
+        double effectiveCd = getEffectiveCooldown(player, tomeItem);
+        setCooldown(player, (long) (effectiveCd * 1000));
+        return true;
+    }
+
     public void sendCooldownActionBar(Player player) {
         if (player == null) return;
         player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 

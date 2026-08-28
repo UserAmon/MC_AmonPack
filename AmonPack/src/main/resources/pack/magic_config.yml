@@ -44,50 +44,50 @@ magic:
     fireblast:
       name: "§c§lFire Blast"
       element: FIRE
-      mana_cost: 35
+      mana_cost: 10
       cooldown: 3.5
-      damage: 10.0
+      damage: 4.0
       description: "Wystrzeliwuje ognistą kulę podpalającą i eksplodującą przy trafieniu."
 
     blazing:
       name: "§6§lBlazing"
       element: FIRE
-      mana_cost: 40
+      mana_cost: 30
       cooldown: 4.0
-      damage: 7.0
+      damage: 6.0
       description: "Ciska 3 kulami ognia w rozrzucie."
 
     flashpoint:
       name: "§4§lFlashPoint"
       element: FIRE
-      mana_cost: 50
-      cooldown: 5.0
-      damage: 14.0
+      mana_cost: 40
+      cooldown: 10.0
+      damage: 10.0
       description: "Potężny promień skupionego ognia penetrujący linie wrogów."
 
     fire_circle:
       name: "§e§lFire Circle"
       element: FIRE
-      mana_cost: 30
-      cooldown: 6.0
-      damage: 5.0
+      mana_cost: 20
+      cooldown: 12.0
+      damage: 4.0
       description: "Tworzy pierścień ognia wokół rzucającego odpychający i palący wrogów."
 
     barrage:
       name: "§c§lBarrage"
       element: FIRE
-      mana_cost: 45
-      cooldown: 7.0
-      damage: 4.5
+      mana_cost: 25
+      cooldown: 8.0
+      damage: 3.5
       description: "Grad małych pocisków ognia spadający na cel."
 
     # ------------------------- POWIETRZE (AIR) -------------------------------
     blow:
       name: "§f§lBlow"
       element: AIR
-      mana_cost: 25
-      cooldown: 2.5
-      damage: 4.0
+      mana_cost: 5
+      cooldown: 2
+      damage: 2.0
       description: "Wystrzeliwuje silny podmuch wiatru odrzucający wrogów."
 
     airblade:
@@ -101,25 +101,25 @@ magic:
     air_vortex:
       name: "§3§lWir Powietrza"
       element: AIR
-      mana_cost: 45
+      mana_cost: 35
       cooldown: 8.0
-      damage: 12.0
+      damage: 4.0
       description: "Tkanie gwiazdy wiatru i uwolnienie gigantycznego wiru."
 
     # ------------------------ BŁYSKAWICE (LIGHTNING) -------------------------
     lightning:
       name: "§e§lLightning"
       element: LIGHTNING
-      mana_cost: 30
-      cooldown: 4.0
-      damage: 12.0
+      mana_cost: 25
+      cooldown: 8.0
+      damage: 8.0
       description: "Odliczający pierścień elektryczny, w który po 2s uderza piorun."
 
     chain_lightning:
       name: "§6§lChain Lightning"
       element: LIGHTNING
-      mana_cost: 45
-      cooldown: 5.5
+      mana_cost: 40
+      cooldown: 10
       damage: 9.0
       description: "Łańcuch piorunów przeskakujący między wrogami i wybuchający w wodzie."
 
@@ -127,17 +127,17 @@ magic:
     splash:
       name: "§b§lSplash"
       element: WATER
-      mana_cost: 20
-      cooldown: 2.0
-      damage: 6.5
+      mana_cost: 15
+      cooldown: 1.0
+      damage: 4
       description: "Wodny pocisk Waterstrike (wymaga butelki wody w EQ lub wody w pobliżu)."
 
     freeze:
       name: "§3§lFreeze"
       element: WATER
-      mana_cost: 35
-      cooldown: 6.0
-      damage: 8.0
+      mana_cost: 25
+      cooldown: 3.0
+      damage: 4.0
       description: "Zamraża taflę wody w promieniu 5 bloków w lód, który po 5s eksploduje."
 
     evaporate:
@@ -152,27 +152,15 @@ magic:
   #                                ULEPSZENIA
   # ============================================================================
   upgrades:
-    # --- Ogólne (Tomy, Różdżki, Laski) ---
-    mana_reduction:
-      name: "§bEfektywność Many"
-      desc: "Zmniejsza koszt many zaklęć o 10 MP."
-      cost_exp: 5
-    cooldown_reduction:
-      name: "§eSzybki Rzut"
-      desc: "Skraca czas odnowienia zaklęć o 1.0s."
-      cost_exp: 5
-    multi_cast:
-      name: "§6Wielokrotny Pocisk"
-      desc: "Wystrzeliwuje 2 pociski jednocześnie w lekkim rozrzucie."
-      cost_exp: 8
-
-    # --- Ogień (Fire Blast) ---
+    # --- Ogień: Fire Blast ---
     fireblast_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 10
       desc: "Zmniejsza koszt many Fire Blast o -10 MP."
       cost_exp: 5
     fireblast_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 1.0
       desc: "Skraca czas odnowienia Fire Blast o -1.0s."
       cost_exp: 5
     fireblast_multi:
@@ -184,39 +172,47 @@ magic:
       desc: "Trafienie wroga w Stanie Ognia rykoszetuje do 3 pobliskich celów."
       cost_exp: 10
 
-    # --- Ogień (Blazing, FlashPoint, Fire Circle, Barrage) ---
+    # --- Ogień: Blazing ---
     blazing_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 15
       desc: "Zmniejsza koszt many Blazing o -15 MP."
       cost_exp: 5
     blazing_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 1.5
       desc: "Skraca cooldown Blazing o -1.5s."
       cost_exp: 5
     blazing_power:
       name: "§6Piekielna Fala"
-      desc: "Zwiększa obrażenia fali o +4.0 i wydłuża podpalenie do 8s."
+      desc: "Zwiększa obrażenia fali i wydłuża podpalenie do 8s."
       cost_exp: 8
 
+    # --- Ogień: FlashPoint ---
     flashpoint_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 20
       desc: "Zmniejsza koszt many FlashPoint o -20 MP."
       cost_exp: 8
     flashpoint_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 2.0
       desc: "Skraca cooldown FlashPoint o -2.0s."
       cost_exp: 8
     flashpoint_radius:
       name: "§4Kataklizm"
-      desc: "Zwiększa promień eksplozji do 6 bloków i zadaje +6.0 obrażeń."
+      desc: "Zwiększa promień eksplozji do 6 bloków i zadaje potężne obrażenia."
       cost_exp: 12
 
+    # --- Ogień: Fire Circle ---
     fire_circle_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 15
       desc: "Zmniejsza koszt many Fire Circle o -15 MP."
       cost_exp: 5
     fire_circle_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 2.0
       desc: "Skraca cooldown Fire Circle o -2.0s."
       cost_exp: 5
     fire_circle_barrier:
@@ -224,12 +220,15 @@ magic:
       desc: "Zwiększa siłę odepchnięcia i daje odporność na ogień na 5s."
       cost_exp: 8
 
+    # --- Ogień: Barrage ---
     barrage_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 20
       desc: "Zmniejsza koszt many Barrage o -20 MP."
       cost_exp: 8
     barrage_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 2.0
       desc: "Skraca cooldown Barrage o -2.0s."
       cost_exp: 8
     barrage_count:
@@ -237,39 +236,47 @@ magic:
       desc: "Wystrzeliwuje 6 pocisków zamiast 4."
       cost_exp: 12
 
-    # --- Powietrze (Blow, Airblade, Wir) ---
+    # --- Powietrze: Blow ---
     blow_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 10
       desc: "Zmniejsza koszt many Blow o -10 MP."
       cost_exp: 5
     blow_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 1.0
       desc: "Skraca cooldown Blow o -1.0s."
       cost_exp: 5
     blow_power:
       name: "§fPoryw Fenów"
-      desc: "Zwiększa odrzut o +50% i zadaje +3.0 obrażeń."
+      desc: "Zwiększa odrzut o +50% i zadaje dodatkowe obrażenia."
       cost_exp: 8
 
+    # --- Powietrze: Airblade ---
     airblade_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 15
       desc: "Zmniejsza koszt many Airblade o -15 MP."
       cost_exp: 5
     airblade_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 1.5
       desc: "Skraca cooldown Airblade o -1.5s."
       cost_exp: 5
     airblade_width:
       name: "§bSzerokie Cięcie"
-      desc: "Zwiększa szerokość cięcia wiatru i zadaje +4.0 obrażeń."
+      desc: "Zwiększa szerokość cięcia wiatru i zadaje dodatkowe obrażenia."
       cost_exp: 8
 
+    # --- Powietrze: Wir Powietrza ---
     air_vortex_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 15
       desc: "Zmniejsza koszt many Wiru o -15 MP."
       cost_exp: 5
     air_vortex_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 2.0
       desc: "Skraca cooldown Wiru o -2.0s."
       cost_exp: 5
     air_vortex_radius:
@@ -277,59 +284,85 @@ magic:
       desc: "Zwiększa promień zasysania do 12 bloków i czas trwania do 6s."
       cost_exp: 10
 
-    # --- Błyskawice (Lightning, Chain Lightning) ---
+    # --- Błyskawice: Lightning ---
     lightning_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 10
       desc: "Zmniejsza koszt many Lightning o -10 MP."
       cost_exp: 5
     lightning_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 1.0
       desc: "Skraca cooldown Lightning o -1.0s."
       cost_exp: 5
-    lightning_dmg:
-      name: "§eGrzmot Pioruna"
-      desc: "Zwiększa obrażenia Lightning o +5.0 DMG."
+    lightning_power:
+      name: "§ePiorun Kulisty"
+      desc: "Zwiększa obrażenia pioruna i promień rażenia do 6 bloków."
       cost_exp: 8
 
+    # --- Błyskawice: Chain Lightning ---
     chain_lightning_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 15
       desc: "Zmniejsza koszt many Chain Lightning o -15 MP."
-      cost_exp: 5
+      cost_exp: 6
     chain_lightning_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 1.5
       desc: "Skraca cooldown Chain Lightning o -1.5s."
-      cost_exp: 5
-    chain_bounces:
-      name: "§6Więcej Odbić"
-      desc: "Chain Lightning odbija się do 6 celów."
-      cost_exp: 8
+      cost_exp: 6
+    chain_lightning_bounces:
+      name: "§6Hiperprzewodność"
+      desc: "Zwiększa liczbę przeskoków do 6 i obrażenia wybuchu w wodzie."
+      cost_exp: 10
 
-    # --- Woda (Splash, Freeze, Evaporate) ---
+    # --- Woda: Splash ---
     splash_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 10
       desc: "Zmniejsza koszt many Splash o -10 MP."
       cost_exp: 4
     splash_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 0.8
       desc: "Skraca cooldown Splash o -0.8s."
       cost_exp: 4
-    splash_dmg:
-      name: "§bPotęga Fali"
-      desc: "Zwiększa obrażenia Splash o +3.0 DMG."
+    splash_power:
+      name: "§bWodna Kula"
+      desc: "Zwiększa siłę odrzutu i obrażenia pocisku wodnego."
       cost_exp: 6
 
+    # --- Woda: Freeze ---
     freeze_mana:
       name: "§bEfektywność Many"
+      mana_reduction: 15
       desc: "Zmniejsza koszt many Freeze o -15 MP."
       cost_exp: 5
     freeze_cd:
       name: "§eSzybki Rzut"
+      cooldown_reduction: 1.5
       desc: "Skraca cooldown Freeze o -1.5s."
       cost_exp: 5
     freeze_radius:
-      name: "§3Większy Zasięg Zamarzania"
-      desc: "Zwiększa promień zamrażania z 5 do 8 bloków."
+      name: "§3Lodowa Otchłań"
+      desc: "Zwiększa promień zamrażania do 6 bloków i obrażenia eksplozji lodu."
       cost_exp: 8
+
+    # --- Woda: Evaporate ---
+    evaporate_mana:
+      name: "§bEfektywność Many"
+      mana_reduction: 20
+      desc: "Zmniejsza koszt many Evaporate o -20 MP."
+      cost_exp: 8
+    evaporate_cd:
+      name: "§eSzybki Rzut"
+      cooldown_reduction: 2.0
+      desc: "Skraca cooldown Evaporate o -2.0s."
+      cost_exp: 8
+    evaporate_power:
+      name: "§cWrząca Mgła"
+      desc: "Zadaje obrażenia wrzątku wszystkim wrogom w chmurze pary."
+      cost_exp: 10
 
   # ============================================================================
   #                        PRZEDMIOTY MAGICZNE (POZIOMY)
@@ -337,6 +370,7 @@ magic:
   items:
     tome_fire:
       display_name: "§c§lTom Ognia"
+      short_desc: "Starożytna księga zawierająca pierwotne zaklęcia płomieni."
       element: "FIRE"
       levels:
         1:
@@ -377,6 +411,7 @@ magic:
 
     wand_fen:
       display_name: "§b§lRóżdżka Fenów"
+      short_desc: "Mistyczna różdżka wiatru wykuta z esencji fenów."
       element: "AIR"
       levels:
         1:
@@ -399,6 +434,7 @@ magic:
 
     staff_lightning:
       display_name: "§e§lLaska Błyskawic"
+      short_desc: "Mistyczna laska przewodząca pioruny i energię burzy."
       element: "LIGHTNING"
       levels:
         1:
@@ -420,6 +456,7 @@ magic:
 
     wand_water:
       display_name: "§9§lRóżdżka Wody"
+      short_desc: "Różdżka ukształtowana z czystego oceanicznego kryształu."
       element: "WATER"
       levels:
         1:

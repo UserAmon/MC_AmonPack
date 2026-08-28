@@ -552,19 +552,34 @@ public class Listeners implements Listener {
                                 Abilities.PK_Abilities.Air.GustShield.class);
                 shield.onHit();
                 event.setCancelled(true);
+                return;
             }
 
-            double totalReduction = 0;
+            boolean ignoreArmor = p.hasMetadata("magic_ignore_armor");
+            if (ignoreArmor) {
+                p.removeMetadata("magic_ignore_armor", AmonPackPlugin.plugin);
+            }
+
             for (ItemStack item : p.getInventory().getArmorContents()) {
                 if (item != null && item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
                     if (CraftingMenager.IsArmor(item)) {
                         Craftable_Armor armor = CraftingMenager.GetCraftedArmorByItem(item);
-                        totalReduction += armor.ExecutePlayerGetDamaged(event.getDamager(), item, p);
-
+                        if (armor != null) {
+                            armor.ExecutePlayerGetDamaged(event.getDamager(), item, p);
+                        }
                     }
                 }
             }
-            double newDamage = event.getDamage() - totalReduction;
+
+            // Nadpisujemy / znosimy waniliową redukcję zbroi Minecrafta
+            try {
+                if (event.isApplicable(org.bukkit.event.entity.EntityDamageEvent.DamageModifier.ARMOR)) {
+                    event.setDamage(org.bukkit.event.entity.EntityDamageEvent.DamageModifier.ARMOR, 0.0);
+                }
+            } catch (Exception ignored) {}
+
+            double baseDamage = event.getDamage();
+            double newDamage = RPG.Crafting.Objects.CustomArmorManager.calculateReducedDamage(p, baseDamage, ignoreArmor);
             event.setDamage(newDamage);
         }
 
@@ -846,7 +861,7 @@ public class Listeners implements Listener {
                 List<ItemStack> requiredItems = mold.getItemsRequiredToShapeMold();
                 boolean hasAll = true;
                 for (ItemStack required : requiredItems) {
-                    if (!inv.containsAtLeast(required, required.getAmount())) {
+                    if (CraftingMenager.countMatchingItems(p, required) < required.getAmount()) {
                         hasAll = false;
                         break;
                     }

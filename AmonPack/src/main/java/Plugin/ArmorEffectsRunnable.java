@@ -14,6 +14,8 @@ public class ArmorEffectsRunnable extends BukkitRunnable {
     @Override
     public void run() {
         for (Player player : Bukkit.getOnlinePlayers()) {
+            RPG.Crafting.Objects.CustomArmorManager.updatePlayerSpeed(player);
+
             if (player.getFireTicks() > 10) {
                 boolean hasPhoenixHeart = false;
                 for (ItemStack item : player.getInventory().getArmorContents()) {

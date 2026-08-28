@@ -47,21 +47,33 @@ public class SpellSelectUpgradeGui implements InventoryHolder {
             inventory.setItem(i, filler);
         }
 
-        boolean isAir = MagicItemManager.isAirWand(mainHandItem);
+        String itemId = MagicItemManager.getMagicItemId(mainHandItem);
+        if (itemId == null) itemId = "tome_fire";
         int itemLevel = MagicItemManager.getTomeLevel(mainHandItem);
 
-        if (isAir) {
-            // Różdżka Fenów: Blow (11), Airblade (13), Wir Powietrza (15)
-            addSpellSlot(11, "blow", Material.FEATHER, "§f§lZaklęcie: Blow", 1, itemLevel);
-            addSpellSlot(13, "airblade", Material.IRON_SWORD, "§b§lZaklęcie: Airblade", 2, itemLevel);
-            addSpellSlot(15, "air_vortex", Material.ELYTRA, "§3§lZaklęcie: Wir Powietrza", 2, itemLevel);
-        } else {
-            // Tom Ognia: Fire Blast (10), Blazing (12), FlashPoint (14), Fire Circle (16), Barrage (22)
-            addSpellSlot(10, "fireblast", Material.FIRE_CHARGE, "§c§lZaklęcie: Fire Blast", 1, itemLevel);
-            addSpellSlot(12, "blazing", Material.BLAZE_POWDER, "§6§lZaklęcie: Blazing", 2, itemLevel);
-            addSpellSlot(14, "flashpoint", Material.LAVA_BUCKET, "§4§lZaklęcie: FlashPoint", 3, itemLevel);
-            addSpellSlot(16, "fire_circle", Material.MAGMA_CREAM, "§e§lZaklęcie: Fire Circle", 2, itemLevel);
-            addSpellSlot(22, "barrage", Material.BLAZE_ROD, "§d§lZaklęcie: Barrage", 3, itemLevel);
+        switch (itemId) {
+            case "wand_fen" -> {
+                addSpellSlot(11, "blow", Material.FEATHER, "§f§lZaklęcie: Blow", 1, itemLevel);
+                addSpellSlot(13, "airblade", Material.IRON_SWORD, "§b§lZaklęcie: Airblade", 2, itemLevel);
+                addSpellSlot(15, "air_vortex", Material.ELYTRA, "§3§lZaklęcie: Wir Powietrza", 2, itemLevel);
+            }
+            case "staff_lightning" -> {
+                addSpellSlot(12, "lightning", Material.LIGHTNING_ROD, "§e§lZaklęcie: Lightning", 1, itemLevel);
+                addSpellSlot(14, "chain_lightning", Material.COPPER_INGOT, "§6§lZaklęcie: Chain Lightning", 2, itemLevel);
+            }
+            case "wand_water" -> {
+                addSpellSlot(11, "splash", Material.PRISMARINE_SHARD, "§b§lZaklęcie: Splash", 1, itemLevel);
+                addSpellSlot(13, "freeze", Material.ICE, "§9§lZaklęcie: Freeze", 2, itemLevel);
+                addSpellSlot(15, "evaporate", Material.WATER_BUCKET, "§3§lZaklęcie: Evaporate", 3, itemLevel);
+            }
+            default -> {
+                // Tom Ognia i domyślne tomy
+                addSpellSlot(10, "fireblast", Material.FIRE_CHARGE, "§c§lZaklęcie: Fire Blast", 1, itemLevel);
+                addSpellSlot(12, "blazing", Material.BLAZE_POWDER, "§6§lZaklęcie: Blazing", 2, itemLevel);
+                addSpellSlot(14, "flashpoint", Material.LAVA_BUCKET, "§4§lZaklęcie: FlashPoint", 3, itemLevel);
+                addSpellSlot(16, "fire_circle", Material.MAGMA_CREAM, "§e§lZaklęcie: Fire Circle", 2, itemLevel);
+                addSpellSlot(22, "barrage", Material.BLAZE_ROD, "§d§lZaklęcie: Barrage", 3, itemLevel);
+            }
         }
 
         // Slot 18: Powrót do Ołtarza

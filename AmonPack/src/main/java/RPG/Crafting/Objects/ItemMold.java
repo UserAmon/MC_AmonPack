@@ -80,11 +80,28 @@ public class ItemMold {
             EffectsLore.add("§9§lBazowe obrażenia: " + damage);
         }
         if (TypeOfMold == ItemType.ARMOR) {
-            EffectsLore.add("");
-            EffectsLore.add("§9§lBazowe obrona: " + damage);
+            if (this instanceof Craftable_Armor ca) {
+                EffectsLore = new ArrayList<>(ca.getFormattedArmorLore());
+                if (!ExistingEffects.isEmpty()) {
+                    EffectsLore.add("");
+                    EffectsLore.add("§9Wykute Runy:");
+                    for (MagicEffects effects : ExistingEffects) {
+                        EffectsLore.add("§8- " + effects.getDisplayName());
+                    }
+                }
+            } else {
+                EffectsLore.add("");
+                EffectsLore.add("§9§lBazowa obrona: " + damage);
+            }
         }
         MoldMeta.setLore(EffectsLore);
         NewMold.setItemMeta(MoldMeta);
+
+        // Jeśli wytworzono przedmiot magiczny, inicjalizujemy dane magii (poziom 1, 0 zabójstw, domyślny czar, ujednolicone lore)
+        if (CraftIntoItem && (RPG.Magic.manager.MagicItemManager.isMagicItem(NewMold) || RPG.Crafting.CraftingMenager.isMagicMold(this))) {
+            RPG.Magic.manager.MagicItemManager.initMagicItem(NewMold, weaponID.toLowerCase(java.util.Locale.ROOT));
+        }
+
         player.getInventory().addItem(NewMold);
 
         // Powiadomienie systemu progresji o wytworzeniu przedmiotu

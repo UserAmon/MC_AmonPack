@@ -30,18 +30,15 @@ public class AirVortexSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "air_vortex_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "air_vortex_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
-
-        int effectiveMana = hasManaRed ? Math.max(20, getManaCost() - 15) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(3.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
+        int effectiveMana = getEffectiveMana(player, tomeItem);
+        double effectiveCd = getEffectiveCooldown(player, tomeItem);
 
         if (isOnCooldown(player)) {
             sendCooldownActionBar(player);
             return false;
         }
 
-        if (!manaManager.hasMana(player, effectiveMana)) {
+        if (player.getGameMode() != org.bukkit.GameMode.CREATIVE && !manaManager.hasMana(player, effectiveMana)) {
             sendNoManaActionBar(player, effectiveMana, manaManager);
             return false;
         }

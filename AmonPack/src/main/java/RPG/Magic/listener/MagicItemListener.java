@@ -77,12 +77,38 @@ public class MagicItemListener implements Listener {
                 return;
             }
 
-            // Standardowe PPM: jeśli gracz nie ma strzał, uruchamiamy wirtualne ładowanie czaru
+            // PPM bez Shiftu: naciąganie łuku z animacją spowolnienia i widocznym ładowaniem
             if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
-                if (!hasArrow(player)) {
+                String spellId = MagicItemManager.getPrimarySpellId(item);
+                Spell spell = spellRegistry.getSpell(spellId);
+                if (spell == null) {
                     event.setCancelled(true);
-                    handleVirtualStaffCharge(player, item);
+                    player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                            net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§cBrak przypisanego zaklęcia!"));
+                    return;
                 }
+
+                // Natychmiastowa blokada jeśli czar ma cooldown
+                if (spell.isOnCooldown(player)) {
+                    event.setCancelled(true);
+                    spell.sendCooldownActionBar(player);
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.7f, 1.2f);
+                    return;
+                }
+
+                // Natychmiastowa blokada jeśli brak many (chyba że w Creative)
+                if (player.getGameMode() != org.bukkit.GameMode.CREATIVE) {
+                    int effectiveMana = spell.getEffectiveMana(player, item);
+                    if (!manaManager.hasMana(player, effectiveMana)) {
+                        event.setCancelled(true);
+                        spell.sendNoManaActionBar(player, effectiveMana, manaManager);
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.7f, 1.2f);
+                        return;
+                    }
+                }
+
+                ensureMagicArrow(player);
+                startStaffChargeParticles(player);
                 return;
             }
         }
@@ -165,10 +191,18 @@ public class MagicItemListener implements Listener {
         ItemStack bow = event.getBow();
         if (bow == null || !MagicItemManager.isMagicStaff(bow)) return;
 
-        // Anulowanie strzały i pocisku fizycznego
+        // Zawsze anulujemy fizyczną strzałę i jej zużycie
         event.setCancelled(true);
 
-        // Rzucenie czaru z laski przy puszczeniu łuku
+        float force = event.getForce();
+        if (force < 0.75f) {
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
+                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c✦ Ładowanie przerwane za wcześnie! (Przytrzymaj PPM do pełnego naciągnięcia)"));
+            player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 0.7f, 1.6f);
+            return;
+        }
+
+        // Rzucenie czaru z laski przy pełnym naładowaniu łuku
         String spellId = MagicItemManager.getPrimarySpellId(bow);
         Spell spell = spellRegistry.getSpell(spellId);
         if (spell != null) {
@@ -176,36 +210,44 @@ public class MagicItemListener implements Listener {
         }
     }
 
-    private void handleVirtualStaffCharge(Player player, ItemStack staffItem) {
+    private void ensureMagicArrow(Player player) {
+        if (hasArrow(player)) return;
+        ItemStack dummyArrow = new ItemStack(Material.ARROW, 1);
+        var meta = dummyArrow.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName("§8Magiczna Strzała");
+            meta.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "magic_arrow"), org.bukkit.persistence.PersistentDataType.BYTE, (byte) 1);
+            dummyArrow.setItemMeta(meta);
+        }
+        player.getInventory().addItem(dummyArrow);
+    }
+
+    private void startStaffChargeParticles(Player player) {
         UUID uuid = player.getUniqueId();
         if (staffChargeStart.containsKey(uuid)) return;
-
         staffChargeStart.put(uuid, System.currentTimeMillis());
-        player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.5f);
 
         new BukkitRunnable() {
             int ticks = 0;
-            final int maxChargeTicks = 25; // 1.25 sekundy
-
             @Override
             public void run() {
-                if (!player.isOnline() || !player.getInventory().getItemInMainHand().equals(staffItem)) {
+                if (!player.isOnline() || !MagicItemManager.isMagicStaff(player.getInventory().getItemInMainHand())) {
+                    staffChargeStart.remove(uuid);
+                    cancel();
+                    return;
+                }
+                if (!player.isHandRaised() && ticks > 4) {
                     staffChargeStart.remove(uuid);
                     cancel();
                     return;
                 }
 
                 ticks += 2;
-                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(0, 1.2, 0), 4, 0.3, 0.5, 0.3, 0.05);
+                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation().add(0, 1.2, 0), 4, 0.3, 0.4, 0.3, 0.05);
 
-                if (ticks >= maxChargeTicks) {
-                    cancel();
+                if (ticks >= 40) {
                     staffChargeStart.remove(uuid);
-                    String spellId = MagicItemManager.getPrimarySpellId(staffItem);
-                    Spell spell = spellRegistry.getSpell(spellId);
-                    if (spell != null) {
-                        spell.cast(player, staffItem, manaManager);
-                    }
+                    cancel();
                 }
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 0L, 2L);

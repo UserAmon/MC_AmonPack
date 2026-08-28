@@ -48,12 +48,6 @@ public class SplashSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "splash_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "splash_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
-
-        int effectiveMana = hasManaRed ? Math.max(10, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(1.0, getCooldownSeconds() - 1.0) : getCooldownSeconds();
-
         if (isOnCooldown(player)) {
             sendCooldownActionBar(player);
             return false;
@@ -62,9 +56,10 @@ public class SplashSpell extends Spell {
         UUID uuid = player.getUniqueId();
         boolean hasBottle = hasWaterBottle(player);
         boolean hasDrawnWater = hasPreparedSource(uuid);
+        boolean isCreative = player.getGameMode() == org.bukkit.GameMode.CREATIVE;
 
         // Jeśli gracz nie ma butelki i nie ma przyciągniętej wody przez Shift
-        if (!hasBottle && !hasDrawnWater) {
+        if (!hasBottle && !hasDrawnWater && !isCreative) {
             // Próba natychmiastowego pobrania ze spojrzenia na wodę (jeśli patrzy na wodę w zasięgu 12 bloków)
             RayTraceResult ray = player.getWorld().rayTraceBlocks(player.getEyeLocation(), player.getEyeLocation().getDirection(), 12.0, FluidCollisionMode.ALWAYS, true);
             if (ray != null && ray.getHitBlock() != null && isWaterOrIce(ray.getHitBlock().getType())) {
@@ -79,13 +74,10 @@ public class SplashSpell extends Spell {
             }
         }
 
-        if (!manaManager.hasMana(player, effectiveMana)) {
-            sendNoManaActionBar(player, effectiveMana, manaManager);
+        if (!checkAndConsumeCost(player, tomeItem, manaManager)) {
             return false;
         }
 
-        manaManager.consumeMana(player, effectiveMana);
-        setCooldown(player, (long) (effectiveCd * 1000));
         removePreparedSource(uuid);
 
         // Wystrzelenie pocisku Waterstrike

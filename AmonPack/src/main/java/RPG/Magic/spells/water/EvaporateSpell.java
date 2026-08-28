@@ -32,12 +32,6 @@ public class EvaporateSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "evaporate_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "evaporate_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
-
-        int effectiveMana = hasManaRed ? Math.max(20, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(3.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
-
         if (isOnCooldown(player)) {
             sendCooldownActionBar(player);
             return false;
@@ -55,13 +49,9 @@ public class EvaporateSpell extends Spell {
             return false;
         }
 
-        if (!manaManager.hasMana(player, effectiveMana)) {
-            sendNoManaActionBar(player, effectiveMana, manaManager);
+        if (!checkAndConsumeCost(player, tomeItem, manaManager)) {
             return false;
         }
-
-        manaManager.consumeMana(player, effectiveMana);
-        setCooldown(player, (long) (effectiveCd * 1000));
 
         Location center = centerBlock.getLocation();
         center.getWorld().playSound(center, Sound.BLOCK_FIRE_EXTINGUISH, 1.2f, 0.7f);

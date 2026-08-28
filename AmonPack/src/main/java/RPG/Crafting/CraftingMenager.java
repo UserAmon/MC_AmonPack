@@ -483,7 +483,14 @@ public class CraftingMenager {
                             .getMaterial(Objects.requireNonNull(Config.getString(path + "Material")));
                     String DisplayName = Objects.requireNonNull(Config.getString(path + "Name"));
                     Integer CustomModelId = Config.getInt(path + "Custom_Model_ID");
-                    double DmgReduction = Config.getDouble(path + "Dmg_Reduction");
+                    double armorValue = Config.contains(path + "Armor") ? Config.getDouble(path + "Armor") : Config.getDouble(path + "Dmg_Reduction", 1.0);
+                    double manaRedPercent = Config.getDouble(path + "Mana_Reduction_Percent", 0.0);
+                    double manaRedFlat = Config.getDouble(path + "Mana_Reduction_Flat", 0.0);
+                    String manaElement = Config.getString(path + "Mana_Element", "ALL");
+                    double cdRedPercent = Config.getDouble(path + "Cooldown_Reduction_Percent", 0.0);
+                    double cdRedFlat = Config.getDouble(path + "Cooldown_Reduction_Flat", 0.0);
+                    String cdElement = Config.getString(path + "Cooldown_Element", "ALL");
+                    double speedIncPercent = Config.getDouble(path + "Speed_Increase_Percent", 0.0);
 
                     String MoldPath = path + "Mold.";
                     List<ItemStack> ItemToShapeMold = new ArrayList<>();
@@ -535,7 +542,8 @@ public class CraftingMenager {
                     }
 
                     Craftable_Armor armor = new Craftable_Armor(ArmorName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
-                            ItemLoreList, CustomModelId, AllowedEffects, DmgReduction);
+                            ItemLoreList, CustomModelId, AllowedEffects, armorValue, manaRedPercent, manaRedFlat, manaElement,
+                            cdRedPercent, cdRedFlat, cdElement, speedIncPercent);
                     AllArmor.add(armor);
                 }
             }
@@ -786,10 +794,58 @@ public class CraftingMenager {
         }
     }
 
+    public static boolean matchesCraftingIngredient(ItemStack content, ItemStack required) {
+        if (content == null || required == null) return false;
+        if (content.getType() != required.getType()) return false;
+
+        // Przedmioty magiczne (Różdżki, Laski, Tomy) NIGDY nie są składnikami rzemieślniczymi
+        if (RPG.Magic.manager.MagicItemManager.isMagicItem(content)) {
+            return false;
+        }
+
+        boolean reqHasCmd = required.hasItemMeta() && required.getItemMeta().hasCustomModelData();
+        boolean reqHasCustomName = required.hasItemMeta() && required.getItemMeta().hasDisplayName();
+        boolean contHasCmd = content.hasItemMeta() && content.getItemMeta().hasCustomModelData();
+
+        if (reqHasCmd) {
+            if (!contHasCmd || required.getItemMeta().getCustomModelData() != content.getItemMeta().getCustomModelData()) {
+                return false;
+            }
+        } else {
+            // Wymagany zwykły przedmiot vanilla - ignorujemy przedmioty z CustomModelData
+            if (contHasCmd) {
+                return false;
+            }
+        }
+
+        if (reqHasCustomName) {
+            if (!content.hasItemMeta() || !content.getItemMeta().hasDisplayName() ||
+                    !ChatColor.stripColor(content.getItemMeta().getDisplayName()).equalsIgnoreCase(ChatColor.stripColor(required.getItemMeta().getDisplayName()))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static int countMatchingItems(Player p, ItemStack required) {
+        if (p == null || required == null) return 0;
+        if (p.getGameMode() == org.bukkit.GameMode.CREATIVE) return 9999;
+        int total = 0;
+        for (ItemStack content : p.getInventory().getContents()) {
+            if (matchesCraftingIngredient(content, required)) {
+                total += content.getAmount();
+            }
+        }
+        return total;
+    }
+
     public static boolean HaveItems(Player p, Boolean Delete, List<ItemStack> itemToDelete) {
+        if (p == null || itemToDelete == null) return false;
+        if (p.getGameMode() == org.bukkit.GameMode.CREATIVE) return true;
         boolean hasAll = true;
         for (ItemStack required : itemToDelete) {
-            if (!p.getInventory().containsAtLeast(required, required.getAmount())) {
+            if (countMatchingItems(p, required) < required.getAmount()) {
                 hasAll = false;
                 break;
             }
@@ -798,28 +854,16 @@ public class CraftingMenager {
             for (ItemStack required : itemToDelete) {
                 int amountToRemove = required.getAmount();
                 for (ItemStack content : p.getInventory().getContents()) {
-                    if (content == null)
-                        continue;
-                    if (content.getType() == required.getType()) {
-                        boolean sameMeta = true;
-                        if (required.hasItemMeta()) {
-                            ItemMeta reqMeta = required.getItemMeta();
-                            ItemMeta contMeta = content.getItemMeta();
-                            if (reqMeta.hasCustomModelData() && contMeta.hasCustomModelData()) {
-                                if (reqMeta.getCustomModelData() != contMeta.getCustomModelData()) {
-                                    sameMeta = false;
-                                }
-                            }
-                        }
-                        if (sameMeta) {
-                            int contentAmount = content.getAmount();
-                            if (contentAmount > amountToRemove) {
-                                content.setAmount(contentAmount - amountToRemove);
-                                break;
-                            } else {
-                                amountToRemove -= contentAmount;
-                                content.setAmount(0);
-                            }
+                    if (amountToRemove <= 0) break;
+                    if (matchesCraftingIngredient(content, required)) {
+                        int contentAmount = content.getAmount();
+                        if (contentAmount > amountToRemove) {
+                            content.setAmount(contentAmount - amountToRemove);
+                            amountToRemove = 0;
+                            break;
+                        } else {
+                            amountToRemove -= contentAmount;
+                            content.setAmount(0);
                         }
                     }
                 }
@@ -827,7 +871,6 @@ public class CraftingMenager {
             p.updateInventory();
         }
         return hasAll;
-
     }
 
     private static ItemStack parseItem(String matName, int amount) {

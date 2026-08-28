@@ -23,25 +23,11 @@ public class FireCircleSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "fire_circle_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "fire_circle_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
         boolean hasBarrier = MagicItemManager.hasUpgrade(tomeItem, "fire_circle_barrier");
 
-        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 15) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
-
-        if (isOnCooldown(player)) {
-            sendCooldownActionBar(player);
+        if (!checkAndConsumeCost(player, tomeItem, manaManager)) {
             return false;
         }
-
-        if (!manaManager.hasMana(player, effectiveMana)) {
-            sendNoManaActionBar(player, effectiveMana, manaManager);
-            return false;
-        }
-
-        manaManager.consumeMana(player, effectiveMana);
-        setCooldown(player, (long) (effectiveCd * 1000));
 
         Location center = player.getLocation().add(0, 0.2, 0);
         center.getWorld().playSound(center, Sound.ITEM_FIRECHARGE_USE, 1.2f, 0.7f);

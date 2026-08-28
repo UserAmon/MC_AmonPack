@@ -25,24 +25,9 @@ public class LightningSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "lightning_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "lightning_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
-
-        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(1.5, getCooldownSeconds() - 1.0) : getCooldownSeconds();
-
-        if (isOnCooldown(player)) {
-            sendCooldownActionBar(player);
+        if (!checkAndConsumeCost(player, tomeItem, manaManager)) {
             return false;
         }
-
-        if (!manaManager.hasMana(player, effectiveMana)) {
-            sendNoManaActionBar(player, effectiveMana, manaManager);
-            return false;
-        }
-
-        manaManager.consumeMana(player, effectiveMana);
-        setCooldown(player, (long) (effectiveCd * 1000));
 
         // Raytrace celowania gracza do 35 bloków
         Location eye = player.getEyeLocation();

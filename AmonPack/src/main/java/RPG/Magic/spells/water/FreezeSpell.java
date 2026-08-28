@@ -30,12 +30,6 @@ public class FreezeSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "freeze_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "freeze_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
-
-        int effectiveMana = hasManaRed ? Math.max(15, getManaCost() - 10) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(2.5, getCooldownSeconds() - 1.5) : getCooldownSeconds();
-
         if (isOnCooldown(player)) {
             sendCooldownActionBar(player);
             return false;
@@ -53,13 +47,9 @@ public class FreezeSpell extends Spell {
             return false;
         }
 
-        if (!manaManager.hasMana(player, effectiveMana)) {
-            sendNoManaActionBar(player, effectiveMana, manaManager);
+        if (!checkAndConsumeCost(player, tomeItem, manaManager)) {
             return false;
         }
-
-        manaManager.consumeMana(player, effectiveMana);
-        setCooldown(player, (long) (effectiveCd * 1000));
 
         Location center = centerBlock.getLocation();
         center.getWorld().playSound(center, Sound.BLOCK_GLASS_PLACE, 1.2f, 0.5f);

@@ -23,26 +23,12 @@ public class BarrageSpell extends Spell {
 
     @Override
     public boolean cast(Player player, ItemStack tomeItem, ManaManager manaManager) {
-        boolean hasManaRed = MagicItemManager.hasUpgrade(tomeItem, "barrage_mana") || MagicItemManager.hasUpgrade(tomeItem, "mana_reduction");
-        boolean hasCdRed = MagicItemManager.hasUpgrade(tomeItem, "barrage_cd") || MagicItemManager.hasUpgrade(tomeItem, "cooldown_reduction");
         boolean hasCount = MagicItemManager.hasUpgrade(tomeItem, "barrage_count");
         int maxShots = hasCount ? 6 : 4;
 
-        int effectiveMana = hasManaRed ? Math.max(20, getManaCost() - 20) : getManaCost();
-        double effectiveCd = hasCdRed ? Math.max(2.0, getCooldownSeconds() - 2.0) : getCooldownSeconds();
-
-        if (isOnCooldown(player)) {
-            sendCooldownActionBar(player);
+        if (!checkAndConsumeCost(player, tomeItem, manaManager)) {
             return false;
         }
-
-        if (!manaManager.hasMana(player, effectiveMana)) {
-            sendNoManaActionBar(player, effectiveMana, manaManager);
-            return false;
-        }
-
-        manaManager.consumeMana(player, effectiveMana);
-        setCooldown(player, (long) (effectiveCd * 1000));
 
         new BukkitRunnable() {
             int count = 0;
