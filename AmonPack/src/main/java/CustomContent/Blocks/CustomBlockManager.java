@@ -158,8 +158,15 @@ public class CustomBlockManager {
             case "meteoryt_ore" -> 2;
             case "basalt_ore" -> 3;
             case "arcane_altar" -> 4;
+            case "gunsmith_table" -> 5;
             default -> 0;
         };
+    }
+
+    public String getCustomBlockAt(Location loc) {
+        if (loc == null || loc.getBlock() == null) return null;
+        CustomBlock cb = getCustomBlock(loc.getBlock());
+        return cb != null ? cb.getId() : null;
     }
 
     public void placeBlock(Block block, String customBlockId, boolean applyPhysics, boolean saveImmediately) {

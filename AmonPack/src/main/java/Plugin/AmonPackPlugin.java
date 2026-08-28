@@ -84,6 +84,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static RPG.Progression.ProgressionManager progressionManager;
 	public static RPG.Magic.manager.ManaManager manaManager;
 	public static RPG.Magic.manager.SpellRegistry spellRegistry;
+	public static CustomContent.Guns.GunManager gunManager;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -543,6 +544,12 @@ public class AmonPackPlugin extends JavaPlugin {
 			this.getCommand("amon").setTabCompleter(
 					new CustomContent.Commands.AmonTabCompleter(customItemManager, customBlockManager, bossManager));
 		}
+
+		// --- 6b. SYSTEM BRONI PALNEJ I RUSZNIKARNI ---
+		gunManager = new CustomContent.Guns.GunManager();
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Guns.GunListener(gunManager), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Guns.GunsmithGui(), this);
+		this.getServer().getPluginManager().registerEvents(new CustomContent.Guns.GunsmithManager(customBlockManager), this);
 
 		// --- 7. SYSTEM MAGII I MANY ---
 		spellRegistry = new RPG.Magic.manager.SpellRegistry();

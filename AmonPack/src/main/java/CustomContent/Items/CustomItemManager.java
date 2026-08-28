@@ -301,6 +301,13 @@ public class CustomItemManager {
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
             meta.getPersistentDataContainer().set(ITEM_KEY, PersistentDataType.STRING, customItem.getId());
             stack.setItemMeta(meta);
+
+            // Jeśli to broń palna, aplikujemy GunData
+            CustomContent.Guns.GunType gt = CustomContent.Guns.GunType.fromId(customItem.getId());
+            if (gt != null) {
+                CustomContent.Guns.GunData gd = new CustomContent.Guns.GunData(gt);
+                gd.applyToItemStack(stack);
+            }
         }
         return stack;
     }

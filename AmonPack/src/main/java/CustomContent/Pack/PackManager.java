@@ -154,7 +154,7 @@ public class PackManager {
             // 2b. Atlas tekstur dla Minecraft 1.19.3 - 1.21.4+ (rejestracja wszystkich folderów w atlasie spriteów)
             JsonObject atlasRoot = new JsonObject();
             JsonArray sources = new JsonArray();
-            String[] atlasDirs = {"item", "block", "weapons", "tools", "magic", "crafting", "gui", "armor", "boss"};
+            String[] atlasDirs = {"item", "block", "weapons", "tools", "guns", "ammo", "magic", "crafting", "gui", "armor", "boss"};
             for (String d : atlasDirs) {
                 JsonObject srcObj = new JsonObject();
                 srcObj.addProperty("type", "directory");
@@ -183,6 +183,18 @@ public class PackManager {
             registerModelOverride("wooden_sword", 10007, "amonpack:weapons/sztylet");
             registerModelOverride("wooden_sword", 10020, "amonpack:weapons/bone_sword");
             registerModelOverride("stone_sword", 10027, "amonpack:weapons/basalt_sword");
+
+            // Bronie palne (IRON_HOE)
+            registerModelOverride("iron_hoe", 10050, "amonpack:guns/flintlock_pistol");
+            registerModelOverride("iron_hoe", 10051, "amonpack:guns/flintlock_musket");
+            registerModelOverride("iron_hoe", 10052, "amonpack:guns/blunderbuss");
+            registerModelOverride("iron_hoe", 10053, "amonpack:guns/pepperbox");
+
+            // Amunicja (IRON_NUGGET)
+            registerModelOverride("iron_nugget", 10060, "amonpack:ammo/lead_bullet");
+            registerModelOverride("iron_nugget", 10061, "amonpack:ammo/scatter_shot");
+            registerModelOverride("iron_nugget", 10062, "amonpack:ammo/dragon_cartridge");
+            registerModelOverride("iron_nugget", 10063, "amonpack:ammo/slug_cartridge");
 
             // Łuk (BOW)
             registerModelOverride("bow", 10021, "amonpack:weapons/custom_bow");
@@ -236,6 +248,8 @@ public class PackManager {
             registerModelOverride("iron_nugget", 30003, "amonpack:block/basalt_ore");
             registerModelOverride("note_block", 30004, "amonpack:block/arcane_altar");
             registerModelOverride("iron_nugget", 30004, "amonpack:block/arcane_altar");
+            registerModelOverride("note_block", 30005, "amonpack:block/gunsmith_table");
+            registerModelOverride("iron_nugget", 30005, "amonpack:block/gunsmith_table");
 
             File mcItems = new File(tempBuildDir, "assets/minecraft/items");
             mcItems.mkdirs();
@@ -269,6 +283,11 @@ public class PackManager {
             altarModel.addProperty("model", "amonpack:block/arcane_altar");
             variants.add("instrument=bass,note=4,powered=false", altarModel);
             variants.add("instrument=bass,note=4,powered=true", altarModel);
+
+            JsonObject gunsmithModel = new JsonObject();
+            gunsmithModel.addProperty("model", "amonpack:block/gunsmith_table");
+            variants.add("instrument=bass,note=5,powered=false", gunsmithModel);
+            variants.add("instrument=bass,note=5,powered=true", gunsmithModel);
 
             blockstatesRoot.add("variants", variants);
             try (FileWriter writer = new FileWriter(new File(mcBlockstates, "note_block.json"), StandardCharsets.UTF_8)) {

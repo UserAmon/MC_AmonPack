@@ -443,3 +443,89 @@ items:
       - " &c⚔ Obrażenia: &f+8.5"
       - " &e⚡ Szybkość ataku: &f1.6"
 
+  # --- BRONIE PALNE (FIREARMS) ---
+  flintlock_pistol:
+    display_name: "&6&lPistolet Skałkowy"
+    base_material: IRON_HOE
+    model: "guns/flintlock_pistol"
+    custom_model_data: 10050
+    unbreakable: false
+    lore:
+      - "&7Prymitywna broń boczna na czarny proch."
+
+  flintlock_musket:
+    display_name: "&e&lMuszkiet Piechoty"
+    base_material: IRON_HOE
+    model: "guns/flintlock_musket"
+    custom_model_data: 10051
+    unbreakable: false
+    lore:
+      - "&7Długa broń czarnoprochowa o potężnym zasięgu."
+
+  blunderbuss:
+    display_name: "&c&lGarłacz Rozpylający"
+    base_material: IRON_HOE
+    model: "guns/blunderbuss"
+    custom_model_data: 10052
+    unbreakable: false
+    lore:
+      - "&7Krótka strzelba wypluwająca niszczycielską chmarę śrutu."
+
+  pepperbox:
+    display_name: "&b&lPieprzniczka Obrotowa"
+    base_material: IRON_HOE
+    model: "guns/pepperbox"
+    custom_model_data: 10053
+    unbreakable: false
+    lore:
+      - "&7Czterolufowy pistolet obrotowy na 4 szybkie strzały."
+
+  # --- AMUNICJA (AMMO) ---
+  lead_bullet:
+    display_name: "&f&lOłowiana Kula Muszkietowa"
+    base_material: IRON_NUGGET
+    model: "ammo/lead_bullet"
+    custom_model_data: 10060
+    unbreakable: true
+    lore:
+      - "&7Ciężka kula ołowiana do pistoletów i muszkietów."
+
+  scatter_shot:
+    display_name: "&e&lPakiet Śrutu Ołowianego"
+    base_material: IRON_NUGGET
+    model: "ammo/scatter_shot"
+    custom_model_data: 10061
+    unbreakable: true
+    lore:
+      - "&7Woreczek zawierający 8 ołowianych śrucin dedykowany do Garłacza."
+
+  dragon_cartridge:
+    display_name: "&c&lKula Zapalająca (Smoczy Oddech)"
+    base_material: IRON_NUGGET
+    model: "ammo/dragon_cartridge"
+    custom_model_data: 10062
+    unbreakable: true
+    lore:
+      - "&7Nasycona siarką kula podpalająca wrogów i podłoże."
+
+  slug_cartridge:
+    display_name: "&6&lCiężki Pocisk Brenek (Slug)"
+    base_material: IRON_NUGGET
+    model: "ammo/slug_cartridge"
+    custom_model_data: 10063
+    unbreakable: true
+    lore:
+      - "&7Ciężki monolityczny pocisk do Garłacza zadający potężne obrażenia."
+
+  # --- WARSZTAT RUSZNIKARSKI ---
+  gunsmith_table:
+    display_name: "&8&lWarsztat Rusznikarski"
+    base_material: NOTE_BLOCK
+    model: "block/gunsmith_table"
+    custom_model_data: 30005
+    unbreakable: true
+    lore:
+      - "&7Specjalistyczny stół do naprawy i modyfikacji broni palnej."
+      - ""
+      - "&e✦ Kliknij PPM po postawieniu, aby otworzyć Warsztat!"
+

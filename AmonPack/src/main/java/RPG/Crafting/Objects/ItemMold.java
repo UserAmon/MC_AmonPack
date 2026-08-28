@@ -102,6 +102,15 @@ public class ItemMold {
             RPG.Magic.manager.MagicItemManager.initMagicItem(NewMold, weaponID.toLowerCase(java.util.Locale.ROOT));
         }
 
+        // Jeśli wytworzono broń palną, inicjalizujemy dane broni i lore
+        if (CraftIntoItem) {
+            CustomContent.Guns.GunType gt = CustomContent.Guns.GunType.fromId(weaponID);
+            if (gt != null) {
+                CustomContent.Guns.GunData gd = new CustomContent.Guns.GunData(gt);
+                gd.applyToItemStack(NewMold);
+            }
+        }
+
         player.getInventory().addItem(NewMold);
 
         // Powiadomienie systemu progresji o wytworzeniu przedmiotu

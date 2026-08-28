@@ -1424,3 +1424,230 @@ Craftable_Items:
         c1:
           Material: STICK
           Amount: 1
+
+  # ==========================================
+  # BRONIE PALNE (FIREARMS) & AMUNICJA
+  # ==========================================
+
+  flintlock_pistol:
+    Material: IRON_HOE
+    Name: "§6§lPistolet Skałkowy"
+    Custom_Model_ID: 10050
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: COPPER_INGOT
+          Amount: 4
+        m2:
+          Material: FLINT
+          Amount: 2
+        m3:
+          Material: OAK_PLANKS
+          Amount: 2
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Prymitywna broń boczna na czarny proch."
+      Items_To_Craft:
+        c1:
+          Material: COPPER_INGOT
+          Amount: 2
+
+  flintlock_musket:
+    Material: IRON_HOE
+    Name: "§e§lMuszkiet Piechoty"
+    Custom_Model_ID: 10051
+    Required_Stage: IRON
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: IRON_INGOT
+          Amount: 6
+        m2:
+          Material: FLINT
+          Amount: 3
+        m3:
+          Material: SPRUCE_PLANKS
+          Amount: 4
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Długa broń czarnoprochowa o potężnym zasięgu."
+      Items_To_Craft:
+        c1:
+          Material: IRON_INGOT
+          Amount: 3
+
+  blunderbuss:
+    Material: IRON_HOE
+    Name: "§c§lGarłacz Rozpylający"
+    Custom_Model_ID: 10052
+    Required_Stage: IRON
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: COPPER_INGOT
+          Amount: 6
+        m2:
+          Material: IRON_INGOT
+          Amount: 3
+        m3:
+          Material: FLINT
+          Amount: 2
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Krótka strzelba wypluwająca niszczycielską chmarę śrutu."
+      Items_To_Craft:
+        c1:
+          Material: COPPER_INGOT
+          Amount: 2
+
+  pepperbox:
+    Material: IRON_HOE
+    Name: "§b§lPieprzniczka Obrotowa"
+    Custom_Model_ID: 10053
+    Required_Stage: IRON
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: IRON_INGOT
+          Amount: 8
+        m2:
+          Material: COPPER_INGOT
+          Amount: 4
+        m3:
+          Material: FLINT
+          Amount: 3
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Czterolufowy pistolet obrotowy na 4 szybkie strzały."
+      Items_To_Craft:
+        c1:
+          Material: IRON_INGOT
+          Amount: 4
+
+  lead_bullet:
+    Material: IRON_NUGGET
+    Name: "§f§lOłowiana Kula Muszkietowa"
+    Custom_Model_ID: 10060
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: RAW_COPPER
+          Amount: 2
+        m2:
+          Material: GUNPOWDER
+          Amount: 2
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Ciężka kula ołowiana do pistoletów i muszkietów."
+      Items_To_Craft:
+        c1:
+          Material: GUNPOWDER
+          Amount: 1
+
+  scatter_shot:
+    Material: IRON_NUGGET
+    Name: "§e§lPakiet Śrutu Ołowianego"
+    Custom_Model_ID: 10061
+    Required_Stage: IRON
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: IRON_NUGGET
+          Amount: 8
+        m2:
+          Material: GUNPOWDER
+          Amount: 2
+        m3:
+          Material: PAPER
+          Amount: 1
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Woreczek zawierający 8 ołowianych śrucin dedykowany do Garłacza."
+      Items_To_Craft:
+        c1:
+          Material: GUNPOWDER
+          Amount: 1
+
+  dragon_cartridge:
+    Material: IRON_NUGGET
+    Name: "§c§lKula Zapalająca (Smoczy Oddech)"
+    Custom_Model_ID: 10062
+    Required_Stage: IRON
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: BLAZE_POWDER
+          Amount: 2
+        m2:
+          Material: GUNPOWDER
+          Amount: 2
+        m3:
+          Material: RAW_COPPER
+          Amount: 1
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Nasycona siarką kula podpalająca wrogów i podłoże."
+      Items_To_Craft:
+        c1:
+          Material: BLAZE_POWDER
+          Amount: 1
+
+  slug_cartridge:
+    Material: IRON_NUGGET
+    Name: "§6§lCiężki Pocisk Brenek (Slug)"
+    Custom_Model_ID: 10063
+    Required_Stage: IRON
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: IRON_INGOT
+          Amount: 2
+        m2:
+          Material: GUNPOWDER
+          Amount: 3
+        m3:
+          Material: COPPER_INGOT
+          Amount: 1
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Ciężki monolityczny pocisk do Garłacza zadający potężne obrażenia."
+      Items_To_Craft:
+        c1:
+          Material: GUNPOWDER
+          Amount: 1
+
+  gunsmith_table:
+    Material: NOTE_BLOCK
+    Name: "§8§lWarsztat Rusznikarski"
+    Custom_Model_ID: 30005
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ANVIL
+          Amount: 1
+        m2:
+          Material: COPPER_INGOT
+          Amount: 4
+        m3:
+          Material: OAK_PLANKS
+          Amount: 4
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Specjalistyczny stół do naprawy i modyfikacji broni palnej."
+        l2: "§e✦ Kliknij PPM po postawieniu, aby otworzyć Warsztat!"
+      Items_To_Craft:
+        c1:
+          Material: COPPER_INGOT
+          Amount: 2

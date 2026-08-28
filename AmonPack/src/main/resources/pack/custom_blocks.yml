@@ -70,3 +70,19 @@ blocks:
       veins_per_chunk: 12
       min_y: -32
       max_y: 64
+
+  gunsmith_table:
+    display_name: "&8&lWarsztat Rusznikarski"
+    base_material: NOTE_BLOCK
+    model: "block/gunsmith_table"
+    custom_model_data: 30005
+    hardness: 3.0
+    required_tool: "PICKAXE"
+    required_tier: 0
+    drops:
+      custom_item: "gunsmith_table"
+      min: 1
+      max: 1
+      exp: 5.0
+    generation:
+      enabled: false
