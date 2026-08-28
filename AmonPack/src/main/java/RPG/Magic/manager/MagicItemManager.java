@@ -32,6 +32,14 @@ public class MagicItemManager {
 
     public static String getMagicItemId(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
+
+        Material mat = item.getType();
+        String matName = mat.name();
+        if (matName.contains("HELMET") || matName.contains("CHESTPLATE") || matName.contains("LEGGINGS") || matName.contains("BOOTS")
+                || matName.contains("SWORD") || matName.contains("PICKAXE") || matName.contains("AXE") || matName.contains("SHOVEL") || matName.contains("HOE")) {
+            return null;
+        }
+
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         String id = pdc.get(MAGIC_ITEM_ID_KEY, PersistentDataType.STRING);
@@ -42,7 +50,7 @@ public class MagicItemManager {
         String wId = pdc.get(wKey, PersistentDataType.STRING);
         if (wId != null && !wId.isEmpty()) {
             String lower = wId.toLowerCase(Locale.ROOT);
-            if (lower.contains("tome") || lower.contains("wand") || lower.contains("staff")) {
+            if (lower.startsWith("tome_") || lower.startsWith("wand_") || lower.startsWith("staff_")) {
                 return lower;
             }
         }
@@ -57,10 +65,10 @@ public class MagicItemManager {
         }
         if (meta.hasDisplayName()) {
             String name = meta.getDisplayName().toLowerCase(Locale.ROOT);
-            if (name.contains("tom") || name.contains("tome") || name.contains("ognia")) return "tome_fire";
-            if (name.contains("fen") || name.contains("powietrza")) return "wand_fen";
-            if (name.contains("laska") || name.contains("błyskawic") || name.contains("lightning")) return "staff_lightning";
-            if (name.contains("wody") || name.contains("water")) return "wand_water";
+            if (name.contains("tom ognia") || name.contains("tome of fire")) return "tome_fire";
+            if (name.contains("różdżka fenów") || name.contains("rozdzka fenow") || name.contains("wand of air")) return "wand_fen";
+            if (name.contains("laska błyskawic") || name.contains("laska blyskawic") || name.contains("staff of lightning")) return "staff_lightning";
+            if (name.contains("różdżka wody") || name.contains("rozdzka wody") || name.contains("wand of water")) return "wand_water";
         }
         return null;
     }

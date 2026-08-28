@@ -9,10 +9,11 @@ import java.util.List;
 public enum StageType {
     WOODEN(0, "WOODEN", "&6&lEtap Drewniany", ChatColor.GOLD, Material.OAK_LOG, 101, "&7Początki przetrwania, podstawowe narzędzia i schronienie."),
     STONE(1, "STONE", "&7&lEtap Kamienny", ChatColor.GRAY, Material.STONE_PICKAXE, 102, "&7Rozwój osady, kopalnia i podstawowa eksploracja."),
-    IRON(2, "IRON", "&f&lEtap Żelazny", ChatColor.WHITE, Material.IRON_CHESTPLATE, 103, "&7Zaawansowane rzemiosło, pierwsze lochy i bossowie."),
-    DIAMOND(3, "DIAMOND", "&b&lEtap Diamentowy", ChatColor.AQUA, Material.DIAMOND_SWORD, 104, "&7Pełne RPG, trudne dungeony i przygotowanie do Netheru."),
-    NETHER(4, "NETHER", "&c&lEtap Netheru", ChatColor.RED, Material.NETHERITE_INGOT, 105, "&7Podbój wymiaru ognia, starożytne szczątki i infernalne potęgi."),
-    END(5, "END", "&d&lEtap Endu", ChatColor.LIGHT_PURPLE, Material.DRAGON_EGG, 106, "&7Ostateczna granica, potęga Kresu i Smoczy Władca.");
+    COPPER(2, "COPPER", "&6&lEtap Miedziany", ChatColor.GOLD, Material.COPPER_INGOT, 107, "&7Obróbka miedzi, elektryczność i pierwsze zaawansowane stopy."),
+    IRON(3, "IRON", "&f&lEtap Żelazny", ChatColor.WHITE, Material.IRON_CHESTPLATE, 103, "&7Zaawansowane rzemiosło, pierwsze lochy i bossowie."),
+    DIAMOND(4, "DIAMOND", "&b&lEtap Diamentowy", ChatColor.AQUA, Material.DIAMOND_SWORD, 104, "&7Pełne RPG, trudne dungeony i przygotowanie do Netheru."),
+    NETHER(5, "NETHER", "&c&lEtap Netheru", ChatColor.RED, Material.NETHERITE_INGOT, 105, "&7Podbój wymiaru ognia, starożytne szczątki i infernalne potęgi."),
+    END(6, "END", "&d&lEtap Endu", ChatColor.LIGHT_PURPLE, Material.DRAGON_EGG, 106, "&7Ostateczna granica, potęga Kresu i Smoczy Władca.");
 
     private final int order;
     private final String id;

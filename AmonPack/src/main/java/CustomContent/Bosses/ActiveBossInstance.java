@@ -79,6 +79,13 @@ public class ActiveBossInstance {
     }
 
     private void setupModelDisplay() {
+        // 1. Spróbuj podpiąć model przez ModelEngine (jeśli włączony na serwerze)
+        boolean attachedME = CustomContent.Hooks.ModelEngineHook.attachModel(entity, template.getId());
+        if (attachedME) {
+            return;
+        }
+
+        // 2. Fallback: Natywny ItemDisplay z resourcepacka
         try {
             Location loc = entity.getLocation();
             this.displayEntity = loc.getWorld().spawn(loc, ItemDisplay.class, d -> {
@@ -90,6 +97,13 @@ public class ActiveBossInstance {
                 }
                 d.setItemStack(item);
                 d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
+                float sc = (float) Math.max(0.5, template.getScale());
+                d.setTransformation(new org.bukkit.util.Transformation(
+                        new org.joml.Vector3f(0f, 0f, 0f),
+                        new org.joml.AxisAngle4f(0f, 0f, 1f, 0f),
+                        new org.joml.Vector3f(sc, sc, sc),
+                        new org.joml.AxisAngle4f(0f, 0f, 1f, 0f)
+                ));
             });
         } catch (Throwable t) {
             Bukkit.getLogger().warning("[AmonPack] Nie udało się zespawnować ItemDisplay dla Bossa: " + t.getMessage());

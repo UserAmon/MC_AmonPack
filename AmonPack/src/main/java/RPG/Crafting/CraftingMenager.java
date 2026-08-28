@@ -106,6 +106,28 @@ public class CraftingMenager {
                 break;
         }
         for (ItemMold mold : ChosenMolds) {
+            if (!mold.isUnlockedFor(player)) {
+                ItemStack lockedStack = new ItemStack(Material.GRAY_DYE);
+                ItemMeta lockedMeta = lockedStack.getItemMeta();
+                if (lockedMeta != null) {
+                    lockedMeta.setDisplayName("§8🔒 §7Nieznana Forma Rzemieślnicza");
+                    List<String> lockedLore = new ArrayList<>();
+                    lockedLore.add("§c🔒 Przedmiot zablokowany!");
+                    if (mold.getRequiredStage() != null && !mold.getRequiredStage().isEmpty()) {
+                        RPG.Progression.model.StageType st = RPG.Progression.model.StageType.fromName(mold.getRequiredStage());
+                        lockedLore.add("§7Wymagany etap: " + (st != null ? st.getDisplayName() : ("§e" + mold.getRequiredStage())));
+                    }
+                    if (mold.getRequiredObjective() != null && !mold.getRequiredObjective().isEmpty()) {
+                        lockedLore.add("§7Wymagane zadanie: §e" + mold.getRequiredObjective());
+                    }
+                    lockedLore.add("");
+                    lockedLore.add("§8Rozwijaj progresję, aby odblokować ten przepis.");
+                    lockedMeta.setLore(lockedLore);
+                    lockedStack.setItemMeta(lockedMeta);
+                }
+                inv.addItem(lockedStack);
+                continue;
+            }
             ItemStack stack = mold.toItemStack();
             ItemMeta meta = stack.getItemMeta();
             List<String> lore = new ArrayList<>(mold.getItemLore());
@@ -129,12 +151,36 @@ public class CraftingMenager {
         Inventory inv = ItemsAdderHook.createTexturedInventory(EffectsGui,
                 EffectsGui.getSize(), EffectsGui.getTitle(), "amonpack:bending_abilities_list");
         ItemMold moldItem = getItemMoldByItem(item);
+        if (moldItem == null) return;
 
         for (MagicEffects effect : moldItem.getAllowedMagicEffects()) {
             if (moldItem instanceof Craftable_Item && !effect.isItemEffect()) {
                 continue;
             }
             if (!(moldItem instanceof Craftable_Item) && effect.isItemEffect()) {
+                continue;
+            }
+
+            if (!effect.isUnlockedFor(player)) {
+                ItemStack lockedEffect = new ItemStack(Material.GRAY_DYE);
+                ItemMeta lockedMeta = lockedEffect.getItemMeta();
+                if (lockedMeta != null) {
+                    lockedMeta.setDisplayName("§8🔒 §7Nieznana Runa / Efekt");
+                    List<String> lockedLore = new ArrayList<>();
+                    lockedLore.add("§c🔒 Runa zablokowana!");
+                    if (effect.getRequiredStage() != null && !effect.getRequiredStage().isEmpty()) {
+                        RPG.Progression.model.StageType st = RPG.Progression.model.StageType.fromName(effect.getRequiredStage());
+                        lockedLore.add("§7Wymagany etap: " + (st != null ? st.getDisplayName() : ("§e" + effect.getRequiredStage())));
+                    }
+                    if (effect.getRequiredObjective() != null && !effect.getRequiredObjective().isEmpty()) {
+                        lockedLore.add("§7Wymagane zadanie: §e" + effect.getRequiredObjective());
+                    }
+                    lockedLore.add("");
+                    lockedLore.add("§8Rozwijaj progresję, aby odblokować tę runę.");
+                    lockedMeta.setLore(lockedLore);
+                    lockedEffect.setItemMeta(lockedMeta);
+                }
+                inv.addItem(lockedEffect);
                 continue;
             }
             ItemStack effectItem = new ItemStack(Material.BOOK);
@@ -331,11 +377,14 @@ public class CraftingMenager {
                     int scrollModelID = Config.getInt("MagicEffects." + effectId + ".ScrollModelID");
                     long chargeTime = Config.getLong("MagicEffects." + effectId + ".ChargeTime", 2500);
                     int power = Config.getInt("MagicEffects." + effectId + ".Power", 0);
+                    String reqStage = Config.getString("MagicEffects." + effectId + ".Required_Stage");
+                    String reqObjective = Config.getString("MagicEffects." + effectId + ".Required_Objective");
 
-                    AllMagicEffects
-                            .add(new MagicEffects(conditions, cost, name, lore, effectId, IsMajor, IsItemEffect,
-                                    IsArmorEffect,
-                                    scrollName, scrollModelID, chargeTime, power));
+                    MagicEffects newEff = new MagicEffects(conditions, cost, name, lore, effectId, IsMajor, IsItemEffect,
+                            IsArmorEffect, scrollName, scrollModelID, chargeTime, power);
+                    newEff.setRequiredStage(reqStage);
+                    newEff.setRequiredObjective(reqObjective);
+                    AllMagicEffects.add(newEff);
                 }
             }
         } catch (Exception e) {
@@ -403,6 +452,8 @@ public class CraftingMenager {
                     }
                     CraftedWeapon w = new CraftedWeapon(WeaponName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects, BaseDmg);
+                    w.setRequiredStage(Config.getString(path + "Required_Stage"));
+                    w.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllCraftableWeapons.add(w);
                 }
             }
@@ -467,6 +518,8 @@ public class CraftingMenager {
 
                     Craftable_Tool tool = new Craftable_Tool(ToolName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects);
+                    tool.setRequiredStage(Config.getString(path + "Required_Stage"));
+                    tool.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllTools.add(tool);
                 }
             }
@@ -544,6 +597,8 @@ public class CraftingMenager {
                     Craftable_Armor armor = new Craftable_Armor(ArmorName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects, armorValue, manaRedPercent, manaRedFlat, manaElement,
                             cdRedPercent, cdRedFlat, cdElement, speedIncPercent);
+                    armor.setRequiredStage(Config.getString(path + "Required_Stage"));
+                    armor.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllArmor.add(armor);
                 }
             }
@@ -612,6 +667,8 @@ public class CraftingMenager {
 
                     Craftable_Item craftItem = new Craftable_Item(ItemName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName,
                             material, ItemLoreList, CustomModelId, AllowedEffects);
+                    craftItem.setRequiredStage(Config.getString(path + "Required_Stage"));
+                    craftItem.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllCraftableItems.add(craftItem);
                 }
             }
@@ -902,13 +959,11 @@ public class CraftingMenager {
     }
 
     public static boolean isMagicMold(ItemMold mold) {
-        if (mold == null) return false;
+        if (mold == null || mold.getTypeOfMold() != ItemMold.ItemType.ITEM) return false;
         String wid = mold.getWeaponID().toLowerCase(java.util.Locale.ROOT);
         String name = mold.getItemName().toLowerCase(java.util.Locale.ROOT);
-        int cmd = mold.getCustomModelID() != null ? mold.getCustomModelID() : 0;
-        return (cmd >= 20000 && cmd < 30000)
-                || wid.startsWith("tome_") || wid.startsWith("wand_") || wid.startsWith("staff_")
-                || wid.contains("tome") || wid.contains("wand") || wid.contains("staff")
-                || name.contains("tom") || name.contains("różdżka") || name.contains("laska");
+        return wid.startsWith("tome_") || wid.startsWith("wand_") || wid.startsWith("staff_")
+                || wid.equals("tome_fire") || wid.equals("wand_fen") || wid.equals("staff_lightning") || wid.equals("wand_water")
+                || name.contains("tom ognia") || name.contains("różdżka fenów") || name.contains("laska błyskawic") || name.contains("różdżka wody");
     }
 }

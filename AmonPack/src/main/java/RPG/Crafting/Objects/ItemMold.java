@@ -97,8 +97,8 @@ public class ItemMold {
         MoldMeta.setLore(EffectsLore);
         NewMold.setItemMeta(MoldMeta);
 
-        // Jeśli wytworzono przedmiot magiczny, inicjalizujemy dane magii (poziom 1, 0 zabójstw, domyślny czar, ujednolicone lore)
-        if (CraftIntoItem && (RPG.Magic.manager.MagicItemManager.isMagicItem(NewMold) || RPG.Crafting.CraftingMenager.isMagicMold(this))) {
+        // Jeśli wytworzono przedmiot magiczny (Tomy, Różdżki, Laski), inicjalizujemy dane magii
+        if (CraftIntoItem && TypeOfMold == ItemType.ITEM && (RPG.Magic.manager.MagicItemManager.isMagicItem(NewMold) || RPG.Crafting.CraftingMenager.isMagicMold(this))) {
             RPG.Magic.manager.MagicItemManager.initMagicItem(NewMold, weaponID.toLowerCase(java.util.Locale.ROOT));
         }
 
@@ -213,5 +213,49 @@ public class ItemMold {
 
     public ItemType getTypeOfMold() {
         return TypeOfMold;
+    }
+
+    private String requiredStage = null;
+    private String requiredObjective = null;
+
+    public String getRequiredStage() {
+        return requiredStage;
+    }
+
+    public void setRequiredStage(String requiredStage) {
+        this.requiredStage = requiredStage;
+    }
+
+    public String getRequiredObjective() {
+        return requiredObjective;
+    }
+
+    public void setRequiredObjective(String requiredObjective) {
+        this.requiredObjective = requiredObjective;
+    }
+
+    public boolean isUnlockedFor(Player player) {
+        if (player == null) return true;
+        if (player.getGameMode() == org.bukkit.GameMode.CREATIVE) return true;
+        if (!Plugin.AmonPackPlugin.ENABLE_SLOW_PROGRESSION) return true;
+        if (RPG.Progression.ProgressionManager.getInstance() == null || RPG.Progression.ProgressionManager.getInstance().getProgressionService() == null) return true;
+
+        RPG.Progression.model.PlayerProgressionData data = RPG.Progression.ProgressionManager.getInstance().getProgressionService().getPlayerData(player);
+        if (data == null) return true;
+
+        if (requiredStage != null && !requiredStage.trim().isEmpty()) {
+            RPG.Progression.model.StageType reqStage = RPG.Progression.model.StageType.fromName(requiredStage.trim());
+            if (reqStage != null && !data.getCurrentStage().isAtLeast(reqStage)) {
+                return false;
+            }
+        }
+
+        if (requiredObjective != null && !requiredObjective.trim().isEmpty()) {
+            if (!data.isQuestCompleted(requiredObjective.trim())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

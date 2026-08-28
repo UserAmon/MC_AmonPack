@@ -4,7 +4,7 @@ bosses:
     base_entity: HUSK
     model:
       model_path: "boss/Spirit_Earth_2"
-      custom_model_data: 20001
+      custom_model_data: 30101
       scale: 2.2
     stats:
       max_health: 550.0

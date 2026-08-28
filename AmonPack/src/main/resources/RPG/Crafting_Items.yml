@@ -531,45 +531,114 @@ MagicEffects:
         Material: COBBLESTONE
         Amount: 64
   #
+  #
   # ####TOOLS
   Vein_Miner:
-    Name: §6⛏ Vein Miner
+    Name: "§6[⛏] Żyła Górnicza"
     Lore:
-      l1: §7Mines entire veins of ores.
+      l1: "§7Wydobywa całe połączone żyły rudy jednym uderzeniem."
     IsMajor: true
-    Power: 12
+    Required_Stage: STONE
+    Power: 16
     Cost:
       c1:
-        Material: DIAMOND
+        Material: LAPIS_LAZULI
+        Amount: 4
+      c2:
+        Material: RAW_IRON
         Amount: 2
   Area_Miner:
-    Name: §c💥 Area Miner
+    Name: "§c[💥] Obszarowe Wydobycie"
     Lore:
-      l1: §7Right-click to mine 3x3 area.
+      l1: "§7Kliknij PPM aby wydrążyć obszar wokół wskazanego bloku."
     IsMajor: true
+    Required_Stage: COPPER
     Cost:
       c1:
         Material: TNT
-        Amount: 2
+        Amount: 1
+      c2:
+        Material: GUNPOWDER
+        Amount: 4
   Tree_Feller:
-    Name: §2🪓 Tree Feller
+    Name: "§2[🪓] Drwal Puszczy"
     Lore:
-      l1: §7Chops down entire trees.
+      l1: "§7Ścina całe połączone drzewo wraz z liśćmi po zrąbaniu pnia."
     IsMajor: true
-    Power: 20
+    Required_Stage: WOODEN
+    Power: 50
     Cost:
       c1:
-        Material: GOLDEN_AXE
-        Amount: 1
+        Material: OAK_LOG
+        Amount: 8
+      c2:
+        Material: STICK
+        Amount: 4
   Axe_Throw:
-    Name: §b🪓 Axe Throw
+    Name: "§b[🪓] Rzut Toporem"
     Lore:
-      l1: §7Right-click air to throw axe.
+      l1: "§7Kliknij PPM aby cisnąć wirującym toporem we wrogów."
     IsMajor: false
+    Required_Stage: WOODEN
     Cost:
       c1:
         Material: IRON_INGOT
-        Amount: 5
+        Amount: 2
+      c2:
+        Material: FEATHER
+        Amount: 2
+  Fortune_Boost:
+    Name: "§6[⛏] Fortunne Wydobycie"
+    Lore:
+      l1: "§7Zwiększa ilość wydobywanych surowców i minerałów z rud."
+    IsMajor: true
+    Required_Stage: COPPER
+    Cost:
+      c1:
+        Material: LAPIS_LAZULI
+        Amount: 6
+      c2:
+        Material: COPPER_INGOT
+        Amount: 4
+  Smelting_Touch:
+    Name: "§c[🔥] Dotyk Wytapiacza"
+    Lore:
+      l1: "§7Automatycznie przetapia wykopane rudy i kamienie w sztabki i gładkie bloki."
+    IsMajor: true
+    Required_Stage: COPPER
+    Cost:
+      c1:
+        Material: BLAZE_POWDER
+        Amount: 2
+      c2:
+        Material: COAL
+        Amount: 8
+  Durability_Boost:
+    Name: "§a[🛡] Wzmocniona Wytrzymałość"
+    Lore:
+      l1: "§7Wzmacnia strukturę narzędzia, zmniejszając zużycie trwałości o 50%."
+    IsMajor: false
+    Required_Stage: WOODEN
+    Cost:
+      c1:
+        Material: FLINT
+        Amount: 4
+      c2:
+        Material: STICK
+        Amount: 4
+  Efficiency_Boost:
+    Name: "§e[⚡] Przyspieszone Wydobycie"
+    Lore:
+      l1: "§7Nadaje efekt Pośpiechu I (Haste) podczas trzymania narzędzia, przyspieszając pracę."
+    IsMajor: false
+    Required_Stage: STONE
+    Cost:
+      c1:
+        Material: SUGAR
+        Amount: 8
+      c2:
+        Material: REDSTONE
+        Amount: 4
 
 # ####Bronie
 Craftable_Weapons:
@@ -843,6 +912,7 @@ Craftable_Weapons:
           Material: BONE
           Amount: 3
   #
+  #
   wooden_bow:
     Material: BOW
     Name: "§6§lWzmocniony Długi Łuk"
@@ -870,12 +940,203 @@ Craftable_Weapons:
         c1:
           Material: BOW
           Amount: 1
+  #
+  basalt_sword:
+    Material: STONE_SWORD
+    Name: "§8§lBazaltowy Miecz"
+    Custom_Model_ID: 10027
+    Base_Damage: 8
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ia:basalt_shard
+          Amount: 2
+        m2:
+          Material: STICK
+          Amount: 1
+      AllowedMagicEffects:
+      - Monster_Hunter
+      - Knockback
+      - Looting
+      - Fire_Damage_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Ciężkie ostrze wykute z wulkanicznych odłamków bazaltu."
+      Items_To_Craft:
+        c1:
+          Material: STONE_SWORD
+          Amount: 1
 # ###Tools
 Craftable_Tools:
+  bone_pickaxe:
+    Material: WOODEN_PICKAXE
+    Name: "§f§lKościany Kilof"
+    Custom_Model_ID: 10022
+    Required_Stage: WOODEN
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: BONE
+          Amount: 3
+        m2:
+          Material: STICK
+          Amount: 2
+      AllowedMagicEffects:
+      - Vein_Miner
+      - Area_Miner
+      - Mining_Loot_Boost
+      - Fortune_Boost
+      - Smelting_Touch
+      - Durability_Boost
+      - Efficiency_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Prymitywny kilof wykonany z twardych kości bestii."
+      Items_To_Craft:
+        c1:
+          Material: WOODEN_PICKAXE
+          Amount: 1
+  bone_axe:
+    Material: WOODEN_AXE
+    Name: "§f§lKościany Topór"
+    Custom_Model_ID: 10028
+    Required_Stage: WOODEN
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: BONE
+          Amount: 3
+        m2:
+          Material: STICK
+          Amount: 2
+      AllowedMagicEffects:
+      - Tree_Feller
+      - Axe_Throw
+      - Mining_Loot_Boost
+      - Durability_Boost
+      - Efficiency_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Ostre kościane narzędzie do wycinki lasu."
+      Items_To_Craft:
+        c1:
+          Material: WOODEN_AXE
+          Amount: 1
+  basalt_pickaxe:
+    Material: STONE_PICKAXE
+    Name: "§8§lBazaltowy Kilof"
+    Custom_Model_ID: 10023
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ia:basalt_shard
+          Amount: 3
+        m2:
+          Material: STICK
+          Amount: 2
+      AllowedMagicEffects:
+      - Vein_Miner
+      - Area_Miner
+      - Mining_Loot_Boost
+      - Fortune_Boost
+      - Smelting_Touch
+      - Durability_Boost
+      - Efficiency_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Masywny kilof z wulkanicznej skały do głębokiego górnictwa."
+      Items_To_Craft:
+        c1:
+          Material: STONE_PICKAXE
+          Amount: 1
+  basalt_axe:
+    Material: STONE_AXE
+    Name: "§8§lBazaltowy Topór"
+    Custom_Model_ID: 10024
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ia:basalt_shard
+          Amount: 3
+        m2:
+          Material: STICK
+          Amount: 2
+      AllowedMagicEffects:
+      - Tree_Feller
+      - Axe_Throw
+      - Mining_Loot_Boost
+      - Durability_Boost
+      - Efficiency_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Wulkaniczny topór z łatwością kruszący grube pnie drzew."
+      Items_To_Craft:
+        c1:
+          Material: STONE_AXE
+          Amount: 1
+  basalt_shovel:
+    Material: STONE_SHOVEL
+    Name: "§8§lBazaltowa Łopata"
+    Custom_Model_ID: 10025
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ia:basalt_shard
+          Amount: 1
+        m2:
+          Material: STICK
+          Amount: 2
+      AllowedMagicEffects:
+      - Area_Miner
+      - Mining_Loot_Boost
+      - Durability_Boost
+      - Efficiency_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Wzmocniona łopata do szybkiego przekopywania twardego podłoża."
+      Items_To_Craft:
+        c1:
+          Material: STONE_SHOVEL
+          Amount: 1
+  basalt_hoe:
+    Material: STONE_HOE
+    Name: "§8§lBazaltowa Motyka"
+    Custom_Model_ID: 10026
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ia:basalt_shard
+          Amount: 2
+        m2:
+          Material: STICK
+          Amount: 2
+      AllowedMagicEffects:
+      - Durability_Boost
+      - Efficiency_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Twarda motyka bazaltowa ułatwiająca uprawę roli."
+      Items_To_Craft:
+        c1:
+          Material: STONE_HOE
+          Amount: 1
   meteorite_pickaxe:
     Material: NETHERITE_PICKAXE
     Name: "§4§lKilof z Meteorytu"
     Custom_Model_ID: 10014
+    Required_Stage: IRON
     Mold:
       Items_To_Craft:
         m1:
@@ -888,6 +1149,10 @@ Craftable_Tools:
       - Vein_Miner
       - Area_Miner
       - Mining_Loot_Boost
+      - Fortune_Boost
+      - Smelting_Touch
+      - Durability_Boost
+      - Efficiency_Boost
       - Experience
     Item:
       Lore:
@@ -900,6 +1165,7 @@ Craftable_Tools:
     Material: NETHERITE_AXE
     Name: "§4§lTopór z Meteorytu"
     Custom_Model_ID: 10002
+    Required_Stage: IRON
     Mold:
       Items_To_Craft:
         m1:
@@ -912,6 +1178,8 @@ Craftable_Tools:
       - Tree_Feller
       - Axe_Throw
       - Mining_Loot_Boost
+      - Durability_Boost
+      - Efficiency_Boost
       - Experience
     Item:
       Lore:
@@ -925,7 +1193,8 @@ Craftable_Armor:
   leather_hat:
     Material: LEATHER_HELMET
     Name: "§b§lCzapka Czarodzieja Powietrza"
-    Custom_Model_ID: 0
+    Custom_Model_ID: 20010
+    Required_Stage: WOODEN
     Armor: 1.0
     Mana_Reduction_Percent: 0.33
     Mana_Element: "AIR"
@@ -947,7 +1216,8 @@ Craftable_Armor:
   thief_boots:
     Material: LEATHER_BOOTS
     Name: "§8§lButy Złodzieja"
-    Custom_Model_ID: 0
+    Custom_Model_ID: 20011
+    Required_Stage: WOODEN
     Armor: 1.0
     Speed_Increase_Percent: 0.10
     Cooldown_Reduction_Flat: 0.5
@@ -1053,6 +1323,7 @@ Craftable_Items:
     Material: BOOK
     Name: "§c§lTom Ognia"
     Custom_Model_ID: 20001
+    Required_Stage: STONE
     Mold:
       Items_To_Craft:
         m1:
@@ -1079,6 +1350,7 @@ Craftable_Items:
     Material: STICK
     Name: "§b§lRóżdżka Fenów"
     Custom_Model_ID: 20002
+    Required_Stage: WOODEN
     Mold:
       Items_To_Craft:
         m1:
@@ -1103,6 +1375,7 @@ Craftable_Items:
     Material: BOW
     Name: "§e§lLaska Błyskawic"
     Custom_Model_ID: 20003
+    Required_Stage: COPPER
     Mold:
       Items_To_Craft:
         m1:
@@ -1129,6 +1402,7 @@ Craftable_Items:
     Material: STICK
     Name: "§9§lRóżdżka Wody"
     Custom_Model_ID: 20004
+    Required_Stage: STONE
     Mold:
       Items_To_Craft:
         m1:

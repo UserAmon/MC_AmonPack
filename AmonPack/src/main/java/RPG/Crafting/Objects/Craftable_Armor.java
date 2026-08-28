@@ -88,27 +88,37 @@ public class Craftable_Armor extends ItemMold {
     }
 
     public List<String> getFormattedArmorLore() {
-        List<String> lore = new ArrayList<>(getItemLore());
+        List<String> lore = new ArrayList<>();
+        if (getItemLore() != null && !getItemLore().isEmpty()) {
+            lore.addAll(getItemLore());
+        }
         lore.add("");
-        lore.add("§9§lPancerz: §f+" + (armorValue == (long) armorValue ? String.format(Locale.ROOT, "%d", (long) armorValue) : String.format(Locale.ROOT, "%.1f", armorValue)));
-        if (manaReductionPercent > 0) {
-            String elStr = manaElement != null && !manaElement.equalsIgnoreCase("ALL") ? " (" + manaElement + ")" : "";
-            lore.add("§b✦ Zużycie many: §f-" + (int)(manaReductionPercent * 100) + "%" + elStr);
-        }
-        if (manaReductionFlat > 0) {
-            String elStr = manaElement != null && !manaElement.equalsIgnoreCase("ALL") ? " (" + manaElement + ")" : "";
-            lore.add("§b✦ Zużycie many: §f-" + (int)manaReductionFlat + " MP" + elStr);
-        }
-        if (cdReductionPercent > 0) {
-            String elStr = cdElement != null && !cdElement.equalsIgnoreCase("ALL") ? " (" + cdElement + ")" : "";
-            lore.add("§e✦ Czas odnowienia: §f-" + (int)(cdReductionPercent * 100) + "%" + elStr);
-        }
-        if (cdReductionFlat > 0) {
-            String elStr = cdElement != null && !cdElement.equalsIgnoreCase("ALL") ? " (" + cdElement + ")" : "";
-            lore.add("§e✦ Czas odnowienia: §f-" + String.format(Locale.ROOT, "%.1f", cdReductionFlat) + "s" + elStr);
-        }
-        if (speedIncreasePercent > 0) {
-            lore.add("§a✦ Prędkość ruchu: §f+" + (int)(speedIncreasePercent * 100) + "%");
+        lore.add("§6Statystyki Pancerza:");
+        lore.add(" §9🛡 Pancerz: §f+" + (armorValue == (long) armorValue ? String.format(Locale.ROOT, "%d", (long) armorValue) : String.format(Locale.ROOT, "%.1f", armorValue)));
+
+        boolean hasBuffs = (manaReductionPercent > 0 || manaReductionFlat > 0 || cdReductionPercent > 0 || cdReductionFlat > 0 || speedIncreasePercent > 0);
+        if (hasBuffs) {
+            lore.add("");
+            lore.add("§dMistyczne Właściwości:");
+            if (manaReductionPercent > 0) {
+                String elStr = manaElement != null && !manaElement.equalsIgnoreCase("ALL") ? " §7(" + manaElement + ")" : "";
+                lore.add(" §b✦ Koszt many czarów: §f-" + (int)(manaReductionPercent * 100) + "%" + elStr);
+            }
+            if (manaReductionFlat > 0) {
+                String elStr = manaElement != null && !manaElement.equalsIgnoreCase("ALL") ? " §7(" + manaElement + ")" : "";
+                lore.add(" §b✦ Koszt many czarów: §f-" + (int)manaReductionFlat + " MP" + elStr);
+            }
+            if (cdReductionPercent > 0) {
+                String elStr = cdElement != null && !cdElement.equalsIgnoreCase("ALL") ? " §7(" + cdElement + ")" : "";
+                lore.add(" §e✦ Czas odnowienia: §f-" + (int)(cdReductionPercent * 100) + "%" + elStr);
+            }
+            if (cdReductionFlat > 0) {
+                String elStr = cdElement != null && !cdElement.equalsIgnoreCase("ALL") ? " §7(" + cdElement + ")" : "";
+                lore.add(" §e✦ Czas odnowienia: §f-" + String.format(Locale.ROOT, "%.1f", cdReductionFlat) + "s" + elStr);
+            }
+            if (speedIncreasePercent > 0) {
+                lore.add(" §a✦ Prędkość ruchu: §f+" + (int)(speedIncreasePercent * 100) + "%");
+            }
         }
         return lore;
     }

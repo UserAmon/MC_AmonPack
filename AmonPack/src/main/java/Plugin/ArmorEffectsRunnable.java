@@ -16,6 +16,19 @@ public class ArmorEffectsRunnable extends BukkitRunnable {
         for (Player player : Bukkit.getOnlinePlayers()) {
             RPG.Crafting.Objects.CustomArmorManager.updatePlayerSpeed(player);
 
+            ItemStack mainHand = player.getInventory().getItemInMainHand();
+            if (mainHand != null && mainHand.hasItemMeta()) {
+                if (CraftingMenager.HaveEffect(mainHand, "Efficiency_Boost")) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 30, 0, false, false, false));
+                }
+                if (mainHand.getItemMeta().hasCustomModelData()) {
+                    int cmd = mainHand.getItemMeta().getCustomModelData();
+                    if (cmd == 10022 || cmd == 10028) {
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 30, 0, false, false, false));
+                    }
+                }
+            }
+
             if (player.getFireTicks() > 10) {
                 boolean hasPhoenixHeart = false;
                 for (ItemStack item : player.getInventory().getArmorContents()) {

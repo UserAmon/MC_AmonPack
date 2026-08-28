@@ -154,7 +154,7 @@ public class PackManager {
             // 2b. Atlas tekstur dla Minecraft 1.19.3 - 1.21.4+ (rejestracja wszystkich folderów w atlasie spriteów)
             JsonObject atlasRoot = new JsonObject();
             JsonArray sources = new JsonArray();
-            String[] atlasDirs = {"item", "block", "weapons", "magic", "crafting", "gui"};
+            String[] atlasDirs = {"item", "block", "weapons", "tools", "magic", "crafting", "gui", "armor", "boss"};
             for (String d : atlasDirs) {
                 JsonObject srcObj = new JsonObject();
                 srcObj.addProperty("type", "directory");
@@ -182,6 +182,7 @@ public class PackManager {
             registerModelOverride("wooden_sword", 10006, "amonpack:weapons/wlocznia_ognia");
             registerModelOverride("wooden_sword", 10007, "amonpack:weapons/sztylet");
             registerModelOverride("wooden_sword", 10020, "amonpack:weapons/bone_sword");
+            registerModelOverride("stone_sword", 10027, "amonpack:weapons/basalt_sword");
 
             // Łuk (BOW)
             registerModelOverride("bow", 10021, "amonpack:weapons/custom_bow");
@@ -193,9 +194,6 @@ public class PackManager {
             registerModelOverride("prismarine_shard", 20004, "amonpack:magic/wand_water");
             registerModelOverride("book", 10010, "amonpack:magic/tome_fire");
             registerModelOverride("book", 20001, "amonpack:magic/tome_fire");
-            registerModelOverride("book", 20002, "amonpack:magic/wand_fen");
-            registerModelOverride("book", 20004, "amonpack:magic/wand_water");
-            registerModelOverride("enchanted_book", 10010, "amonpack:magic/tome_fire");
             registerModelOverride("enchanted_book", 20001, "amonpack:magic/tome_fire");
             registerModelOverride("enchanted_book", 20002, "amonpack:magic/wand_fen");
             registerModelOverride("enchanted_book", 20004, "amonpack:magic/wand_water");
@@ -212,8 +210,19 @@ public class PackManager {
             registerModelOverride("diamond_sword", 10001, "amonpack:item/meteor_scythe");
             registerModelOverride("diamond_axe", 10002, "amonpack:item/meteor_axe");
             registerModelOverride("netherite_axe", 10002, "amonpack:item/meteor_axe");
-            registerModelOverride("diamond_pickaxe", 10014, "amonpack:weapons/meteor_pickaxe");
-            registerModelOverride("netherite_pickaxe", 10014, "amonpack:weapons/meteor_pickaxe");
+            registerModelOverride("diamond_pickaxe", 10014, "amonpack:tools/meteor_pickaxe");
+            registerModelOverride("netherite_pickaxe", 10014, "amonpack:tools/meteor_pickaxe");
+            registerModelOverride("wooden_pickaxe", 10022, "amonpack:tools/bone_pickaxe");
+            registerModelOverride("stone_pickaxe", 10022, "amonpack:tools/bone_pickaxe");
+            registerModelOverride("wooden_axe", 10028, "amonpack:tools/bone_axe");
+            registerModelOverride("stone_axe", 10028, "amonpack:tools/bone_axe");
+            registerModelOverride("stone_pickaxe", 10023, "amonpack:tools/basalt_pickaxe");
+            registerModelOverride("stone_axe", 10024, "amonpack:tools/basalt_axe");
+            registerModelOverride("stone_shovel", 10025, "amonpack:tools/basalt_shovel");
+            registerModelOverride("stone_hoe", 10026, "amonpack:tools/basalt_hoe");
+            registerModelOverride("leather_helmet", 20010, "amonpack:armor/air_wizard_hat");
+            registerModelOverride("leather_boots", 20011, "amonpack:armor/thief_boots");
+            registerModelOverride("carved_pumpkin", 30101, "amonpack:boss/Spirit_Earth_2");
 
             // Bloki (NOTE_BLOCK & IRON_NUGGET)
             registerModelOverride("note_block", 30001, "amonpack:block/meteoryt_ore");

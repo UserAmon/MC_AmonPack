@@ -268,6 +268,9 @@ public class ConfigsMenager {
                 "EMERALD_ORE",
                 "LAPIS_ORE",
                 "DIAMOND_ORE",
+                "NETHER_QUARTZ_ORE",
+                "NETHER_GOLD_ORE",
+                "ANCIENT_DEBRIS",
 
                 "GILDED_BLACKSTONE",
                 "AMETHYST_CLUSTER",
@@ -277,12 +280,24 @@ public class ConfigsMenager {
                 "LARGE_AMETHYST_BUD",
 
                 "STONE",
+                "COBBLESTONE",
                 "DEEPSLATE",
+                "COBBLED_DEEPSLATE",
+                "GRANITE",
+                "DIORITE",
+                "ANDESITE",
                 "TUFF",
                 "CALCITE",
+                "DRIPSTONE_BLOCK",
                 "BASALT",
+                "SMOOTH_BASALT",
+                "BLACKSTONE",
                 "NETHERRACK",
-                "BLACKSTONE"));
+                "END_STONE",
+                "SANDSTONE",
+                "RED_SANDSTONE",
+                "OBSIDIAN",
+                "MOSSY_COBBLESTONE"));
 
         cfg.set("AmonPack.Farms.farm1.World", "world");
         cfg.set("AmonPack.Farms.farm1.Exp.WHEAT", 1.0);

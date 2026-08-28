@@ -70,6 +70,19 @@ stages:
           - wooden_craft_crafting_table
         reward:
           exp: 15
+      wooden_craft_bone_pickaxe:
+        title: "Stwórz kościany kilof"
+        description: "Wykuj w stole rzemieślniczym kilof z kości bestii."
+        category: CORE
+        objective_type: craft_item
+        target: bone_pickaxe
+        amount: 1
+        required: true
+        icon: BONE
+        depends_on:
+          - wooden_craft_crafting_table
+        reward:
+          exp: 20
       wooden_craft_wooden_sword:
         title: "Stwórz drewniany miecz"
         description: "Podstawowa broń do samoobrony przed potworami nocy."
@@ -583,8 +596,8 @@ stages:
     display_name: "&7&lEtap Kamienny"
     description: "&7Rozwój osady, zorganizowane górnictwo i szersza eksploracja Overworldu."
     completion:
-      unlock: IRON
-      message: "&6&l[AmonPack] &a&lETAP KAMIENNY UKOŃCZONY! &fOdblokowano: &fEtap Żelazny"
+      unlock: COPPER
+      message: "&6&l[AmonPack] &a&lETAP KAMIENNY UKOŃCZONY! &eOdblokowano: &6Etap Miedziany"
     exploration_biomes:
       - Taiga
       - Dark Forest
@@ -856,6 +869,96 @@ stages:
           - stone_craft_stone_weapon
         reward:
           money: 50.0
+
+
+  COPPER:
+    display_name: "&6&lEtap Miedziany"
+    description: "&7Wydobycie i wytapianie miedzi, pierwsze mechanizmy, odgromniki i magia burzy."
+    completion:
+      unlock: IRON
+      message: "&6&l[AmonPack] &a&lETAP MIEDZIANY UKOŃCZONY! &fOdblokowano: &fEtap Żelazny"
+    exploration_biomes:
+      - Stony Peaks
+      - Windswept Hills
+      - Dripstone Caves
+      - River
+    quests:
+      copper_mine_ore:
+        title: "Wykop rudę miedzi x16"
+        description: "Zdobądź surową miedź z podziemnych złóż."
+        category: MINING
+        objective_type: destroy_block
+        target: COPPER_ORE
+        amount: 16
+        required: true
+        icon: RAW_COPPER
+        reward:
+          exp: 30
+      copper_smelt_ingots:
+        title: "Przetop miedziane sztabki x16"
+        description: "Użyj pieca, aby uzyskać czyste sztabki miedzi."
+        category: MINING
+        objective_type: craft_item
+        target: COPPER_INGOT
+        amount: 16
+        required: true
+        icon: COPPER_INGOT
+        depends_on:
+          - copper_mine_ore
+        reward:
+          exp: 35
+      copper_craft_block:
+        title: "Stwórz blok miedzi x2"
+        description: "Skompresuj miedź w solidne bloki budowlane."
+        category: CORE
+        objective_type: craft_item
+        target: COPPER_BLOCK
+        amount: 2
+        required: true
+        icon: COPPER_BLOCK
+        depends_on:
+          - copper_smelt_ingots
+        reward:
+          exp: 25
+      copper_craft_lightning_rod:
+        title: "Stwórz piorunochron"
+        description: "Wykorzystaj właściwości przewodzące miedzi, by chronić obóz."
+        category: CORE
+        objective_type: craft_item
+        target: LIGHTNING_ROD
+        amount: 1
+        required: true
+        icon: LIGHTNING_ROD
+        depends_on:
+          - copper_smelt_ingots
+        reward:
+          exp: 30
+      copper_craft_spyglass:
+        title: "Stwórz lunetę"
+        description: "Miedź i ametyst pozwolą ci obserwować dalekie horyzonty."
+        category: EXPLORATION
+        objective_type: craft_item
+        target: SPYGLASS
+        amount: 1
+        required: false
+        icon: SPYGLASS
+        depends_on:
+          - copper_smelt_ingots
+        reward:
+          exp: 25
+      copper_craft_lightning_staff:
+        title: "Wykuj Laskę Błyskawic"
+        description: "Połącz miedź z esencją burzy w stole rzemieślniczym."
+        category: MAGIC
+        objective_type: craft_item
+        target: staff_lightning
+        amount: 1
+        required: true
+        icon: BOW
+        depends_on:
+          - copper_smelt_ingots
+        reward:
+          exp: 50
 
 
   IRON:

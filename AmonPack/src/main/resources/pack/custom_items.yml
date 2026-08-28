@@ -346,3 +346,100 @@ items:
       - "&b✦ LPM: &fWystrzelenie Splash &8(20 MP, 2s cd)"
       - "&d✦ PPM: &fOtwórz menu czarów"
 
+  leather_hat:
+    display_name: "&b&lCzapka Czarodzieja Powietrza"
+    base_material: LEATHER_HELMET
+    model: "armor/air_wizard_hat"
+    custom_model_data: 20010
+    unbreakable: true
+    lore:
+      - "&7Lekkie nakrycie głowy nasycone esencją wiatru."
+      - ""
+      - "&9🛡 Pancerz: &f+1"
+      - "&b✦ Zużycie many: &f-33% (AIR)"
+      - "&e✦ Czas odnowienia: &f-33% (AIR)"
+
+  thief_boots:
+    display_name: "&8&lButy Złodzieja"
+    base_material: LEATHER_BOOTS
+    model: "armor/thief_boots"
+    custom_model_data: 20011
+    unbreakable: true
+    lore:
+      - "&7Lekkie i ciche obuwie sprzyjające zwinności."
+      - ""
+      - "&9🛡 Pancerz: &f+1"
+      - "&a✦ Prędkość ruchu: &f+10%"
+      - "&e✦ Czas odnowienia: &f-0.5s"
+
+  bone_pickaxe:
+    display_name: "&f&lKościany Kilof"
+    base_material: WOODEN_PICKAXE
+    model: "tools/bone_pickaxe"
+    custom_model_data: 10022
+    unbreakable: true
+    lore:
+      - "&7Prymitywny kilof wykonany z twardych kości bestii."
+      - "&7Pozwala na wydobywanie wczesnych minerałów i skał."
+
+  bone_axe:
+    display_name: "&f&lKościany Topór"
+    base_material: WOODEN_AXE
+    model: "tools/bone_axe"
+    custom_model_data: 10028
+    unbreakable: true
+    lore:
+      - "&7Ostrze z kości do szybkiego pozyskiwania drewna."
+
+  basalt_pickaxe:
+    display_name: "&8&lBazaltowy Kilof"
+    base_material: STONE_PICKAXE
+    model: "tools/basalt_pickaxe"
+    custom_model_data: 10023
+    unbreakable: true
+    lore:
+      - "&7Ciężki kilof uformowany z twardego wulkanicznego bazaltu."
+
+  basalt_axe:
+    display_name: "&8&lBazaltowy Topór"
+    base_material: STONE_AXE
+    model: "tools/basalt_axe"
+    custom_model_data: 10024
+    unbreakable: true
+    lore:
+      - "&7Mocny topór zdolny do rąbania gęstych pni drzew."
+
+  basalt_shovel:
+    display_name: "&8&lBazaltowa Łopata"
+    base_material: STONE_SHOVEL
+    model: "tools/basalt_shovel"
+    custom_model_data: 10025
+    unbreakable: true
+    lore:
+      - "&7Wzmocniona łopata do kopania ziemi i żwiru."
+
+  basalt_hoe:
+    display_name: "&8&lBazaltowa Motyka"
+    base_material: STONE_HOE
+    model: "tools/basalt_hoe"
+    custom_model_data: 10026
+    unbreakable: true
+    lore:
+      - "&7Wytrzymała motyka do uprawy ziemi w osadzie."
+
+  basalt_sword:
+    display_name: "&8&lBazaltowy Miecz"
+    base_material: STONE_SWORD
+    model: "weapons/basalt_sword"
+    custom_model_data: 10027
+    unbreakable: true
+    stats:
+      attack_damage: 8.5
+      attack_speed: 1.6
+    lore:
+      - "&7Ostrze wykute ze stopu wulkanicznego bazaltu."
+      - ""
+      - "&6Statystyki:"
+      - " &c⚔ Obrażenia: &f+8.5"
+      - " &e⚡ Szybkość ataku: &f1.6"
+

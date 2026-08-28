@@ -428,7 +428,7 @@ public class Listeners implements Listener {
         Block b = event.getBlock();
         ItemStack hand = player.getInventory().getItemInMainHand();
 
-        if (ForestMenager.isAxe(hand) && ForestMenager.isLog(b.getType())) {
+        if (ForestMenager.isAxe(hand) && ForestMenager.isLog(b.getType()) && CraftingMenager.HaveEffect(hand, "Tree_Feller")) {
             ForestMenager.onStartChopping(player, b);
         }
     }
@@ -442,7 +442,7 @@ public class Listeners implements Listener {
         Block b = event.getBlock();
         ItemStack hand = player.getInventory().getItemInMainHand();
 
-        if (ForestMenager.isAxe(hand) && ForestMenager.isLog(b.getType())) {
+        if (ForestMenager.isAxe(hand) && ForestMenager.isLog(b.getType()) && CraftingMenager.HaveEffect(hand, "Tree_Feller")) {
             if (ForestMenager.tryChopTreeAnimated(player, b, hand)) {
                 event.setCancelled(true);
                 return;
@@ -786,10 +786,20 @@ public class Listeners implements Listener {
             if (Objects.equals(event.getInventory().getHolder(), CraftingMenager.EffectsGui)) {
                 event.setCancelled(true);
                 if (event.getSlot() != 53) {
+                    if (clickeditem == null || clickeditem.getType() == Material.GRAY_DYE || (clickeditem.hasItemMeta() && clickeditem.getItemMeta().hasDisplayName() && clickeditem.getItemMeta().getDisplayName().contains("Nieznan"))) {
+                        p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
+                        p.sendMessage(ChatColor.RED + "Ta runa / efekt jest jeszcze zablokowana w Twojej progresji!");
+                        return;
+                    }
                     String effectName = ChatColor.stripColor(clickeditem.getItemMeta().getDisplayName());
                     MagicEffects effect = CraftingMenager.GetMagicEfectByDisplayName(effectName);
                     if (effect == null) {
                         System.out.println(ChatColor.RED + "❌ Wystąpił błąd: nie znaleziono efektu!");
+                        return;
+                    }
+                    if (!effect.isUnlockedFor(p)) {
+                        p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
+                        p.sendMessage(ChatColor.RED + "Ta runa / efekt jest jeszcze zablokowana w Twojej progresji!");
                         return;
                     }
                     if (!PlayerLevelMenager.CheckPlayerMagicEffectsCondition(effect, p)) {
@@ -830,7 +840,7 @@ public class Listeners implements Listener {
                         if (item.getTypeOfMold() == ItemMold.ItemType.WEAPON) {
                             CraftedWeapon weapon = CraftingMenager.getCraftedWeaponByItem(item.toItemStack());
                             item.Craft(p, new ArrayList<>(), event.getInventory().getItem(53), true,
-                                    weapon.getDamage());
+                                     weapon.getDamage());
                         } else if (item.getTypeOfMold() == ItemMold.ItemType.ITEM) {
                             item.Craft(p, new ArrayList<>(), event.getInventory().getItem(53), true, 0);
                         } else {
@@ -847,8 +857,19 @@ public class Listeners implements Listener {
             }
             if (Objects.equals(event.getInventory().getHolder(), CraftingMenager.CraftingGui)) {
                 event.setCancelled(true);
+                if (clickeditem == null || clickeditem.getType() == Material.GRAY_DYE || (clickeditem.hasItemMeta() && clickeditem.getItemMeta().hasDisplayName() && clickeditem.getItemMeta().getDisplayName().contains("Nieznan"))) {
+                    p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
+                    p.sendMessage(ChatColor.RED + "Ten przedmiot rzemieślniczy jest jeszcze zablokowany w Twojej progresji!");
+                    return;
+                }
                 ItemMold mold = CraftingMenager.getItemMoldByItem(clickeditem);
                 if (mold == null) return;
+
+                if (!mold.isUnlockedFor(p)) {
+                    p.closeInventory();
+                    p.sendMessage(ChatColor.RED + "Ten przedmiot rzemieślniczy jest jeszcze zablokowany w Twojej progresji!");
+                    return;
+                }
 
                 if (RPG.Progression.ProgressionManager.getInstance() != null) {
                     RPG.Progression.model.PlayerProgressionData progData = RPG.Progression.ProgressionManager.getInstance().getProgressionService().getPlayerData(p);

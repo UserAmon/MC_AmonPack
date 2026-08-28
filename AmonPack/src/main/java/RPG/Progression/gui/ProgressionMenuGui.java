@@ -69,9 +69,9 @@ public class ProgressionMenuGui implements InventoryHolder {
         );
         inventory.setItem(8, createItem(Material.MAP, "§3§lAtlas Odkrytych Biomów", biomesLore));
 
-        // 6 Stages Layout (Slots: 20, 21, 22, 23, 24, 25)
-        int[] stageSlots = {20, 21, 22, 23, 24, 25};
-        StageType[] stages = {StageType.WOODEN, StageType.STONE, StageType.IRON, StageType.DIAMOND, StageType.NETHER, StageType.END};
+        // 7 Stages Layout (Slots: 19, 20, 21, 22, 23, 24, 25)
+        int[] stageSlots = {19, 20, 21, 22, 23, 24, 25};
+        StageType[] stages = {StageType.WOODEN, StageType.STONE, StageType.COPPER, StageType.IRON, StageType.DIAMOND, StageType.NETHER, StageType.END};
 
         for (int i = 0; i < stages.length; i++) {
             StageType stage = stages[i];
@@ -141,8 +141,8 @@ public class ProgressionMenuGui implements InventoryHolder {
             return;
         }
 
-        int[] stageSlots = {20, 21, 22, 23, 24, 25};
-        StageType[] stages = {StageType.WOODEN, StageType.STONE, StageType.IRON, StageType.DIAMOND, StageType.NETHER, StageType.END};
+        int[] stageSlots = {19, 20, 21, 22, 23, 24, 25};
+        StageType[] stages = {StageType.WOODEN, StageType.STONE, StageType.COPPER, StageType.IRON, StageType.DIAMOND, StageType.NETHER, StageType.END};
 
         for (int i = 0; i < stageSlots.length; i++) {
             if (slot == stageSlots[i]) {

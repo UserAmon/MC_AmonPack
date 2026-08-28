@@ -43,6 +43,8 @@ public class MagicEffects {
     private final int scrollModelID;
     private long chargeTime;
     private int power;
+    private String requiredStage;
+    private String requiredObjective;
 
     public MagicEffects(List<MagicEffectsConditions> conditions, List<ItemStack> cost, String name, List<String> lore,
             String id, boolean isMajor) {
@@ -64,6 +66,47 @@ public class MagicEffects {
         this.scrollModelID = scrollModelID;
         this.chargeTime = chargeTime;
         this.power = power;
+    }
+
+    public String getRequiredStage() {
+        return requiredStage;
+    }
+
+    public void setRequiredStage(String requiredStage) {
+        this.requiredStage = requiredStage;
+    }
+
+    public String getRequiredObjective() {
+        return requiredObjective;
+    }
+
+    public void setRequiredObjective(String requiredObjective) {
+        this.requiredObjective = requiredObjective;
+    }
+
+    public boolean isUnlockedFor(Player player) {
+        if (player == null) return true;
+        if (player.getGameMode() == org.bukkit.GameMode.CREATIVE) return true;
+        if (!Plugin.AmonPackPlugin.ENABLE_SLOW_PROGRESSION) return true;
+        if (RPG.Progression.ProgressionManager.getInstance() == null || RPG.Progression.ProgressionManager.getInstance().getProgressionService() == null) return true;
+
+        RPG.Progression.model.PlayerProgressionData data = RPG.Progression.ProgressionManager.getInstance().getProgressionService().getPlayerData(player);
+        if (data == null) return true;
+
+        if (requiredStage != null && !requiredStage.trim().isEmpty()) {
+            RPG.Progression.model.StageType reqStage = RPG.Progression.model.StageType.fromName(requiredStage.trim());
+            if (reqStage != null && !data.getCurrentStage().isAtLeast(reqStage)) {
+                return false;
+            }
+        }
+
+        if (requiredObjective != null && !requiredObjective.trim().isEmpty()) {
+            if (!data.isQuestCompleted(requiredObjective.trim())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public int getPower() {

@@ -50,3 +50,23 @@ blocks:
       exp: 10.0
     generation:
       enabled: false
+
+  basalt_ore:
+    display_name: "&8&lRuda Bazaltu"
+    base_material: NOTE_BLOCK
+    model: "block/basalt_ore"
+    custom_model_data: 30003
+    hardness: 3.5
+    required_tool: "PICKAXE"
+    required_tier: 1 # Wymaga kamiennego/kościanego kilofa lub lepszego
+    drops:
+      custom_item: "basalt_shard"
+      min: 1
+      max: 3
+      exp: 10.0
+    generation:
+      enabled: true
+      vein_size: 8
+      veins_per_chunk: 12
+      min_y: -32
+      max_y: 64
