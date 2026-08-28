@@ -1626,6 +1626,34 @@ Craftable_Items:
           Material: GUNPOWDER
           Amount: 1
 
+  dragon_scatter_shot:
+    Material: IRON_NUGGET
+    Name: "§c§lSmoczy Śrut Rozpylający"
+    Custom_Model_ID: 10064
+    Required_Stage: IRON
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: BLAZE_POWDER
+          Amount: 3
+        m2:
+          Material: GUNPOWDER
+          Amount: 3
+        m3:
+          Material: IRON_NUGGET
+          Amount: 10
+        m4:
+          Material: PAPER
+          Amount: 1
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Nasycony siarką pakiet 10 płonących śrucin do Garłacza."
+      Items_To_Craft:
+        c1:
+          Material: BLAZE_POWDER
+          Amount: 1
+
   gunsmith_table:
     Material: NOTE_BLOCK
     Name: "§8§lWarsztat Rusznikarski"

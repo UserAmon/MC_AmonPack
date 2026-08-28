@@ -195,6 +195,7 @@ public class PackManager {
             registerModelOverride("iron_nugget", 10061, "amonpack:ammo/scatter_shot");
             registerModelOverride("iron_nugget", 10062, "amonpack:ammo/dragon_cartridge");
             registerModelOverride("iron_nugget", 10063, "amonpack:ammo/slug_cartridge");
+            registerModelOverride("iron_nugget", 10064, "amonpack:ammo/dragon_scatter_shot");
 
             // Łuk (BOW)
             registerModelOverride("bow", 10021, "amonpack:weapons/custom_bow");

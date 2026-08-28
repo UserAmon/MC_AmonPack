@@ -30,6 +30,13 @@ public enum AmmoType {
             Material.IRON_NUGGET,
             10063,
             "§7Ciężki monolityczny pocisk do Garłacza zadający potężne obrażenia."
+    ),
+    DRAGON_SCATTER_SHOT(
+            "dragon_scatter_shot",
+            "§cSmoczy Śrut Rozpylający",
+            Material.IRON_NUGGET,
+            10064,
+            "§7Nasycony siarką pakiet 10 płonących śrucin do Garłacza o zwiększonym zasięgu."
     );
 
     private final String id;
@@ -55,6 +62,7 @@ public enum AmmoType {
     public static AmmoType fromId(String id) {
         if (id == null) return null;
         if (id.equalsIgnoreCase("slug_cartide")) return SLUG_CARTRIDGE;
+        if (id.equalsIgnoreCase("dragon_scatter")) return DRAGON_SCATTER_SHOT;
         for (AmmoType at : values()) {
             if (at.id.equalsIgnoreCase(id)) return at;
         }

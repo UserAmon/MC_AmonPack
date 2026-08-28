@@ -517,6 +517,15 @@ items:
     lore:
       - "&7Ciężki monolityczny pocisk do Garłacza zadający potężne obrażenia."
 
+  dragon_scatter_shot:
+    display_name: "&c&lSmoczy Śrut Rozpylający"
+    base_material: IRON_NUGGET
+    model: "ammo/dragon_scatter_shot"
+    custom_model_data: 10064
+    unbreakable: true
+    lore:
+      - "&7Nasycony siarką pakiet 10 płonących śrucin do Garłacza o zwiększonym zasięgu."
+
   # --- WARSZTAT RUSZNIKARSKI ---
   gunsmith_table:
     display_name: "&8&lWarsztat Rusznikarski"

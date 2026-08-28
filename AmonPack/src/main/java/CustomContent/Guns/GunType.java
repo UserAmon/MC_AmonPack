@@ -13,7 +13,7 @@ public enum GunType {
             1,
             36, // 1.8s (36 ticków)
             25.0,
-            0.085, // rozrzut bazowy (wyraźny bez celowania)
+            0.17, // 2x większa losowość / rozrzut bazowy
             150, // durability
             AmmoType.LEAD_BULLET,
             false
@@ -28,7 +28,7 @@ public enum GunType {
             1,
             60, // 3.0s (60 ticków)
             60.0,
-            0.055, // rozrzut z biodra, po ADS staje się snajperski
+            0.11, // rozrzut z biodra (ciężko trafić bez celowania)
             250,
             AmmoType.LEAD_BULLET,
             true
@@ -38,12 +38,12 @@ public enum GunType {
             "§c§lGarłacz Rozpylający",
             Material.IRON_HOE,
             10052,
-            1.5, // 8 x 1.5 = 12.0 dla śrutu
+            1.5, // 8-10 x 1.5 = 12.0 - 15.0 dla śrutu
             1.5,
             1,
             50, // 2.5s (50 ticków)
             14.0,
-            0.22, // szeroki stożek śrutu
+            0.40, // potężny, bardzo szeroki stożek śrutu
             200,
             AmmoType.SCATTER_SHOT,
             false
@@ -58,7 +58,7 @@ public enum GunType {
             4, // 4 komory
             15, // 0.75s na komorę
             20.0,
-            0.11, // zauważalny rozrzut serii
+            0.22, // duży rozrzut w szybkiej serii
             220,
             AmmoType.LEAD_BULLET,
             false
@@ -100,7 +100,7 @@ public enum GunType {
     public boolean isCompatibleAmmo(AmmoType ammo) {
         if (ammo == null) return false;
         if (this == BLUNDERBUSS) {
-            return ammo == AmmoType.SCATTER_SHOT || ammo == AmmoType.SLUG_CARTRIDGE || ammo == AmmoType.DRAGON_CARTRIDGE;
+            return ammo == AmmoType.SCATTER_SHOT || ammo == AmmoType.SLUG_CARTRIDGE || ammo == AmmoType.DRAGON_SCATTER_SHOT;
         }
         return ammo == AmmoType.LEAD_BULLET || ammo == AmmoType.DRAGON_CARTRIDGE;
     }

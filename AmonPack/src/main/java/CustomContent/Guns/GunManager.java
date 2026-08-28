@@ -6,6 +6,9 @@ import RPG.Progression.model.ObjectiveType;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,14 +25,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GunManager {
 
+    private static final UUID SCOPE_SPEED_MOD_UUID = UUID.fromString("d37a892b-83bb-4c28-bb71-8716382109aa");
+
     private final Set<UUID> aimingPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<UUID> scopedPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Map<UUID, BukkitTask> activeReloads = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastShotTime = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
     public void handleRightClick(Player player, ItemStack gunItem) {
         if (!GunData.isGun(gunItem)) return;
-        // Trzymanie PPM = Mocny Zoom ADS
+        // Trzymanie PPM = Celowanie (ADS lub Luneta 10x Zoom)
         startAiming(player, gunItem);
     }
 
@@ -38,7 +44,7 @@ public class GunManager {
         GunData data = GunData.fromItemStack(gunItem);
         if (data == null) return;
 
-        // Sprawdzenie cooldownu strzału (0.25s - 0.45s)
+        // Sprawdzenie cooldownu strzału
         long now = System.currentTimeMillis();
         long last = lastShotTime.getOrDefault(player.getUniqueId(), 0L);
         long cooldownMs = data.getGunType() == GunType.PEPPERBOX ? 250L : 450L;
@@ -63,7 +69,6 @@ public class GunManager {
         if (data.getCurrentAmmo() <= 0) {
             player.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1.0f, 1.4f);
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c⚠ Brak kul w komorze! Naciśnij [F] aby załadować."));
-            // Automatyczny start reloadu
             startReload(player, gunItem);
             return;
         }
@@ -82,8 +87,24 @@ public class GunManager {
             ammo = data.getGunType().getRequiredAmmoType();
         }
 
-        boolean isDragon = (ammo == AmmoType.DRAGON_CARTRIDGE);
+        boolean isDragonCartridge = (ammo == AmmoType.DRAGON_CARTRIDGE);
+        boolean isDragonScatter = (ammo == AmmoType.DRAGON_SCATTER_SHOT);
         boolean isSlug = (ammo == AmmoType.SLUG_CARTRIDGE);
+        boolean isDragon = isDragonCartridge || isDragonScatter;
+
+        // Obliczenie obrażeń pocisku przed odjęciem amunicji
+        final double singleBulletDamage;
+        if (data.getGunType() == GunType.BLUNDERBUSS) {
+            if (isSlug) {
+                singleBulletDamage = 15.0 + (data.getLevel() - 1) * 1.5;
+            } else if (isDragonScatter) {
+                singleBulletDamage = 1.8 + (data.getLevel() - 1) * 0.2;
+            } else {
+                singleBulletDamage = 1.5 + (data.getLevel() - 1) * 0.2;
+            }
+        } else {
+            singleBulletDamage = data.getDamage();
+        }
 
         // 1. Dźwięki i dym wystrzału z lufy
         Location muzzleLoc = eyeLoc.clone().add(dir.clone().multiply(0.8)).add(0, -0.15, 0);
@@ -97,17 +118,23 @@ public class GunManager {
             world.playSound(eyeLoc, Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 0.8f);
         }
 
-        world.spawnParticle(Particle.FLAME, muzzleLoc, isDragon ? 25 : 12, 0.15, 0.15, 0.15, 0.05);
-        world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, muzzleLoc, isSlug ? 28 : 18, 0.25, 0.25, 0.25, 0.05);
-        world.spawnParticle(Particle.SMOKE, muzzleLoc, 25, 0.3, 0.3, 0.3, 0.08);
+        boolean pepperboxUnique = (data.getGunType() == GunType.PEPPERBOX && data.hasUniqueMod());
+        int smokeCount = pepperboxUnique ? 8 : (isSlug ? 28 : 18);
+        int flameCount = isDragon ? 25 : (pepperboxUnique ? 5 : 12);
+
+        world.spawnParticle(Particle.FLAME, muzzleLoc, flameCount, 0.15, 0.15, 0.15, 0.05);
+        world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, muzzleLoc, smokeCount, 0.25, 0.25, 0.25, 0.05);
+        world.spawnParticle(Particle.SMOKE, muzzleLoc, pepperboxUnique ? 10 : 25, 0.3, 0.3, 0.3, 0.08);
 
         // 2. Liczba pocisków
-        // Garłacz strzela 8 śrucinami tylko gdy załadowany jest śrut lub smoczy oddech; slug to 1 potężny pocisk
-        int bulletCount = (data.getGunType() == GunType.BLUNDERBUSS && !isSlug) ? 8 : 1;
+        // Garłacz strzela 8 (zwykły śrut) lub 10 (smoczy śrut) lub 1 (ciężki brenek)
+        int bulletCount = (data.getGunType() == GunType.BLUNDERBUSS) ?
+                (isSlug ? 1 : (isDragonScatter ? 10 : 8)) : 1;
+
         boolean isAiming = isAiming(player);
         double baseSpread = data.getSpread();
 
-        if (isAiming) baseSpread *= 0.30; // 70% redukcja rozrzutu przy ADS!
+        if (isAiming) baseSpread *= 0.25; // 75% redukcja rozrzutu przy celowaniu
         if (player.isSprinting()) baseSpread *= 1.60;
         if (player.isSneaking()) baseSpread *= 0.75;
 
@@ -120,11 +147,11 @@ public class GunManager {
                         (random.nextDouble() - 0.5) * baseSpread
                 )).normalize();
             }
-            simulateBullet(player, eyeLoc, spreadDir, data, ammo);
+            simulateBullet(player, eyeLoc, spreadDir, data, ammo, singleBulletDamage);
         }
 
-        // 3. Odrzut kamery i fizyczny odrzut gracza w tył
-        applyRecoil(player, data.getGunType(), isSlug);
+        // 3. Odrzut
+        applyRecoil(player, data.getGunType(), isSlug, pepperboxUnique);
 
         // 4. Zużycie amunicji i trwałości
         data.setCurrentAmmo(data.getCurrentAmmo() - 1);
@@ -139,13 +166,13 @@ public class GunManager {
         }
     }
 
-    private void simulateBullet(Player shooter, Location startLoc, Vector initialVelocity, GunData data, AmmoType ammo) {
+    private void simulateBullet(Player shooter, Location startLoc, Vector initialVelocity, GunData data, AmmoType ammo, double bulletDamage) {
         World world = startLoc.getWorld();
-        double speed = (ammo == AmmoType.SLUG_CARTRIDGE) ? 3.4 : 3.0; // 60-68 m/s
+        double speed = (ammo == AmmoType.SLUG_CARTRIDGE) ? 3.5 : 3.0; // 60-70 m/s
         Vector velocity = initialVelocity.clone().multiply(speed);
         Location currentLoc = startLoc.clone();
         final double maxRange = data.getEffectiveRange();
-        final boolean isDragon = (ammo == AmmoType.DRAGON_CARTRIDGE);
+        final boolean isDragon = (ammo == AmmoType.DRAGON_CARTRIDGE || ammo == AmmoType.DRAGON_SCATTER_SHOT);
         final boolean isSlug = (ammo == AmmoType.SLUG_CARTRIDGE);
 
         new BukkitRunnable() {
@@ -161,7 +188,7 @@ public class GunManager {
                     if (hit != null) {
                         Location hitPos = hit.getHitPosition().toLocation(world);
                         if (hit.getHitEntity() instanceof LivingEntity victim) {
-                            handleHitEntity(shooter, victim, hitPos, data, ammo);
+                            handleHitEntity(shooter, victim, hitPos, data, ammo, bulletDamage);
                         } else if (hit.getHitBlock() != null) {
                             handleHitBlock(hitPos, isDragon);
                         }
@@ -195,13 +222,12 @@ public class GunManager {
         }.runTaskTimer(AmonPackPlugin.plugin, 1L, 1L);
     }
 
-    private void handleHitEntity(Player shooter, LivingEntity victim, Location hitLoc, GunData data, AmmoType ammo) {
+    private void handleHitEntity(Player shooter, LivingEntity victim, Location hitLoc, GunData data, AmmoType ammo, double damage) {
         World world = victim.getWorld();
         boolean isHeadshot = hitLoc.getY() >= (victim.getEyeLocation().getY() - 0.25);
-        boolean isDragon = (ammo == AmmoType.DRAGON_CARTRIDGE);
+        boolean isDragon = (ammo == AmmoType.DRAGON_CARTRIDGE || ammo == AmmoType.DRAGON_SCATTER_SHOT);
         boolean isSlug = (ammo == AmmoType.SLUG_CARTRIDGE);
 
-        double damage = data.getDamage();
         if (isDragon) {
             damage += 3.0; // Bonus ognia
         }
@@ -220,18 +246,18 @@ public class GunManager {
         // Zadanie obrażeń
         victim.damage(damage, shooter);
 
-        // Odrzut dla Garłacza (POZIOMY BEZ PODRZUCANIA W GÓRĘ)
+        // ZWIĘKSZONY POZIOMY ODRZUT DLA STRZELBY (Garłacz)
         if (data.getGunType() == GunType.BLUNDERBUSS) {
             Vector kb = victim.getLocation().toVector().subtract(shooter.getLocation().toVector());
             kb.setY(0);
-            double kbStrength = isSlug ? 1.25 : 0.85;
+            double kbStrength = isSlug ? 2.2 : 1.45;
             if (kb.lengthSquared() > 0.001) {
                 kb.normalize().multiply(kbStrength);
             }
             victim.setVelocity(new Vector(kb.getX(), 0.0, kb.getZ()));
         }
 
-        // Efekt smoczego oddechu (Podpalenie na 6 sekund i rozbłysk płomieni)
+        // Efekt smoczego oddechu (Podpalenie na 6 sekund)
         if (isDragon) {
             victim.setFireTicks(120);
             world.spawnParticle(Particle.LAVA, hitLoc, 10, 0.3, 0.3, 0.3, 0.1);
@@ -257,19 +283,19 @@ public class GunManager {
         }
     }
 
-    private void applyRecoil(Player player, GunType type, boolean isSlug) {
-        float pitchKick = (type == GunType.BLUNDERBUSS) ? (isSlug ? -6.0f : -5.0f) :
-                type == GunType.FLINTLOCK_MUSKET ? -3.8f : -2.2f;
-        float yawKick = (random.nextFloat() - 0.5f) * 1.6f;
+    private void applyRecoil(Player player, GunType type, boolean isSlug, boolean pepperboxReduced) {
+        float pitchKick = (type == GunType.BLUNDERBUSS) ? (isSlug ? -6.5f : -5.5f) :
+                type == GunType.FLINTLOCK_MUSKET ? -4.0f : (pepperboxReduced ? -1.2f : -2.5f);
+        float yawKick = (random.nextFloat() - 0.5f) * (pepperboxReduced ? 0.8f : 1.6f);
 
         Location loc = player.getLocation();
         loc.setPitch(Math.max(-90.0f, loc.getPitch() + pitchKick));
         loc.setYaw(loc.getYaw() + yawKick);
         player.teleport(loc);
 
-        // Odrzut fizyczny gracza w tył (zauważalny dla strzelby)
-        double backForce = (type == GunType.BLUNDERBUSS) ? (isSlug ? -0.36 : -0.25) :
-                type == GunType.FLINTLOCK_MUSKET ? -0.14 : -0.09;
+        // Odrzut fizyczny gracza w tył
+        double backForce = (type == GunType.BLUNDERBUSS) ? (isSlug ? -0.40 : -0.28) :
+                type == GunType.FLINTLOCK_MUSKET ? -0.15 : (pepperboxReduced ? -0.04 : -0.10);
 
         Vector back = player.getLocation().getDirection().setY(0).normalize().multiply(backForce);
         player.setVelocity(player.getVelocity().add(back));
@@ -280,7 +306,8 @@ public class GunManager {
         GunData data = GunData.fromItemStack(gunItem);
         if (data == null) return;
 
-        if (data.getCurrentAmmo() >= data.getGunType().getMaxAmmo()) {
+        int maxCap = data.getMaxAmmoCapacity();
+        if (data.getCurrentAmmo() >= maxCap) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§aBroń jest już w pełni załadowana!"));
             return;
         }
@@ -289,7 +316,7 @@ public class GunManager {
             return;
         }
 
-        // Wyszukanie amunicji o najwyższym priorytecie (najniższy numer slotu w Hotbarze 0..8, potem EQ 9..35, potem Offhand)
+        // Wyszukanie kompatybilnej amunicji (Hotbar 0..8 -> EQ 9..35 -> Offhand)
         AmmoType selectedAmmo = findHighestPriorityAmmo(player, data.getGunType());
         if (selectedAmmo == null && player.getGameMode() != GameMode.CREATIVE) {
             player.playSound(player.getLocation(), Sound.BLOCK_CHEST_LOCKED, 1.0f, 1.5f);
@@ -311,7 +338,6 @@ public class GunManager {
 
             @Override
             public void run() {
-                // Anulowanie jeśli gracz zmienił trzymany przedmiot lub zamknął grę
                 ItemStack currentHand = player.getInventory().getItemInMainHand();
                 if (!GunData.isGun(currentHand) || !player.isOnline()) {
                     cancelReload(player);
@@ -329,7 +355,6 @@ public class GunManager {
                 bar.append("§e] §fŁadowanie: ").append(chosenAmmo.getDisplayName());
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(bar.toString()));
 
-                // Dźwięki fazowe
                 if (tick == 1) {
                     player.playSound(player.getLocation(), Sound.BLOCK_SAND_PLACE, 1.0f, 1.1f);
                 } else if (tick == totalTicks / 2) {
@@ -351,20 +376,21 @@ public class GunManager {
     private void finishReload(Player player, ItemStack gunItem, GunData data, AmmoType ammoToLoad) {
         activeReloads.remove(player.getUniqueId());
 
+        int maxCap = data.getMaxAmmoCapacity();
         if (player.getGameMode() != GameMode.CREATIVE) {
-            int needed = data.getGunType().getMaxAmmo() - data.getCurrentAmmo();
+            int needed = maxCap - data.getCurrentAmmo();
             int consumed = consumeAmmoByPriority(player, ammoToLoad, needed);
             if (consumed <= 0) return;
             data.setCurrentAmmo(data.getCurrentAmmo() + consumed);
         } else {
-            data.setCurrentAmmo(data.getGunType().getMaxAmmo());
+            data.setCurrentAmmo(maxCap);
         }
 
         data.setLoadedAmmoType(ammoToLoad);
         data.applyToItemStack(gunItem);
 
         player.playSound(player.getLocation(), Sound.ITEM_FLINTANDSTEEL_USE, 1.0f, 1.4f);
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a✔ Załadowano " + ammoToLoad.getDisplayName() + " §f(" + data.getCurrentAmmo() + "/" + data.getGunType().getMaxAmmo() + ")"));
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a✔ Załadowano " + ammoToLoad.getDisplayName() + " §f(" + data.getCurrentAmmo() + "/" + maxCap + ")"));
     }
 
     public boolean isReloading(Player player) {
@@ -380,17 +406,33 @@ public class GunManager {
     }
 
     public void startAiming(Player player, ItemStack gunItem) {
-        aimingPlayers.add(player.getUniqueId());
         GunData data = GunData.fromItemStack(gunItem);
-        // Slowness V (amplifier 4) lub z lunetą Slowness VIII (amplifier 7) dla BARDZO MOCNEGO ZOOMA!
-        int amplifier = (data != null && data.hasBrassScope()) ? 7 : 4;
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 14, amplifier, false, false, false));
+        boolean hasScope = (data != null && (data.hasBrassScope() || (data.getGunType() == GunType.FLINTLOCK_MUSKET && data.hasUniqueMod())));
+
+        if (hasScope) {
+            if (!scopedPlayers.contains(player.getUniqueId())) {
+                player.playSound(player.getLocation(), Sound.ITEM_SPYGLASS_USE, 1.0f, 1.2f);
+            }
+            scopedPlayers.add(player.getUniqueId());
+            aimingPlayers.add(player.getUniqueId());
+
+            // 10x SUPER OPTICAL ZOOM: Drastyczne zmniejszenie WalkSpeed do 0.025 (8x zoom) + crosshair
+            player.setWalkSpeed(0.025f);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 14, 6, false, false, false));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§8[ §f─────── §c⊕ §f─────── §8] §e10x LUNETA OPTYCZNA"));
+        } else {
+            aimingPlayers.add(player.getUniqueId());
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 14, 4, false, false, false));
+        }
     }
 
     public void stopAiming(Player player) {
-        if (aimingPlayers.remove(player.getUniqueId())) {
-            player.removePotionEffect(PotionEffectType.SLOWNESS);
+        aimingPlayers.remove(player.getUniqueId());
+        if (scopedPlayers.remove(player.getUniqueId())) {
+            player.setWalkSpeed(0.2f);
+            player.playSound(player.getLocation(), Sound.ITEM_SPYGLASS_STOP_USING, 1.0f, 1.2f);
         }
+        player.removePotionEffect(PotionEffectType.SLOWNESS);
     }
 
     public boolean isAiming(Player player) {
@@ -468,10 +510,12 @@ public class GunManager {
             if (cmd == AmmoType.SCATTER_SHOT.getCustomModelData()) return AmmoType.SCATTER_SHOT;
             if (cmd == AmmoType.DRAGON_CARTRIDGE.getCustomModelData()) return AmmoType.DRAGON_CARTRIDGE;
             if (cmd == AmmoType.SLUG_CARTRIDGE.getCustomModelData()) return AmmoType.SLUG_CARTRIDGE;
+            if (cmd == AmmoType.DRAGON_SCATTER_SHOT.getCustomModelData()) return AmmoType.DRAGON_SCATTER_SHOT;
         }
         if (meta.hasDisplayName()) {
             String name = meta.getDisplayName().toLowerCase(Locale.ROOT);
             if (name.contains("slug") || name.contains("brenek")) return AmmoType.SLUG_CARTRIDGE;
+            if (name.contains("smoczy śrut") || name.contains("dragon_scatter")) return AmmoType.DRAGON_SCATTER_SHOT;
             if (name.contains("dragon") || name.contains("zapalając") || name.contains("smocz")) return AmmoType.DRAGON_CARTRIDGE;
             if (name.contains("scatter") || name.contains("śrut")) return AmmoType.SCATTER_SHOT;
             if (name.contains("lead") || name.contains("ołowian")) return AmmoType.LEAD_BULLET;
