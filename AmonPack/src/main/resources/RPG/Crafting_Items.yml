@@ -968,6 +968,34 @@ Craftable_Weapons:
         c1:
           Material: STONE_SWORD
           Amount: 1
+
+  basalt_blade:
+    Material: STONE_SWORD
+    Name: "§8§lBazaltowy Sztylet"
+    Custom_Model_ID: 10029
+    Base_Damage: 7
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: ia:basalt_shard
+          Amount: 1
+        m2:
+          Material: STICK
+          Amount: 1
+      AllowedMagicEffects:
+      - Monster_Hunter
+      - Knockback
+      - Looting
+      - Fire_Damage_Boost
+      - Experience
+    Item:
+      Lore:
+        l1: "§7Lekki i zabójczo ostry nóż wykuty z wulkanicznego szkła bazaltowego."
+      Items_To_Craft:
+        c1:
+          Material: STONE_SWORD
+          Amount: 1
 # ###Tools
 Craftable_Tools:
   bone_pickaxe:
@@ -1430,7 +1458,7 @@ Craftable_Items:
   # ==========================================
 
   flintlock_pistol:
-    Material: IRON_HOE
+    Material: CROSSBOW
     Name: "§6§lPistolet Skałkowy"
     Custom_Model_ID: 10050
     Required_Stage: COPPER
@@ -1451,11 +1479,41 @@ Craftable_Items:
         l1: "§7Prymitywna broń boczna na czarny proch."
       Items_To_Craft:
         c1:
+          Material: CROSSBOW
+          Amount: 1
+
+  flintlock:
+    Material: CROSSBOW
+    Name: "§6§lFlintlock"
+    Custom_Model_ID: 10055
+    Required_Stage: COPPER
+    Mold:
+      Items_To_Craft:
+        m1:
           Material: COPPER_INGOT
+          Amount: 4
+        m2:
+          Material: FLINT
           Amount: 2
+        m3:
+          Material: TRIPWIRE_HOOK
+          Amount: 1
+        m4:
+          Material: STRING
+          Amount: 2
+      AllowedMagicEffects: []
+    Item:
+      Lore:
+        l1: "§7Pistolet skałkowy oparty na mechanizmie napinania (Kusza)."
+        l2: "§e✦ Trzymaj PPM: §fNaciągnięcie kurka i wsypanie prochu"
+        l3: "§6✦ Kliknij PPM: §fWystrzał kuli z potężnym hukiem!"
+      Items_To_Craft:
+        c1:
+          Material: CROSSBOW
+          Amount: 1
 
   flintlock_musket:
-    Material: IRON_HOE
+    Material: CROSSBOW
     Name: "§e§lMuszkiet Piechoty"
     Custom_Model_ID: 10051
     Required_Stage: IRON
@@ -1476,11 +1534,11 @@ Craftable_Items:
         l1: "§7Długa broń czarnoprochowa o potężnym zasięgu."
       Items_To_Craft:
         c1:
-          Material: IRON_INGOT
-          Amount: 3
+          Material: CROSSBOW
+          Amount: 1
 
   blunderbuss:
-    Material: IRON_HOE
+    Material: CROSSBOW
     Name: "§c§lGarłacz Rozpylający"
     Custom_Model_ID: 10052
     Required_Stage: IRON
@@ -1501,11 +1559,11 @@ Craftable_Items:
         l1: "§7Krótka strzelba wypluwająca niszczycielską chmarę śrutu."
       Items_To_Craft:
         c1:
-          Material: COPPER_INGOT
-          Amount: 2
+          Material: CROSSBOW
+          Amount: 1
 
   pepperbox:
-    Material: IRON_HOE
+    Material: CROSSBOW
     Name: "§b§lPieprzniczka Obrotowa"
     Custom_Model_ID: 10053
     Required_Stage: IRON
@@ -1526,8 +1584,8 @@ Craftable_Items:
         l1: "§7Czterolufowy pistolet obrotowy na 4 szybkie strzały."
       Items_To_Craft:
         c1:
-          Material: IRON_INGOT
-          Amount: 4
+          Material: CROSSBOW
+          Amount: 1
 
   lead_bullet:
     Material: IRON_NUGGET

@@ -2195,26 +2195,26 @@
     },
     "firstperson_righthand": {
       "rotation": [
-        -83.99,
-        -8.41,
-        -8
+        -91.37,
+        6.36,
+        -8.47
       ],
       "translation": [
-        -5.5,
-        7.25,
-        8.25
+        0,
+        5.5,
+        7
       ]
     },
     "firstperson_lefthand": {
       "rotation": [
-        -83.99,
-        -8.41,
-        -8
+        -91.37,
+        6.36,
+        -8.47
       ],
       "translation": [
-        -5.5,
-        7.25,
-        8.25
+        0,
+        5.5,
+        7
       ]
     },
     "ground": {

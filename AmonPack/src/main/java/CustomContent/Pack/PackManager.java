@@ -183,11 +183,18 @@ public class PackManager {
             registerModelOverride("wooden_sword", 10007, "amonpack:weapons/sztylet");
             registerModelOverride("wooden_sword", 10020, "amonpack:weapons/bone_sword");
             registerModelOverride("stone_sword", 10027, "amonpack:weapons/basalt_sword");
+            registerModelOverride("stone_sword", 10029, "amonpack:weapons/basalt_blade");
 
-            // Bronie palne (IRON_HOE)
+            // Bronie palne (CROSSBOW & IRON_HOE)
+            registerModelOverride("crossbow", 10050, "amonpack:guns/flintlock_pistol");
+            registerModelOverride("crossbow", 10051, "amonpack:guns/crude_rifle");
+            registerModelOverride("crossbow", 10052, "amonpack:guns/crude_shotgun");
+            registerModelOverride("crossbow", 10053, "amonpack:guns/pepperbox");
+            registerModelOverride("crossbow", 10055, "amonpack:guns/flintlock");
+
             registerModelOverride("iron_hoe", 10050, "amonpack:guns/flintlock_pistol");
-            registerModelOverride("iron_hoe", 10051, "amonpack:guns/flintlock_musket");
-            registerModelOverride("iron_hoe", 10052, "amonpack:guns/blunderbuss");
+            registerModelOverride("iron_hoe", 10051, "amonpack:guns/crude_rifle");
+            registerModelOverride("iron_hoe", 10052, "amonpack:guns/crude_shotgun");
             registerModelOverride("iron_hoe", 10053, "amonpack:guns/pepperbox");
 
             // Amunicja (IRON_NUGGET)
@@ -300,7 +307,7 @@ public class PackManager {
                 String mat = entry.getKey();
                 Map<Integer, String> cmdMap = entry.getValue();
 
-                boolean isWeapon = mat.contains("sword") || mat.contains("axe") || mat.contains("pickaxe") || mat.contains("shovel") || mat.contains("hoe") || mat.contains("bow") || mat.contains("stick");
+                boolean isWeapon = mat.contains("sword") || mat.contains("axe") || mat.contains("pickaxe") || mat.contains("shovel") || mat.contains("hoe") || mat.contains("bow") || mat.contains("stick") || mat.contains("crossbow");
                 boolean isBlock = mat.contains("note_block") || mat.contains("carved_pumpkin");
 
                 // Format A: 1.14 - 1.21.1 (models/item/<mat>.json)
@@ -327,6 +334,34 @@ public class PackManager {
                     ov.add("predicate", pred);
                     ov.addProperty("model", cmdEntry.getValue());
                     overrides.add(ov);
+
+                    // Jeśli to kusza, dodajemy predykaty dla stanu naciągania i załadowania
+                    if (mat.equals("crossbow")) {
+                        JsonObject ovPulling = new JsonObject();
+                        JsonObject predPulling = new JsonObject();
+                        predPulling.addProperty("custom_model_data", cmdEntry.getKey());
+                        predPulling.addProperty("pulling", 1);
+                        ovPulling.add("predicate", predPulling);
+                        ovPulling.addProperty("model", cmdEntry.getValue());
+                        overrides.add(ovPulling);
+
+                        JsonObject ovCharged = new JsonObject();
+                        JsonObject predCharged = new JsonObject();
+                        predCharged.addProperty("custom_model_data", cmdEntry.getKey());
+                        predCharged.addProperty("charged", 1);
+                        ovCharged.add("predicate", predCharged);
+                        ovCharged.addProperty("model", cmdEntry.getValue());
+                        overrides.add(ovCharged);
+
+                        JsonObject ovFirework = new JsonObject();
+                        JsonObject predFirework = new JsonObject();
+                        predFirework.addProperty("custom_model_data", cmdEntry.getKey());
+                        predFirework.addProperty("charged", 1);
+                        predFirework.addProperty("firework", 1);
+                        ovFirework.add("predicate", predFirework);
+                        ovFirework.addProperty("model", cmdEntry.getValue());
+                        overrides.add(ovFirework);
+                    }
                 }
                 modelRoot.add("overrides", overrides);
 

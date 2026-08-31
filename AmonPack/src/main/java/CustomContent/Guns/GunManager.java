@@ -8,10 +8,11 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -25,26 +26,26 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GunManager {
 
-    private static final UUID SCOPE_SPEED_MOD_UUID = UUID.fromString("d37a892b-83bb-4c28-bb71-8716382109aa");
-
     private final Set<UUID> aimingPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Set<UUID> scopedPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Map<UUID, BukkitTask> activeReloads = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastShotTime = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
-    public void handleRightClick(Player player, ItemStack gunItem) {
-        if (!GunData.isGun(gunItem)) return;
-        // Trzymanie PPM = Celowanie (ADS lub Luneta 10x Zoom)
-        startAiming(player, gunItem);
-    }
-
     public void handleLeftClick(Player player, ItemStack gunItem) {
         if (!GunData.isGun(gunItem)) return;
         GunData data = GunData.fromItemStack(gunItem);
         if (data == null) return;
 
-        // Sprawdzenie cooldownu strzału
+        // Informacja o stanie broni lub celowanie
+        if (data.getCurrentAmmo() <= 0) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cKomora pusta! §7[Przytrzymaj PPM aby załadować]"));
+        } else {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a● Broń załadowana! §7(" + data.getCurrentAmmo() + "/" + data.getMaxAmmoCapacity() + ") [Kliknij PPM aby strzelić]"));
+        }
+    }
+
+    public void fireGun(Player player, ItemStack gunItem, GunData data) {
         long now = System.currentTimeMillis();
         long last = lastShotTime.getOrDefault(player.getUniqueId(), 0L);
         long cooldownMs = data.getGunType() == GunType.PEPPERBOX ? 250L : 450L;
@@ -52,32 +53,20 @@ public class GunManager {
             return;
         }
 
-        // Sprawdzenie czy gracz właśnie przeładowuje
-        if (isReloading(player)) {
-            player.sendMessage("§cBroń jest w trakcie przeładowywania!");
-            return;
-        }
-
-        // Sprawdzenie trwałości
         if (data.getCurrentDurability() <= 0) {
             player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BREAK, 1.0f, 0.8f);
-            player.sendMessage("§c❌ Ta broń jest zniszczona! Napraw ją w Stole Rusznikarskim.");
+            player.sendMessage("§c❌ Ta broń jest zniszczona! Napraw ją w Warsztacie Rusznikarskim.");
             return;
         }
 
-        // Sprawdzenie amunicji w komorze
         if (data.getCurrentAmmo() <= 0) {
             player.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1.0f, 1.4f);
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c⚠ Brak kul w komorze! Naciśnij [F] aby załadować."));
-            startReload(player, gunItem);
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c⚠ Brak kul w komorze! Przytrzymaj [PPM] aby załadować."));
             return;
         }
 
         lastShotTime.put(player.getUniqueId(), now);
-        fireGun(player, gunItem, data);
-    }
 
-    private void fireGun(Player player, ItemStack gunItem, GunData data) {
         Location eyeLoc = player.getEyeLocation();
         Vector dir = eyeLoc.getDirection().normalize();
         World world = player.getWorld();
@@ -100,7 +89,7 @@ public class GunManager {
             } else if (isDragonScatter) {
                 singleBulletDamage = 1.8 + (data.getLevel() - 1) * 0.2;
             } else {
-                singleBulletDamage = 1.5 + (data.getLevel() - 1) * 0.2;
+                singleBulletDamage = 1.6 + (data.getLevel() - 1) * 0.2;
             }
         } else {
             singleBulletDamage = data.getDamage();
@@ -127,7 +116,6 @@ public class GunManager {
         world.spawnParticle(Particle.SMOKE, muzzleLoc, pepperboxUnique ? 10 : 25, 0.3, 0.3, 0.3, 0.08);
 
         // 2. Liczba pocisków
-        // Garłacz strzela 8 (zwykły śrut) lub 10 (smoczy śrut) lub 1 (ciężki brenek)
         int bulletCount = (data.getGunType() == GunType.BLUNDERBUSS) ?
                 (isSlug ? 1 : (isDragonScatter ? 10 : 8)) : 1;
 
@@ -158,9 +146,25 @@ public class GunManager {
         if (player.getGameMode() != GameMode.CREATIVE) {
             data.setCurrentDurability(data.getCurrentDurability() - 1);
         }
+
+        // 5. Aktualizacja przedmiotu i stanu kuszy
         data.applyToItemStack(gunItem);
 
-        // 5. Powiadomienie progresji
+        // Jeśli zostały jeszcze pociski (np. w Pieprzniczce lub Dubeltówce) - broń pozostaje naładowana i gotowa do kolejnego strzału!
+        if (data.getCurrentAmmo() > 0) {
+            if (gunItem.getItemMeta() instanceof CrossbowMeta cm) {
+                cm.addChargedProjectile(new ItemStack(Material.ARROW, 1));
+                gunItem.setItemMeta(cm);
+            }
+            StringBuilder sb = new StringBuilder("§a");
+            for (int k = 0; k < data.getCurrentAmmo(); k++) sb.append("● ");
+            for (int k = data.getCurrentAmmo(); k < data.getMaxAmmoCapacity(); k++) sb.append("§8○ ");
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(sb.toString() + "§e(" + data.getCurrentAmmo() + "/" + data.getMaxAmmoCapacity() + ") Gotowa do strzału!"));
+        } else {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cKomora pusta! §7[Przytrzymaj PPM aby załadować]"));
+        }
+
+        // 6. Powiadomienie progresji
         if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
             ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.USE_ITEM, data.getGunType().getId(), 1);
         }
@@ -243,10 +247,8 @@ public class GunManager {
             world.spawnParticle(Particle.DAMAGE_INDICATOR, hitLoc, 6, 0.2, 0.2, 0.2, 0.1);
         }
 
-        // Zadanie obrażeń
         victim.damage(damage, shooter);
 
-        // ZWIĘKSZONY POZIOMY ODRZUT DLA STRZELBY (Garłacz)
         if (data.getGunType() == GunType.BLUNDERBUSS) {
             Vector kb = victim.getLocation().toVector().subtract(shooter.getLocation().toVector());
             kb.setY(0);
@@ -257,14 +259,12 @@ public class GunManager {
             victim.setVelocity(new Vector(kb.getX(), 0.0, kb.getZ()));
         }
 
-        // Efekt smoczego oddechu (Podpalenie na 6 sekund)
         if (isDragon) {
             victim.setFireTicks(120);
             world.spawnParticle(Particle.LAVA, hitLoc, 10, 0.3, 0.3, 0.3, 0.1);
             world.spawnParticle(Particle.FLAME, hitLoc, 15, 0.4, 0.3, 0.4, 0.05);
         }
 
-        // Zaliczenie headshota do progresji
         if (isHeadshot && ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
             ProgressionManager.getInstance().getProgressionService().handleObjective(shooter, ObjectiveType.KILL_ENTITY, "HEADSHOT", 1);
         }
@@ -293,7 +293,6 @@ public class GunManager {
         loc.setYaw(loc.getYaw() + yawKick);
         player.teleport(loc);
 
-        // Odrzut fizyczny gracza w tył
         double backForce = (type == GunType.BLUNDERBUSS) ? (isSlug ? -0.40 : -0.28) :
                 type == GunType.FLINTLOCK_MUSKET ? -0.15 : (pepperboxReduced ? -0.04 : -0.10);
 
@@ -308,7 +307,7 @@ public class GunManager {
 
         int maxCap = data.getMaxAmmoCapacity();
         if (data.getCurrentAmmo() >= maxCap) {
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§aBroń jest już w pełni załadowana!"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§aBroń jest już w pełni załadowana! [PPM Wystrzał]"));
             return;
         }
 
@@ -316,7 +315,6 @@ public class GunManager {
             return;
         }
 
-        // Wyszukanie kompatybilnej amunicji (Hotbar 0..8 -> EQ 9..35 -> Offhand)
         AmmoType selectedAmmo = findHighestPriorityAmmo(player, data.getGunType());
         if (selectedAmmo == null && player.getGameMode() != GameMode.CREATIVE) {
             player.playSound(player.getLocation(), Sound.BLOCK_CHEST_LOCKED, 1.0f, 1.5f);
@@ -331,6 +329,12 @@ public class GunManager {
         data.setLoadedAmmoType(chosenAmmo);
 
         int totalTicks = data.getReloadTicks();
+        if (gunItem.containsEnchantment(Enchantment.QUICK_CHARGE)) {
+            int qc = gunItem.getEnchantmentLevel(Enchantment.QUICK_CHARGE);
+            totalTicks = Math.max(10, totalTicks - (qc * 12));
+        }
+
+        final int finalTicks = totalTicks;
         UUID uuid = player.getUniqueId();
 
         BukkitTask task = new BukkitRunnable() {
@@ -345,25 +349,26 @@ public class GunManager {
                 }
 
                 tick++;
-                double progress = (double) tick / totalTicks;
+                double progress = (double) tick / finalTicks;
                 int barBlocks = (int) (progress * 10);
                 StringBuilder bar = new StringBuilder("§e[");
                 for (int b = 0; b < 10; b++) {
                     if (b < barBlocks) bar.append("§a■");
                     else bar.append("§7□");
                 }
-                bar.append("§e] §fŁadowanie: ").append(chosenAmmo.getDisplayName());
+                int pct = (int) (progress * 100);
+                bar.append("§e] §fŁadowanie: ").append(chosenAmmo.getDisplayName()).append(" §7(").append(pct).append("%)");
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(bar.toString()));
 
                 if (tick == 1) {
                     player.playSound(player.getLocation(), Sound.BLOCK_SAND_PLACE, 1.0f, 1.1f);
-                } else if (tick == totalTicks / 2) {
+                } else if (tick == finalTicks / 2) {
                     player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_IRON, 1.0f, 1.2f);
-                } else if (tick == (int) (totalTicks * 0.85)) {
+                } else if (tick == (int) (finalTicks * 0.85)) {
                     player.playSound(player.getLocation(), Sound.BLOCK_LEVER_CLICK, 1.0f, 1.4f);
                 }
 
-                if (tick >= totalTicks) {
+                if (tick >= finalTicks) {
                     finishReload(player, currentHand, data, chosenAmmo);
                     cancel();
                 }
@@ -390,7 +395,8 @@ public class GunManager {
         data.applyToItemStack(gunItem);
 
         player.playSound(player.getLocation(), Sound.ITEM_FLINTANDSTEEL_USE, 1.0f, 1.4f);
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a✔ Załadowano " + ammoToLoad.getDisplayName() + " §f(" + data.getCurrentAmmo() + "/" + maxCap + ")"));
+        player.playSound(player.getLocation(), Sound.BLOCK_LEVER_CLICK, 1.0f, 1.8f);
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a✔ Załadowano " + ammoToLoad.getDisplayName() + " §f(" + data.getCurrentAmmo() + "/" + maxCap + ") §e[PPM Wystrzał]"));
     }
 
     public boolean isReloading(Player player) {
@@ -416,7 +422,6 @@ public class GunManager {
             scopedPlayers.add(player.getUniqueId());
             aimingPlayers.add(player.getUniqueId());
 
-            // 10x SUPER OPTICAL ZOOM: Drastyczne zmniejszenie WalkSpeed do 0.025 (8x zoom) + crosshair
             player.setWalkSpeed(0.025f);
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 14, 6, false, false, false));
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§8[ §f─────── §c⊕ §f─────── §8] §e10x LUNETA OPTYCZNA"));
@@ -440,7 +445,6 @@ public class GunManager {
     }
 
     public AmmoType findHighestPriorityAmmo(Player player, GunType gunType) {
-        // 1. Hotbar (sloty 0..8)
         for (int slot = 0; slot <= 8; slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             AmmoType at = getAmmoTypeFromStack(stack);
@@ -448,7 +452,6 @@ public class GunManager {
                 return at;
             }
         }
-        // 2. Główny ekwipunek (sloty 9..35)
         for (int slot = 9; slot <= 35; slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             AmmoType at = getAmmoTypeFromStack(stack);
@@ -456,7 +459,6 @@ public class GunManager {
                 return at;
             }
         }
-        // 3. Druga ręka (Offhand)
         ItemStack offhand = player.getInventory().getItemInOffHand();
         AmmoType atOff = getAmmoTypeFromStack(offhand);
         if (atOff != null && gunType.isCompatibleAmmo(atOff)) {
@@ -468,7 +470,6 @@ public class GunManager {
 
     public int consumeAmmoByPriority(Player player, AmmoType type, int maxToConsume) {
         int remaining = maxToConsume;
-        // Hotbar 0..8
         for (int slot = 0; slot <= 8; slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (getAmmoTypeFromStack(stack) == type) {
@@ -479,7 +480,6 @@ public class GunManager {
                 if (remaining <= 0) return maxToConsume;
             }
         }
-        // Inventory 9..35
         for (int slot = 9; slot <= 35; slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (getAmmoTypeFromStack(stack) == type) {
@@ -490,7 +490,6 @@ public class GunManager {
                 if (remaining <= 0) return maxToConsume;
             }
         }
-        // Offhand
         ItemStack offhand = player.getInventory().getItemInOffHand();
         if (getAmmoTypeFromStack(offhand) == type) {
             int take = Math.min(offhand.getAmount(), remaining);

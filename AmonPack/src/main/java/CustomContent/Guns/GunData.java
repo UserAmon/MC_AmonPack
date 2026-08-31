@@ -1,17 +1,20 @@
 package CustomContent.Guns;
 
 import Plugin.AmonPackPlugin;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -52,7 +55,12 @@ public class GunData {
     public static boolean isGun(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
-        return meta.getPersistentDataContainer().has(KEY_GUN_TYPE, PersistentDataType.STRING);
+        if (meta.getPersistentDataContainer().has(KEY_GUN_TYPE, PersistentDataType.STRING)) return true;
+        if (meta.hasCustomModelData()) {
+            int cmd = meta.getCustomModelData();
+            if (cmd >= 10050 && cmd <= 10055) return true;
+        }
+        return false;
     }
 
     public static GunData fromItemStack(ItemStack item) {
@@ -62,6 +70,13 @@ public class GunData {
 
         String typeStr = pdc.get(KEY_GUN_TYPE, PersistentDataType.STRING);
         GunType type = GunType.fromId(typeStr);
+        if (type == null && meta.hasCustomModelData()) {
+            int cmd = meta.getCustomModelData();
+            if (cmd == 10050 || cmd == 10055) type = GunType.FLINTLOCK_PISTOL;
+            else if (cmd == 10051) type = GunType.FLINTLOCK_MUSKET;
+            else if (cmd == 10052) type = GunType.BLUNDERBUSS;
+            else if (cmd == 10053) type = GunType.PEPPERBOX;
+        }
         if (type == null) return null;
 
         GunData data = new GunData(type);
@@ -121,6 +136,17 @@ public class GunData {
         meta.setDisplayName(gunType.getDisplayName() + (level > 1 ? " §7[Poz. " + level + "]" : ""));
         meta.setLore(getFormattedLore());
         meta.setUnbreakable(false);
+
+        // Synchronizacja stanu naładowania kuszy
+        if (meta instanceof CrossbowMeta cm) {
+            if (currentAmmo > 0) {
+                if (!cm.hasChargedProjectiles()) {
+                    cm.addChargedProjectile(new ItemStack(Material.ARROW, 1));
+                }
+            } else {
+                cm.setChargedProjectiles(Collections.emptyList());
+            }
+        }
 
         // Vanilla durability bar sync
         if (meta instanceof Damageable dmg) {
@@ -209,8 +235,8 @@ public class GunData {
         }
 
         lore.add("");
-        lore.add("§8[LPM] Wystrzał  |  [PPM] Celowanie (ADS)");
-        lore.add("§8[F] Przeładowanie (wybiera amunicję z początku paska/EQ)");
+        lore.add("§8[Trzymaj PPM] Załadowanie i naciągnięcie broni");
+        lore.add("§8[Kliknij PPM] Wystrzał kuli po naładowaniu");
 
         return lore;
     }
@@ -228,7 +254,7 @@ public class GunData {
             } else if (loadedAmmoType == AmmoType.DRAGON_SCATTER_SHOT) {
                 return 1.8 + (level - 1) * 0.2;
             }
-            return 1.5 + (level - 1) * 0.2;
+            return 1.6 + (level - 1) * 0.2;
         }
         double base = gunType.getBaseDamage();
         double lvlBonus = (level - 1) * 0.8;
@@ -263,7 +289,6 @@ public class GunData {
 
         double s = gunType.getBaseSpread();
         if (rifling) s *= 0.60;
-        // Każdy poziom znacząco polepsza skupienie/celność kuli
         s *= Math.max(0.40, 1.0 - ((level - 1) * 0.12));
         return s;
     }

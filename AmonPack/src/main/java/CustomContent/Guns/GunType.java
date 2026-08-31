@@ -6,14 +6,14 @@ public enum GunType {
     FLINTLOCK_PISTOL(
             "flintlock_pistol",
             "§6§lPistolet Skałkowy",
-            Material.IRON_HOE,
+            Material.CROSSBOW,
             10050,
-            5.5,
+            6.0,
             1.5,
             1,
-            36, // 1.8s (36 ticków)
+            48, // 2.4s (48 ticków)
             25.0,
-            0.17, // 2x większa losowość / rozrzut bazowy
+            0.17, // rozrzut bazowy
             150, // durability
             AmmoType.LEAD_BULLET,
             false
@@ -21,14 +21,14 @@ public enum GunType {
     FLINTLOCK_MUSKET(
             "flintlock_musket",
             "§e§lMuszkiet Piechoty",
-            Material.IRON_HOE,
+            Material.CROSSBOW,
             10051,
-            11.0,
+            12.0,
             1.5,
             1,
-            60, // 3.0s (60 ticków)
+            70, // 3.5s (70 ticków)
             60.0,
-            0.11, // rozrzut z biodra (ciężko trafić bez celowania)
+            0.11, // rozrzut z biodra
             250,
             AmmoType.LEAD_BULLET,
             true
@@ -36,14 +36,14 @@ public enum GunType {
     BLUNDERBUSS(
             "blunderbuss",
             "§c§lGarłacz Rozpylający",
-            Material.IRON_HOE,
+            Material.CROSSBOW,
             10052,
-            1.5, // 8-10 x 1.5 = 12.0 - 15.0 dla śrutu
+            1.6, // 8-10 x 1.6 = 12.8 - 16.0 dla śrutu
             1.5,
             1,
-            50, // 2.5s (50 ticków)
-            14.0,
-            0.40, // potężny, bardzo szeroki stożek śrutu
+            56, // 2.8s (56 ticków)
+            15.0,
+            0.40, // szeroki stożek śrutu
             200,
             AmmoType.SCATTER_SHOT,
             false
@@ -51,14 +51,14 @@ public enum GunType {
     PEPPERBOX(
             "pepperbox",
             "§b§lPieprzniczka Obrotowa",
-            Material.IRON_HOE,
+            Material.CROSSBOW,
             10053,
-            4.5,
+            5.0,
             1.5,
             4, // 4 komory
-            15, // 0.75s na komorę
+            80, // 4.0s (ładowanie całego bębna)
             20.0,
-            0.22, // duży rozrzut w szybkiej serii
+            0.22, // rozrzut serii
             220,
             AmmoType.LEAD_BULLET,
             false
