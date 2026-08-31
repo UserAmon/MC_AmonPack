@@ -6,8 +6,6 @@ import RPG.Progression.model.ObjectiveType;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -37,7 +35,6 @@ public class GunManager {
         GunData data = GunData.fromItemStack(gunItem);
         if (data == null) return;
 
-        // Informacja o stanie broni lub celowanie
         if (data.getCurrentAmmo() <= 0) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cKomora pusta! §7[Przytrzymaj PPM aby załadować]"));
         } else {
@@ -48,7 +45,7 @@ public class GunManager {
     public void fireGun(Player player, ItemStack gunItem, GunData data) {
         long now = System.currentTimeMillis();
         long last = lastShotTime.getOrDefault(player.getUniqueId(), 0L);
-        long cooldownMs = data.getGunType() == GunType.PEPPERBOX ? 250L : 450L;
+        long cooldownMs = data.getGunType() == GunType.PEPPERBOX ? 120L : 250L;
         if (now - last < cooldownMs) {
             return;
         }
@@ -89,7 +86,7 @@ public class GunManager {
             } else if (isDragonScatter) {
                 singleBulletDamage = 1.8 + (data.getLevel() - 1) * 0.2;
             } else {
-                singleBulletDamage = 1.6 + (data.getLevel() - 1) * 0.2;
+                singleBulletDamage = data.getDamage();
             }
         } else {
             singleBulletDamage = data.getDamage();
@@ -115,14 +112,26 @@ public class GunManager {
         world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, muzzleLoc, smokeCount, 0.25, 0.25, 0.25, 0.05);
         world.spawnParticle(Particle.SMOKE, muzzleLoc, pepperboxUnique ? 10 : 25, 0.3, 0.3, 0.3, 0.08);
 
-        // 2. Liczba pocisków
-        int bulletCount = (data.getGunType() == GunType.BLUNDERBUSS) ?
-                (isSlug ? 1 : (isDragonScatter ? 10 : 8)) : 1;
+        // 2. Liczba pocisków z konfiguracji (zakres min_pellets .. max_pellets)
+        int minP = GunConfigManager.getInstance().getAmmoMinPellets(ammo, GunConfigManager.getInstance().getMinPellets(data.getGunType()));
+        int maxP = GunConfigManager.getInstance().getAmmoMaxPellets(ammo, GunConfigManager.getInstance().getMaxPellets(data.getGunType()));
+        int bulletCount;
+        if (data.getGunType() == GunType.BLUNDERBUSS || ammo == AmmoType.SCATTER_SHOT || ammo == AmmoType.DRAGON_SCATTER_SHOT) {
+            if (ammo == AmmoType.SLUG_CARTRIDGE) {
+                bulletCount = 1;
+            } else {
+                int low = Math.min(minP, maxP);
+                int high = Math.max(minP, maxP);
+                bulletCount = low + (high > low ? random.nextInt(high - low + 1) : 0);
+            }
+        } else {
+            bulletCount = 1;
+        }
 
         boolean isAiming = isAiming(player);
         double baseSpread = data.getSpread();
 
-        if (isAiming) baseSpread *= 0.25; // 75% redukcja rozrzutu przy celowaniu
+        if (isAiming) baseSpread *= 0.25;
         if (player.isSprinting()) baseSpread *= 1.60;
         if (player.isSneaking()) baseSpread *= 0.75;
 
@@ -138,7 +147,7 @@ public class GunManager {
             simulateBullet(player, eyeLoc, spreadDir, data, ammo, singleBulletDamage);
         }
 
-        // 3. Odrzut
+        // 3. Odrzut gracza
         applyRecoil(player, data.getGunType(), isSlug, pepperboxUnique);
 
         // 4. Zużycie amunicji i trwałości
@@ -150,16 +159,31 @@ public class GunManager {
         // 5. Aktualizacja przedmiotu i stanu kuszy
         data.applyToItemStack(gunItem);
 
-        // Jeśli zostały jeszcze pociski (np. w Pieprzniczce lub Dubeltówce) - broń pozostaje naładowana i gotowa do kolejnego strzału!
+        // Jeśli zostały jeszcze pociski (Pieprzniczka / Dubeltówka) – natychmiastowe i opóźnione odnowienie naciągu kuszy
         if (data.getCurrentAmmo() > 0) {
             if (gunItem.getItemMeta() instanceof CrossbowMeta cm) {
                 cm.addChargedProjectile(new ItemStack(Material.ARROW, 1));
                 gunItem.setItemMeta(cm);
             }
+            Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+                ItemStack handItem = player.getInventory().getItemInMainHand();
+                if (GunData.isGun(handItem)) {
+                    GunData curData = GunData.fromItemStack(handItem);
+                    if (curData != null && curData.getCurrentAmmo() > 0) {
+                        curData.applyToItemStack(handItem);
+                        if (handItem.getItemMeta() instanceof CrossbowMeta cm) {
+                            cm.setChargedProjectiles(Collections.singletonList(new ItemStack(Material.ARROW, 1)));
+                            handItem.setItemMeta(cm);
+                        }
+                        player.updateInventory();
+                    }
+                }
+            });
+
             StringBuilder sb = new StringBuilder("§a");
             for (int k = 0; k < data.getCurrentAmmo(); k++) sb.append("● ");
             for (int k = data.getCurrentAmmo(); k < data.getMaxAmmoCapacity(); k++) sb.append("§8○ ");
-            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(sb.toString() + "§e(" + data.getCurrentAmmo() + "/" + data.getMaxAmmoCapacity() + ") Gotowa do strzału!"));
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(sb.toString() + "§e(" + data.getCurrentAmmo() + "/" + data.getMaxAmmoCapacity() + ") Gotowa do strzału! §7[PPM kolejny strzał]"));
         } else {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cKomora pusta! §7[Przytrzymaj PPM aby załadować]"));
         }
@@ -178,6 +202,9 @@ public class GunManager {
         final double maxRange = data.getEffectiveRange();
         final boolean isDragon = (ammo == AmmoType.DRAGON_CARTRIDGE || ammo == AmmoType.DRAGON_SCATTER_SHOT);
         final boolean isSlug = (ammo == AmmoType.SLUG_CARTRIDGE);
+        final boolean isPiercing = (data.getGunType() == GunType.BLUNDERBUSS || isSlug || isDragon);
+
+        Set<UUID> hitVictims = new HashSet<>();
 
         new BukkitRunnable() {
             private double distanceTraveled = 0.0;
@@ -187,23 +214,27 @@ public class GunManager {
                 for (int step = 0; step < 3; step++) {
                     Vector stepMovement = velocity.clone().multiply(0.333);
                     RayTraceResult hit = world.rayTrace(currentLoc, stepMovement.normalize(), stepMovement.length(),
-                            FluidCollisionMode.NEVER, true, 0.35, entity -> entity != shooter && entity instanceof LivingEntity);
+                            FluidCollisionMode.NEVER, true, 0.35, entity -> entity != shooter && entity instanceof LivingEntity && !hitVictims.contains(entity.getUniqueId()));
 
                     if (hit != null) {
                         Location hitPos = hit.getHitPosition().toLocation(world);
                         if (hit.getHitEntity() instanceof LivingEntity victim) {
+                            hitVictims.add(victim.getUniqueId());
                             handleHitEntity(shooter, victim, hitPos, data, ammo, bulletDamage);
+                            if (!isPiercing) {
+                                cancel();
+                                return;
+                            }
                         } else if (hit.getHitBlock() != null) {
                             handleHitBlock(hitPos, isDragon);
+                            cancel();
+                            return;
                         }
-                        cancel();
-                        return;
                     }
 
                     currentLoc.add(stepMovement);
                     distanceTraveled += stepMovement.length();
 
-                    // Efekty smugi pocisku
                     if (isDragon) {
                         world.spawnParticle(Particle.FLAME, currentLoc, 2, 0.02, 0.02, 0.02, 0.01);
                         world.spawnParticle(Particle.SMOKE, currentLoc, 1, 0, 0, 0, 0);
@@ -233,7 +264,7 @@ public class GunManager {
         boolean isSlug = (ammo == AmmoType.SLUG_CARTRIDGE);
 
         if (isDragon) {
-            damage += 3.0; // Bonus ognia
+            damage += 3.0;
         }
 
         if (isHeadshot) {
@@ -247,16 +278,20 @@ public class GunManager {
             world.spawnParticle(Particle.DAMAGE_INDICATOR, hitLoc, 6, 0.2, 0.2, 0.2, 0.1);
         }
 
+        // Zerowanie noDamageTicks (i-frames), aby każdy trafiający śrut ze strzelby zadawał obrażenia!
+        victim.setNoDamageTicks(0);
         victim.damage(damage, shooter);
+        victim.setNoDamageTicks(0);
 
+        // ZWIĘKSZONY ODRZUT DLA STRZELBY (Garłacz) Z LEKKIM PODBICIEM Y +0.12
         if (data.getGunType() == GunType.BLUNDERBUSS) {
             Vector kb = victim.getLocation().toVector().subtract(shooter.getLocation().toVector());
             kb.setY(0);
-            double kbStrength = isSlug ? 2.2 : 1.45;
+            double kbStrength = isSlug ? 2.6 : 1.8;
             if (kb.lengthSquared() > 0.001) {
                 kb.normalize().multiply(kbStrength);
             }
-            victim.setVelocity(new Vector(kb.getX(), 0.0, kb.getZ()));
+            victim.setVelocity(new Vector(kb.getX(), 0.12, kb.getZ()));
         }
 
         if (isDragon) {
@@ -339,6 +374,7 @@ public class GunManager {
 
         BukkitTask task = new BukkitRunnable() {
             int tick = 0;
+            int notRaisedTicks = 0;
 
             @Override
             public void run() {
@@ -346,6 +382,17 @@ public class GunManager {
                 if (!GunData.isGun(currentHand) || !player.isOnline()) {
                     cancelReload(player);
                     return;
+                }
+
+                // Weryfikacja czy gracz rzeczywiście trzyma PPM (naciąga kuszę)
+                if (!player.isHandRaised()) {
+                    notRaisedTicks++;
+                    if (notRaisedTicks > 2) {
+                        cancelReload(player);
+                        return;
+                    }
+                } else {
+                    notRaisedTicks = 0;
                 }
 
                 tick++;

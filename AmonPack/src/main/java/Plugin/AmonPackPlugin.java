@@ -546,6 +546,7 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 
 		// --- 6b. SYSTEM BRONI PALNEJ I RUSZNIKARNI ---
+		CustomContent.Guns.GunConfigManager.getInstance();
 		gunManager = new CustomContent.Guns.GunManager();
 		this.getServer().getPluginManager().registerEvents(new CustomContent.Guns.GunListener(gunManager), this);
 		this.getServer().getPluginManager().registerEvents(new CustomContent.Guns.GunsmithGui(), this);

@@ -1400,7 +1400,7 @@ Craftable_Items:
           Amount: 1
 
   Staff_Lightning:
-    Material: BOW
+    Material: CROSSBOW
     Name: "§e§lLaska Błyskawic"
     Custom_Model_ID: 20003
     Required_Stage: COPPER
@@ -1423,8 +1423,8 @@ Craftable_Items:
         l3: "§d✦ Shift + PPM: §fOtwórz menu czarów"
       Items_To_Craft:
         c1:
-          Material: STICK
-          Amount: 2
+          Material: CROSSBOW
+          Amount: 1
 
   Wand_Water:
     Material: STICK

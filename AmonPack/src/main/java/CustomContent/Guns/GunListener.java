@@ -18,7 +18,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -37,7 +36,6 @@ public class GunListener implements Listener {
         ItemStack mainHand = player.getInventory().getItemInMainHand();
 
         if (GunData.isGun(mainHand)) {
-            // Blokada przeniesienia broni do lewej ręki
             event.setCancelled(true);
             GunData data = GunData.fromItemStack(mainHand);
             if (data != null && data.getCurrentAmmo() < data.getMaxAmmoCapacity()) {
@@ -58,7 +56,6 @@ public class GunListener implements Listener {
         Action action = event.getAction();
 
         if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
-            // LPM: Celowanie (ADS) lub szybki podgląd
             if (player.isSneaking()) {
                 if (gunManager.isAiming(player)) {
                     gunManager.stopAiming(player);
@@ -69,35 +66,40 @@ public class GunListener implements Listener {
                 gunManager.handleLeftClick(player, item);
             }
         } else if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
-            // PPM: Ładowanie kuszy (jeśli rozładowana) lub celowanie
-            if (data.getCurrentAmmo() <= 0) {
-                AmmoType ammo = gunManager.findHighestPriorityAmmo(player, data.getGunType());
-                if (ammo == null && player.getGameMode() != org.bukkit.GameMode.CREATIVE) {
-                    event.setCancelled(true);
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c❌ Brak kul w ekwipunku! Wymagana: " + data.getGunType().getRequiredAmmoType().getDisplayName()));
-                    player.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1.0f, 1.5f);
-                    return;
-                }
-
-                if (!gunManager.isReloading(player)) {
-                    gunManager.startReload(player, item);
-                }
-
-                // Dodanie tymczasowej strzały do naciągnięcia kuszy
-                if (!player.getInventory().contains(Material.ARROW) && player.getGameMode() != org.bukkit.GameMode.CREATIVE) {
-                    ItemStack ghostArrow = new ItemStack(Material.ARROW, 1);
-                    ItemMeta arrowMeta = ghostArrow.getItemMeta();
-                    if (arrowMeta != null) {
-                        arrowMeta.getPersistentDataContainer().set(KEY_GHOST_ARROW, PersistentDataType.BYTE, (byte) 1);
-                        arrowMeta.setDisplayName("§8[Kula Pistoletowa]");
-                        ghostArrow.setItemMeta(arrowMeta);
-                    }
-                    player.getInventory().addItem(ghostArrow);
-                }
-            } else {
+            // Jeśli broń jest naładowana i gotowa do strzału:
+            if (data.getCurrentAmmo() > 0) {
                 if (player.isSneaking() && !gunManager.isAiming(player)) {
                     gunManager.startAiming(player, item);
+                    return;
                 }
+                // Natychmiastowy wystrzał przy kliknięciu PPM (np. szybka seria z Pieprzniczki / Dubeltówki)
+                gunManager.fireGun(player, item, data);
+                return;
+            }
+
+            // Jeśli broń jest rozładowana – rozpoczynamy ładowanie
+            AmmoType ammo = gunManager.findHighestPriorityAmmo(player, data.getGunType());
+            if (ammo == null && player.getGameMode() != org.bukkit.GameMode.CREATIVE) {
+                event.setCancelled(true);
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c❌ Brak kul w ekwipunku! Wymagana: " + data.getGunType().getRequiredAmmoType().getDisplayName()));
+                player.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 1.0f, 1.5f);
+                return;
+            }
+
+            if (!gunManager.isReloading(player)) {
+                gunManager.startReload(player, item);
+            }
+
+            // Dodanie tymczasowej strzały do naciągnięcia kuszy
+            if (!player.getInventory().contains(Material.ARROW) && player.getGameMode() != org.bukkit.GameMode.CREATIVE) {
+                ItemStack ghostArrow = new ItemStack(Material.ARROW, 1);
+                ItemMeta arrowMeta = ghostArrow.getItemMeta();
+                if (arrowMeta != null) {
+                    arrowMeta.getPersistentDataContainer().set(KEY_GHOST_ARROW, PersistentDataType.BYTE, (byte) 1);
+                    arrowMeta.setDisplayName("§8[Kula Pistoletowa]");
+                    ghostArrow.setItemMeta(arrowMeta);
+                }
+                player.getInventory().addItem(ghostArrow);
             }
         }
     }

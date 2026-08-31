@@ -40,6 +40,10 @@ public class MagicItemManager {
             return null;
         }
 
+        if (CustomContent.Guns.GunData.isGun(item)) {
+            return null;
+        }
+
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         String id = pdc.get(MAGIC_ITEM_ID_KEY, PersistentDataType.STRING);
@@ -81,7 +85,7 @@ public class MagicItemManager {
             if (id.startsWith("tome_") || id.contains("tome") || id.contains("tom") || id.contains("księga")) return MagicItemType.TOME;
         }
         if (item != null) {
-            if (item.getType() == Material.BOW) return MagicItemType.STAFF;
+            if (item.getType() == Material.BOW || item.getType() == Material.CROSSBOW) return MagicItemType.STAFF;
             if (item.getType() == Material.STICK || item.getType() == Material.PRISMARINE_SHARD) return MagicItemType.WAND;
             if (item.getType() == Material.BOOK || item.getType() == Material.ENCHANTED_BOOK) return MagicItemType.TOME;
         }

@@ -1,0 +1,143 @@
+# ==========================================
+# AmonPack - Konfiguracja Broni Palnej (Guns)
+# ==========================================
+
+# Globalne ustawienia broni
+global:
+  movement_speed_penalty: -0.18
+  enable_headshots: true
+
+# Konfiguracja poszczególnych broni
+guns:
+  flintlock_pistol:
+    display_name: "&3&lPistolet Skałkowy"
+    custom_model_data: 10050
+    base_damage: 7.0
+    headshot_multiplier: 1.5
+    max_ammo: 1
+    reload_ticks: 60
+    effective_range: 25.0
+    base_spread: 0.20
+    max_durability: 150
+    supports_bayonet: false
+    piercing: false
+    knockback_strength: 0.8
+
+  blunderbuss:
+    display_name: "&4&lGarłacz Rozpylający"
+    custom_model_data: 10052
+    base_damage: 2
+    headshot_multiplier: 1.8
+    max_ammo: 1
+    reload_ticks: 70
+    effective_range: 15.0
+    base_spread: 0.45
+    min_pellets: 6
+    max_pellets: 10
+    max_durability: 150
+    supports_bayonet: false
+    piercing: true
+    knockback_strength: 1.9
+    knockback_vertical: 0.12
+
+  flintlock_musket:
+    display_name: "&6&lMuszkiet Piechoty"
+    custom_model_data: 10051
+    base_damage: 12.0
+    headshot_multiplier: 2
+    max_ammo: 1
+    reload_ticks: 70
+    effective_range: 75.0
+    base_spread: 0.15
+    max_durability: 200
+    supports_bayonet: true
+    piercing: false
+    knockback_strength: 1.1
+
+  pepperbox:
+    display_name: "&d&lPieprzniczka Obrotowa"
+    custom_model_data: 10053
+    base_damage: 5.0
+    headshot_multiplier: 1.5
+    max_ammo: 4
+    reload_ticks: 80
+    effective_range: 20.0
+    base_spread: 0.25
+    max_durability: 220
+    supports_bayonet: false
+    piercing: false
+    knockback_strength: 0.7
+
+# Konfiguracja amunicji
+ammo:
+  lead_bullet:
+    display_name: "&fOłowiana Kula Muszkietowa"
+    custom_model_data: 10060
+    damage_bonus: 0.0
+    reload_ticks_penalty: 0
+    fire_ticks: 0
+
+  scatter_shot:
+    display_name: "&ePakiet Śrutu Ołowianego"
+    custom_model_data: 10061
+    min_pellets: 6
+    max_pellets: 10
+    damage_bonus: 0.0
+    reload_ticks_penalty: 0
+    fire_ticks: 0
+
+  dragon_cartridge:
+    display_name: "&cKula Zapalająca (Smoczy Oddech)"
+    custom_model_data: 10062
+    damage_bonus: 2.0
+    reload_ticks_penalty: 20
+    fire_ticks: 120
+
+  slug_cartridge:
+    display_name: "&6Ciężki Pocisk Brenek (Slug)"
+    custom_model_data: 10063
+    min_pellets: 1
+    max_pellets: 1
+    damage_fixed: 15.0
+    effective_range_bonus: 20.0
+    reload_ticks_penalty: 25
+    spread_multiplier: 0.1
+    piercing: true
+    knockback_strength: 2.8
+    fire_ticks: 0
+
+  dragon_scatter_shot:
+    display_name: "&cSmoczy Śrut Rozpylający"
+    custom_model_data: 10064
+    min_pellets: 10
+    max_pellets: 14
+    damage_per_pellet: 1.8
+    effective_range_bonus: 7
+    reload_ticks_penalty: 35
+    fire_ticks: 120
+    piercing: true
+    knockback_strength: 1.9
+
+# Konfiguracja modyfikacji rusznikarskich (Gunsmith mods)
+mods:
+  rifling:
+    spread_reduction: 0.30 # -40% rozrzutu
+    range_bonus: 10.0 # +10m zasięgu
+  reinforced_lock:
+    reload_time_reduction: 0.30 # -30% czasu ładowania
+  bayonet:
+    melee_damage: 7.0
+  recoil_stock:
+    recoil_reduction: 0.40
+  unique_mods:
+    pistol_lightweight:
+      remove_speed_penalty: true
+    shotgun_double_barrel:
+      max_ammo: 2
+    musket_scope:
+      zoom_level: 10.0
+      headshot_bonus: 0.35
+    pepperbox_extended_mag:
+      max_ammo: 5
+      recoil_reduction: 0.50
+      smoke_reduction: 0.50

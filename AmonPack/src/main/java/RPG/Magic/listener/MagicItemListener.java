@@ -193,16 +193,21 @@ public class MagicItemListener implements Listener {
 
         // Zawsze anulujemy fizyczną strzałę i jej zużycie
         event.setCancelled(true);
+        if (event.getProjectile() != null) {
+            event.getProjectile().remove();
+        }
+
+        cleanMagicArrows(player);
 
         float force = event.getForce();
-        if (force < 0.75f) {
+        if (force < 0.75f && bow.getType() == Material.BOW) {
             player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
                     net.md_5.bungee.api.chat.TextComponent.fromLegacyText("§c✦ Ładowanie przerwane za wcześnie! (Przytrzymaj PPM do pełnego naciągnięcia)"));
             player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 0.7f, 1.6f);
             return;
         }
 
-        // Rzucenie czaru z laski przy pełnym naładowaniu łuku
+        // Rzucenie czaru z laski przy pełnym naładowaniu kuszy/łuku
         String spellId = MagicItemManager.getPrimarySpellId(bow);
         Spell spell = spellRegistry.getSpell(spellId);
         if (spell != null) {
@@ -222,6 +227,17 @@ public class MagicItemListener implements Listener {
         player.getInventory().addItem(dummyArrow);
     }
 
+    private void cleanMagicArrows(Player player) {
+        for (int i = 0; i < player.getInventory().getSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack != null && stack.getType() == Material.ARROW && stack.hasItemMeta()) {
+                if (stack.getItemMeta().getPersistentDataContainer().has(new org.bukkit.NamespacedKey(AmonPackPlugin.plugin, "magic_arrow"), org.bukkit.persistence.PersistentDataType.BYTE)) {
+                    player.getInventory().setItem(i, null);
+                }
+            }
+        }
+    }
+
     private void startStaffChargeParticles(Player player) {
         UUID uuid = player.getUniqueId();
         if (staffChargeStart.containsKey(uuid)) return;
@@ -233,11 +249,13 @@ public class MagicItemListener implements Listener {
             public void run() {
                 if (!player.isOnline() || !MagicItemManager.isMagicStaff(player.getInventory().getItemInMainHand())) {
                     staffChargeStart.remove(uuid);
+                    cleanMagicArrows(player);
                     cancel();
                     return;
                 }
                 if (!player.isHandRaised() && ticks > 4) {
                     staffChargeStart.remove(uuid);
+                    cleanMagicArrows(player);
                     cancel();
                     return;
                 }
@@ -265,6 +283,7 @@ public class MagicItemListener implements Listener {
     @EventHandler
     public void onItemHeld(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
+        cleanMagicArrows(player);
         ItemStack newItem = player.getInventory().getItem(event.getNewSlot());
         if (newItem != null && isMagicItem(newItem)) {
             String spellId = MagicItemManager.getPrimarySpellId(newItem);

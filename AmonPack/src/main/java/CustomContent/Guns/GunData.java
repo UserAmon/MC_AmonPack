@@ -254,41 +254,41 @@ public class GunData {
             } else if (loadedAmmoType == AmmoType.DRAGON_SCATTER_SHOT) {
                 return 1.8 + (level - 1) * 0.2;
             }
-            return 1.6 + (level - 1) * 0.2;
+            return GunConfigManager.getInstance().getBaseDamage(gunType) + (level - 1) * 0.2;
         }
-        double base = gunType.getBaseDamage();
+        double base = GunConfigManager.getInstance().getBaseDamage(gunType);
         double lvlBonus = (level - 1) * 0.8;
         return base + lvlBonus;
     }
 
     public double getHeadshotMultiplier() {
-        double mult = gunType.getHeadshotMultiplier();
+        double mult = GunConfigManager.getInstance().getHeadshotMultiplier(gunType);
         if (brassScope || (gunType == GunType.FLINTLOCK_MUSKET && uniqueMod)) mult += 0.25;
         mult += (level - 1) * 0.05;
         return mult;
     }
 
     public double getEffectiveRange() {
-        double r = gunType.getMaxRange();
+        double r = GunConfigManager.getInstance().getEffectiveRange(gunType);
         if (loadedAmmoType == AmmoType.SLUG_CARTRIDGE) {
             r += 15.0;
         } else if (loadedAmmoType == AmmoType.DRAGON_SCATTER_SHOT) {
             r += 5.0;
         }
-        if (rifling) r += 10.0;
+        if (rifling) r += GunConfigManager.getInstance().getRiflingRangeBonus();
         return r;
     }
 
     public double getSpread() {
         if (gunType == GunType.BLUNDERBUSS && loadedAmmoType == AmmoType.SLUG_CARTRIDGE) {
             double s = 0.07;
-            if (rifling) s *= 0.60;
+            if (rifling) s *= (1.0 - GunConfigManager.getInstance().getRiflingSpreadReduction());
             s *= Math.max(0.40, 1.0 - ((level - 1) * 0.12));
             return s;
         }
 
-        double s = gunType.getBaseSpread();
-        if (rifling) s *= 0.60;
+        double s = GunConfigManager.getInstance().getBaseSpread(gunType);
+        if (rifling) s *= (1.0 - GunConfigManager.getInstance().getRiflingSpreadReduction());
         s *= Math.max(0.40, 1.0 - ((level - 1) * 0.12));
         return s;
     }
@@ -298,11 +298,11 @@ public class GunData {
     }
 
     public int getReloadTicks() {
-        double ticks = gunType.getReloadTicks();
+        double ticks = GunConfigManager.getInstance().getReloadTicks(gunType);
         if (loadedAmmoType == AmmoType.SLUG_CARTRIDGE || loadedAmmoType == AmmoType.DRAGON_SCATTER_SHOT) {
             ticks += 20; // 1s dłużej
         }
-        if (reinforcedLock) ticks *= 0.70;
+        if (reinforcedLock) ticks *= (1.0 - GunConfigManager.getInstance().getLockReloadReduction());
         return (int) Math.max(10, ticks);
     }
 

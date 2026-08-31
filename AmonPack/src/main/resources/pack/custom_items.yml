@@ -324,7 +324,7 @@ items:
 
   staff_lightning:
     display_name: "&e&lLaska Błyskawic"
-    base_material: BOW
+    base_material: CROSSBOW
     model: "magic/staff_lightning"
     custom_model_data: 20003
     unbreakable: true

@@ -80,13 +80,24 @@ public class AmonCommand implements CommandExecutor {
                 }
                 break;
 
+            case "gun":
+            case "guns":
+                if (args.length > 1 && args[1].equalsIgnoreCase("reload")) {
+                    CustomContent.Guns.GunConfigManager.getInstance().load();
+                    sender.sendMessage("§a[AmonPack] Przeładowano konfigurację broni palnej (gun_config.yml).");
+                } else {
+                    sender.sendMessage("§6Użycie: §f/amon gun reload");
+                }
+                break;
+
             case "reload":
                 packManager.load();
                 itemManager.load();
                 blockManager.load();
                 bossManager.load();
                 Plugin.AmonPackPlugin.plugin.loadMagicConfig();
-                sender.sendMessage("§a[AmonPack] Przeładowano wszystkie konfiguracje, magię, modele i zasoby.");
+                CustomContent.Guns.GunConfigManager.getInstance().load();
+                sender.sendMessage("§a[AmonPack] Przeładowano wszystkie konfiguracje, broń palną (gun_config.yml), magię, modele i zasoby.");
                 break;
 
             default:
