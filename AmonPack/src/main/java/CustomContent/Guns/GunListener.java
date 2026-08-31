@@ -21,6 +21,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GunListener implements Listener {
 
     private static final NamespacedKey KEY_GHOST_ARROW = new NamespacedKey(AmonPackPlugin.plugin, "ghost_arrow_flintlock");
@@ -162,6 +165,56 @@ public class GunListener implements Listener {
                 if (data != null && data.hasBayonet()) {
                     event.setDamage(event.getDamage() + 7.0);
                     player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.2f);
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityDeath(org.bukkit.event.entity.EntityDeathEvent event) {
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) return;
+
+        ItemStack hand = killer.getInventory().getItemInMainHand();
+        if (!GunData.isGun(hand)) return;
+
+        GunData data = GunData.fromItemStack(hand);
+        if (data == null) return;
+
+        // Pistolet: Łowca Czarownic - 2x EXP, podwójny drop i szansa na amunicję
+        if (data.getUniqueMod() == GunUniqueMod.PISTOL_WITCH_HUNTER) {
+            double expMult = GunConfigManager.getInstance().getUniqueDouble("pistol_witch_hunter", "exp_multiplier", 2.0);
+            event.setDroppedExp((int) Math.round(event.getDroppedExp() * expMult));
+
+            List<ItemStack> extraDrops = new ArrayList<>();
+            for (ItemStack drop : event.getDrops()) {
+                if (drop != null) extraDrops.add(drop.clone());
+            }
+            event.getDrops().addAll(extraDrops);
+
+            double ammoChance = GunConfigManager.getInstance().getUniqueDouble("pistol_witch_hunter", "ammo_drop_chance", 0.35);
+            if (Math.random() < ammoChance) {
+                ItemStack ammoStack = new ItemStack(Material.IRON_NUGGET, 1 + (int) (Math.random() * 2));
+                ItemMeta meta = ammoStack.getItemMeta();
+                if (meta != null) {
+                    meta.setCustomModelData(10060);
+                    meta.setDisplayName("§fOłowiana Kula Muszkietowa");
+                    ammoStack.setItemMeta(meta);
+                }
+                event.getDrops().add(ammoStack);
+                killer.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§5✦ §l[Łowca Czarownic] §aZdobyto dodatkowy łup i amunicję!"));
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerDamageBreakStalker(org.bukkit.event.entity.EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            ItemStack hand = player.getInventory().getItemInMainHand();
+            if (GunData.isGun(hand)) {
+                GunData data = GunData.fromItemStack(hand);
+                if (data != null && data.getUniqueMod() == GunUniqueMod.MUSKET_STALKER) {
+                    player.removePotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY);
                 }
             }
         }

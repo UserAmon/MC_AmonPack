@@ -121,6 +121,18 @@ public class GunConfigManager {
         return config.getDouble("mods.bayonet.melee_damage", 7.0);
     }
 
+    public double getUniqueDouble(String modId, String key, double def) {
+        return config.getDouble("mods.unique_mods." + modId + "." + key, def);
+    }
+
+    public int getUniqueInt(String modId, String key, int def) {
+        return config.getInt("mods.unique_mods." + modId + "." + key, def);
+    }
+
+    public boolean getUniqueBoolean(String modId, String key, boolean def) {
+        return config.getBoolean("mods.unique_mods." + modId + "." + key, def);
+    }
+
     public FileConfiguration getConfig() {
         return config;
     }

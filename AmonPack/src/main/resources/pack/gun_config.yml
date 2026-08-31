@@ -89,7 +89,7 @@ ammo:
   dragon_cartridge:
     display_name: "&cKula Zapalająca (Smoczy Oddech)"
     custom_model_data: 10062
-    damage_bonus: 2.0
+    damage_bonus: 1
     reload_ticks_penalty: 20
     fire_ticks: 120
 
@@ -100,8 +100,8 @@ ammo:
     max_pellets: 1
     damage_fixed: 15.0
     effective_range_bonus: 20.0
-    reload_ticks_penalty: 25
-    spread_multiplier: 0.1
+    reload_ticks_penalty: 35
+    spread_multiplier: 0.15
     piercing: true
     knockback_strength: 2.8
     fire_ticks: 0
@@ -109,10 +109,10 @@ ammo:
   dragon_scatter_shot:
     display_name: "&cSmoczy Śrut Rozpylający"
     custom_model_data: 10064
-    min_pellets: 10
-    max_pellets: 14
-    damage_per_pellet: 1.8
-    effective_range_bonus: 7
+    min_pellets: 7
+    max_pellets: 10
+    damage_per_pellet: 1
+    effective_range_bonus: 5
     reload_ticks_penalty: 35
     fire_ticks: 120
     piercing: true
@@ -121,7 +121,7 @@ ammo:
 # Konfiguracja modyfikacji rusznikarskich (Gunsmith mods)
 mods:
   rifling:
-    spread_reduction: 0.30 # -40% rozrzutu
+    spread_reduction: 0.30 # -30% rozrzutu
     range_bonus: 10.0 # +10m zasięgu
   reinforced_lock:
     reload_time_reduction: 0.30 # -30% czasu ładowania
@@ -129,15 +129,52 @@ mods:
     melee_damage: 7.0
   recoil_stock:
     recoil_reduction: 0.40
+
+  # UNIKALNE ULEPSZENIA (Tylko 1 aktywne na broń)
   unique_mods:
-    pistol_lightweight:
-      remove_speed_penalty: true
+    # --- Muszkiet Piechoty ---
+    musket_stalker:
+      crit_damage_bonus: 0.4 # +35% obrażeń krytycznych
+      stand_still_ticks: 40 # Czas bezruchu do aktywacji kamuflażu (1.5s)
+      leaf_radius: 2 # Maksymalna odległość od liści/krzaków
+    musket_infantryman:
+      reload_reduction_ticks: 20 # -1.0s czasu ładowania
+      free_ammo_chance: 0.25 # 25% szansy na darmowy nabój przy ładowaniu
+      speed_amplifier: 1 # Poziom Speeda (Speed I) podczas naciągania broni
+
+    # --- Pistolet Skałkowy ---
+    pistol_fast_and_furious:
+      remove_speed_penalty: true # Brak spowolnienia z bronią w ręce
+      durability_bonus: 100 # +75 do maksymalnej wytrzymałości
+      range_bonus: 10.0 # +10m zasięgu
+      damage_bonus: 2.0 # +2.0 DMG bazowych obrażeń
+    pistol_witch_hunter:
+      reload_reduction_ticks: 15 # -0.5s czasu ładowania
+      crit_bonus: 0.40 # +40% obrażeń krytycznych (Headshot)
+      exp_multiplier: 2.0 # Podwójny EXP z zabójstw
+      ammo_drop_chance: 0.3 # 35% szansy na drop kul ze zwłok
+    pistol_emotional_support:
+      exhaustion_duration_seconds: 10 # Czas trwania Wyczerpania
+      slowness_amplifier: 2 # Spowolnienie II
+      pistol_damage_vulnerability: 0.3 # +30% większe obrażenia z pistoletów dla ofiary
+
+    # --- Garłacz Rozpylający ---
     shotgun_double_barrel:
-      max_ammo: 2
-    musket_scope:
-      zoom_level: 10.0
-      headshot_bonus: 0.35
-    pepperbox_extended_mag:
-      max_ammo: 5
-      recoil_reduction: 0.50
-      smoke_reduction: 0.50
+      max_ammo: 2 # 2 strzały przed przeładowaniem
+    shotgun_demolition:
+      extra_min_pellets: 2 # +4 do minimalnego śrutu
+      extra_max_pellets: 4 # +6 do maksymalnego śrutu
+      reload_penalty_ticks: 30 # +1.0s czasu ładowania
+      dragon_range_bonus: 5.0 # +8m zasięgu dla smoczego śrutu
+      dragon_fire_radius: 1 # Promień podpalenia terenu (3x3 / 5x5)
+      slug_extra_pellets: 3 # Liczba śrucin po bokach breneka
+
+    # --- Pieprzniczka Obrotowa ---
+    pepperbox_perfect_soldier:
+      max_ammo: 6 # 5 komór (+1 pocisk)
+      recoil_reduction: 0.65 # -50% odrzutu gracza
+      smoke_reduction: 0.65 # -50% dymu przy wystrzale
+    pepperbox_hurricane:
+      max_ammo: 3 # Zmniejszenie pojemności do 3 pocisków
+      reload_penalty_ticks: 16 # +0.8s czasu ładowania
+      headshot_instant_reload: 1 # Natychmiastowe załadowanie 1 pocisku przy zabójstwie w głowę

@@ -6,6 +6,7 @@ import RPG.Progression.model.ObjectiveType;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -28,7 +29,82 @@ public class GunManager {
     private final Set<UUID> scopedPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Map<UUID, BukkitTask> activeReloads = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastShotTime = new ConcurrentHashMap<>();
+    private final Map<UUID, Location> lastPlayerLoc = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> stationaryTicks = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> exhaustedEnemies = new ConcurrentHashMap<>();
     private final Random random = new Random();
+
+    public GunManager() {
+        startStalkerTask();
+    }
+
+    private void startStalkerTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    ItemStack hand = player.getInventory().getItemInMainHand();
+                    if (!GunData.isGun(hand)) {
+                        stationaryTicks.remove(player.getUniqueId());
+                        continue;
+                    }
+
+                    GunData data = GunData.fromItemStack(hand);
+                    if (data == null || data.getUniqueMod() != GunUniqueMod.MUSKET_STALKER || data.getCurrentAmmo() <= 0) {
+                        stationaryTicks.remove(player.getUniqueId());
+                        continue;
+                    }
+
+                    UUID uuid = player.getUniqueId();
+                    Location currentLoc = player.getLocation();
+                    Location lastLoc = lastPlayerLoc.get(uuid);
+
+                    if (lastLoc != null && currentLoc.getWorld() == lastLoc.getWorld() && currentLoc.distanceSquared(lastLoc) < 0.04) {
+                        if (isNearFoliage(currentLoc, 2.5)) {
+                            int ticks = stationaryTicks.getOrDefault(uuid, 0) + 5;
+                            stationaryTicks.put(uuid, ticks);
+
+                            if (ticks >= 30) {
+                                // Aktywacja kamuflażu Stalkera
+                                player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 30, 0, false, false, false));
+                                player.getWorld().spawnParticle(Particle.FALLING_SPORE_BLOSSOM, currentLoc.clone().add(0, 1.0, 0), 4, 0.4, 0.5, 0.4, 0.02);
+                                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§2🌿 §l[STALKER] §aKamuflaż aktywny §7(+35% Crit DMG z ukrycia)"));
+                            }
+                        } else {
+                            stationaryTicks.remove(uuid);
+                        }
+                    } else {
+                        stationaryTicks.put(uuid, 0);
+                        lastPlayerLoc.put(uuid, currentLoc.clone());
+                    }
+                }
+            }
+        }.runTaskTimer(AmonPackPlugin.plugin, 10L, 5L);
+    }
+
+    public static boolean isNearFoliage(Location loc, double radius) {
+        World world = loc.getWorld();
+        if (world == null) return false;
+        int r = (int) Math.ceil(radius);
+        int bx = loc.getBlockX();
+        int by = loc.getBlockY();
+        int bz = loc.getBlockZ();
+
+        for (int x = -r; x <= r; x++) {
+            for (int y = -1; y <= r; y++) {
+                for (int z = -r; z <= r; z++) {
+                    Block b = world.getBlockAt(bx + x, by + y, bz + z);
+                    String name = b.getType().name();
+                    if (name.contains("LEAVES") || name.contains("GRASS") || name.contains("FERN") ||
+                            name.contains("VINE") || name.contains("BUSH") || name.contains("AZALEA") ||
+                            name.contains("GLOW_BERRIES") || name.contains("MOSS")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     public void handleLeftClick(Player player, ItemStack gunItem) {
         if (!GunData.isGun(gunItem)) return;
@@ -78,7 +154,7 @@ public class GunManager {
         boolean isSlug = (ammo == AmmoType.SLUG_CARTRIDGE);
         boolean isDragon = isDragonCartridge || isDragonScatter;
 
-        // Obliczenie obrażeń pocisku przed odjęciem amunicji
+        // Obliczenie obrażeń pocisku
         final double singleBulletDamage;
         if (data.getGunType() == GunType.BLUNDERBUSS) {
             if (isSlug) {
@@ -104,7 +180,7 @@ public class GunManager {
             world.playSound(eyeLoc, Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 0.8f);
         }
 
-        boolean pepperboxUnique = (data.getGunType() == GunType.PEPPERBOX && data.hasUniqueMod());
+        boolean pepperboxUnique = (data.getUniqueMod() == GunUniqueMod.PEPPERBOX_PERFECT_SOLDIER);
         int smokeCount = pepperboxUnique ? 8 : (isSlug ? 28 : 18);
         int flameCount = isDragon ? 25 : (pepperboxUnique ? 5 : 12);
 
@@ -115,6 +191,12 @@ public class GunManager {
         // 2. Liczba pocisków z konfiguracji (zakres min_pellets .. max_pellets)
         int minP = GunConfigManager.getInstance().getAmmoMinPellets(ammo, GunConfigManager.getInstance().getMinPellets(data.getGunType()));
         int maxP = GunConfigManager.getInstance().getAmmoMaxPellets(ammo, GunConfigManager.getInstance().getMaxPellets(data.getGunType()));
+
+        if (data.getUniqueMod() == GunUniqueMod.SHOTGUN_DEMOLITION) {
+            minP += GunConfigManager.getInstance().getUniqueInt("shotgun_demolition", "extra_min_pellets", 4);
+            maxP += GunConfigManager.getInstance().getUniqueInt("shotgun_demolition", "extra_max_pellets", 6);
+        }
+
         int bulletCount;
         if (data.getGunType() == GunType.BLUNDERBUSS || ammo == AmmoType.SCATTER_SHOT || ammo == AmmoType.DRAGON_SCATTER_SHOT) {
             if (ammo == AmmoType.SLUG_CARTRIDGE) {
@@ -147,6 +229,19 @@ public class GunManager {
             simulateBullet(player, eyeLoc, spreadDir, data, ammo, singleBulletDamage);
         }
 
+        // Demolka: Jeśli wystrzelono Breneka, wystrzel dodatkowo 4 rozproszone śruciny po bokach!
+        if (data.getUniqueMod() == GunUniqueMod.SHOTGUN_DEMOLITION && isSlug) {
+            int extraSlugs = GunConfigManager.getInstance().getUniqueInt("shotgun_demolition", "slug_extra_pellets", 4);
+            for (int i = 0; i < extraSlugs; i++) {
+                Vector extraDir = dir.clone().add(new Vector(
+                        (random.nextDouble() - 0.5) * 0.35,
+                        (random.nextDouble() - 0.5) * 0.35,
+                        (random.nextDouble() - 0.5) * 0.35
+                )).normalize();
+                simulateBullet(player, eyeLoc, extraDir, data, AmmoType.SCATTER_SHOT, 2.5);
+            }
+        }
+
         // 3. Odrzut gracza
         applyRecoil(player, data.getGunType(), isSlug, pepperboxUnique);
 
@@ -159,7 +254,6 @@ public class GunManager {
         // 5. Aktualizacja przedmiotu i stanu kuszy
         data.applyToItemStack(gunItem);
 
-        // Jeśli zostały jeszcze pociski (Pieprzniczka / Dubeltówka) – natychmiastowe i opóźnione odnowienie naciągu kuszy
         if (data.getCurrentAmmo() > 0) {
             if (gunItem.getItemMeta() instanceof CrossbowMeta cm) {
                 cm.addChargedProjectile(new ItemStack(Material.ARROW, 1));
@@ -226,7 +320,7 @@ public class GunManager {
                                 return;
                             }
                         } else if (hit.getHitBlock() != null) {
-                            handleHitBlock(hitPos, isDragon);
+                            handleHitBlock(hitPos, isDragon, data.getUniqueMod() == GunUniqueMod.SHOTGUN_DEMOLITION);
                             cancel();
                             return;
                         }
@@ -267,6 +361,12 @@ public class GunManager {
             damage += 3.0;
         }
 
+        // Wsparcie Emocjonalne: jeśli cel jest wyczerpany, otrzymuje +30% obrażeń od pistoletów!
+        if (data.getGunType() == GunType.FLINTLOCK_PISTOL && isExhausted(victim)) {
+            damage *= 1.30;
+            shooter.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§d💔 §l[Wsparcie Emocjonalne] §e+30% DMG (Cel Wyczerpany!)"));
+        }
+
         if (isHeadshot) {
             damage *= data.getHeadshotMultiplier();
             world.playSound(hitLoc, Sound.ENTITY_ARROW_HIT_PLAYER, 1.2f, 1.6f);
@@ -278,10 +378,36 @@ public class GunManager {
             world.spawnParticle(Particle.DAMAGE_INDICATOR, hitLoc, 6, 0.2, 0.2, 0.2, 0.1);
         }
 
+        boolean willDie = (victim.getHealth() - damage <= 0);
+
         // Zerowanie noDamageTicks (i-frames), aby każdy trafiający śrut ze strzelby zadawał obrażenia!
         victim.setNoDamageTicks(0);
         victim.damage(damage, shooter);
         victim.setNoDamageTicks(0);
+
+        // Pistolet: Wsparcie Emocjonalne - nakłada Wyczerpanie
+        if (data.getUniqueMod() == GunUniqueMod.PISTOL_EMOTIONAL_SUPPORT) {
+            int durationSec = GunConfigManager.getInstance().getUniqueInt("pistol_emotional_support", "exhaustion_duration_seconds", 5);
+            exhaustedEnemies.put(victim.getUniqueId(), System.currentTimeMillis() + (durationSec * 1000L));
+            victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationSec * 20, 1));
+            world.spawnParticle(Particle.DAMAGE_INDICATOR, victim.getEyeLocation(), 8, 0.3, 0.3, 0.3, 0.1);
+            world.playSound(hitLoc, Sound.ENTITY_VEX_HURT, 0.8f, 1.2f);
+        }
+
+        // Pieprzniczka: Huragan - Zabójstwo krytyczne (Headshot Kill) od razu ładuje 1 nabój do komory!
+        if (data.getUniqueMod() == GunUniqueMod.PEPPERBOX_HURRICANE && isHeadshot && willDie) {
+            int maxCap = data.getMaxAmmoCapacity();
+            if (data.getCurrentAmmo() < maxCap) {
+                data.setCurrentAmmo(data.getCurrentAmmo() + 1);
+                ItemStack hand = shooter.getInventory().getItemInMainHand();
+                if (GunData.isGun(hand)) {
+                    data.applyToItemStack(hand);
+                }
+                world.playSound(shooter.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.2f, 2.0f);
+                world.playSound(shooter.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 1.0f, 1.4f);
+                shooter.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§d🌪 §l[HURAGAN] §eZabójstwo w głowę! +1 Nabój naładowany natychmiast! (" + data.getCurrentAmmo() + "/" + maxCap + ")"));
+            }
+        }
 
         // ZWIĘKSZONY ODRZUT DLA STRZELBY (Garłacz) Z LEKKIM PODBICIEM Y +0.12
         if (data.getGunType() == GunType.BLUNDERBUSS) {
@@ -305,15 +431,27 @@ public class GunManager {
         }
     }
 
-    private void handleHitBlock(Location hitLoc, boolean isDragon) {
+    public boolean isExhausted(LivingEntity entity) {
+        Long until = exhaustedEnemies.get(entity.getUniqueId());
+        return until != null && System.currentTimeMillis() < until;
+    }
+
+    private void handleHitBlock(Location hitLoc, boolean isDragon, boolean isDemolition) {
         World world = hitLoc.getWorld();
         world.playSound(hitLoc, Sound.BLOCK_STONE_HIT, 1.0f, 1.2f);
         world.spawnParticle(Particle.BLOCK, hitLoc, 15, 0.2, 0.2, 0.2, 0.1, Material.STONE.createBlockData());
 
         if (isDragon) {
-            world.spawnParticle(Particle.FLAME, hitLoc, 16, 0.4, 0.2, 0.4, 0.05);
-            if (hitLoc.getBlock().getType() == Material.AIR) {
-                hitLoc.getBlock().setType(Material.FIRE);
+            int radius = isDemolition ? 2 : 1;
+            world.spawnParticle(Particle.FLAME, hitLoc, isDemolition ? 35 : 16, 0.8, 0.4, 0.8, 0.08);
+
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    Location fireLoc = hitLoc.clone().add(dx, 0, dz);
+                    if (fireLoc.getBlock().getType() == Material.AIR) {
+                        fireLoc.getBlock().setType(Material.FIRE);
+                    }
+                }
             }
         }
     }
@@ -372,6 +510,11 @@ public class GunManager {
         final int finalTicks = totalTicks;
         UUID uuid = player.getUniqueId();
 
+        // Muszkiet: Piechur - daje lekki efekt Speed podczas ładowania
+        if (data.getUniqueMod() == GunUniqueMod.MUSKET_INFANTRYMAN) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, finalTicks + 5, 0, false, false, false));
+        }
+
         BukkitTask task = new BukkitRunnable() {
             int tick = 0;
             int notRaisedTicks = 0;
@@ -429,7 +572,17 @@ public class GunManager {
         activeReloads.remove(player.getUniqueId());
 
         int maxCap = data.getMaxAmmoCapacity();
-        if (player.getGameMode() != GameMode.CREATIVE) {
+        boolean freeAmmo = false;
+
+        // Muszkiet: Piechur - szansa na nie-zużycie kuli przy ładowaniu
+        if (data.getUniqueMod() == GunUniqueMod.MUSKET_INFANTRYMAN) {
+            double freeChance = GunConfigManager.getInstance().getUniqueDouble("musket_infantryman", "free_ammo_chance", 0.25);
+            if (random.nextDouble() < freeChance) {
+                freeAmmo = true;
+            }
+        }
+
+        if (player.getGameMode() != GameMode.CREATIVE && !freeAmmo) {
             int needed = maxCap - data.getCurrentAmmo();
             int consumed = consumeAmmoByPriority(player, ammoToLoad, needed);
             if (consumed <= 0) return;
@@ -443,7 +596,12 @@ public class GunManager {
 
         player.playSound(player.getLocation(), Sound.ITEM_FLINTANDSTEEL_USE, 1.0f, 1.4f);
         player.playSound(player.getLocation(), Sound.BLOCK_LEVER_CLICK, 1.0f, 1.8f);
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a✔ Załadowano " + ammoToLoad.getDisplayName() + " §f(" + data.getCurrentAmmo() + "/" + maxCap + ") §e[PPM Wystrzał]"));
+
+        if (freeAmmo) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§e✦ §l[Piechur] §aZachowano amunicję! §fZaładowano " + ammoToLoad.getDisplayName() + " (" + data.getCurrentAmmo() + "/" + maxCap + ") §e[PPM Wystrzał]"));
+        } else {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a✔ Załadowano " + ammoToLoad.getDisplayName() + " §f(" + data.getCurrentAmmo() + "/" + maxCap + ") §e[PPM Wystrzał]"));
+        }
     }
 
     public boolean isReloading(Player player) {
@@ -460,7 +618,7 @@ public class GunManager {
 
     public void startAiming(Player player, ItemStack gunItem) {
         GunData data = GunData.fromItemStack(gunItem);
-        boolean hasScope = (data != null && (data.hasBrassScope() || (data.getGunType() == GunType.FLINTLOCK_MUSKET && data.hasUniqueMod())));
+        boolean hasScope = (data != null && data.hasBrassScope());
 
         if (hasScope) {
             if (!scopedPlayers.contains(player.getUniqueId())) {

@@ -31,6 +31,7 @@ public class GunData {
     public static final NamespacedKey KEY_MOD_SCOPE = new NamespacedKey(AmonPackPlugin.plugin, "gun_mod_scope");
     public static final NamespacedKey KEY_MOD_BAYONET = new NamespacedKey(AmonPackPlugin.plugin, "gun_mod_bayonet");
     public static final NamespacedKey KEY_MOD_UNIQUE = new NamespacedKey(AmonPackPlugin.plugin, "gun_mod_unique");
+    public static final NamespacedKey KEY_UNIQUE_MOD_ID = new NamespacedKey(AmonPackPlugin.plugin, "gun_unique_mod_id");
 
     private static final UUID SPEED_MOD_UUID = UUID.fromString("6a71e621-3df2-4f38-bc02-b2d952676b71");
 
@@ -43,13 +44,13 @@ public class GunData {
     private boolean reinforcedLock = false;
     private boolean brassScope = false;
     private boolean bayonet = false;
-    private boolean uniqueMod = false;
+    private GunUniqueMod uniqueMod = GunUniqueMod.NONE;
 
     public GunData(GunType gunType) {
         this.gunType = gunType;
-        this.currentAmmo = 0; // domyślnie rozładowana po wykuciu
+        this.currentAmmo = 0;
         this.loadedAmmoType = null;
-        this.currentDurability = gunType.getMaxDurability();
+        this.currentDurability = getMaxDurability();
     }
 
     public static boolean isGun(ItemStack item) {
@@ -84,13 +85,25 @@ public class GunData {
         String ammoStr = pdc.get(KEY_LOADED_AMMO_TYPE, PersistentDataType.STRING);
         data.loadedAmmoType = AmmoType.fromId(ammoStr);
 
-        data.currentDurability = pdc.getOrDefault(KEY_DURABILITY, PersistentDataType.INTEGER, type.getMaxDurability());
+        data.currentDurability = pdc.getOrDefault(KEY_DURABILITY, PersistentDataType.INTEGER, data.getMaxDurability());
         data.level = pdc.getOrDefault(KEY_LEVEL, PersistentDataType.INTEGER, 1);
         data.rifling = pdc.getOrDefault(KEY_MOD_RIFLING, PersistentDataType.BYTE, (byte) 0) == (byte) 1;
         data.reinforcedLock = pdc.getOrDefault(KEY_MOD_LOCK, PersistentDataType.BYTE, (byte) 0) == (byte) 1;
         data.brassScope = pdc.getOrDefault(KEY_MOD_SCOPE, PersistentDataType.BYTE, (byte) 0) == (byte) 1;
         data.bayonet = pdc.getOrDefault(KEY_MOD_BAYONET, PersistentDataType.BYTE, (byte) 0) == (byte) 1;
-        data.uniqueMod = pdc.getOrDefault(KEY_MOD_UNIQUE, PersistentDataType.BYTE, (byte) 0) == (byte) 1;
+
+        String uModStr = pdc.get(KEY_UNIQUE_MOD_ID, PersistentDataType.STRING);
+        if (uModStr != null && !uModStr.isEmpty()) {
+            data.uniqueMod = GunUniqueMod.fromId(uModStr);
+        } else if (pdc.getOrDefault(KEY_MOD_UNIQUE, PersistentDataType.BYTE, (byte) 0) == (byte) 1) {
+            // Legacy mapping
+            if (type == GunType.FLINTLOCK_PISTOL) data.uniqueMod = GunUniqueMod.PISTOL_FAST_AND_FURIOUS;
+            else if (type == GunType.BLUNDERBUSS) data.uniqueMod = GunUniqueMod.SHOTGUN_DOUBLE_BARREL;
+            else if (type == GunType.PEPPERBOX) data.uniqueMod = GunUniqueMod.PEPPERBOX_PERFECT_SOLDIER;
+            else if (type == GunType.FLINTLOCK_MUSKET) data.uniqueMod = GunUniqueMod.MUSKET_STALKER;
+        } else {
+            data.uniqueMod = GunUniqueMod.NONE;
+        }
 
         return data;
     }
@@ -114,18 +127,19 @@ public class GunData {
         pdc.set(KEY_MOD_LOCK, PersistentDataType.BYTE, (byte) (reinforcedLock ? 1 : 0));
         pdc.set(KEY_MOD_SCOPE, PersistentDataType.BYTE, (byte) (brassScope ? 1 : 0));
         pdc.set(KEY_MOD_BAYONET, PersistentDataType.BYTE, (byte) (bayonet ? 1 : 0));
-        pdc.set(KEY_MOD_UNIQUE, PersistentDataType.BYTE, (byte) (uniqueMod ? 1 : 0));
+        pdc.set(KEY_MOD_UNIQUE, PersistentDataType.BYTE, (byte) (uniqueMod != GunUniqueMod.NONE ? 1 : 0));
+        pdc.set(KEY_UNIQUE_MOD_ID, PersistentDataType.STRING, uniqueMod.getId());
 
-        // Kara -10% do prędkości ruchu przy trzymaniu broni w ręce (chyba że pistolet ma Lekką Konstrukcję)
+        // Kara do prędkości poruszania się (-10%), chyba że broń ma ulepszenie Szybki i Wściekły
         meta.removeAttributeModifier(Attribute.MOVEMENT_SPEED);
-        boolean hasSpeedPenalty = !(gunType == GunType.FLINTLOCK_PISTOL && uniqueMod);
+        boolean hasSpeedPenalty = (uniqueMod != GunUniqueMod.PISTOL_FAST_AND_FURIOUS);
         if (hasSpeedPenalty) {
             meta.addAttributeModifier(
                     Attribute.MOVEMENT_SPEED,
                     new AttributeModifier(
                             SPEED_MOD_UUID,
                             "gun_speed_penalty",
-                            -0.10,
+                            GunConfigManager.getInstance().getMovementSpeedPenalty(),
                             AttributeModifier.Operation.ADD_SCALAR,
                             EquipmentSlot.HAND
                     )
@@ -150,7 +164,7 @@ public class GunData {
 
         // Vanilla durability bar sync
         if (meta instanceof Damageable dmg) {
-            double ratio = 1.0 - ((double) currentDurability / gunType.getMaxDurability());
+            double ratio = 1.0 - ((double) currentDurability / getMaxDurability());
             int vanillaMax = item.getType().getMaxDurability();
             dmg.setDamage((int) Math.max(0, Math.min(vanillaMax - 1, ratio * vanillaMax)));
         }
@@ -188,10 +202,11 @@ public class GunData {
         }
 
         // Trwałość & Waga
-        double durPercent = ((double) currentDurability / gunType.getMaxDurability()) * 100;
+        int maxDur = getMaxDurability();
+        double durPercent = ((double) currentDurability / maxDur) * 100;
         String durColor = durPercent > 50 ? "§a" : durPercent > 20 ? "§e" : "§c";
-        lore.add("§7Wytrzymałość: " + durColor + currentDurability + "§7/" + gunType.getMaxDurability());
-        boolean hasSpeedPenalty = !(gunType == GunType.FLINTLOCK_PISTOL && uniqueMod);
+        lore.add("§7Wytrzymałość: " + durColor + currentDurability + "§7/" + maxDur);
+        boolean hasSpeedPenalty = (uniqueMod != GunUniqueMod.PISTOL_FAST_AND_FURIOUS);
         lore.add("§7Ciężar broni: " + (hasSpeedPenalty ? "§c-10% Prędkości Ruchu" : "§aLekka (0% spowolnienia)"));
         lore.add("");
 
@@ -213,23 +228,45 @@ public class GunData {
         lore.add(" §e⏳ Czas ładowania: §f" + String.format(Locale.ROOT, "%.1f", getReloadTimeSeconds()) + "s");
 
         // Zainstalowane ulepszenia rusznikarskie
-        boolean hasMods = rifling || reinforcedLock || brassScope || bayonet || uniqueMod;
+        boolean hasMods = rifling || reinforcedLock || brassScope || bayonet || (uniqueMod != GunUniqueMod.NONE);
         if (hasMods) {
             lore.add("");
             lore.add("§dModyfikacje Rusznikarskie:");
-            if (rifling) lore.add(" §f✦ §aGwintowana Lufa §7(+40% celności, +10m)");
+            if (rifling) lore.add(" §f✦ §aGwintowana Lufa §7(+30% celności, +10m)");
             if (reinforcedLock) lore.add(" §f✦ §eWzmocniony Zamek §7(-30% czasu ładowania)");
             if (bayonet && gunType == GunType.FLINTLOCK_MUSKET) lore.add(" §f✦ §cBagnet Myśliwski §7(+7.0 DMG wręcz przy uderzeniu)");
-            if (brassScope || (gunType == GunType.FLINTLOCK_MUSKET && uniqueMod)) {
-                lore.add(" §f✦ §bLuneta Optyczna §7(Super 10x Zoom, +25% headshot)");
-            }
-            if (uniqueMod) {
-                if (gunType == GunType.FLINTLOCK_PISTOL) {
-                    lore.add(" §f✦ §aLekka Konstrukcja §7(Brak kary do prędkości poruszania się)");
-                } else if (gunType == GunType.BLUNDERBUSS) {
-                    lore.add(" §f✦ §6Dubeltówka §7(Druga lufa - 2 strzały przed przeładowaniem)");
-                } else if (gunType == GunType.PEPPERBOX) {
-                    lore.add(" §f✦ §dPowiększony Bęben i Kompensator §7(+1 komora, -50% odrzutu)");
+
+            if (uniqueMod != GunUniqueMod.NONE) {
+                switch (uniqueMod) {
+                    case MUSKET_STALKER:
+                        lore.add(" §f✦ §2[Unikalne] Stalker §7(Kamuflaż w liściach/krzakach, +35% Crit DMG)");
+                        break;
+                    case MUSKET_INFANTRYMAN:
+                        lore.add(" §f✦ §e[Unikalne] Piechur §7(-1s ładowania, Speed w trakcie naciągania, szansa na darmowy nabój)");
+                        break;
+                    case PISTOL_FAST_AND_FURIOUS:
+                        lore.add(" §f✦ §a[Unikalne] Szybki i Wściekły §7(Brak kary speeda, +75 dur, +10m, +2.0 DMG)");
+                        break;
+                    case PISTOL_WITCH_HUNTER:
+                        lore.add(" §f✦ §5[Unikalne] Łowca Czarownic §7(-0.5s ładowania, +100% EXP, 2x Drop, drop amunicji, +40% Crit)");
+                        break;
+                    case PISTOL_EMOTIONAL_SUPPORT:
+                        lore.add(" §f✦ §d[Unikalne] Wsparcie Emocjonalne §7(Debuff Wyczerpanie: spowolnienie i +30% DMG z pistoletów)");
+                        break;
+                    case SHOTGUN_DOUBLE_BARREL:
+                        lore.add(" §f✦ §6[Unikalne] Dubeltówka §7(Druga lufa - 2 strzały przed przeładowaniem)");
+                        break;
+                    case SHOTGUN_DEMOLITION:
+                        lore.add(" §f✦ §c[Unikalne] Demolka §7(+ilość śrutu, +reload, większy zasięg i zapłon, slug ze śrutem)");
+                        break;
+                    case PEPPERBOX_PERFECT_SOLDIER:
+                        lore.add(" §f✦ §b[Unikalne] Żołnierz Doskonały §7(+1 komora, -50% odrzutu i dymu)");
+                        break;
+                    case PEPPERBOX_HURRICANE:
+                        lore.add(" §f✦ §3[Unikalne] Huragan §7(3 komory, zabójstwo w głowę natychmiast ładuje nabój!)");
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -242,9 +279,18 @@ public class GunData {
     }
 
     public int getMaxAmmoCapacity() {
-        if (gunType == GunType.BLUNDERBUSS && uniqueMod) return 2;
-        if (gunType == GunType.PEPPERBOX && uniqueMod) return 5;
+        if (uniqueMod == GunUniqueMod.SHOTGUN_DOUBLE_BARREL) return 2;
+        if (uniqueMod == GunUniqueMod.PEPPERBOX_PERFECT_SOLDIER) return 5;
+        if (uniqueMod == GunUniqueMod.PEPPERBOX_HURRICANE) return 3;
         return gunType.getMaxAmmo();
+    }
+
+    public int getMaxDurability() {
+        int dur = GunConfigManager.getInstance().getMaxDurability(gunType);
+        if (uniqueMod == GunUniqueMod.PISTOL_FAST_AND_FURIOUS) {
+            dur += GunConfigManager.getInstance().getUniqueInt("pistol_fast_and_furious", "durability_bonus", 75);
+        }
+        return dur;
     }
 
     public double getDamage() {
@@ -257,13 +303,21 @@ public class GunData {
             return GunConfigManager.getInstance().getBaseDamage(gunType) + (level - 1) * 0.2;
         }
         double base = GunConfigManager.getInstance().getBaseDamage(gunType);
+        if (uniqueMod == GunUniqueMod.PISTOL_FAST_AND_FURIOUS) {
+            base += GunConfigManager.getInstance().getUniqueDouble("pistol_fast_and_furious", "damage_bonus", 2.0);
+        }
         double lvlBonus = (level - 1) * 0.8;
         return base + lvlBonus;
     }
 
     public double getHeadshotMultiplier() {
         double mult = GunConfigManager.getInstance().getHeadshotMultiplier(gunType);
-        if (brassScope || (gunType == GunType.FLINTLOCK_MUSKET && uniqueMod)) mult += 0.25;
+        if (brassScope) mult += 0.25;
+        if (uniqueMod == GunUniqueMod.MUSKET_STALKER) {
+            mult += GunConfigManager.getInstance().getUniqueDouble("musket_stalker", "crit_damage_bonus", 0.35);
+        } else if (uniqueMod == GunUniqueMod.PISTOL_WITCH_HUNTER) {
+            mult += GunConfigManager.getInstance().getUniqueDouble("pistol_witch_hunter", "crit_bonus", 0.40);
+        }
         mult += (level - 1) * 0.05;
         return mult;
     }
@@ -276,6 +330,12 @@ public class GunData {
             r += 5.0;
         }
         if (rifling) r += GunConfigManager.getInstance().getRiflingRangeBonus();
+        if (uniqueMod == GunUniqueMod.PISTOL_FAST_AND_FURIOUS) {
+            r += GunConfigManager.getInstance().getUniqueDouble("pistol_fast_and_furious", "range_bonus", 10.0);
+        }
+        if (uniqueMod == GunUniqueMod.SHOTGUN_DEMOLITION && (loadedAmmoType == AmmoType.DRAGON_CARTRIDGE || loadedAmmoType == AmmoType.DRAGON_SCATTER_SHOT)) {
+            r += GunConfigManager.getInstance().getUniqueDouble("shotgun_demolition", "dragon_range_bonus", 8.0);
+        }
         return r;
     }
 
@@ -300,9 +360,20 @@ public class GunData {
     public int getReloadTicks() {
         double ticks = GunConfigManager.getInstance().getReloadTicks(gunType);
         if (loadedAmmoType == AmmoType.SLUG_CARTRIDGE || loadedAmmoType == AmmoType.DRAGON_SCATTER_SHOT) {
-            ticks += 20; // 1s dłużej
+            ticks += 20;
         }
         if (reinforcedLock) ticks *= (1.0 - GunConfigManager.getInstance().getLockReloadReduction());
+
+        if (uniqueMod == GunUniqueMod.MUSKET_INFANTRYMAN) {
+            ticks -= GunConfigManager.getInstance().getUniqueInt("musket_infantryman", "reload_reduction_ticks", 20);
+        } else if (uniqueMod == GunUniqueMod.PISTOL_WITCH_HUNTER) {
+            ticks -= GunConfigManager.getInstance().getUniqueInt("pistol_witch_hunter", "reload_reduction_ticks", 10);
+        } else if (uniqueMod == GunUniqueMod.SHOTGUN_DEMOLITION) {
+            ticks += GunConfigManager.getInstance().getUniqueInt("shotgun_demolition", "reload_penalty_ticks", 20);
+        } else if (uniqueMod == GunUniqueMod.PEPPERBOX_HURRICANE) {
+            ticks += GunConfigManager.getInstance().getUniqueInt("pepperbox_hurricane", "reload_penalty_ticks", 16);
+        }
+
         return (int) Math.max(10, ticks);
     }
 
@@ -315,17 +386,18 @@ public class GunData {
     public AmmoType getLoadedAmmoType() { return loadedAmmoType; }
     public void setLoadedAmmoType(AmmoType loadedAmmoType) { this.loadedAmmoType = loadedAmmoType; }
     public int getCurrentDurability() { return currentDurability; }
-    public void setCurrentDurability(int currentDurability) { this.currentDurability = Math.max(0, Math.min(gunType.getMaxDurability(), currentDurability)); }
+    public void setCurrentDurability(int currentDurability) { this.currentDurability = Math.max(0, Math.min(getMaxDurability(), currentDurability)); }
     public int getLevel() { return level; }
     public void setLevel(int level) { this.level = Math.max(1, Math.min(5, level)); }
     public boolean hasRifling() { return rifling; }
     public void setRifling(boolean rifling) { this.rifling = rifling; }
     public boolean hasReinforcedLock() { return reinforcedLock; }
     public void setReinforcedLock(boolean reinforcedLock) { this.reinforcedLock = reinforcedLock; }
-    public boolean hasBrassScope() { return brassScope || (gunType == GunType.FLINTLOCK_MUSKET && uniqueMod); }
+    public boolean hasBrassScope() { return brassScope; }
     public void setBrassScope(boolean brassScope) { this.brassScope = brassScope; }
     public boolean hasBayonet() { return bayonet; }
     public void setBayonet(boolean bayonet) { this.bayonet = bayonet; }
-    public boolean hasUniqueMod() { return uniqueMod; }
-    public void setUniqueMod(boolean uniqueMod) { this.uniqueMod = uniqueMod; }
+    public GunUniqueMod getUniqueMod() { return uniqueMod; }
+    public void setUniqueMod(GunUniqueMod uniqueMod) { this.uniqueMod = (uniqueMod != null ? uniqueMod : GunUniqueMod.NONE); }
+    public boolean hasUniqueMod() { return uniqueMod != GunUniqueMod.NONE; }
 }
