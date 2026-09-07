@@ -1,0 +1,237 @@
+# ==============================================================================
+#                 AMONPACK - BATTLEROYALE / ZOMBIE APOCALYPSE CONFIG
+# ==============================================================================
+# Zaawansowany tryb gry Battle Royale / PvPvE / Extraction Zombie Apocalypse
+# z automatyczną naprawą mapy schematem, strefą śmierci, customowymi pistoletami,
+# ulepszeniami broni, amunicją, 5-minutową infekcją, botami AI i portalem ewakuacji.
+
+settings:
+  # Czas trwania lobby przed startem gry (w sekundach)
+  lobby-duration-seconds: 60
+  # Minimalna liczba graczy do startu (ustawione na 1, aby można było grać i testować solo!)
+  min-players: 1
+  # Maksymalna liczba graczy w lobby
+  max-players: 20
+  # Czas zamrożenia graczy (Freeze) na spawnach przed startem
+  freeze-countdown-seconds: 20
+  # Czy puste miejsca graczy na spawnach mają być automatycznie uzupełniane wrogimi botami AI
+  fill-empty-slots-with-bots: true
+  # Maksymalna liczba botów do zespawnowania (jeśli gra 1 osoba, zespawnuje się do 19 botów)
+  max-bots: 19
+
+arena:
+  name: "Strefa Kwarantanny - Zombie Apocalypse"
+  # Nazwa świata instancji gry
+  world-name: "hungergames_arena"
+  # Plik schematu w plugins/AmonPack/schematics/ używany do automatycznej naprawy mapy
+  schematic: "hungergames_map.schem"
+  paste-location:
+    x: 0.0
+    y: 100.0
+    z: 0.0
+  # Środek areny (wokół niego zamyka się strefa i tam pojawia się finałowy portal)
+  center-location:
+    x: 0.0
+    y: 100.0
+    z: 0.0
+
+  # Punkty startowe (do 20 pozycji dla graczy i botów AI)
+  spawns:
+    - { x: 35.0, y: 101.0, z: 0.0, yaw: 90.0, pitch: 0.0 }
+    - { x: 33.2, y: 101.0, z: 10.8, yaw: 108.0, pitch: 0.0 }
+    - { x: 28.3, y: 101.0, z: 20.5, yaw: 126.0, pitch: 0.0 }
+    - { x: 20.5, y: 101.0, z: 28.3, yaw: 144.0, pitch: 0.0 }
+    - { x: 10.8, y: 101.0, z: 33.2, yaw: 162.0, pitch: 0.0 }
+    - { x: 0.0, y: 101.0, z: 35.0, yaw: 180.0, pitch: 0.0 }
+    - { x: -10.8, y: 101.0, z: 33.2, yaw: 198.0, pitch: 0.0 }
+    - { x: -20.5, y: 101.0, z: 28.3, yaw: 216.0, pitch: 0.0 }
+    - { x: -28.3, y: 101.0, z: 20.5, yaw: 234.0, pitch: 0.0 }
+    - { x: -33.2, y: 101.0, z: 10.8, yaw: 252.0, pitch: 0.0 }
+    - { x: -35.0, y: 101.0, z: 0.0, yaw: 270.0, pitch: 0.0 }
+    - { x: -33.2, y: 101.0, z: -10.8, yaw: 288.0, pitch: 0.0 }
+    - { x: -28.3, y: 101.0, z: -20.5, yaw: 306.0, pitch: 0.0 }
+    - { x: -20.5, y: 101.0, z: -28.3, yaw: 324.0, pitch: 0.0 }
+    - { x: -10.8, y: 101.0, z: -33.2, yaw: 342.0, pitch: 0.0 }
+    - { x: 0.0, y: 101.0, z: -35.0, yaw: 0.0, pitch: 0.0 }
+    - { x: 10.8, y: 101.0, z: -33.2, yaw: 18.0, pitch: 0.0 }
+    - { x: 20.5, y: 101.0, z: -28.3, yaw: 36.0, pitch: 0.0 }
+    - { x: 28.3, y: 101.0, z: -20.5, yaw: 54.0, pitch: 0.0 }
+    - { x: 33.2, y: 101.0, z: -10.8, yaw: 72.0, pitch: 0.0 }
+
+zone:
+  # Początkowy promień strefy (w blokach)
+  initial-radius: 120.0
+  # Finałowy promień strefy (w nim toczy się finałowa walka z bossem i hordą)
+  final-radius: 14.0
+  # Obrażenia zadawane na sekundę graczom znajdującym się poza strefą
+  damage-outside-per-second: 2.0
+  # Fazy zamykania strefy (wait-seconds = postój strefy, duration-seconds = czas kurczenia)
+  phases:
+    - { wait-seconds: 35, duration-seconds: 60, target-radius: 80.0 }
+    - { wait-seconds: 25, duration-seconds: 50, target-radius: 40.0 }
+    - { wait-seconds: 15, duration-seconds: 40, target-radius: 14.0 }
+
+infection:
+  # Czas trwania infekcji przed śmiercią gracza (300s = 5 minut)
+  total-duration-seconds: 300
+  # Szansa na nałożenie infekcji przy ciosie melee moba lub bossa (0.35 = 35%)
+  melee-infect-chance: 0.35
+  # Przedmiot lekarstwa (consumable) usuwającego infekcję
+  cure-item:
+    material: "POTION"
+    display-name: "&a&l💉 Antidotum na Infekcję"
+    lore:
+      - "&7Wypij ten wywar, aby natychmiast usunąć"
+      - "&7wirus zombie z twojego krwioobiegu."
+      - ""
+      - "&eWymagane do ucieczki przez portal ewakuacyjny!"
+    custom-model-data: 22001
+
+# Ustawienia głodu podczas gry (jedzenie ma kluczowe znaczenie)
+hunger:
+  increased-drain: true
+  drain-interval-seconds: 4
+  exhaustion-addition: 0.75
+
+# Ochrona mapy, dozwolone bloki do niszczenia z opcjonalnym dropem oraz stawianie barykad
+blocks:
+  # Czy niszczenie bloków jest ograniczone wyłącznie do listy poniżej
+  restrict-breaking: true
+  # Lista bloków które gracze mogą niszczyć (z opcjonalnym lootem lub bez dropu)
+  breakable:
+    - { material: "OAK_PLANKS", loot: "OAK_SLAB", amount: 1 }
+    - { material: "COBWEB", loot: "STRING", amount: 1 }
+    - { material: "OAK_SLAB" }
+    - { material: "OAK_DOOR" }
+    - { material: "IRON_DOOR" }
+    - { material: "GLASS" }
+    - { material: "GLASS_PANE" }
+  # Czy stawianie bloków jest ograniczone wyłącznie do zdefiniowanych
+  restrict-placing: true
+  # Bloki które gracze mogą stawiać (barykady)
+  placeable:
+    - "OAK_SLAB"
+  # Liczba uderzeń zombie/bossa wymagana do zniszczenia postawionej barykady
+  barricade-hits-to-destroy: 3
+
+pve:
+  # Odstęp między falami mobów w czasie gry (w sekundach)
+  spawn-interval-seconds: 25
+  # Maksymalna liczba żywych potworów na mapie jednocześnie
+  max-alive-mobs: 30
+  vanilla-mobs:
+    - { type: "ZOMBIE", weight: 65 }
+    - { type: "SKELETON", weight: 35 }
+  mythic-mobs:
+    - { name: "ZombieMutant", level: 1, weight: 10 }
+  # Finałowa fala po zamknięciu strefy do minimalnego promienia
+  final-wave:
+    boss-mythic-mob: "ZombieTitanBoss"
+    zombies-count: 15
+
+# Konfiguracja losowego łupu w kontenerach na mapie
+loot-tables:
+  chests:
+    - { type: "GUN", chance: 0.40, min: 1, max: 1, param: "flintlock_pistol" }
+    - { type: "GUN", chance: 0.25, min: 1, max: 1, param: "pepperbox" }
+    - { type: "GUN", chance: 0.20, min: 1, max: 1, param: "flintlock_musket" }
+    - { type: "GUN", chance: 0.20, min: 1, max: 1, param: "blunderbuss" }
+    - { type: "AMMO", chance: 0.65, min: 4, max: 12, param: "lead_bullet" }
+    - { type: "AMMO", chance: 0.35, min: 3, max: 8, param: "scatter_shot" }
+    - { type: "AMMO", chance: 0.20, min: 2, max: 5, param: "dragon_cartridge" }
+    - { type: "UPGRADE_KIT", chance: 0.25, min: 1, max: 1, param: "1" }
+    - { type: "CURE", chance: 0.35, min: 1, max: 1, param: "" }
+    - { type: "BANDAGE", chance: 0.50, min: 1, max: 3, param: "" }
+    - { type: "BLOCK", chance: 0.45, min: 2, max: 6, param: "OAK_SLAB" }
+    - { type: "VANILLA", chance: 0.35, min: 1, max: 1, param: "IRON_SWORD" }
+    - { type: "VANILLA", chance: 0.20, min: 1, max: 1, param: "BOW" }
+    - { type: "ARMOR", chance: 0.30, min: 1, max: 1, param: "IRON_CHESTPLATE" }
+    - { type: "FOOD", chance: 0.50, min: 2, max: 5, param: "COOKED_BEEF" }
+
+  barrels:
+    - { type: "CURE", chance: 0.50, min: 1, max: 2, param: "" }
+    - { type: "BANDAGE", chance: 0.60, min: 2, max: 4, param: "" }
+    - { type: "FOOD", chance: 0.80, min: 3, max: 8, param: "BREAD" }
+    - { type: "FOOD", chance: 0.60, min: 2, max: 6, param: "GOLDEN_CARROT" }
+    - { type: "AMMO", chance: 0.50, min: 4, max: 10, param: "lead_bullet" }
+    - { type: "AMMO", chance: 0.30, min: 3, max: 6, param: "slug_cartridge" }
+    - { type: "UPGRADE_KIT", chance: 0.15, min: 1, max: 1, param: "1" }
+    - { type: "GUN", chance: 0.20, min: 1, max: 1, param: "flintlock_pistol" }
+
+  shelves:
+    - { type: "GUN", chance: 0.65, min: 1, max: 1, param: "flintlock_musket" }
+    - { type: "GUN", chance: 0.50, min: 1, max: 1, param: "blunderbuss" }
+    - { type: "GUN", chance: 0.45, min: 1, max: 1, param: "pepperbox" }
+    - { type: "GUN", chance: 0.40, min: 1, max: 1, param: "flintlock_pistol" }
+    - { type: "UPGRADE_KIT", chance: 0.35, min: 1, max: 1, param: "2" }
+    - { type: "AMMO", chance: 0.70, min: 6, max: 16, param: "lead_bullet" }
+    - { type: "AMMO", chance: 0.45, min: 4, max: 10, param: "dragon_scatter_shot" }
+    - { type: "CURE", chance: 0.25, min: 1, max: 1, param: "" }
+    - { type: "BANDAGE", chance: 0.35, min: 1, max: 2, param: "" }
+    - { type: "VANILLA", chance: 0.35, min: 1, max: 1, param: "CROSSBOW" }
+
+  # Sklepy tematyczne i specjalne skrzynie
+  food:
+    - { type: "FOOD", chance: 0.90, min: 4, max: 10, param: "BREAD" }
+    - { type: "FOOD", chance: 0.80, min: 3, max: 6, param: "COOKED_BEEF" }
+    - { type: "FOOD", chance: 0.60, min: 2, max: 5, param: "GOLDEN_CARROT" }
+    - { type: "FOOD", chance: 0.25, min: 1, max: 2, param: "GOLDEN_APPLE" }
+    - { type: "POTION", chance: 0.40, min: 1, max: 2, param: "REGENERATION" }
+    - { type: "POTION", chance: 0.40, min: 1, max: 2, param: "SPEED" }
+
+  medical:
+    - { type: "CURE", chance: 0.75, min: 1, max: 2, param: "" }
+    - { type: "BANDAGE", chance: 0.90, min: 2, max: 5, param: "" }
+    - { type: "POTION", chance: 0.60, min: 1, max: 2, param: "HEALING" }
+    - { type: "POTION", chance: 0.50, min: 1, max: 2, param: "REGENERATION" }
+    - { type: "FOOD", chance: 0.40, min: 1, max: 2, param: "GOLDEN_APPLE" }
+
+  guns:
+    - { type: "GUN", chance: 0.70, min: 1, max: 1, param: "flintlock_pistol" }
+    - { type: "GUN", chance: 0.50, min: 1, max: 1, param: "flintlock_musket" }
+    - { type: "GUN", chance: 0.45, min: 1, max: 1, param: "blunderbuss" }
+    - { type: "GUN", chance: 0.40, min: 1, max: 1, param: "pepperbox" }
+    - { type: "AMMO", chance: 0.90, min: 8, max: 20, param: "lead_bullet" }
+    - { type: "AMMO", chance: 0.50, min: 6, max: 12, param: "scatter_shot" }
+    - { type: "AMMO", chance: 0.40, min: 4, max: 8, param: "slug_cartridge" }
+    - { type: "AMMO", chance: 0.30, min: 3, max: 6, param: "dragon_cartridge" }
+    - { type: "UPGRADE_KIT", chance: 0.50, min: 1, max: 2, param: "1" }
+    - { type: "UPGRADE_KIT", chance: 0.25, min: 1, max: 1, param: "2" }
+
+  magic:
+    - { type: "MAGIC", chance: 0.70, min: 1, max: 2, param: "SCROLL_FIRE" }
+    - { type: "MAGIC", chance: 0.60, min: 1, max: 2, param: "SCROLL_FROST" }
+    - { type: "MAGIC", chance: 0.50, min: 1, max: 1, param: "SCROLL_LIGHTNING" }
+    - { type: "POTION", chance: 0.60, min: 1, max: 2, param: "SPEED" }
+    - { type: "VANILLA", chance: 0.40, min: 1, max: 1, param: "DIAMOND_SWORD" }
+
+  melee:
+    - { type: "VANILLA", chance: 0.80, min: 1, max: 1, param: "DIAMOND_SWORD" }
+    - { type: "VANILLA", chance: 0.70, min: 1, max: 1, param: "IRON_SWORD" }
+    - { type: "VANILLA", chance: 0.60, min: 1, max: 1, param: "IRON_AXE" }
+    - { type: "VANILLA", chance: 0.50, min: 1, max: 1, param: "SHIELD" }
+    - { type: "ARMOR", chance: 0.60, min: 1, max: 1, param: "IRON_CHESTPLATE" }
+    - { type: "ARMOR", chance: 0.60, min: 1, max: 1, param: "IRON_LEGGINGS" }
+    - { type: "ARMOR", chance: 0.60, min: 1, max: 1, param: "IRON_BOOTS" }
+
+# Wydarzenia mapy (Atmosferyczne wyzwania losowane na start meczu)
+events:
+  enabled: true
+  chance-silence: 0.35
+  chance-dehydration: 0.35
+  chance-none: 0.30
+
+# Niestandardowi zombie
+custom-zombies:
+  leaper-speed: 0.34
+  leaper-cooldown-seconds: 4
+  gunner-shot-cooldown-seconds: 4.5
+
+extraction:
+  # Promień portalu na środku mapy
+  portal-radius: 2.5
+  rewards:
+    commands:
+      - "give %player% diamond 5"
+      - "give %player% golden_apple 2"
+    exp: 500

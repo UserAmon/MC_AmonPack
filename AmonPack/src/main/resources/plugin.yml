@@ -46,3 +46,7 @@ commands:
     usage: /<command>
     description: "Glowny system progresji etapow RPG"
     aliases: [progress, quests, stage, zadania]
+  hungergames:
+    usage: /<command>
+    description: "Battle Royale / Zombie Apocalypse PvPvE minigame"
+    aliases: [hg, br, battleroyale]

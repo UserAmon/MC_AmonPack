@@ -57,6 +57,15 @@ public class Commands implements CommandExecutor, TabCompleter {
         }
 
         switch (cmdName) {
+            case "hungergames":
+            case "hg":
+            case "br":
+            case "battleroyale":
+                if (AmonPackPlugin.battleRoyaleManager != null) {
+                    return new RPG.BattleRoyale.BattleRoyaleCommand(AmonPackPlugin.battleRoyaleManager).onCommand(sender, cmd, commandLabel, args);
+                }
+                return true;
+
             case "selectelement":
                 if (sender instanceof Player) {
                     PlayerLevelMenager.OpenSelectElementMenu((Player) sender);

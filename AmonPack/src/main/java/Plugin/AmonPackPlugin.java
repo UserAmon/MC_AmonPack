@@ -76,6 +76,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static boolean ENABLE_PARTY = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
 	public static boolean ENABLE_WORLD_GEN = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
 	public static boolean ENABLE_ARMOR_EFFECTS = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
+	public static boolean ENABLE_BATTLE_ROYALE = true;
 
 	public static CustomContent.Pack.PackManager packManager;
 	public static CustomContent.Items.CustomItemManager customItemManager;
@@ -85,6 +86,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static RPG.Magic.manager.ManaManager manaManager;
 	public static RPG.Magic.manager.SpellRegistry spellRegistry;
 	public static CustomContent.Guns.GunManager gunManager;
+	public static RPG.BattleRoyale.BattleRoyaleManager battleRoyaleManager;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -287,7 +289,8 @@ public class AmonPackPlugin extends JavaPlugin {
 				"dungeons/dungeon_config.yml",
 				"dungeons/przykladowy_dungeon.yml",
 				"dungeons/makapu_bandyci.yml",
-				"dungeons/dokumentacja_dungeonow.yml"
+				"dungeons/dokumentacja_dungeonow.yml",
+				"battleroyale.yml"
 		};
 		for (String res : resourcesToSave) {
 			try {
@@ -567,6 +570,19 @@ public class AmonPackPlugin extends JavaPlugin {
 			progressionManager.load();
 		}
 
+		// --- 9. SYSTEM BATTLE ROYALE / ZOMBIE APOCALYPSE ---
+		if (ENABLE_BATTLE_ROYALE) {
+			battleRoyaleManager = RPG.BattleRoyale.BattleRoyaleManager.getInstance();
+			battleRoyaleManager.init();
+			this.getServer().getPluginManager().registerEvents(new RPG.BattleRoyale.BattleRoyaleListener(battleRoyaleManager), this);
+
+			if (this.getCommand("hungergames") != null) {
+				RPG.BattleRoyale.BattleRoyaleCommand brCmd = new RPG.BattleRoyale.BattleRoyaleCommand(battleRoyaleManager);
+				this.getCommand("hungergames").setExecutor(brCmd);
+				this.getCommand("hungergames").setTabCompleter(brCmd);
+			}
+		}
+
 		System.out.println("Amonpack Załadowany!");
 	}
 
@@ -595,6 +611,9 @@ public class AmonPackPlugin extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		try {
+			if (battleRoyaleManager != null) {
+				battleRoyaleManager.shutdown();
+			}
 			if (manaManager != null) {
 				manaManager.stop();
 			}
