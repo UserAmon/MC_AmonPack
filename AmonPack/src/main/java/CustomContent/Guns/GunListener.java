@@ -308,20 +308,6 @@ public class GunListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onMeleeAttackWithBayonet(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player player) {
-            ItemStack item = player.getInventory().getItemInMainHand();
-            if (GunData.isGun(item)) {
-                GunData data = GunData.fromItemStack(item);
-                if (data != null && data.hasBayonet()) {
-                    event.setDamage(event.getDamage() + 7.0);
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.2f);
-                }
-            }
-        }
-    }
-
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDeath(org.bukkit.event.entity.EntityDeathEvent event) {
         Player killer = event.getEntity().getKiller();
@@ -332,6 +318,20 @@ public class GunListener implements Listener {
 
         GunData data = GunData.fromItemStack(hand);
         if (data == null) return;
+
+        // Strzelba: Ergonomiczne Łoże - zabójstwa dają graczowi efekt "Fachu" na 5s (-0.5s przeładowania strzelb)
+        if (data.getGunType() == GunType.BLUNDERBUSS && data.hasBayonet()) {
+            gunManager.grantShotgunFach(killer);
+            killer.playSound(killer.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.6f);
+            killer.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§e⚙ §l[FACH] §aSzybkie przeładowanie strzelb (-0.5s) przez 5s!"));
+        }
+
+        // Pistolet: Punisher - zabójstwa dają graczowi efekt Speed I na 3 sekundy
+        if (data.getGunType() == GunType.FLINTLOCK_PISTOL && data.getUniqueMod() == GunUniqueMod.PISTOL_PUNISHER) {
+            killer.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, 60, 0, false, false, true));
+            killer.playSound(killer.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.8f);
+            killer.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c⚡ §l[PUNISHER] §bZabójstwo! Zwiększona prędkość ruchu na 3s!"));
+        }
 
         // Pistolet: Łowca Czarownic - 2x EXP, podwójny drop i szansa na amunicję
         if (data.getUniqueMod() == GunUniqueMod.PISTOL_WITCH_HUNTER) {

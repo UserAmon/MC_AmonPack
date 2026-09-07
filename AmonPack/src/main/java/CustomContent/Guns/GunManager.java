@@ -33,6 +33,8 @@ public class GunManager {
     private final Map<UUID, Location> lastPlayerLoc = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> stationaryTicks = new ConcurrentHashMap<>();
     private final Map<UUID, Long> exhaustedEnemies = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastStalkerInvisTime = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> shotgunFachBuff = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
     public GunManager() {
@@ -57,6 +59,10 @@ public class GunManager {
                     }
 
                     UUID uuid = player.getUniqueId();
+                    if (player.hasPotionEffect(PotionEffectType.INVISIBILITY)) {
+                        lastStalkerInvisTime.put(uuid, System.currentTimeMillis());
+                    }
+
                     Location currentLoc = player.getLocation();
                     Location lastLoc = lastPlayerLoc.get(uuid);
 
@@ -68,6 +74,7 @@ public class GunManager {
                             if (ticks >= 30) {
                                 // Aktywacja kamuflażu Stalkera
                                 player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 30, 0, false, false, false));
+                                lastStalkerInvisTime.put(uuid, System.currentTimeMillis());
                                 player.getWorld().spawnParticle(Particle.FALLING_SPORE_BLOSSOM, currentLoc.clone().add(0, 1.0, 0), 4, 0.4, 0.5, 0.4, 0.02);
                                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§2🌿 §l[STALKER] §aKamuflaż aktywny §7(+35% Crit DMG z ukrycia)"));
                             }
@@ -431,8 +438,19 @@ public class GunManager {
             shooter.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§d💔 §l[Wsparcie Emocjonalne] §e+30% DMG (Cel Wyczerpany!)"));
         }
 
+        final double baseBodyDamage = damage;
+
         if (isHeadshot) {
-            damage *= data.getHeadshotMultiplier();
+            double headshotMult = data.getHeadshotMultiplier();
+            if (data.getUniqueMod() == GunUniqueMod.MUSKET_STALKER) {
+                boolean stalkerActive = shooter.hasPotionEffect(PotionEffectType.INVISIBILITY)
+                        || (System.currentTimeMillis() - lastStalkerInvisTime.getOrDefault(shooter.getUniqueId(), 0L) <= 5000L);
+                if (stalkerActive) {
+                    headshotMult += GunConfigManager.getInstance().getUniqueDouble("musket_stalker", "crit_damage_bonus", 0.35);
+                    shooter.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§2🌿 §l[STALKER] §a+35% Crit DMG (Zasadzka)!"));
+                }
+            }
+            damage *= headshotMult;
             int marksmanCritPieces = 0;
             for (ItemStack armorItem : shooter.getInventory().getArmorContents()) {
                 if (armorItem != null && armorItem.hasItemMeta() && RPG.Crafting.CraftingMenager.HaveEffect(armorItem, "Marksman_Crit_Damage")) {
@@ -446,6 +464,13 @@ public class GunManager {
             world.playSound(hitLoc, Sound.BLOCK_ANVIL_LAND, 0.6f, 1.8f);
             world.spawnParticle(Particle.CRIT, hitLoc, 15, 0.2, 0.2, 0.2, 0.2);
             shooter.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c🎯 §lTRAFIENIE W GŁOWĘ! §e(" + String.format(Locale.ROOT, "%.1f", damage) + " DMG)"));
+
+            // Muszkiet: Rykoszetujący Zamek (Slot 40) - 33% szansy na przeskok pocisku do kolejnego celu
+            if (data.getGunType() == GunType.FLINTLOCK_MUSKET && data.hasBayonet()) {
+                if (Math.random() < 0.33) {
+                    chainRicochet(shooter, victim, baseBodyDamage);
+                }
+            }
         } else {
             world.playSound(hitLoc, Sound.ENTITY_ARROW_HIT, 1.0f, 1.2f);
             world.spawnParticle(Particle.DAMAGE_INDICATOR, hitLoc, 6, 0.2, 0.2, 0.2, 0.1);
@@ -487,6 +512,9 @@ public class GunManager {
             Vector kb = victim.getLocation().toVector().subtract(shooter.getLocation().toVector());
             kb.setY(0);
             double kbStrength = isSlug ? 2.6 : 1.8;
+            if (data.hasBayonet()) {
+                kbStrength *= 1.5; // Ergonomiczne Łoże (+50% siły odrzutu przeciwnika)
+            }
             if (kb.lengthSquared() > 0.001) {
                 kb.normalize().multiply(kbStrength);
             }
@@ -501,6 +529,56 @@ public class GunManager {
 
         if (isHeadshot && ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
             ProgressionManager.getInstance().getProgressionService().handleObjective(shooter, ObjectiveType.KILL_ENTITY, "HEADSHOT", 1);
+        }
+    }
+
+    public void grantShotgunFach(Player player) {
+        shotgunFachBuff.put(player.getUniqueId(), System.currentTimeMillis() + 5000L);
+    }
+
+    public boolean isShotgunFachActive(Player player) {
+        Long until = shotgunFachBuff.get(player.getUniqueId());
+        return until != null && System.currentTimeMillis() < until;
+    }
+
+    private void chainRicochet(Player shooter, LivingEntity primaryVictim, double bodyDamage) {
+        World world = primaryVictim.getWorld();
+        Location pLoc = primaryVictim.getLocation().clone().add(0, 1.0, 0);
+        LivingEntity nearest = null;
+        double nearestDistSq = 64.0; // promień 8m
+
+        for (org.bukkit.entity.Entity e : world.getNearbyEntities(pLoc, 8.0, 8.0, 8.0)) {
+            if (e instanceof LivingEntity le && !le.equals(primaryVictim) && !le.equals(shooter) && !le.isDead()) {
+                if (le instanceof org.bukkit.entity.ArmorStand) continue;
+                double distSq = le.getLocation().distanceSquared(pLoc);
+                if (distSq < nearestDistSq) {
+                    nearestDistSq = distSq;
+                    nearest = le;
+                }
+            }
+        }
+
+        if (nearest != null) {
+            Location tLoc = nearest.getLocation().clone().add(0, 1.0, 0);
+            Vector line = tLoc.toVector().subtract(pLoc.toVector());
+            double dist = line.length();
+            if (dist > 0.01) {
+                Vector step = line.clone().normalize().multiply(0.4);
+                Location cur = pLoc.clone();
+                for (double d = 0; d < dist; d += 0.4) {
+                    cur.add(step);
+                    world.spawnParticle(Particle.CRIT, cur, 1, 0, 0, 0, 0);
+                }
+            }
+
+            world.playSound(pLoc, Sound.ENTITY_ARROW_HIT, 1.2f, 1.8f);
+            world.playSound(tLoc, Sound.ITEM_SHIELD_BLOCK, 1.0f, 1.8f);
+
+            nearest.setNoDamageTicks(0);
+            nearest.damage(bodyDamage, shooter);
+            nearest.setNoDamageTicks(0);
+
+            shooter.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§c⚡ §l[Rykoszet] §ePocisk trafił kolejny cel! (" + String.format(Locale.ROOT, "%.1f", bodyDamage) + " DMG)"));
         }
     }
 
@@ -588,6 +666,11 @@ public class GunManager {
             double reductionPercent = reloadSpeedPieces * 0.05;
             int reductionTicks = (int) Math.round(baseTicks * reductionPercent);
             totalTicks = Math.max(10, totalTicks - reductionTicks);
+        }
+
+        // Strzelba: Ergonomiczne Łoże - efekt Fachu skraca reload o 0.5s (-10 ticków)
+        if (data.getGunType() == GunType.BLUNDERBUSS && isShotgunFachActive(player)) {
+            totalTicks = Math.max(10, totalTicks - 10);
         }
 
         if (gunItem.containsEnchantment(Enchantment.QUICK_CHARGE)) {

@@ -26,6 +26,7 @@ public class GunsmithGui implements Listener {
     private static final int SLOT_MOD_UNIQUE_1 = 41;
     private static final int SLOT_MOD_UNIQUE_2 = 42;
     private static final int SLOT_MOD_UNIQUE_3 = 43;
+    private static final int SLOT_MOD_UNIQUE_4 = 44;
 
     public static void open(Player player) {
         Inventory inv = Bukkit.createInventory(null, 45, GUI_TITLE);
@@ -115,30 +116,52 @@ public class GunsmithGui implements Listener {
             }
             inv.setItem(SLOT_MOD_LOCK, createItem(Material.FLINT, "§e§lWzmocniony Zamek Skałkowy", lockLore));
 
-            // Slot 40: Bagnet Myśliwski (dla Muszkietu) lub Ergonomiczne Łoże
-            if (data.getGunType() == GunType.FLINTLOCK_MUSKET) {
-                List<String> bayLore = new ArrayList<>();
-                bayLore.add("§7Zadaje §c+7.0 obrażeń wręcz§7 przy bezpośrednim uderzeniu.");
-                bayLore.add("§7Status: " + (data.hasBayonet() ? "§aZainstalowany" : "§cBrak"));
+            // Slot 40: Modyfikacja mechaniczna / łoże (zależna od typu broni)
+            if (data.getGunType() == GunType.FLINTLOCK_PISTOL) {
+                List<String> gripLore = new ArrayList<>();
+                gripLore.add("§7Zwiększa maksymalną wytrzymałość broni o §a+50 punktów§7.");
+                gripLore.add("§7Status: " + (data.hasBayonet() ? "§aZainstalowany" : "§cBrak"));
                 if (!data.hasBayonet()) {
-                    bayLore.add("");
-                    bayLore.add("§6Koszt montażu: §f2x Żelazo, 1x Skóra");
-                    bayLore.add("§eKliknij, aby zamontować!");
+                    gripLore.add("");
+                    gripLore.add("§6Koszt montażu: §f2x Skóra, 2x Żelazo");
+                    gripLore.add("§eKliknij, aby zamontować!");
                 }
-                inv.setItem(SLOT_MOD_OPTIONAL, createItem(Material.IRON_SWORD, "§c§lBagnet Myśliwski", bayLore));
-            } else {
+                inv.setItem(SLOT_MOD_OPTIONAL, createItem(Material.LEATHER, "§6§lWzmocniony Chwyt", gripLore));
+            } else if (data.getGunType() == GunType.BLUNDERBUSS) {
                 List<String> bayLore = new ArrayList<>();
-                bayLore.add("§7Zmniejsza odrzut broni o §b-40%§7.");
-                bayLore.add("§7Status: " + (data.hasBayonet() ? "§aZainstalowany" : "§cBrak"));
+                bayLore.add("§7Zwiększa siłę odrzutu przeciwnika o §b+50%§7.");
+                bayLore.add("§7Zabójstwa dają efekt §eFach§7 na 5s (-0.5s ładowania strzelb).");
+                bayLore.add("§7Status: " + (data.hasBayonet() ? "§aZainstalowane" : "§cBrak"));
                 if (!data.hasBayonet()) {
                     bayLore.add("");
                     bayLore.add("§6Koszt montażu: §f2x Skóra, 2x Miedź");
                     bayLore.add("§eKliknij, aby zamontować!");
                 }
                 inv.setItem(SLOT_MOD_OPTIONAL, createItem(Material.LEATHER, "§6§lErgonomiczne Łoże", bayLore));
+            } else if (data.getGunType() == GunType.FLINTLOCK_MUSKET) {
+                List<String> bayLore = new ArrayList<>();
+                bayLore.add("§7Trafienia krytyczne mają §e33% szansy§7 na rykoszet");
+                bayLore.add("§7do kolejnego wroga w promieniu 8m (obrażenia bazowe).");
+                bayLore.add("§7Status: " + (data.hasBayonet() ? "§aZainstalowany" : "§cBrak"));
+                if (!data.hasBayonet()) {
+                    bayLore.add("");
+                    bayLore.add("§6Koszt montażu: §f2x Żelazo, 1x Krzemień");
+                    bayLore.add("§eKliknij, aby zamontować!");
+                }
+                inv.setItem(SLOT_MOD_OPTIONAL, createItem(Material.FLINT, "§c§lRykoszetujący Zamek", bayLore));
+            } else if (data.getGunType() == GunType.PEPPERBOX) {
+                List<String> cylLore = new ArrayList<>();
+                cylLore.add("§7Powiększa magazynek broni o §e+1 dodatkowy pocisk§7.");
+                cylLore.add("§7Status: " + (data.hasBayonet() ? "§aZainstalowany" : "§cBrak"));
+                if (!data.hasBayonet()) {
+                    cylLore.add("");
+                    cylLore.add("§6Koszt montażu: §f4x Żelazo, 2x Miedź");
+                    cylLore.add("§eKliknij, aby zamontować!");
+                }
+                inv.setItem(SLOT_MOD_OPTIONAL, createItem(Material.HOPPER, "§b§lPowiększony Cylinder", cylLore));
             }
 
-            // 4. Sloty 41, 42, 43: UNIKALNE ULEPSZENIA (Tylko 1 na broń!)
+            // 4. Sloty 41, 42, 43, 44: UNIKALNE ULEPSZENIA (Tylko 1 na broń!)
             GunType gt = data.getGunType();
             GunUniqueMod currentUMod = data.getUniqueMod();
 
@@ -146,7 +169,7 @@ public class GunsmithGui implements Listener {
                 // A: Stalker
                 List<String> sLore = new ArrayList<>();
                 sLore.add("§7Stanie w bezruchu w pobliżu liści/krzaków aktywuje §2Kamuflaż (Niewidzialność)§7.");
-                sLore.add("§7Zapewnia §a+35% obrażeń krytycznych§7 przy strzale z ukrycia.");
+                sLore.add("§7Zapewnia §a+35% obrażeń krytycznych§7 przy strzale z ukrycia (i do 5s po wyjściu).");
                 sLore.add("§7Status: " + (currentUMod == GunUniqueMod.MUSKET_STALKER ? "§a✔ Zainstalowane (Aktywne)" : "§cBrak"));
                 if (currentUMod != GunUniqueMod.MUSKET_STALKER) {
                     sLore.add("");
@@ -168,6 +191,7 @@ public class GunsmithGui implements Listener {
                 }
                 inv.setItem(SLOT_MOD_UNIQUE_2, createItem(Material.FEATHER, "§e§l[Unikalne B] Piechur", pLore));
                 inv.setItem(SLOT_MOD_UNIQUE_3, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
+                inv.setItem(SLOT_MOD_UNIQUE_4, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
 
             } else if (gt == GunType.FLINTLOCK_PISTOL) {
                 // A: Szybki i Wściekły
@@ -206,6 +230,19 @@ public class GunsmithGui implements Listener {
                 }
                 inv.setItem(SLOT_MOD_UNIQUE_3, createItem(Material.POPPY, "§d§l[Unikalne C] Wsparcie Emocjonalne", eLore));
 
+                // D: Punisher
+                List<String> punLore = new ArrayList<>();
+                punLore.add("§7Powiększa magazynek do §e2 pocisków (+1 pocisk)§7 (+1.5s ładowania).");
+                punLore.add("§7Zwiększa zasięg o §b+10m§7 oraz celność (maksymalna z gwintowaną lufą).");
+                punLore.add("§7Zabójstwa dają efekt §bSpeed I§7 na 3 sekundy.");
+                punLore.add("§7Status: " + (currentUMod == GunUniqueMod.PISTOL_PUNISHER ? "§a✔ Zainstalowane (Aktywne)" : "§cBrak"));
+                if (currentUMod != GunUniqueMod.PISTOL_PUNISHER) {
+                    punLore.add("");
+                    punLore.add("§6Koszt wyboru: §f4x Żelazo, 2x Złoto, 1x Proch Strzelniczy");
+                    punLore.add("§eKliknij, aby wybrać ulepszenie D!");
+                }
+                inv.setItem(SLOT_MOD_UNIQUE_4, createItem(Material.REDSTONE, "§c§l[Unikalne D] Punisher", punLore));
+
             } else if (gt == GunType.BLUNDERBUSS) {
                 // A: Dubeltówka
                 List<String> dLore = new ArrayList<>();
@@ -231,11 +268,12 @@ public class GunsmithGui implements Listener {
                 }
                 inv.setItem(SLOT_MOD_UNIQUE_2, createItem(Material.TNT, "§c§l[Unikalne B] Demolka", demoLore));
                 inv.setItem(SLOT_MOD_UNIQUE_3, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
+                inv.setItem(SLOT_MOD_UNIQUE_4, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
 
             } else if (gt == GunType.PEPPERBOX) {
                 // A: Żołnierz Doskonały
                 List<String> zLore = new ArrayList<>();
-                zLore.add("§7Powiększa magazynek do §e5 komór (+1 pocisk)§7.");
+                zLore.add("§7Powiększa magazynek o §e+1 pocisk§7 (do 5 lub 6 z Cylindrem).");
                 zLore.add("§7Zmniejsza odrzut gracza o §b-50%§7 i redukuje dym z lufy.");
                 zLore.add("§7Status: " + (currentUMod == GunUniqueMod.PEPPERBOX_PERFECT_SOLDIER ? "§a✔ Zainstalowane (Aktywne)" : "§cBrak"));
                 if (currentUMod != GunUniqueMod.PEPPERBOX_PERFECT_SOLDIER) {
@@ -247,7 +285,7 @@ public class GunsmithGui implements Listener {
 
                 // B: Huragan
                 List<String> hLore = new ArrayList<>();
-                hLore.add("§7Zmniejsza magazynek do 3 komór (+0.8s czasu ładowania).");
+                hLore.add("§7Zmniejsza magazynek o §c-2 naboje§7 (do 2 lub 3 z Cylindrem, +0.8s ładowania).");
                 hLore.add("§7Zabójstwo w głowę §eBŁYSKAWICZNIE ładuje 1 nabój do komory§7!");
                 hLore.add("§7Status: " + (currentUMod == GunUniqueMod.PEPPERBOX_HURRICANE ? "§a✔ Zainstalowane (Aktywne)" : "§cBrak"));
                 if (currentUMod != GunUniqueMod.PEPPERBOX_HURRICANE) {
@@ -257,6 +295,7 @@ public class GunsmithGui implements Listener {
                 }
                 inv.setItem(SLOT_MOD_UNIQUE_2, createItem(Material.FEATHER, "§3§l[Unikalne B] Huragan", hLore));
                 inv.setItem(SLOT_MOD_UNIQUE_3, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
+                inv.setItem(SLOT_MOD_UNIQUE_4, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
             }
         } else {
             inv.setItem(SLOT_MOD_RIFLING, createItem(Material.BARRIER, "§c§lWłóż broń palną", List.of("§7Umieść broń palną w gnieździe powyżej.")));
@@ -265,6 +304,7 @@ public class GunsmithGui implements Listener {
             inv.setItem(SLOT_MOD_UNIQUE_1, createItem(Material.BARRIER, "§c§lWłóż broń palną", List.of("§7Umieść broń palną w gnieździe powyżej.")));
             inv.setItem(SLOT_MOD_UNIQUE_2, createItem(Material.BARRIER, "§c§lWłóż broń palną", List.of("§7Umieść broń palną w gnieździe powyżej.")));
             inv.setItem(SLOT_MOD_UNIQUE_3, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
+            inv.setItem(SLOT_MOD_UNIQUE_4, createItem(Material.BLACK_STAINED_GLASS_PANE, " ", null));
         }
     }
 
@@ -301,6 +341,8 @@ public class GunsmithGui implements Listener {
                     handleUniqueModChoice(player, inv, gunItem, data, 2);
                 } else if (slot == SLOT_MOD_UNIQUE_3) {
                     handleUniqueModChoice(player, inv, gunItem, data, 3);
+                } else if (slot == SLOT_MOD_UNIQUE_4) {
+                    handleUniqueModChoice(player, inv, gunItem, data, 4);
                 }
             }
         }
@@ -401,31 +443,79 @@ public class GunsmithGui implements Listener {
             return;
         }
 
-        if (data.getGunType() == GunType.FLINTLOCK_MUSKET) {
-            if (player.getGameMode() == GameMode.CREATIVE || (hasItem(player, Material.IRON_INGOT, 2) && hasItem(player, Material.LEATHER, 1))) {
-                if (player.getGameMode() != GameMode.CREATIVE) {
-                    consumeItem(player, Material.IRON_INGOT, 2);
-                    consumeItem(player, Material.LEATHER, 1);
-                }
-                data.setBayonet(true);
-                data.applyToItemStack(gunItem);
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.2f);
-                player.sendMessage("§a[Rusznikarz] Zamontowano Bagnet Myśliwski (+7.0 DMG wręcz)!");
-            } else {
-                player.sendMessage("§c[Rusznikarz] Brak materiałów: 2x Żelazo, 1x Skóra.");
+        GunType gt = data.getGunType();
+        boolean canCraft = false;
+
+        if (player.getGameMode() == GameMode.CREATIVE) {
+            canCraft = true;
+        } else {
+            switch (gt) {
+                case FLINTLOCK_PISTOL:
+                    if (hasItem(player, Material.LEATHER, 2) && hasItem(player, Material.IRON_INGOT, 2)) {
+                        consumeItem(player, Material.LEATHER, 2);
+                        consumeItem(player, Material.IRON_INGOT, 2);
+                        canCraft = true;
+                    }
+                    break;
+                case BLUNDERBUSS:
+                    if (hasItem(player, Material.LEATHER, 2) && hasItem(player, Material.COPPER_INGOT, 2)) {
+                        consumeItem(player, Material.LEATHER, 2);
+                        consumeItem(player, Material.COPPER_INGOT, 2);
+                        canCraft = true;
+                    }
+                    break;
+                case FLINTLOCK_MUSKET:
+                    if (hasItem(player, Material.IRON_INGOT, 2) && hasItem(player, Material.FLINT, 1)) {
+                        consumeItem(player, Material.IRON_INGOT, 2);
+                        consumeItem(player, Material.FLINT, 1);
+                        canCraft = true;
+                    }
+                    break;
+                case PEPPERBOX:
+                    if (hasItem(player, Material.IRON_INGOT, 4) && hasItem(player, Material.COPPER_INGOT, 2)) {
+                        consumeItem(player, Material.IRON_INGOT, 4);
+                        consumeItem(player, Material.COPPER_INGOT, 2);
+                        canCraft = true;
+                    }
+                    break;
+            }
+        }
+
+        if (canCraft) {
+            data.setBayonet(true);
+            if (gt == GunType.FLINTLOCK_PISTOL) {
+                data.setCurrentDurability(data.getCurrentDurability() + 50);
+            }
+            data.applyToItemStack(gunItem);
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.2f);
+            switch (gt) {
+                case FLINTLOCK_PISTOL:
+                    player.sendMessage("§a[Rusznikarz] Zamontowano Wzmocniony Chwyt (+50 do wytrzymałości)!");
+                    break;
+                case BLUNDERBUSS:
+                    player.sendMessage("§a[Rusznikarz] Zamontowano Ergonomiczne Łoże (+50% odrzutu wroga, buff Fach przy zabójstwie)!");
+                    break;
+                case FLINTLOCK_MUSKET:
+                    player.sendMessage("§a[Rusznikarz] Zamontowano Rykoszetujący Zamek (33% szansy na odbicie przy krytyku)!");
+                    break;
+                case PEPPERBOX:
+                    player.sendMessage("§a[Rusznikarz] Zamontowano Powiększony Cylinder (+1 pocisk w magazynku)!");
+                    break;
             }
         } else {
-            if (player.getGameMode() == GameMode.CREATIVE || (hasItem(player, Material.LEATHER, 2) && hasItem(player, Material.COPPER_INGOT, 2))) {
-                if (player.getGameMode() != GameMode.CREATIVE) {
-                    consumeItem(player, Material.LEATHER, 2);
-                    consumeItem(player, Material.COPPER_INGOT, 2);
-                }
-                data.setBayonet(true);
-                data.applyToItemStack(gunItem);
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.2f);
-                player.sendMessage("§a[Rusznikarz] Zamontowano Ergonomiczne Łoże (-40% odrzutu)!");
-            } else {
-                player.sendMessage("§c[Rusznikarz] Brak materiałów: 2x Skóra, 2x Miedź.");
+            switch (gt) {
+                case FLINTLOCK_PISTOL:
+                    player.sendMessage("§c[Rusznikarz] Brak materiałów: 2x Skóra, 2x Żelazo.");
+                    break;
+                case BLUNDERBUSS:
+                    player.sendMessage("§c[Rusznikarz] Brak materiałów: 2x Skóra, 2x Miedź.");
+                    break;
+                case FLINTLOCK_MUSKET:
+                    player.sendMessage("§c[Rusznikarz] Brak materiałów: 2x Żelazo, 1x Krzemień.");
+                    break;
+                case PEPPERBOX:
+                    player.sendMessage("§c[Rusznikarz] Brak materiałów: 4x Żelazo, 2x Miedź.");
+                    break;
             }
         }
     }
@@ -441,6 +531,7 @@ public class GunsmithGui implements Listener {
             if (optionIndex == 1) targetMod = GunUniqueMod.PISTOL_FAST_AND_FURIOUS;
             else if (optionIndex == 2) targetMod = GunUniqueMod.PISTOL_WITCH_HUNTER;
             else if (optionIndex == 3) targetMod = GunUniqueMod.PISTOL_EMOTIONAL_SUPPORT;
+            else if (optionIndex == 4) targetMod = GunUniqueMod.PISTOL_PUNISHER;
         } else if (gt == GunType.BLUNDERBUSS) {
             if (optionIndex == 1) targetMod = GunUniqueMod.SHOTGUN_DOUBLE_BARREL;
             else if (optionIndex == 2) targetMod = GunUniqueMod.SHOTGUN_DEMOLITION;
@@ -499,6 +590,14 @@ public class GunsmithGui implements Listener {
                         consumeItem(player, Material.AMETHYST_SHARD, 2);
                         consumeItem(player, Material.COPPER_INGOT, 4);
                         consumeItem(player, Material.RED_DYE, 2);
+                        canCraft = true;
+                    }
+                    break;
+                case PISTOL_PUNISHER:
+                    if (hasItem(player, Material.IRON_INGOT, 4) && hasItem(player, Material.GOLD_INGOT, 2) && hasItem(player, Material.GUNPOWDER, 1)) {
+                        consumeItem(player, Material.IRON_INGOT, 4);
+                        consumeItem(player, Material.GOLD_INGOT, 2);
+                        consumeItem(player, Material.GUNPOWDER, 1);
                         canCraft = true;
                     }
                     break;

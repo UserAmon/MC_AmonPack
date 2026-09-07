@@ -11,6 +11,7 @@ public enum GunUniqueMod {
     PISTOL_FAST_AND_FURIOUS("pistol_fast_and_furious", "§a§lSzybki i Wściekły", GunType.FLINTLOCK_PISTOL),
     PISTOL_WITCH_HUNTER("pistol_witch_hunter", "§5§lŁowca Czarownic", GunType.FLINTLOCK_PISTOL),
     PISTOL_EMOTIONAL_SUPPORT("pistol_emotional_support", "§d§lWsparcie Emocjonalne", GunType.FLINTLOCK_PISTOL),
+    PISTOL_PUNISHER("pistol_punisher", "§c§lPunisher", GunType.FLINTLOCK_PISTOL),
 
     // Garłacz
     SHOTGUN_DOUBLE_BARREL("shotgun_double_barrel", "§6§lDubeltówka", GunType.BLUNDERBUSS),

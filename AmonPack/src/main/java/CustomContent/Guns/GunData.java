@@ -234,12 +234,27 @@ public class GunData {
             lore.add("§dModyfikacje Rusznikarskie:");
             if (rifling) lore.add(" §f✦ §aGwintowana Lufa §7(+30% celności, +10m)");
             if (reinforcedLock) lore.add(" §f✦ §eWzmocniony Zamek §7(-30% czasu ładowania)");
-            if (bayonet && gunType == GunType.FLINTLOCK_MUSKET) lore.add(" §f✦ §cBagnet Myśliwski §7(+7.0 DMG wręcz przy uderzeniu)");
+            if (bayonet) {
+                switch (gunType) {
+                    case FLINTLOCK_PISTOL:
+                        lore.add(" §f✦ §6Wzmocniony Chwyt §7(+50 Wytrzymałości broni)");
+                        break;
+                    case BLUNDERBUSS:
+                        lore.add(" §f✦ §6Ergonomiczne Łoże §7(Większy odrzut, Zabójstwo: 'Fach' na 5s [-0.5s ładowania])");
+                        break;
+                    case FLINTLOCK_MUSKET:
+                        lore.add(" §f✦ §cRykoszetujący Zamek §7(Trafienia krytyczne: 33% szansy na przeskok do kolejnego celu)");
+                        break;
+                    case PEPPERBOX:
+                        lore.add(" §f✦ §bPowiększony Cylinder §7(+1 pocisk w magazynku)");
+                        break;
+                }
+            }
 
             if (uniqueMod != GunUniqueMod.NONE) {
                 switch (uniqueMod) {
                     case MUSKET_STALKER:
-                        lore.add(" §f✦ §2[Unikalne] Stalker §7(Kamuflaż w liściach/krzakach, +35% Crit DMG)");
+                        lore.add(" §f✦ §2[Unikalne] Stalker §7(Kamuflaż w krzakach, +35% Crit DMG z ukrycia i 5s po wyjściu)");
                         break;
                     case MUSKET_INFANTRYMAN:
                         lore.add(" §f✦ §e[Unikalne] Piechur §7(-1s ładowania, Speed w trakcie naciągania, szansa na darmowy nabój)");
@@ -253,6 +268,9 @@ public class GunData {
                     case PISTOL_EMOTIONAL_SUPPORT:
                         lore.add(" §f✦ §d[Unikalne] Wsparcie Emocjonalne §7(Debuff Wyczerpanie: spowolnienie i +30% DMG z pistoletów)");
                         break;
+                    case PISTOL_PUNISHER:
+                        lore.add(" §f✦ §c[Unikalne] Punisher §7(+1 pocisk, +1.5s ładowania, laserowa celność z lufą, +10m, Speed I po killu)");
+                        break;
                     case SHOTGUN_DOUBLE_BARREL:
                         lore.add(" §f✦ §6[Unikalne] Dubeltówka §7(Druga lufa - 2 strzały przed przeładowaniem)");
                         break;
@@ -260,10 +278,10 @@ public class GunData {
                         lore.add(" §f✦ §c[Unikalne] Demolka §7(+ilość śrutu, +reload, większy zasięg i zapłon, slug ze śrutem)");
                         break;
                     case PEPPERBOX_PERFECT_SOLDIER:
-                        lore.add(" §f✦ §b[Unikalne] Żołnierz Doskonały §7(+1 komora, -50% odrzutu i dymu)");
+                        lore.add(" §f✦ §b[Unikalne] Żołnierz Doskonały §7(+1 pocisk w magazynku [do 6], -50% odrzutu i dymu)");
                         break;
                     case PEPPERBOX_HURRICANE:
-                        lore.add(" §f✦ §3[Unikalne] Huragan §7(3 komory, zabójstwo w głowę natychmiast ładuje nabój!)");
+                        lore.add(" §f✦ §3[Unikalne] Huragan §7(-2 pociski w magazynku [2 lub 3 z cylindrem], Headshot kill ładuje nabój)");
                         break;
                     default:
                         break;
@@ -279,14 +297,31 @@ public class GunData {
     }
 
     public int getMaxAmmoCapacity() {
-        if (uniqueMod == GunUniqueMod.SHOTGUN_DOUBLE_BARREL) return 2;
-        if (uniqueMod == GunUniqueMod.PEPPERBOX_PERFECT_SOLDIER) return 5;
-        if (uniqueMod == GunUniqueMod.PEPPERBOX_HURRICANE) return 3;
-        return gunType.getMaxAmmo();
+        int maxCap = gunType.getMaxAmmo();
+        if (gunType == GunType.PEPPERBOX && bayonet) {
+            maxCap += 1;
+        }
+        if (gunType == GunType.PEPPERBOX) {
+            if (uniqueMod == GunUniqueMod.PEPPERBOX_HURRICANE) {
+                maxCap -= 2; // -2 pociski (3 z cylindrem, 2 bez)
+            } else if (uniqueMod == GunUniqueMod.PEPPERBOX_PERFECT_SOLDIER) {
+                maxCap += 1; // +1 pocisk (6 z cylindrem, 5 bez)
+            }
+        }
+        if (gunType == GunType.FLINTLOCK_PISTOL && uniqueMod == GunUniqueMod.PISTOL_PUNISHER) {
+            maxCap += 1; // Punisher: +1 (2 pociski)
+        }
+        if (uniqueMod == GunUniqueMod.SHOTGUN_DOUBLE_BARREL) {
+            maxCap = 2;
+        }
+        return Math.max(1, maxCap);
     }
 
     public int getMaxDurability() {
         int dur = GunConfigManager.getInstance().getMaxDurability(gunType);
+        if (gunType == GunType.FLINTLOCK_PISTOL && bayonet) {
+            dur += 50; // Wzmocniony Chwyt (+50 trwałości)
+        }
         if (uniqueMod == GunUniqueMod.PISTOL_FAST_AND_FURIOUS) {
             dur += GunConfigManager.getInstance().getUniqueInt("pistol_fast_and_furious", "durability_bonus", 75);
         }
@@ -313,9 +348,7 @@ public class GunData {
     public double getHeadshotMultiplier() {
         double mult = GunConfigManager.getInstance().getHeadshotMultiplier(gunType);
         if (brassScope) mult += 0.25;
-        if (uniqueMod == GunUniqueMod.MUSKET_STALKER) {
-            mult += GunConfigManager.getInstance().getUniqueDouble("musket_stalker", "crit_damage_bonus", 0.35);
-        } else if (uniqueMod == GunUniqueMod.PISTOL_WITCH_HUNTER) {
+        if (uniqueMod == GunUniqueMod.PISTOL_WITCH_HUNTER) {
             mult += GunConfigManager.getInstance().getUniqueDouble("pistol_witch_hunter", "crit_bonus", 0.40);
         }
         mult += (level - 1) * 0.05;
@@ -333,6 +366,9 @@ public class GunData {
         if (uniqueMod == GunUniqueMod.PISTOL_FAST_AND_FURIOUS) {
             r += GunConfigManager.getInstance().getUniqueDouble("pistol_fast_and_furious", "range_bonus", 10.0);
         }
+        if (uniqueMod == GunUniqueMod.PISTOL_PUNISHER) {
+            r += 10.0;
+        }
         if (uniqueMod == GunUniqueMod.SHOTGUN_DEMOLITION && (loadedAmmoType == AmmoType.DRAGON_CARTRIDGE || loadedAmmoType == AmmoType.DRAGON_SCATTER_SHOT)) {
             r += GunConfigManager.getInstance().getUniqueDouble("shotgun_demolition", "dragon_range_bonus", 8.0);
         }
@@ -349,6 +385,13 @@ public class GunData {
 
         double s = GunConfigManager.getInstance().getBaseSpread(gunType);
         if (rifling) s *= (1.0 - GunConfigManager.getInstance().getRiflingSpreadReduction());
+        if (uniqueMod == GunUniqueMod.PISTOL_PUNISHER) {
+            if (rifling) {
+                s = 0.0; // Maksymalna celność z gwintowaną lufą!
+            } else {
+                s *= 0.35;
+            }
+        }
         s *= Math.max(0.40, 1.0 - ((level - 1) * 0.12));
         return s;
     }
@@ -368,6 +411,8 @@ public class GunData {
             ticks -= GunConfigManager.getInstance().getUniqueInt("musket_infantryman", "reload_reduction_ticks", 20);
         } else if (uniqueMod == GunUniqueMod.PISTOL_WITCH_HUNTER) {
             ticks -= GunConfigManager.getInstance().getUniqueInt("pistol_witch_hunter", "reload_reduction_ticks", 10);
+        } else if (uniqueMod == GunUniqueMod.PISTOL_PUNISHER) {
+            ticks += 30; // +1.5s czasu ładowania (+30 ticków)
         } else if (uniqueMod == GunUniqueMod.SHOTGUN_DEMOLITION) {
             ticks += GunConfigManager.getInstance().getUniqueInt("shotgun_demolition", "reload_penalty_ticks", 20);
         } else if (uniqueMod == GunUniqueMod.PEPPERBOX_HURRICANE) {

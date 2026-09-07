@@ -131,6 +131,10 @@ public class CraftingMenager {
             ItemStack stack = mold.toItemStack();
             ItemMeta meta = stack.getItemMeta();
             List<String> lore = new ArrayList<>(mold.getItemLore());
+            if (mold.getResultAmount() > 1) {
+                lore.add("§eWytwarza: §f" + mold.getResultAmount() + " szt.");
+                lore.add("");
+            }
             lore.add("§7Potrzebne materiały:");
             for (ItemStack req : mold.getItemsRequiredToShapeMold()) {
                 if (req.getItemMeta() != null && !req.getItemMeta().getItemName().isEmpty()) {
@@ -450,8 +454,10 @@ public class CraftingMenager {
                             }
                         }
                     }
+                    int resultAmount = Config.getInt(path + "Amount", Config.getInt(path + "Result_Amount", 1));
                     CraftedWeapon w = new CraftedWeapon(WeaponName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects, BaseDmg);
+                    w.setResultAmount(resultAmount);
                     w.setRequiredStage(Config.getString(path + "Required_Stage"));
                     w.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllCraftableWeapons.add(w);
@@ -516,8 +522,10 @@ public class CraftingMenager {
                         }
                     }
 
+                    int resultAmount = Config.getInt(path + "Amount", Config.getInt(path + "Result_Amount", 1));
                     Craftable_Tool tool = new Craftable_Tool(ToolName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects);
+                    tool.setResultAmount(resultAmount);
                     tool.setRequiredStage(Config.getString(path + "Required_Stage"));
                     tool.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllTools.add(tool);
@@ -594,9 +602,11 @@ public class CraftingMenager {
                         }
                     }
 
+                    int resultAmount = Config.getInt(path + "Amount", Config.getInt(path + "Result_Amount", 1));
                     Craftable_Armor armor = new Craftable_Armor(ArmorName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName, material,
                             ItemLoreList, CustomModelId, AllowedEffects, armorValue, manaRedPercent, manaRedFlat, manaElement,
                             cdRedPercent, cdRedFlat, cdElement, speedIncPercent);
+                    armor.setResultAmount(resultAmount);
                     armor.setRequiredStage(Config.getString(path + "Required_Stage"));
                     armor.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllArmor.add(armor);
@@ -665,8 +675,10 @@ public class CraftingMenager {
                         }
                     }
 
+                    int resultAmount = Config.getInt(path + "Amount", Config.getInt(path + "Result_Amount", 1));
                     Craftable_Item craftItem = new Craftable_Item(ItemName.toLowerCase(java.util.Locale.ROOT), ItemToShapeMold, DisplayName,
                             material, ItemLoreList, CustomModelId, AllowedEffects);
+                    craftItem.setResultAmount(resultAmount);
                     craftItem.setRequiredStage(Config.getString(path + "Required_Stage"));
                     craftItem.setRequiredObjective(Config.getString(path + "Required_Objective"));
                     AllCraftableItems.add(craftItem);

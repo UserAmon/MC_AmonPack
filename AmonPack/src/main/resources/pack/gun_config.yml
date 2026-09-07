@@ -125,18 +125,28 @@ mods:
     range_bonus: 10.0 # +10m zasięgu
   reinforced_lock:
     reload_time_reduction: 0.30 # -30% czasu ładowania
-  bayonet:
-    melee_damage: 7.0
-  recoil_stock:
-    recoil_reduction: 0.40
+
+  # Dedykowane modyfikacje mechaniczne / łoża (Slot 40)
+  slot40_mods:
+    pistol_reinforced_grip:
+      durability_bonus: 50 # +50 do maksymalnej wytrzymałości
+    shotgun_recoil_stock:
+      knockback_multiplier: 1.5 # +50% do siły odrzucenia wroga
+      fach_duration_seconds: 5 # Czas trwania buffu Fach
+      fach_reload_reduction_ticks: 10 # -0.5s czasu ładowania strzelb
+    musket_ricochet_lock:
+      chain_chance: 0.33 # 33% szansy przy trafieniu w głowę
+      chain_radius: 8.0 # Zasięg przeskoku pocisku (metry)
+    pepperbox_expanded_cylinder:
+      extra_ammo: 1 # +1 pocisk w bębnie
 
   # UNIKALNE ULEPSZENIA (Tylko 1 aktywne na broń)
   unique_mods:
     # --- Muszkiet Piechoty ---
     musket_stalker:
-      crit_damage_bonus: 0.4 # +35% obrażeń krytycznych
-      stand_still_ticks: 40 # Czas bezruchu do aktywacji kamuflażu (1.5s)
-      leaf_radius: 2 # Maksymalna odległość od liści/krzaków
+      crit_damage_bonus: 0.35 # +35% obrażeń krytycznych z ukrycia i do 5s po wyjściu
+      stand_still_ticks: 30 # Czas bezruchu do aktywacji kamuflażu (1.5s)
+      leaf_radius: 2.5 # Maksymalna odległość od liści/krzaków
     musket_infantryman:
       reload_reduction_ticks: 20 # -1.0s czasu ładowania
       free_ammo_chance: 0.25 # 25% szansy na darmowy nabój przy ładowaniu
@@ -145,36 +155,42 @@ mods:
     # --- Pistolet Skałkowy ---
     pistol_fast_and_furious:
       remove_speed_penalty: true # Brak spowolnienia z bronią w ręce
-      durability_bonus: 100 # +75 do maksymalnej wytrzymałości
+      durability_bonus: 75 # +75 do maksymalnej wytrzymałości
       range_bonus: 10.0 # +10m zasięgu
       damage_bonus: 2.0 # +2.0 DMG bazowych obrażeń
     pistol_witch_hunter:
-      reload_reduction_ticks: 15 # -0.5s czasu ładowania
+      reload_reduction_ticks: 10 # -0.5s czasu ładowania
       crit_bonus: 0.40 # +40% obrażeń krytycznych (Headshot)
       exp_multiplier: 2.0 # Podwójny EXP z zabójstw
-      ammo_drop_chance: 0.3 # 35% szansy na drop kul ze zwłok
+      ammo_drop_chance: 0.35 # 35% szansy na drop kul ze zwłok
     pistol_emotional_support:
-      exhaustion_duration_seconds: 10 # Czas trwania Wyczerpania
-      slowness_amplifier: 2 # Spowolnienie II
-      pistol_damage_vulnerability: 0.3 # +30% większe obrażenia z pistoletów dla ofiary
+      exhaustion_duration_seconds: 5 # Czas trwania Wyczerpania
+      slowness_amplifier: 1 # Spowolnienie II
+      pistol_damage_vulnerability: 0.30 # +30% większe obrażenia z pistoletów dla ofiary
+    pistol_punisher:
+      extra_ammo: 1 # +1 dodatkowy pocisk do komory (łącznie 2)
+      reload_penalty_ticks: 30 # +1.5s czasu ładowania (+30 ticków)
+      range_bonus: 10.0 # +10m zasięgu
+      spread_reduction: 0.65 # Duże skupienie strzału (100% z gwintowaną lufą)
+      speed_duration_ticks: 60 # 3s efektu Speed I po zabójstwie
 
     # --- Garłacz Rozpylający ---
     shotgun_double_barrel:
       max_ammo: 2 # 2 strzały przed przeładowaniem
     shotgun_demolition:
-      extra_min_pellets: 2 # +4 do minimalnego śrutu
-      extra_max_pellets: 4 # +6 do maksymalnego śrutu
-      reload_penalty_ticks: 30 # +1.0s czasu ładowania
-      dragon_range_bonus: 5.0 # +8m zasięgu dla smoczego śrutu
-      dragon_fire_radius: 1 # Promień podpalenia terenu (3x3 / 5x5)
-      slug_extra_pellets: 3 # Liczba śrucin po bokach breneka
+      extra_min_pellets: 4 # +4 do minimalnego śrutu
+      extra_max_pellets: 6 # +6 do maksymalnego śrutu
+      reload_penalty_ticks: 20 # +1.0s czasu ładowania
+      dragon_range_bonus: 8.0 # +8m zasięgu dla smoczego śrutu
+      dragon_fire_radius: 1 # Promień podpalenia terenu (3x3)
+      slug_extra_pellets: 4 # Liczba śrucin po bokach breneka
 
     # --- Pieprzniczka Obrotowa ---
     pepperbox_perfect_soldier:
-      max_ammo: 6 # 5 komór (+1 pocisk)
-      recoil_reduction: 0.65 # -50% odrzutu gracza
-      smoke_reduction: 0.65 # -50% dymu przy wystrzale
+      extra_ammo: 1 # +1 pocisk w magazynku (do 5 lub 6 z Cylindrem)
+      recoil_reduction: 0.50 # -50% odrzutu gracza
+      smoke_reduction: 0.50 # -50% dymu przy wystrzale
     pepperbox_hurricane:
-      max_ammo: 3 # Zmniejszenie pojemności do 3 pocisków
+      ammo_reduction: 2 # -2 naboje w magazynku (do 2 lub 3 z Cylindrem)
       reload_penalty_ticks: 16 # +0.8s czasu ładowania
       headshot_instant_reload: 1 # Natychmiastowe załadowanie 1 pocisku przy zabójstwie w głowę

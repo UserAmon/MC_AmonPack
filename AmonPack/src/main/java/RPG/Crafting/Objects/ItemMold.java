@@ -24,6 +24,7 @@ public class ItemMold {
     private final String weaponID;
     private List<MagicEffects> AllowedMagicEffects = new ArrayList<>();
     private ItemType TypeOfMold;
+    private int resultAmount = 1;
 
     public enum ItemType {
         WEAPON,
@@ -70,6 +71,7 @@ public class ItemMold {
         ItemStack NewMold;
         if (CraftIntoItem) {
             NewMold = addEffectsToItem(toItemStack(), ExistingEffects);
+            NewMold.setAmount(resultAmount > 0 ? resultAmount : 1);
         } else {
             NewMold = addEffectsToItem(to_Empty_Mold_ItemStack(), ExistingEffects);
         }
@@ -141,7 +143,7 @@ public class ItemMold {
     }
 
     public ItemStack toItemStack() {
-        ItemStack item = new ItemStack(ItemMaterial);
+        ItemStack item = new ItemStack(ItemMaterial, resultAmount > 0 ? resultAmount : 1);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             if (ItemName != null)
@@ -260,5 +262,13 @@ public class ItemMold {
         }
 
         return true;
+    }
+
+    public int getResultAmount() {
+        return resultAmount;
+    }
+
+    public void setResultAmount(int resultAmount) {
+        this.resultAmount = resultAmount > 0 ? resultAmount : 1;
     }
 }

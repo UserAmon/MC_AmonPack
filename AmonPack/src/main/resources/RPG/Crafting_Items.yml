@@ -1848,6 +1848,7 @@ Craftable_Items:
     Material: IRON_NUGGET
     Name: "§f§lOłowiana Kula Muszkietowa"
     Custom_Model_ID: 10060
+    Amount: 16
     Required_Stage: COPPER
     Mold:
       Items_To_Craft:
@@ -1870,6 +1871,7 @@ Craftable_Items:
     Material: IRON_NUGGET
     Name: "§e§lPakiet Śrutu Ołowianego"
     Custom_Model_ID: 10061
+    Amount: 16
     Required_Stage: IRON
     Mold:
       Items_To_Craft:
@@ -1895,6 +1897,7 @@ Craftable_Items:
     Material: IRON_NUGGET
     Name: "§c§lKula Zapalająca (Smoczy Oddech)"
     Custom_Model_ID: 10062
+    Amount: 16
     Required_Stage: IRON
     Mold:
       Items_To_Craft:
@@ -1920,6 +1923,7 @@ Craftable_Items:
     Material: IRON_NUGGET
     Name: "§6§lCiężki Pocisk Brenek (Slug)"
     Custom_Model_ID: 10063
+    Amount: 16
     Required_Stage: IRON
     Mold:
       Items_To_Craft:
@@ -1945,6 +1949,7 @@ Craftable_Items:
     Material: IRON_NUGGET
     Name: "§c§lSmoczy Śrut Rozpylający"
     Custom_Model_ID: 10064
+    Amount: 16
     Required_Stage: IRON
     Mold:
       Items_To_Craft:
