@@ -78,7 +78,7 @@ public class BossScrollManager implements Listener {
                 public void run() {
                     double radius = 5;
                     for (Entity e : loc.getWorld().getNearbyEntities(loc, radius, radius, radius)) {
-                        if (e instanceof LivingEntity && !activeBosses.containsKey(e.getUniqueId())) {
+                        if (e instanceof LivingEntity && !(e instanceof Player) && !(e instanceof org.bukkit.entity.ArmorStand) && !activeBosses.containsKey(e.getUniqueId())) {
                             activeBosses.put(e.getUniqueId(), session);
                             session.addEntity(e.getUniqueId());
                             break;
@@ -110,6 +110,8 @@ public class BossScrollManager implements Listener {
 
             Player killer = event.getEntity().getKiller();
             String mmName = config.getString("Bosses." + session.bossId + ".MythicMobName", session.bossId);
+            String rawDisplay = config.getString("Bosses." + session.bossId + ".DisplayName");
+            String strippedDisplay = (rawDisplay != null) ? ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', rawDisplay)).trim() : null;
 
             if (AmonPackPlugin.ENABLE_SLOW_PROGRESSION && RPG.Progression.ProgressionManager.getInstance() != null) {
                 var ps = RPG.Progression.ProgressionManager.getInstance().getProgressionService();
@@ -122,9 +124,15 @@ public class BossScrollManager implements Listener {
                     }
                     for (Player p : credited) {
                         ps.handleObjective(p, RPG.Progression.model.ObjectiveType.DEFEAT_BOSS, session.bossId, 1);
-                        ps.handleObjective(p, RPG.Progression.model.ObjectiveType.DEFEAT_BOSS, mmName, 1);
                         ps.handleObjective(p, RPG.Progression.model.ObjectiveType.KILL_ENTITY, session.bossId, 1);
-                        ps.handleObjective(p, RPG.Progression.model.ObjectiveType.KILL_ENTITY, mmName, 1);
+                        if (mmName != null && !mmName.equalsIgnoreCase(session.bossId)) {
+                            ps.handleObjective(p, RPG.Progression.model.ObjectiveType.DEFEAT_BOSS, mmName, 1);
+                            ps.handleObjective(p, RPG.Progression.model.ObjectiveType.KILL_ENTITY, mmName, 1);
+                        }
+                        if (strippedDisplay != null && !strippedDisplay.isEmpty()) {
+                            ps.handleObjective(p, RPG.Progression.model.ObjectiveType.DEFEAT_BOSS, strippedDisplay, 1);
+                            ps.handleObjective(p, RPG.Progression.model.ObjectiveType.KILL_ENTITY, strippedDisplay, 1);
+                        }
                     }
                 }
             }

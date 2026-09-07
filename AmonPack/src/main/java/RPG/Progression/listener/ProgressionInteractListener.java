@@ -128,27 +128,11 @@ public class ProgressionInteractListener implements Listener {
             String customId = AmonPackPlugin.customItemManager.getCustomItemId(stack);
             if (customId != null) {
                 progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, customId, amount);
-                progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "custom:" + customId, amount);
+                return;
             }
         }
 
         // 2. Vanilla Item Pickup
         progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, mat.name(), amount);
-
-        if (mat.name().endsWith("_LOG") || mat.name().endsWith("_WOOD")) {
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "WOOD", amount);
-        }
-        if (mat == Material.WHEAT_SEEDS || mat == Material.PUMPKIN_SEEDS || mat == Material.MELON_SEEDS || mat == Material.BEETROOT_SEEDS) {
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "SEEDS", amount);
-        }
-        if (mat == Material.COAL || mat == Material.CHARCOAL) {
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "COAL", amount);
-        }
-        if (mat == Material.RAW_IRON || mat == Material.IRON_ORE || mat == Material.DEEPSLATE_IRON_ORE) {
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "IRON_ORE", amount);
-        }
-        if (mat == Material.DIAMOND || mat == Material.DIAMOND_ORE || mat == Material.DEEPSLATE_DIAMOND_ORE) {
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "DIAMOND", amount);
-        }
     }
 }

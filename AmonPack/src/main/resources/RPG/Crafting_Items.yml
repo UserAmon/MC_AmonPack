@@ -423,7 +423,7 @@ MagicEffects:
     Lore:
       l1: "§7Zwiększa o 5% obrażenia krytyczne."
       l2: "§8(Każda część setu może kumulować)"
-    IsMajor: false
+    IsMajor: true
     IsArmorEffect: true
     Cost:
       c1:
@@ -432,6 +432,21 @@ MagicEffects:
       c2:
         Material: FLINT
         Amount: 2
+  #
+  Marksman_Reload_Speed:
+    Name: "§e[⚡] Szybkie Przeładowanie"
+    Lore:
+      l1: "§7Zmniejsza o 5% czas przeładowania broni palnej."
+      l2: "§8(Każda część setu może kumulować)"
+    IsMajor: true
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: COPPER_INGOT
+        Amount: 4
+      c2:
+        Material: FEATHER
+        Amount: 4
   #
   Marksman_Ammo_Save:
     Name: "§e[🏹] Oszczędność Strzelca"
@@ -1417,6 +1432,7 @@ Craftable_Armor:
           Amount: 3
       AllowedMagicEffects:
         - Marksman_Crit_Damage
+        - Marksman_Reload_Speed
         - Marksman_Ammo_Save
         - Marksman_Mob_Loot
     Item:
@@ -1449,6 +1465,7 @@ Craftable_Armor:
           Amount: 4
       AllowedMagicEffects:
         - Marksman_Crit_Damage
+        - Marksman_Reload_Speed
         - Marksman_Ammo_Save
         - Marksman_Mob_Loot
     Item:
@@ -1481,6 +1498,7 @@ Craftable_Armor:
           Amount: 2
       AllowedMagicEffects:
         - Marksman_Crit_Damage
+        - Marksman_Reload_Speed
         - Marksman_Ammo_Save
         - Marksman_Mob_Loot
     Item:
@@ -1513,6 +1531,7 @@ Craftable_Armor:
           Amount: 2
       AllowedMagicEffects:
         - Marksman_Crit_Damage
+        - Marksman_Reload_Speed
         - Marksman_Ammo_Save
         - Marksman_Mob_Loot
     Item:

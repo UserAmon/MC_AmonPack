@@ -87,7 +87,6 @@ public class FarmMenager {
 
                             if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
                                 ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "SWEET_BERRY_BUSH", 1);
-                                ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", 1);
                                 ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.COLLECT_ITEM, "SWEET_BERRIES", berries.getAmount());
                             }
                             return true;
@@ -117,7 +116,6 @@ public class FarmMenager {
 
                     if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
                         ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, type.name(), blocks.size());
-                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", blocks.size());
                     }
                     return true;
                 }
@@ -141,7 +139,6 @@ public class FarmMenager {
 
                     if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
                         ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, type.name(), 1);
-                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", 1);
                     }
                     return true;
                 }
@@ -159,7 +156,6 @@ public class FarmMenager {
 
                     if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
                         ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, type.name(), 1);
-                        ProgressionManager.getInstance().getProgressionService().handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", 1);
                     }
                     return true;
                 }

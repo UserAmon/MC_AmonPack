@@ -3,6 +3,7 @@ package CustomContent.Hooks;
 import RPG.Util.InventoryXHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -90,5 +91,57 @@ public class ItemsAdderHook {
         } else {
             player.openInventory(Bukkit.createInventory(holder, size, title));
         }
+    }
+
+    public static String getCustomFurnitureNamespacedId(Block block) {
+        if (!isAvailable() || block == null) return null;
+        try {
+            dev.lone.itemsadder.api.CustomFurniture f = dev.lone.itemsadder.api.CustomFurniture.byAlreadySpawned(block);
+            return f != null ? f.getNamespacedID() : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static String getCustomFurnitureNamespacedId(Entity entity) {
+        if (!isAvailable() || entity == null) return null;
+        try {
+            dev.lone.itemsadder.api.CustomFurniture f = dev.lone.itemsadder.api.CustomFurniture.byAlreadySpawned(entity);
+            return f != null ? f.getNamespacedID() : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    public static boolean isShelfOrFurniture(Block block) {
+        if (block == null) return false;
+        String furnitureId = getCustomFurnitureNamespacedId(block);
+        if (furnitureId != null) {
+            return true;
+        }
+        String blockId = getCustomBlockNamespacedId(block);
+        if (blockId != null) {
+            return isShelfId(blockId);
+        }
+        return false;
+    }
+
+    public static boolean isShelfOrFurniture(Entity entity) {
+        if (entity == null) return false;
+        String furnitureId = getCustomFurnitureNamespacedId(entity);
+        if (furnitureId != null) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isShelfId(String id) {
+        if (id == null) return false;
+        String lower = id.toLowerCase();
+        return lower.contains("shelf") || lower.contains("polka") || lower.contains("polki")
+                || lower.contains("rack") || lower.contains("stand") || lower.contains("display")
+                || lower.contains("showcase") || lower.contains("wieszak") || lower.contains("furniture")
+                || lower.contains("stojak") || lower.contains("gablota") || lower.contains("szafka")
+                || lower.contains("holder") || lower.contains("board");
     }
 }

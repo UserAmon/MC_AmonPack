@@ -129,13 +129,25 @@ public class ProgressionService {
 
         if (qTarget.equalsIgnoreCase("ANY") || qTarget.equalsIgnoreCase("*")) return true;
 
-        if (qTarget.equalsIgnoreCase(t)) return true;
-
-        // Multi-target or aliases support (e.g. "OAK_LOG,BIRCH_LOG,SPRUCE_LOG" or "HOSTILE")
         if (qTarget.contains(",")) {
             for (String part : qTarget.split(",")) {
-                if (part.trim().equalsIgnoreCase(t)) return true;
+                if (matchesSingleTarget(part.trim(), type, t)) return true;
             }
+            return false;
+        }
+
+        return matchesSingleTarget(qTarget, type, t);
+    }
+
+    private boolean matchesSingleTarget(String qTarget, ObjectiveType type, String t) {
+        if (qTarget.equalsIgnoreCase(t)) return true;
+
+        // custom: prefix compatibility
+        if (qTarget.toLowerCase(Locale.ROOT).startsWith("custom:") && !t.toLowerCase(Locale.ROOT).startsWith("custom:")) {
+            if (qTarget.substring(7).equalsIgnoreCase(t)) return true;
+        }
+        if (t.toLowerCase(Locale.ROOT).startsWith("custom:") && !qTarget.toLowerCase(Locale.ROOT).startsWith("custom:")) {
+            if (t.substring(7).equalsIgnoreCase(qTarget)) return true;
         }
 
         // Hostile mob category alias
@@ -143,14 +155,27 @@ public class ProgressionService {
             return isHostileMob(t);
         }
 
-        // Wood alias
+        // Wood / Log alias
         if (qTarget.equalsIgnoreCase("WOOD") || qTarget.equalsIgnoreCase("LOG")) {
-            return t.toUpperCase().endsWith("_LOG") || t.toUpperCase().endsWith("_WOOD") || t.toUpperCase().endsWith("_STEM");
+            return t.toUpperCase(Locale.ROOT).endsWith("_LOG") || t.toUpperCase(Locale.ROOT).endsWith("_WOOD")
+                    || t.toUpperCase(Locale.ROOT).endsWith("_STEM") || t.toUpperCase(Locale.ROOT).endsWith("_HYPHAE");
         }
 
         // Planks alias
         if (qTarget.equalsIgnoreCase("PLANKS")) {
-            return t.toUpperCase().endsWith("_PLANKS");
+            return t.toUpperCase(Locale.ROOT).endsWith("_PLANKS");
+        }
+
+        // Sapling alias
+        if (qTarget.equalsIgnoreCase("SAPLING")) {
+            return t.toUpperCase(Locale.ROOT).endsWith("_SAPLING") || t.toUpperCase(Locale.ROOT).contains("PROPAGULE");
+        }
+
+        // Seeds alias
+        if (qTarget.equalsIgnoreCase("SEEDS")) {
+            return t.equalsIgnoreCase("WHEAT_SEEDS") || t.equalsIgnoreCase("PUMPKIN_SEEDS")
+                    || t.equalsIgnoreCase("MELON_SEEDS") || t.equalsIgnoreCase("BEETROOT_SEEDS")
+                    || t.equalsIgnoreCase("TORCHFLOWER_SEEDS") || t.equalsIgnoreCase("PITCHER_POD");
         }
 
         // Crops alias
@@ -192,8 +217,49 @@ public class ProgressionService {
             return t.equalsIgnoreCase("COAL") || t.equalsIgnoreCase("CHARCOAL") || t.equalsIgnoreCase("COAL_ORE") || t.equalsIgnoreCase("DEEPSLATE_COAL_ORE");
         }
 
+        // Iron alias
+        if (qTarget.equalsIgnoreCase("IRON_ORE") || qTarget.equalsIgnoreCase("RAW_IRON")) {
+            return t.equalsIgnoreCase("IRON_ORE") || t.equalsIgnoreCase("DEEPSLATE_IRON_ORE") || t.equalsIgnoreCase("RAW_IRON")
+                    || t.equalsIgnoreCase("IRON_INGOT") || t.equalsIgnoreCase("RAW_IRON_BLOCK") || t.equalsIgnoreCase("IRON_BLOCK");
+        }
+
+        // Copper alias
+        if (qTarget.equalsIgnoreCase("COPPER_ORE") || qTarget.equalsIgnoreCase("RAW_COPPER")) {
+            return t.equalsIgnoreCase("COPPER_ORE") || t.equalsIgnoreCase("DEEPSLATE_COPPER_ORE") || t.equalsIgnoreCase("RAW_COPPER")
+                    || t.equalsIgnoreCase("COPPER_INGOT") || t.equalsIgnoreCase("RAW_COPPER_BLOCK") || t.equalsIgnoreCase("COPPER_BLOCK");
+        }
+
+        // Gold alias
+        if (qTarget.equalsIgnoreCase("GOLD_ORE") || qTarget.equalsIgnoreCase("RAW_GOLD")) {
+            return t.equalsIgnoreCase("GOLD_ORE") || t.equalsIgnoreCase("DEEPSLATE_GOLD_ORE") || t.equalsIgnoreCase("RAW_GOLD")
+                    || t.equalsIgnoreCase("GOLD_INGOT") || t.equalsIgnoreCase("NETHER_GOLD_ORE") || t.equalsIgnoreCase("RAW_GOLD_BLOCK") || t.equalsIgnoreCase("GOLD_BLOCK");
+        }
+
+        // Diamond alias
+        if (qTarget.equalsIgnoreCase("DIAMOND") || qTarget.equalsIgnoreCase("DIAMOND_ORE")) {
+            return t.equalsIgnoreCase("DIAMOND") || t.equalsIgnoreCase("DIAMOND_ORE") || t.equalsIgnoreCase("DEEPSLATE_DIAMOND_ORE") || t.equalsIgnoreCase("DIAMOND_BLOCK");
+        }
+
+        // Cobblestone / Stone alias
+        if (qTarget.equalsIgnoreCase("COBBLESTONE") || qTarget.equalsIgnoreCase("STONE")) {
+            return t.equalsIgnoreCase("COBBLESTONE") || t.equalsIgnoreCase("STONE") || t.equalsIgnoreCase("COBBLED_DEEPSLATE") || t.equalsIgnoreCase("DEEPSLATE")
+                    || t.equalsIgnoreCase("GRANITE") || t.equalsIgnoreCase("DIORITE") || t.equalsIgnoreCase("ANDESITE")
+                    || t.equalsIgnoreCase("TUFF") || t.equalsIgnoreCase("CALCITE");
+        }
+
+        // Ores general alias
+        if (qTarget.equalsIgnoreCase("ORE") || qTarget.equalsIgnoreCase("ORES")) {
+            return t.toUpperCase(Locale.ROOT).endsWith("_ORE") || t.equalsIgnoreCase("ANCIENT_DEBRIS")
+                    || t.equalsIgnoreCase("RAW_IRON") || t.equalsIgnoreCase("RAW_COPPER") || t.equalsIgnoreCase("RAW_GOLD") || t.equalsIgnoreCase("AMETHYST_CLUSTER");
+        }
+
+        // Ingot general alias
+        if (qTarget.equalsIgnoreCase("INGOT") || qTarget.equalsIgnoreCase("INGOTS")) {
+            return t.toUpperCase(Locale.ROOT).endsWith("_INGOT");
+        }
+
         // Full armor set check aliases
-        if (qTarget.toUpperCase().startsWith("ARMOR_SET_")) {
+        if (qTarget.toUpperCase(Locale.ROOT).startsWith("ARMOR_SET_")) {
             String armorType = qTarget.substring("ARMOR_SET_".length()); // e.g. LEATHER, IRON, DIAMOND, NETHERITE
             return t.equalsIgnoreCase(armorType);
         }
@@ -203,12 +269,6 @@ public class ProgressionService {
             String cleanQ = qTarget.replace(" ", "_").toUpperCase(Locale.ROOT);
             String cleanT = t.replace(" ", "_").toUpperCase(Locale.ROOT);
             if (cleanQ.equalsIgnoreCase(cleanT) || cleanQ.contains(cleanT) || cleanT.contains(cleanQ)) return true;
-            if (cleanQ.contains(",")) {
-                for (String part : cleanQ.split(",")) {
-                    String p = part.trim();
-                    if (cleanT.equalsIgnoreCase(p) || cleanT.contains(p) || p.contains(cleanT)) return true;
-                }
-            }
             if (cleanQ.contains("BIRCH") && cleanT.contains("BIRCH")) return true;
             if (cleanQ.contains("MEADOW") && cleanT.contains("MEADOW")) return true;
             if (cleanQ.contains("TAIGA") && cleanT.contains("TAIGA")) return true;
@@ -218,7 +278,52 @@ public class ProgressionService {
             if (cleanQ.contains("PEAKS") && cleanT.contains("PEAKS")) return true;
         }
 
+        // Boss aliases (Pirate, Zombie Raider)
+        if (isPirateBossMatch(qTarget, t)) return true;
+        if (isZombieRaiderBossMatch(qTarget, t)) return true;
+
         return false;
+    }
+
+    private String normalizeBossName(String str) {
+        if (str == null) return "";
+        String s = org.bukkit.ChatColor.stripColor(str).toLowerCase(Locale.ROOT).trim();
+        s = s.replace("ą", "a")
+             .replace("ć", "c")
+             .replace("ę", "e")
+             .replace("ł", "l")
+             .replace("ń", "n")
+             .replace("ó", "o")
+             .replace("ś", "s")
+             .replace("ź", "z")
+             .replace("ż", "z");
+        s = s.replaceAll("[^a-z0-9]", "_").replaceAll("_+", "_");
+        if (s.startsWith("_")) s = s.substring(1);
+        if (s.endsWith("_")) s = s.substring(0, s.length() - 1);
+        return s;
+    }
+
+    private boolean isPirateBoss(String norm) {
+        return norm.contains("pirat") || norm.contains("sniper") || norm.contains("snajper");
+    }
+
+    private boolean isZombieRaiderBoss(String norm) {
+        return (norm.contains("zombie") && norm.contains("raider"))
+                || norm.contains("najezdzca")
+                || norm.contains("zza_grobu")
+                || (norm.contains("martwy") && norm.contains("najezdzca"));
+    }
+
+    private boolean isPirateBossMatch(String qTarget, String t) {
+        String normQ = normalizeBossName(qTarget);
+        String normT = normalizeBossName(t);
+        return isPirateBoss(normQ) && isPirateBoss(normT);
+    }
+
+    private boolean isZombieRaiderBossMatch(String qTarget, String t) {
+        String normQ = normalizeBossName(qTarget);
+        String normT = normalizeBossName(t);
+        return isZombieRaiderBoss(normQ) && isZombieRaiderBoss(normT);
     }
 
     private boolean isHostileMob(String mobType) {

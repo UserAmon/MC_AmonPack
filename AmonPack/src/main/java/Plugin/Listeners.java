@@ -879,6 +879,14 @@ public class Listeners implements Listener {
                             return;
                         }
                     }
+                    if (effect.getName().equals("Marksman_Reload_Speed") && CraftingMenager.HaveEffect(previewItem, "Marksman_Crit_Damage")) {
+                        p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "Ta runa wyklucza się z runą Precyzyjnego Uderzenia!");
+                        return;
+                    }
+                    if (effect.getName().equals("Marksman_Crit_Damage") && CraftingMenager.HaveEffect(previewItem, "Marksman_Reload_Speed")) {
+                        p.sendMessage(ChatColor.RED + ChatColor.BOLD.toString() + "Ta runa wyklucza się z runą Szybkiego Przeładowania!");
+                        return;
+                    }
                     CraftingMenager.OpenMagicEffectsGui(p, previewItem, clickeditem);
                 } else {
                     ItemMold item = CraftingMenager.getItemMoldByItem(event.getInventory().getItem(53));

@@ -43,20 +43,11 @@ public class ProgressionBlockListener implements Listener {
         if (block.getBlockData() instanceof Ageable ageable) {
             if (ageable.getAge() >= ageable.getMaximumAge()) {
                 progressionService.handleObjective(player, ObjectiveType.HARVEST_CROP, mat.name(), 1);
-                progressionService.handleObjective(player, ObjectiveType.HARVEST_CROP, "CROPS", 1);
             }
         }
 
         // 3. Destroy block objective
         progressionService.handleObjective(player, ObjectiveType.DESTROY_BLOCK, mat.name(), 1);
-
-        // General wood / ore / stone targets
-        if (mat.name().endsWith("_LOG") || mat.name().endsWith("_WOOD") || mat.name().endsWith("_STEM")) {
-            progressionService.handleObjective(player, ObjectiveType.DESTROY_BLOCK, "WOOD", 1);
-        }
-        if (mat == Material.COBBLESTONE || mat == Material.STONE || mat == Material.DEEPSLATE) {
-            progressionService.handleObjective(player, ObjectiveType.DESTROY_BLOCK, "COBBLESTONE", 1);
-        }
 
         // 4. Mining depth objective
         progressionService.handleObjective(player, ObjectiveType.MINE_TO_DEPTH, String.valueOf(block.getY()), 1);
@@ -85,8 +76,7 @@ public class ProgressionBlockListener implements Listener {
             progressionService.handleObjective(player, ObjectiveType.PLANT_CROP, mat.name(), 1);
         }
         if (mat.name().endsWith("_SAPLING")) {
-            progressionService.handleObjective(player, ObjectiveType.PLANT_CROP, "SAPLING", 1);
-            progressionService.handleObjective(player, ObjectiveType.PLACE_BLOCK, "SAPLING", 1);
+            progressionService.handleObjective(player, ObjectiveType.PLANT_CROP, mat.name(), 1);
         }
     }
 }

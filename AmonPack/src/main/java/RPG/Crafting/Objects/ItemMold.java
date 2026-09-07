@@ -118,14 +118,8 @@ public class ItemMold {
             var service = RPG.Progression.ProgressionManager.getInstance().getProgressionService();
             if (service != null) {
                 service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, weaponID, 1);
-                service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, weaponID.toLowerCase(java.util.Locale.ROOT), 1);
-                service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, ItemMaterial.name(), 1);
-                if (AmonPackPlugin.customItemManager != null) {
-                    String customId = AmonPackPlugin.customItemManager.getCustomItemId(NewMold);
-                    if (customId != null) {
-                        service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, customId, 1);
-                        service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, "custom:" + customId, 1);
-                    }
+                if (!weaponID.equalsIgnoreCase(ItemMaterial.name())) {
+                    service.handleObjective(player, RPG.Progression.model.ObjectiveType.CRAFT_ITEM, ItemMaterial.name(), 1);
                 }
             }
         }

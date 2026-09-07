@@ -58,7 +58,6 @@ public class ProgressionCraftListener implements Listener {
             String customId = Plugin.AmonPackPlugin.customItemManager.getCustomItemId(result);
             if (customId != null) {
                 progressionService.handleObjective(player, ObjectiveType.CRAFT_ITEM, customId, amount);
-                progressionService.handleObjective(player, ObjectiveType.CRAFT_ITEM, "custom:" + customId, amount);
             }
         }
 
@@ -108,25 +107,5 @@ public class ProgressionCraftListener implements Listener {
         progressionService.handleObjective(player, ObjectiveType.COOK_ITEM, mat.name(), amount);
         progressionService.handleObjective(player, ObjectiveType.SMELT_ITEM, mat.name(), amount);
         progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, mat.name(), amount);
-
-        if (mat == Material.CHARCOAL || mat == Material.COAL) {
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "COAL", amount);
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "CHARCOAL", amount);
-            progressionService.handleObjective(player, ObjectiveType.SMELT_ITEM, "COAL", amount);
-            progressionService.handleObjective(player, ObjectiveType.SMELT_ITEM, "CHARCOAL", amount);
-        }
-
-        if (mat == Material.COOKED_BEEF || mat == Material.COOKED_PORKCHOP || mat == Material.COOKED_CHICKEN
-                || mat == Material.COOKED_MUTTON || mat == Material.COOKED_SALMON || mat == Material.COOKED_COD) {
-            progressionService.handleObjective(player, ObjectiveType.COOK_ITEM, "FOOD", amount);
-            progressionService.handleObjective(player, ObjectiveType.COOK_ITEM, "MEAT", amount);
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "FOOD", amount);
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "MEAT", amount);
-        }
-
-        if (mat == Material.IRON_INGOT || mat == Material.GOLD_INGOT || mat == Material.COPPER_INGOT) {
-            progressionService.handleObjective(player, ObjectiveType.SMELT_ITEM, "ORES", amount);
-            progressionService.handleObjective(player, ObjectiveType.COLLECT_ITEM, "INGOT", amount);
-        }
     }
 }

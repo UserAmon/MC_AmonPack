@@ -1,7 +1,7 @@
 Bosses:
   Zombie_Raider:
     MythicMobName: "Zombie_Raider"
-    DisplayName: "&c&lMartwy Najeźdźca"
+    DisplayName: "&4Najeźdzca zza grobu"
     Type: "SINGLE"
     LootTable:
       - Material: "DIAMOND"
@@ -18,7 +18,7 @@ Bosses:
         Chance: 1.0
   Pirates:
     MythicMobName: "Pirate_1_Sniper"
-    DisplayName: "&e&lPiraci Strzelcy"
+    DisplayName: "&aPirat - Snajper"
     Type: "SINGLE"
     GroupSize: 1
     LootTable:
@@ -33,7 +33,7 @@ Bosses:
         Chance: 1.0
   TestBoss:
     MythicMobName: "Zombie_Raider"
-    DisplayName: "&c&lMartwy Najeźdźca"
+    DisplayName: "&4Najeźdzca zza grobu"
     Type: "SINGLE"
     LootTable:
       - Material: "DIAMOND"
@@ -47,7 +47,7 @@ Bosses:
         Chance: 0.1
   TestGroup:
     MythicMobName: "Pirate_1_Sniper"
-    DisplayName: "&e&lPiraci Strzelcy"
+    DisplayName: "&aPirat - Snajper"
     Type: "GROUP"
     GroupSize: 1
     LootTable:

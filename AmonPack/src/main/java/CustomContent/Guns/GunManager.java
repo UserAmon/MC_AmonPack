@@ -28,6 +28,7 @@ public class GunManager {
     private final Set<UUID> aimingPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Set<UUID> scopedPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Map<UUID, BukkitTask> activeReloads = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> activeReloadRealArrows = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastShotTime = new ConcurrentHashMap<>();
     private final Map<UUID, Location> lastPlayerLoc = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> stationaryTicks = new ConcurrentHashMap<>();
@@ -118,10 +119,27 @@ public class GunManager {
         }
     }
 
+    public long getCooldownMs(GunType type) {
+        switch (type) {
+            case PEPPERBOX:
+                return 250L;
+            case FLINTLOCK_PISTOL:
+                return 500L;
+            case FLINTLOCK_MUSKET:
+            case BLUNDERBUSS:
+            default:
+                return 600L;
+        }
+    }
+
+    public long getLastShotTime(UUID uuid) {
+        return lastShotTime.getOrDefault(uuid, 0L);
+    }
+
     public void fireGun(Player player, ItemStack gunItem, GunData data) {
         long now = System.currentTimeMillis();
         long last = lastShotTime.getOrDefault(player.getUniqueId(), 0L);
-        long cooldownMs = data.getGunType() == GunType.PEPPERBOX ? 120L : 250L;
+        long cooldownMs = getCooldownMs(data.getGunType());
         if (now - last < cooldownMs) {
             return;
         }
@@ -268,33 +286,65 @@ public class GunManager {
         // 5. Aktualizacja przedmiotu i stanu kuszy
         data.applyToItemStack(gunItem);
 
+        int cooldownTicks;
+        switch (data.getGunType()) {
+            case PEPPERBOX:
+                cooldownTicks = 6;
+                break;
+            case FLINTLOCK_PISTOL:
+                cooldownTicks = 10;
+                break;
+            case FLINTLOCK_MUSKET:
+            case BLUNDERBUSS:
+            default:
+                cooldownTicks = 12;
+                break;
+        }
+        player.setCooldown(gunItem.getType(), cooldownTicks);
+
         if (data.getCurrentAmmo() > 0) {
             if (gunItem.getItemMeta() instanceof CrossbowMeta cm) {
-                cm.addChargedProjectile(new ItemStack(Material.ARROW, 1));
+                cm.setChargedProjectiles(Collections.singletonList(new ItemStack(Material.ARROW, 1)));
                 gunItem.setItemMeta(cm);
             }
-            Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
-                ItemStack handItem = player.getInventory().getItemInMainHand();
-                if (GunData.isGun(handItem)) {
-                    GunData curData = GunData.fromItemStack(handItem);
-                    if (curData != null && curData.getCurrentAmmo() > 0) {
-                        curData.applyToItemStack(handItem);
-                        if (handItem.getItemMeta() instanceof CrossbowMeta cm) {
-                            cm.setChargedProjectiles(Collections.singletonList(new ItemStack(Material.ARROW, 1)));
-                            handItem.setItemMeta(cm);
-                        }
-                        player.updateInventory();
-                    }
-                }
-            });
-
             StringBuilder sb = new StringBuilder("§a");
             for (int k = 0; k < data.getCurrentAmmo(); k++) sb.append("● ");
             for (int k = data.getCurrentAmmo(); k < data.getMaxAmmoCapacity(); k++) sb.append("§8○ ");
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(sb.toString() + "§e(" + data.getCurrentAmmo() + "/" + data.getMaxAmmoCapacity() + ") Gotowa do strzału! §7[PPM kolejny strzał]"));
         } else {
+            if (gunItem.getItemMeta() instanceof CrossbowMeta cm) {
+                cm.setChargedProjectiles(Collections.emptyList());
+                gunItem.setItemMeta(cm);
+            }
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cKomora pusta! §7[Przytrzymaj PPM aby załadować]"));
         }
+
+        // Natychmiastowa i synchroniczna aktualizacja broni w ręce gracza
+        player.getInventory().setItemInMainHand(gunItem);
+        player.updateInventory();
+
+        // 1-tickowe potwierdzenie stanu w ekwipunku gracza
+        final int targetAmmo = data.getCurrentAmmo();
+        Bukkit.getScheduler().runTask(AmonPackPlugin.plugin, () -> {
+            ItemStack handItem = player.getInventory().getItemInMainHand();
+            if (GunData.isGun(handItem)) {
+                GunData curData = GunData.fromItemStack(handItem);
+                if (curData != null) {
+                    curData.setCurrentAmmo(targetAmmo);
+                    curData.applyToItemStack(handItem);
+                    if (handItem.getItemMeta() instanceof CrossbowMeta cm) {
+                        if (targetAmmo > 0) {
+                            cm.setChargedProjectiles(Collections.singletonList(new ItemStack(Material.ARROW, 1)));
+                        } else {
+                            cm.setChargedProjectiles(Collections.emptyList());
+                        }
+                        handItem.setItemMeta(cm);
+                    }
+                    player.getInventory().setItemInMainHand(handItem);
+                    player.updateInventory();
+                }
+            }
+        });
 
         // 6. Powiadomienie progresji
         if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
@@ -525,6 +575,21 @@ public class GunManager {
         data.setLoadedAmmoType(chosenAmmo);
 
         int totalTicks = data.getReloadTicks();
+        int baseTicks = totalTicks;
+
+        // Efekt zbroi strzelca: Marksman_Reload_Speed (-5% czasu przeładowania za każdy element pancerza)
+        int reloadSpeedPieces = 0;
+        for (ItemStack armorItem : player.getInventory().getArmorContents()) {
+            if (armorItem != null && armorItem.hasItemMeta() && RPG.Crafting.CraftingMenager.HaveEffect(armorItem, "Marksman_Reload_Speed")) {
+                reloadSpeedPieces++;
+            }
+        }
+        if (reloadSpeedPieces > 0) {
+            double reductionPercent = reloadSpeedPieces * 0.05;
+            int reductionTicks = (int) Math.round(baseTicks * reductionPercent);
+            totalTicks = Math.max(10, totalTicks - reductionTicks);
+        }
+
         if (gunItem.containsEnchantment(Enchantment.QUICK_CHARGE)) {
             int qc = gunItem.getEnchantmentLevel(Enchantment.QUICK_CHARGE);
             totalTicks = Math.max(10, totalTicks - (qc * 12));
@@ -532,6 +597,8 @@ public class GunManager {
 
         final int finalTicks = totalTicks;
         UUID uuid = player.getUniqueId();
+        int initialArrows = GunListener.countRealArrows(player);
+        activeReloadRealArrows.put(uuid, initialArrows);
 
         // Muszkiet: Piechur - daje lekki efekt Speed podczas ładowania
         if (data.getUniqueMod() == GunUniqueMod.MUSKET_INFANTRYMAN) {
@@ -593,6 +660,8 @@ public class GunManager {
 
     private void finishReload(Player player, ItemStack gunItem, GunData data, AmmoType ammoToLoad) {
         activeReloads.remove(player.getUniqueId());
+        restoreConsumedArrows(player);
+        GunListener.cleanGhostArrows(player);
 
         int maxCap = data.getMaxAmmoCapacity();
         boolean freeAmmo = false;
@@ -616,6 +685,12 @@ public class GunManager {
 
         data.setLoadedAmmoType(ammoToLoad);
         data.applyToItemStack(gunItem);
+        if (gunItem.getItemMeta() instanceof CrossbowMeta cm) {
+            cm.setChargedProjectiles(Collections.singletonList(new ItemStack(Material.ARROW, 1)));
+            gunItem.setItemMeta(cm);
+        }
+        player.getInventory().setItemInMainHand(gunItem);
+        player.updateInventory();
 
         player.playSound(player.getLocation(), Sound.ITEM_FLINTANDSTEEL_USE, 1.0f, 1.4f);
         player.playSound(player.getLocation(), Sound.BLOCK_LEVER_CLICK, 1.0f, 1.8f);
@@ -633,9 +708,23 @@ public class GunManager {
 
     public void cancelReload(Player player) {
         BukkitTask task = activeReloads.remove(player.getUniqueId());
+        restoreConsumedArrows(player);
+        GunListener.cleanGhostArrows(player);
         if (task != null) {
             task.cancel();
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§cPrzeładowanie przerwane!"));
+        }
+    }
+
+    private void restoreConsumedArrows(Player player) {
+        Integer initial = activeReloadRealArrows.remove(player.getUniqueId());
+        if (initial != null && player.isOnline()) {
+            int current = GunListener.countRealArrows(player);
+            int diff = initial - current;
+            if (diff > 0) {
+                player.getInventory().addItem(new ItemStack(Material.ARROW, diff));
+                player.updateInventory();
+            }
         }
     }
 

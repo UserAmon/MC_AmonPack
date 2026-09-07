@@ -370,38 +370,11 @@ public class MiningMenager {
                         if (ProgressionManager.getInstance() != null && ProgressionManager.getInstance().getProgressionService() != null) {
                             var ps = ProgressionManager.getInstance().getProgressionService();
                             ps.handleObjective(player, ObjectiveType.DESTROY_BLOCK, type.name(), 1);
-                            if (type == Material.COBBLESTONE || type == Material.STONE || type == Material.DEEPSLATE || type == Material.GRANITE || type == Material.DIORITE || type == Material.ANDESITE) {
-                                ps.handleObjective(player, ObjectiveType.DESTROY_BLOCK, "COBBLESTONE", 1);
-                                ps.handleObjective(player, ObjectiveType.DESTROY_BLOCK, "STONE", 1);
-                            }
-                            if (type.name().endsWith("_ORE")) {
-                                ps.handleObjective(player, ObjectiveType.DESTROY_BLOCK, "ORES", 1);
-                                ps.handleObjective(player, ObjectiveType.DESTROY_BLOCK, "ORE", 1);
-                            }
                             ps.handleObjective(player, ObjectiveType.MINE_TO_DEPTH, String.valueOf(block.getY()), 1);
 
                             for (ItemStack item : Drops) {
                                 if (item != null && item.getType() != Material.AIR) {
                                     ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, item.getType().name(), item.getAmount());
-                                    if (item.getType() == Material.COAL || item.getType() == Material.CHARCOAL) {
-                                        ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, "COAL", item.getAmount());
-                                    }
-                                    if (item.getType() == Material.RAW_IRON || item.getType() == Material.IRON_INGOT) {
-                                        ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, "IRON_ORE", item.getAmount());
-                                    }
-                                    if (item.getType() == Material.RAW_COPPER || item.getType() == Material.COPPER_INGOT) {
-                                        ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, "COPPER_ORE", item.getAmount());
-                                    }
-                                    if (item.getType() == Material.RAW_GOLD || item.getType() == Material.GOLD_INGOT) {
-                                        ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, "GOLD_ORE", item.getAmount());
-                                    }
-                                    if (item.getType() == Material.DIAMOND) {
-                                        ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, "DIAMOND", item.getAmount());
-                                    }
-                                    if (item.getType() == Material.COBBLESTONE || item.getType() == Material.STONE) {
-                                        ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, "COBBLESTONE", item.getAmount());
-                                        ps.handleObjective(player, ObjectiveType.COLLECT_ITEM, "STONE", item.getAmount());
-                                    }
                                 }
                             }
                         }
