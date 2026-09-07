@@ -1,7 +1,39 @@
 Bosses:
+  Zombie_Raider:
+    MythicMobName: "Zombie_Raider"
+    DisplayName: "&c&lMartwy Najeźdźca"
+    Type: "SINGLE"
+    LootTable:
+      - Material: "DIAMOND"
+        Amount: 1
+        Chance: 0.5
+      - Material: "IRON_INGOT"
+        Amount: 8
+        Chance: 1.0
+      - Material: "ROTTEN_FLESH"
+        Amount: 10
+        Chance: 1.0
+      - Material: "BONE"
+        Amount: 8
+        Chance: 1.0
+  Pirates:
+    MythicMobName: "Pirate_1_Sniper"
+    DisplayName: "&e&lPiraci Strzelcy"
+    Type: "SINGLE"
+    GroupSize: 1
+    LootTable:
+      - Material: "COPPER_INGOT"
+        Amount: 6
+        Chance: 1.0
+      - Material: "FEATHER"
+        Amount: 4
+        Chance: 0.8
+      - Material: "ARROW"
+        Amount: 8
+        Chance: 1.0
   TestBoss:
-    MythicMobName: "SkeletalMinion"
-    DisplayName: "&aSkeletal Minion"
+    MythicMobName: "Zombie_Raider"
+    DisplayName: "&c&lMartwy Najeźdźca"
     Type: "SINGLE"
     LootTable:
       - Material: "DIAMOND"
@@ -14,10 +46,10 @@ Bosses:
         Amount: 1
         Chance: 0.1
   TestGroup:
-    MythicMobName: "SkeletalMinion"
-    DisplayName: "&aSkeletal Minion"
+    MythicMobName: "Pirate_1_Sniper"
+    DisplayName: "&e&lPiraci Strzelcy"
     Type: "GROUP"
-    GroupSize: 3
+    GroupSize: 1
     LootTable:
       - Material: "IRON_INGOT"
         Amount: 10

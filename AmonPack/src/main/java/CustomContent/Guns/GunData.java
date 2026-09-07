@@ -59,7 +59,7 @@ public class GunData {
         if (meta.getPersistentDataContainer().has(KEY_GUN_TYPE, PersistentDataType.STRING)) return true;
         if (meta.hasCustomModelData()) {
             int cmd = meta.getCustomModelData();
-            if (cmd >= 10050 && cmd <= 10055) return true;
+            if (cmd >= 10050 && cmd <= 10053) return true;
         }
         return false;
     }
@@ -73,7 +73,7 @@ public class GunData {
         GunType type = GunType.fromId(typeStr);
         if (type == null && meta.hasCustomModelData()) {
             int cmd = meta.getCustomModelData();
-            if (cmd == 10050 || cmd == 10055) type = GunType.FLINTLOCK_PISTOL;
+            if (cmd == 10050) type = GunType.FLINTLOCK_PISTOL;
             else if (cmd == 10051) type = GunType.FLINTLOCK_MUSKET;
             else if (cmd == 10052) type = GunType.BLUNDERBUSS;
             else if (cmd == 10053) type = GunType.PEPPERBOX;

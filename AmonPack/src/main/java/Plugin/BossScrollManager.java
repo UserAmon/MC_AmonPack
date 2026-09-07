@@ -56,12 +56,14 @@ public class BossScrollManager implements Listener {
     }
 
     public void summonBoss(Location location, String bossId) {
-
-        System.out.println(ChatColor.RED + "Boss configuration not found: " + bossId);
+        if (config == null || !config.contains("Bosses." + bossId)) {
+            System.out.println(ChatColor.RED + "[BossScrollManager] Nie znaleziono konfiguracji bossa: " + bossId);
+            return;
+        }
 
         String mmName = config.getString("Bosses." + bossId + ".MythicMobName");
-        String type = config.getString("Bosses." + bossId + ".Type");
-        int count = type.equalsIgnoreCase("GROUP") ? config.getInt("Bosses." + bossId + ".GroupSize") : 1;
+        String type = config.getString("Bosses." + bossId + ".Type", "SINGLE");
+        int count = type.equalsIgnoreCase("GROUP") ? config.getInt("Bosses." + bossId + ".GroupSize", 1) : 1;
 
         BossSession session = new BossSession(bossId, count);
 
@@ -86,8 +88,8 @@ public class BossScrollManager implements Listener {
             }.runTaskLater(AmonPackPlugin.plugin, 5L); // Wait 5 ticks for spawn
         }
 
-        System.out.println(ChatColor.GREEN + "Ritual complete! " + config.getString("Bosses." + bossId + ".DisplayName")
-                + ChatColor.GREEN + " has been summoned!");
+        String displayName = ChatColor.translateAlternateColorCodes('&', config.getString("Bosses." + bossId + ".DisplayName", bossId));
+        Bukkit.broadcastMessage(ChatColor.DARK_RED + "☠ " + ChatColor.RED + "Rytuał przyzwania dobiegł końca! " + displayName + ChatColor.RED + " przybywa na pole bitwy!");
     }
 
     @EventHandler
@@ -105,6 +107,27 @@ public class BossScrollManager implements Listener {
         if (activeBosses.containsKey(event.getEntity().getUniqueId())) {
             BossSession session = activeBosses.remove(event.getEntity().getUniqueId());
             session.removeEntity(event.getEntity().getUniqueId());
+
+            Player killer = event.getEntity().getKiller();
+            String mmName = config.getString("Bosses." + session.bossId + ".MythicMobName", session.bossId);
+
+            if (AmonPackPlugin.ENABLE_SLOW_PROGRESSION && RPG.Progression.ProgressionManager.getInstance() != null) {
+                var ps = RPG.Progression.ProgressionManager.getInstance().getProgressionService();
+                if (ps != null) {
+                    java.util.Set<Player> credited = new java.util.HashSet<>();
+                    if (killer != null) credited.add(killer);
+                    for (UUID uid : session.damageMap.keySet()) {
+                        Player p = Bukkit.getPlayer(uid);
+                        if (p != null && p.isOnline()) credited.add(p);
+                    }
+                    for (Player p : credited) {
+                        ps.handleObjective(p, RPG.Progression.model.ObjectiveType.DEFEAT_BOSS, session.bossId, 1);
+                        ps.handleObjective(p, RPG.Progression.model.ObjectiveType.DEFEAT_BOSS, mmName, 1);
+                        ps.handleObjective(p, RPG.Progression.model.ObjectiveType.KILL_ENTITY, session.bossId, 1);
+                        ps.handleObjective(p, RPG.Progression.model.ObjectiveType.KILL_ENTITY, mmName, 1);
+                    }
+                }
+            }
 
             if (session.isFinished()) {
                 spawnLootChest(event.getEntity().getLocation(), session);

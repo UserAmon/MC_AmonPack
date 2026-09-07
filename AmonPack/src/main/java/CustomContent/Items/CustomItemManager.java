@@ -126,7 +126,6 @@ public class CustomItemManager {
         registerDefaultItem("wlocznia_ognia", "§c§lWłócznia Ognia", Material.WOODEN_SWORD, 10006, "amonpack:weapons/wlocznia_ognia");
         registerDefaultItem("sztylet", "§8§lSztylet Cienia", Material.WOODEN_SWORD, 10007, "amonpack:weapons/sztylet");
         registerDefaultItem("bone_sword", "§f§lKościany Miecz", Material.WOODEN_SWORD, 10020, "amonpack:weapons/bone_sword");
-        registerDefaultItem("custom_bow", "§6§lWzmocniony Długi Łuk", Material.BOW, 10021, "amonpack:weapons/custom_bow");
         registerDefaultItem("meteor_pickaxe", "§4§lKilof z Meteorytu", Material.NETHERITE_PICKAXE, 10014, "amonpack:weapons/meteor_pickaxe");
 
         // Rejestracja magii
@@ -331,7 +330,6 @@ public class CustomItemManager {
             if (cmd == 20001) return "tome_fire";
             if (cmd == 20002) return "wand_fen";
             if (cmd == 10020) return "bone_sword";
-            if (cmd == 10021) return "custom_bow";
             if (cmd == 10014) return "meteor_pickaxe";
             if (cmd == 10002) return "meteor_axe";
         }
@@ -345,7 +343,6 @@ public class CustomItemManager {
             if (name.contains("tom ognia")) return "tome_fire";
             if (name.contains("różdżka") || name.contains("fen") || name.contains("wand")) return "wand_fen";
             if (name.contains("kościany miecz")) return "bone_sword";
-            if (name.contains("długi łuk") || name.contains("custom bow")) return "custom_bow";
             if (name.contains("meteorytowy kilof")) return "meteor_pickaxe";
             if (name.contains("meteorytowy topór")) return "meteor_axe";
         }

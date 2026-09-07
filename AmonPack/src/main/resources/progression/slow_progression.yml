@@ -590,6 +590,20 @@ stages:
           - wooden_kill_hostile_5
         reward:
           exp: 20
+      wooden_defeat_pirates:
+        title: "Pokonaj Pirata Snajpera"
+        description: "Użyj Zwoju Przyzwania Piratów i zgładź Pirata Snajpera, aby zabezpieczyć obóz."
+        category: COMBAT
+        objective_type: kill_entity
+        target: Pirate_1_Sniper
+        amount: 1
+        required: true
+        icon: CROSSBOW
+        depends_on:
+          - wooden_craft_leather_armor
+        reward:
+          money: 50.0
+          exp: 50
 
 
   STONE:
@@ -869,6 +883,20 @@ stages:
           - stone_craft_stone_weapon
         reward:
           money: 50.0
+      stone_defeat_zombie_raider:
+        title: "Pokonaj Martwego Najeźdźcę"
+        description: "Użyj Zwoju Przyzwania Martwego Najeźdźcy i pokonaj potężnego bossa Zombie Raider."
+        category: COMBAT
+        objective_type: defeat_boss
+        target: Zombie_Raider
+        amount: 1
+        required: true
+        icon: ZOMBIE_HEAD
+        depends_on:
+          - stone_craft_stone_weapon
+        reward:
+          money: 100.0
+          exp: 60
 
 
   COPPER:

@@ -245,8 +245,22 @@ public class GunManager {
         // 3. Odrzut gracza
         applyRecoil(player, data.getGunType(), isSlug, pepperboxUnique);
 
-        // 4. Zużycie amunicji i trwałości
-        data.setCurrentAmmo(data.getCurrentAmmo() - 1);
+        // 4. Zużycie amunicji i trwałości (z uwzględnieniem efektu Marksman_Ammo_Save: +5% na element pancerza)
+        int ammoSavePieces = 0;
+        for (ItemStack armorItem : player.getInventory().getArmorContents()) {
+            if (armorItem != null && armorItem.hasItemMeta() && RPG.Crafting.CraftingMenager.HaveEffect(armorItem, "Marksman_Ammo_Save")) {
+                ammoSavePieces++;
+            }
+        }
+        double ammoSaveChance = ammoSavePieces * 0.05;
+        boolean ammoSaved = (ammoSaveChance > 0 && Math.random() < ammoSaveChance);
+
+        if (!ammoSaved) {
+            data.setCurrentAmmo(data.getCurrentAmmo() - 1);
+        } else {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.7f, 2.0f);
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("§a✦ [Strzelec] Zaoszczędzono amunicję!"));
+        }
         if (player.getGameMode() != GameMode.CREATIVE) {
             data.setCurrentDurability(data.getCurrentDurability() - 1);
         }
@@ -369,6 +383,15 @@ public class GunManager {
 
         if (isHeadshot) {
             damage *= data.getHeadshotMultiplier();
+            int marksmanCritPieces = 0;
+            for (ItemStack armorItem : shooter.getInventory().getArmorContents()) {
+                if (armorItem != null && armorItem.hasItemMeta() && RPG.Crafting.CraftingMenager.HaveEffect(armorItem, "Marksman_Crit_Damage")) {
+                    marksmanCritPieces++;
+                }
+            }
+            if (marksmanCritPieces > 0) {
+                damage *= (1.0 + (marksmanCritPieces * 0.05));
+            }
             world.playSound(hitLoc, Sound.ENTITY_ARROW_HIT_PLAYER, 1.2f, 1.6f);
             world.playSound(hitLoc, Sound.BLOCK_ANVIL_LAND, 0.6f, 1.8f);
             world.spawnParticle(Particle.CRIT, hitLoc, 15, 0.2, 0.2, 0.2, 0.2);

@@ -303,16 +303,6 @@ items:
       - "&7Wykuty z prastarych kości bestii."
       - "&7Obsługuje magiczne runy i ulepszenia."
 
-  custom_bow:
-    display_name: "&6&lWzmocniony Długi Łuk"
-    base_material: BOW
-    model: "weapons/custom_bow"
-    custom_model_data: 10021
-    unbreakable: true
-    lore:
-      - "&7Potężny łuk kompozytowy o wielkim zasięgu."
-      - "&7Obsługuje specjalne efekty strzałów."
-
   meteor_pickaxe:
     display_name: "&4&lKilof z Meteorytu"
     base_material: NETHERITE_PICKAXE
@@ -345,32 +335,6 @@ items:
       - ""
       - "&b✦ LPM: &fWystrzelenie Splash &8(20 MP, 2s cd)"
       - "&d✦ PPM: &fOtwórz menu czarów"
-
-  leather_hat:
-    display_name: "&b&lCzapka Czarodzieja Powietrza"
-    base_material: LEATHER_HELMET
-    model: "armor/air_wizard_hat"
-    custom_model_data: 20010
-    unbreakable: true
-    lore:
-      - "&7Lekkie nakrycie głowy nasycone esencją wiatru."
-      - ""
-      - "&9🛡 Pancerz: &f+1"
-      - "&b✦ Zużycie many: &f-33% (AIR)"
-      - "&e✦ Czas odnowienia: &f-33% (AIR)"
-
-  thief_boots:
-    display_name: "&8&lButy Złodzieja"
-    base_material: LEATHER_BOOTS
-    model: "armor/thief_boots"
-    custom_model_data: 20011
-    unbreakable: true
-    lore:
-      - "&7Lekkie i ciche obuwie sprzyjające zwinności."
-      - ""
-      - "&9🛡 Pancerz: &f+1"
-      - "&a✦ Prędkość ruchu: &f+10%"
-      - "&e✦ Czas odnowienia: &f-0.5s"
 
   bone_pickaxe:
     display_name: "&f&lKościany Kilof"
@@ -470,24 +434,6 @@ items:
     unbreakable: false
     lore:
       - "&7Prymitywna broń boczna na czarny proch."
-
-  flintlock:
-    display_name: "&6&lFlintlock"
-    base_material: CROSSBOW
-    model: "guns/flintlock"
-    custom_model_data: 10055
-    unbreakable: false
-    lore:
-      - "&7Pistolet skałkowy oparty na mechanizmie napinania (Kusza)."
-      - ""
-      - "&6Właściwości:"
-      - " &c⚔ Obrażenia kuli: &f+10.0 DMG"
-      - " &4🎯 Trafienie w głowę: &f+150%"
-      - " &b⚡ Zasięg skuteczny: &f40m"
-      - ""
-      - "&e✦ Trzymaj PPM: &fNaciągnięcie kurka i wsypanie prochu"
-      - "&6✦ Kliknij PPM: &fWystrzał kuli z potężnym hukiem!"
-      - "&7Wymaga amunicji: &fOłowiana Kula / Kula Zapalająca w EQ"
 
   flintlock_musket:
     display_name: "&e&lMuszkiet Piechoty"

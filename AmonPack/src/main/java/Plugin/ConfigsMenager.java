@@ -623,59 +623,65 @@ public class ConfigsMenager {
         cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Material", "STONE");
         cfg.set("MagicEffects.Item_Effect_Test.Cost.c1.Amount", 1);
 
-        // Summon Undead Effect
-        cfg.set("MagicEffects.Summon_Undead.Name", "§5💀 Przyzwanie Nieumarłych");
-        cfg.set("MagicEffects.Summon_Undead.Lore.l1", "§7Przyzywa 3 Zombie po krótkim rytuale.");
-        cfg.set("MagicEffects.Summon_Undead.IsMajor", true);
+        // Summon Boss Zombie_Raider Effect
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Name", "§c[👹] Przyzwanie Martwego Najeźdźcy");
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Lore.l1", "§7Przyzywa bossa Martwy Najeźdźca (/mm m spawn Zombie_Raider).");
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.IsMajor", true);
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.IsItemEffect", true);
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.ScrollName", "§c§lZwój Przyzwania Martwego Najeźdźcy");
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.ScrollModelID", 0);
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Conditions.req1.Skill_Type", "COMBAT");
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Conditions.req1.Skill_Level", 2);
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Cost.c1.Material", "SPIDER_EYE");
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Cost.c1.Amount", 2);
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Cost.c2.Material", "BONE");
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Cost.c2.Amount", 5);
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Cost.c3.Material", "ROTTEN_FLESH");
+        cfg.set("MagicEffects.Summon_Boss_Zombie_Raider.Cost.c3.Amount", 5);
 
-        cfg.set("MagicEffects.Summon_Undead.IsItemEffect", true);
-        cfg.set("MagicEffects.Summon_Undead.ScrollName", "§5💀 Zwój Nieumarłych");
-        cfg.set("MagicEffects.Summon_Undead.ScrollModelID", 10007);
-        cfg.set("MagicEffects.Summon_Undead.Conditions.req1.Skill_Type", "BOUNTY");
-        cfg.set("MagicEffects.Summon_Undead.Conditions.req1.Skill_Level", 1);
-        cfg.set("MagicEffects.Summon_Undead.Cost.c1.Material", "ROTTEN_FLESH");
-        cfg.set("MagicEffects.Summon_Undead.Cost.c1.Amount", 5);
+        // Scroll of Zombie_Raider
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Material", "PAPER");
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Name", "§c§lZwój Przyzwania Martwego Najeźdźcy");
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Custom_Model_ID", 0);
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Mold.Items_To_Craft.m1.Material", "SPIDER_EYE");
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Mold.Items_To_Craft.m1.Amount", 2);
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Mold.Items_To_Craft.m2.Material", "BONE");
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Mold.Items_To_Craft.m2.Amount", 5);
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Mold.Items_To_Craft.m3.Material", "ROTTEN_FLESH");
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Mold.Items_To_Craft.m3.Amount", 5);
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Mold.AllowedMagicEffects", Arrays.asList("Summon_Boss_Zombie_Raider"));
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Item.Lore.l1", "§7Starożytny pergamin zapisany krwią najeźdźców.");
+        cfg.set("Craftable_Items.Scroll_Of_Zombie_Raider.Item.Lore.l2", "§eKliknij PPM aby użyć.");
 
-        // Scroll of Undead
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Material", "PAPER");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Name", "§5💀 Zwój Przyzwania Nieumarłych");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Custom_Model_ID", 10001);
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m1.Material", "ROTTEN_FLESH");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m1.Amount", 10);
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m2.Material", "BONE");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m2.Amount", 5);
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m3.Material", "PAPER");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.Items_To_Craft.m3.Amount", 1);
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Mold.AllowedMagicEffects", Arrays.asList("Summon_Undead"));
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l1", "§7Starożytny zwój używany do");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l2", "§7przyzywania nieumarłych sług.");
-        cfg.set("Craftable_Items.Scroll_Of_Undead.Item.Lore.l3", "§eKliknij PPM aby użyć.");
+        // Summon Boss Pirates Effect
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Name", "§e[🏴‍☠] Przyzwanie Piratów");
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Lore.l1", "§7Przyzywa Pirata Snajpera (/mm m spawn Pirate_1_Sniper).");
+        cfg.set("MagicEffects.Summon_Boss_Pirates.IsMajor", true);
+        cfg.set("MagicEffects.Summon_Boss_Pirates.IsItemEffect", true);
+        cfg.set("MagicEffects.Summon_Boss_Pirates.ScrollName", "§e§lZwój Przyzwania Piratów");
+        cfg.set("MagicEffects.Summon_Boss_Pirates.ScrollModelID", 0);
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Conditions.req1.Skill_Type", "COMBAT");
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Conditions.req1.Skill_Level", 1);
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Cost.c1.Material", "SPIDER_EYE");
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Cost.c1.Amount", 1);
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Cost.c2.Material", "BONE");
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Cost.c2.Amount", 3);
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Cost.c3.Material", "ROTTEN_FLESH");
+        cfg.set("MagicEffects.Summon_Boss_Pirates.Cost.c3.Amount", 3);
 
-        // Summon Boss TestBoss Effect
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.Name", "§c👹 Przyzwanie Króla Szkieletów");
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.Lore.l1", "§7Przyzywa Króla Szkieletów.");
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.IsMajor", true);
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.IsItemEffect", true);
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.ScrollName", "§c👹 Zwój Króla Szkieletów");
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.ScrollModelID", 10008);
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.Conditions.req1.Skill_Type", "COMBAT");
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.Conditions.req1.Skill_Level", 5);
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.Cost.c1.Material", "BONE_BLOCK");
-        cfg.set("MagicEffects.Summon_Boss_TestBoss.Cost.c1.Amount", 10);
-
-        // Scroll of TestBoss
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Material", "PAPER");
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Name", "§c👹 Zwój Przyzwania Króla Szkieletów");
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Custom_Model_ID", 10002);
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m1.Material", "BONE_BLOCK");
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m1.Amount", 10);
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m2.Material", "DIAMOND");
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m2.Amount", 1);
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m3.Material", "PAPER");
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.Items_To_Craft.m3.Amount", 1);
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Mold.AllowedMagicEffects", Arrays.asList("Summon_Boss_TestBoss"));
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Item.Lore.l1", "§7Zwój przyzywający potężnego bossa.");
-        cfg.set("Craftable_Items.Scroll_Of_TestBoss.Item.Lore.l2", "§eKliknij PPM aby użyć.");
+        // Scroll of Pirates
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Material", "PAPER");
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Name", "§e§lZwój Przyzwania Piratów");
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Custom_Model_ID", 0);
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Mold.Items_To_Craft.m1.Material", "SPIDER_EYE");
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Mold.Items_To_Craft.m1.Amount", 1);
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Mold.Items_To_Craft.m2.Material", "BONE");
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Mold.Items_To_Craft.m2.Amount", 3);
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Mold.Items_To_Craft.m3.Material", "ROTTEN_FLESH");
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Mold.Items_To_Craft.m3.Amount", 3);
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Mold.AllowedMagicEffects", Arrays.asList("Summon_Boss_Pirates"));
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Item.Lore.l1", "§7Przeklęta mapa z wezwaniem morskich rozbójników.");
+        cfg.set("Craftable_Items.Scroll_Of_Pirates.Item.Lore.l2", "§eKliknij PPM aby użyć.");
     }
 
 }

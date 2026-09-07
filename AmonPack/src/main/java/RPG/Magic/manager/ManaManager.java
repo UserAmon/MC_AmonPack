@@ -5,6 +5,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
@@ -30,15 +31,21 @@ public class ManaManager {
     public void start() {
         if (regenTask != null) regenTask.cancel();
 
-        // Regeneracja many co 10 ticków (0.5 sekundy) -> +1.0 MP + aktualizacja BossBara
+        // Regeneracja many co 10 ticków (0.5 sekundy) + bonusy zbroi czarodzieja + aktualizacja BossBara
         regenTask = Bukkit.getScheduler().runTaskTimer(AmonPackPlugin.plugin, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 UUID uuid = player.getUniqueId();
-                double max = getMaxMana(uuid);
+                double max = getMaxMana(player);
                 double current = getMana(uuid);
 
                 if (current < max) {
-                    double next = Math.min(max, current + (regenRatePerSecond * 0.5));
+                    double effectiveRegen = regenRatePerSecond;
+                    for (ItemStack item : player.getInventory().getArmorContents()) {
+                        if (item != null && item.hasItemMeta() && RPG.Crafting.CraftingMenager.HaveEffect(item, "Wizard_Mana_Regen")) {
+                            effectiveRegen += 5.0;
+                        }
+                    }
+                    double next = Math.min(max, current + (effectiveRegen * 0.5));
                     currentMana.put(uuid, next);
                     updateManaBossBar(player, next, max);
                 } else {
@@ -107,11 +114,21 @@ public class ManaManager {
     }
 
     public double getMaxMana(UUID uuid) {
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) return getMaxMana(player);
         return maxMana.getOrDefault(uuid, defaultMaxMana);
     }
 
     public double getMaxMana(Player player) {
-        return player != null ? getMaxMana(player.getUniqueId()) : defaultMaxMana;
+        if (player == null) return defaultMaxMana;
+        double base = maxMana.getOrDefault(player.getUniqueId(), defaultMaxMana);
+        int bonus = 0;
+        for (ItemStack item : player.getInventory().getArmorContents()) {
+            if (item != null && item.hasItemMeta() && RPG.Crafting.CraftingMenager.HaveEffect(item, "Wizard_Max_Mana")) {
+                bonus += 10;
+            }
+        }
+        return base + bonus;
     }
 
     public void setMana(UUID uuid, double mana) {

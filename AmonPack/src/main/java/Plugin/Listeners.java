@@ -596,6 +596,60 @@ public class Listeners implements Listener {
                     event.setDamage(weapon.getDamage() + DamageModifier);
                 }
             }
+
+            // Bonus krytyczny zbroi strzelca (Marksman_Crit_Damage: +5% na element pancerza)
+            boolean isMeleeCrit = p.getFallDistance() > 0.0F && !p.isOnGround() && !p.isInsideVehicle()
+                    && !p.hasPotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS) && !p.isInWater();
+            if (isMeleeCrit) {
+                int critPieces = 0;
+                for (ItemStack armorItem : p.getInventory().getArmorContents()) {
+                    if (armorItem != null && armorItem.hasItemMeta() && CraftingMenager.HaveEffect(armorItem, "Marksman_Crit_Damage")) {
+                        critPieces++;
+                    }
+                }
+                if (critPieces > 0) {
+                    event.setDamage(event.getDamage() * (1.0 + (critPieces * 0.05)));
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.NORMAL)
+    public void onEntityDeathMarksmanLoot(EntityDeathEvent event) {
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) return;
+        ItemStack hand = killer.getInventory().getItemInMainHand();
+        boolean isWeapon = (hand != null && hand.getType() != Material.AIR) && (
+                CustomContent.Guns.GunData.isGun(hand) ||
+                CraftingMenager.IsWeapon(hand) ||
+                hand.getType().name().endsWith("_SWORD") ||
+                hand.getType().name().endsWith("_AXE") ||
+                hand.getType() == Material.BOW ||
+                hand.getType() == Material.CROSSBOW
+        );
+        if (!isWeapon) return;
+
+        int lootPieces = 0;
+        for (ItemStack armorItem : killer.getInventory().getArmorContents()) {
+            if (armorItem != null && armorItem.hasItemMeta() && CraftingMenager.HaveEffect(armorItem, "Marksman_Mob_Loot")) {
+                lootPieces++;
+            }
+        }
+        if (lootPieces <= 0) return;
+
+        double chance = lootPieces * 0.10; // +10% szansy na element pancerza
+        List<ItemStack> extraDrops = new ArrayList<>();
+        for (ItemStack drop : event.getDrops()) {
+            if (drop != null && drop.getType() != Material.AIR) {
+                if (Math.random() < chance) {
+                    extraDrops.add(drop.clone());
+                }
+            }
+        }
+        if (!extraDrops.isEmpty()) {
+            event.getDrops().addAll(extraDrops);
+            killer.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                    new net.md_5.bungee.api.chat.TextComponent("§a✦ [Strzelec] Podwojony łup z potwora!"));
         }
     }
     /*

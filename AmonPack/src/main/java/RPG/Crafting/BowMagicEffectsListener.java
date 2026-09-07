@@ -36,6 +36,19 @@ public class BowMagicEffectsListener implements Listener {
         boolean piercing = hasEffect(bow, "Bow_Piercing_Arrows", "Przeszywające");
         boolean pinArrows = hasEffect(bow, "Bow_Pin_Arrows", "Grotowe");
 
+        // Efekt zbroi: Marksman_Ammo_Save (+5% szansy na zachowanie strzały za każdy element pancerza)
+        int ammoSavePieces = 0;
+        for (ItemStack armorItem : player.getInventory().getArmorContents()) {
+            if (armorItem != null && armorItem.hasItemMeta() && CraftingMenager.HaveEffect(armorItem, "Marksman_Ammo_Save")) {
+                ammoSavePieces++;
+            }
+        }
+        if (ammoSavePieces > 0 && Math.random() < (ammoSavePieces * 0.05)) {
+            event.setConsumeItem(false);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.7f, 2.0f);
+            player.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, new net.md_5.bungee.api.chat.TextComponent("§a✦ [Strzelec] Zaoszczędzono strzałę!"));
+        }
+
         if (event.getProjectile() instanceof AbstractArrow arrow) {
             if (piercing) {
                 arrow.setPierceLevel(5);
@@ -83,6 +96,18 @@ public class BowMagicEffectsListener implements Listener {
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof AbstractArrow arrow)) return;
         if (!(event.getEntity() instanceof LivingEntity target)) return;
+
+        if (arrow.isCritical() && arrow.getShooter() instanceof Player shooter) {
+            int critPieces = 0;
+            for (ItemStack armorItem : shooter.getInventory().getArmorContents()) {
+                if (armorItem != null && armorItem.hasItemMeta() && CraftingMenager.HaveEffect(armorItem, "Marksman_Crit_Damage")) {
+                    critPieces++;
+                }
+            }
+            if (critPieces > 0) {
+                event.setDamage(event.getDamage() * (1.0 + (critPieces * 0.05)));
+            }
+        }
 
         if (arrow.hasMetadata("pin_arrow")) {
             UUID targetId = target.getUniqueId();

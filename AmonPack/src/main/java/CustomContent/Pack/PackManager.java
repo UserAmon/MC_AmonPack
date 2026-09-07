@@ -190,7 +190,6 @@ public class PackManager {
             registerModelOverride("crossbow", 10051, "amonpack:guns/crude_rifle");
             registerModelOverride("crossbow", 10052, "amonpack:guns/crude_shotgun");
             registerModelOverride("crossbow", 10053, "amonpack:guns/pepperbox");
-            registerModelOverride("crossbow", 10055, "amonpack:guns/flintlock");
 
             registerModelOverride("iron_hoe", 10050, "amonpack:guns/flintlock_pistol");
             registerModelOverride("iron_hoe", 10051, "amonpack:guns/crude_rifle");
@@ -206,7 +205,6 @@ public class PackManager {
 
             // Kusza i Łuk
             registerModelOverride("crossbow", 20003, "amonpack:magic/staff_lightning");
-            registerModelOverride("bow", 10021, "amonpack:weapons/custom_bow");
             registerModelOverride("bow", 20003, "amonpack:magic/staff_lightning");
 
             // Różdżka i magia (STICK, BOOK, ENCHANTED_BOOK, PRISMARINE_SHARD)

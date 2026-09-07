@@ -38,6 +38,35 @@ public class ProgressionCombatListener implements Listener {
             progressionService.handleObjective(killer, ObjectiveType.KILL_ENTITY, "AGGRESSIVE_MOBS", 1);
         }
 
+        // MythicMobs and Custom Name check
+        if (victim.getCustomName() != null) {
+            String stripped = org.bukkit.ChatColor.stripColor(victim.getCustomName()).trim();
+            progressionService.handleObjective(killer, ObjectiveType.KILL_ENTITY, stripped, 1);
+            progressionService.handleObjective(killer, ObjectiveType.DEFEAT_BOSS, stripped, 1);
+        }
+        if (victim.hasMetadata("MythicMob")) {
+            for (org.bukkit.metadata.MetadataValue mv : victim.getMetadata("MythicMob")) {
+                try {
+                    Object mobInst = mv.value();
+                    if (mobInst != null) {
+                        String internalName = null;
+                        try {
+                            Object mobType = mobInst.getClass().getMethod("getType").invoke(mobInst);
+                            if (mobType != null) {
+                                internalName = (String) mobType.getClass().getMethod("getInternalName").invoke(mobType);
+                            }
+                        } catch (Throwable ignored) {
+                            internalName = (String) mobInst.getClass().getMethod("getMobType").invoke(mobInst);
+                        }
+                        if (internalName != null) {
+                            progressionService.handleObjective(killer, ObjectiveType.KILL_ENTITY, internalName, 1);
+                            progressionService.handleObjective(killer, ObjectiveType.DEFEAT_BOSS, internalName, 1);
+                        }
+                    }
+                } catch (Throwable ignored) {}
+            }
+        }
+
         // 2. Boss defeat check for vanilla bosses
         if (victim instanceof EnderDragon) {
             progressionService.handleObjective(killer, ObjectiveType.DEFEAT_BOSS, "ENDER_DRAGON", 1);

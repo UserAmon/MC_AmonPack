@@ -339,37 +339,129 @@ MagicEffects:
       c1:
         Material: SNOW
         Amount: 16
-  #
   # ###ZWOJE
   # ##BASIC
-  Summon_Boss_TestBoss:
-    Name: §c👹 Przyzwanie Króla Szkieletów
+  Summon_Boss_Zombie_Raider:
+    Name: "§c[👹] Przyzwanie Martwego Najeźdźcy"
     Lore:
-      l1: §7Przyzywa Króla Szkieletów.
+      l1: "§7Przyzywa bossa Martwy Najeźdźca (/mm m spawn Zombie_Raider)."
     IsMajor: true
     IsItemEffect: true
-    ScrollName: §c👹 Zwój Króla Szkieletów
-    ScrollModelID: 10032
+    ScrollName: "§c§lZwój Przyzwania Martwego Najeźdźcy"
+    ScrollModelID: 0
     Conditions:
       req1:
         Skill_Type: COMBAT
         Skill_Level: 2
     Cost:
       c1:
-        Material: BONE_BLOCK
-        Amount: 10
-  # ##
-  Summon_Undead:
-    Name: §8[💀] Przyzwanie Nieumarłych
+        Material: SPIDER_EYE
+        Amount: 2
+      c2:
+        Material: BONE
+        Amount: 5
+      c3:
+        Material: ROTTEN_FLESH
+        Amount: 5
+  #
+  Summon_Boss_Pirates:
+    Name: "§e[🏴‍☠] Przyzwanie Piratów"
     Lore:
-      l1: §4Przywołuje nieumarłe istoty do walki u twego boku
+      l1: "§7Przyzywa Pirata Snajpera (/mm m spawn Pirate_1_Sniper)."
+    IsMajor: true
     IsItemEffect: true
-    ScrollName: §eZwój Przyzwania Nieumarłych
-    ScrollModelID: 10032
+    ScrollName: "§e§lZwój Przyzwania Piratów"
+    ScrollModelID: 0
+    Conditions:
+      req1:
+        Skill_Type: COMBAT
+        Skill_Level: 1
     Cost:
       c1:
-        Material: STRING
+        Material: SPIDER_EYE
+        Amount: 1
+      c2:
+        Material: BONE
         Amount: 3
+      c3:
+        Material: ROTTEN_FLESH
+        Amount: 3
+  #
+  # ### EFEKTY ZBROI CZARODZIEJA
+  Wizard_Max_Mana:
+    Name: "§b[✨] Mistyczna Pojemność"
+    Lore:
+      l1: "§7Zwiększa maksymalną manę o 10 punktów."
+      l2: "§8(Każdy element pancerza może kumulować)"
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: LAPIS_LAZULI
+        Amount: 8
+      c2:
+        Material: PAPER
+        Amount: 3
+  #
+  Wizard_Mana_Regen:
+    Name: "§9[🌀] Źródło Many"
+    Lore:
+      l1: "§7Zwiększa regenerację many o +5/sekundę."
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: AMETHYST_SHARD
+        Amount: 4
+      c2:
+        Material: PAPER
+        Amount: 3
+  #
+  # ### EFEKTY ZBROI STRZELCA
+  Marksman_Crit_Damage:
+    Name: "§6[🎯] Precyzyjne Uderzenie"
+    Lore:
+      l1: "§7Zwiększa o 5% obrażenia krytyczne."
+      l2: "§8(Każda część setu może kumulować)"
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: COPPER_INGOT
+        Amount: 4
+      c2:
+        Material: FLINT
+        Amount: 2
+  #
+  Marksman_Ammo_Save:
+    Name: "§e[🏹] Oszczędność Strzelca"
+    Lore:
+      l1: "§7Zapewnia szansę na niezużycie pocisku przy wystrzale."
+      l2: "§8(+5% szansy na każdą część pancerza)"
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: FEATHER
+        Amount: 8
+      c2:
+        Material: STRING
+        Amount: 4
+  #
+  Marksman_Mob_Loot:
+    Name: "§a[💰] Zmysł Łowcy"
+    Lore:
+      l1: "§7Zabójstwa bronią zwiększają drop przedmiotów z mobów."
+      l2: "§8(+10% szansy na podwójny drop za każdy element)"
+    IsMajor: false
+    IsArmorEffect: true
+    Cost:
+      c1:
+        Material: COPPER_INGOT
+        Amount: 4
+      c2:
+        Material: LEATHER
+        Amount: 4
   # ###
   # ###WATER
   Ice_Wall:
@@ -912,35 +1004,6 @@ Craftable_Weapons:
           Material: BONE
           Amount: 3
   #
-  #
-  wooden_bow:
-    Material: BOW
-    Name: "§6§lWzmocniony Długi Łuk"
-    Custom_Model_ID: 10021
-    Base_Damage: 5
-    Mold:
-      Items_To_Craft:
-        m1:
-          Material: STICK
-          Amount: 3
-        m2:
-          Material: STRING
-          Amount: 3
-      AllowedMagicEffects:
-      - Bow_Triple_Shot
-      - Bow_Piercing_Arrows
-      - Bow_Pin_Arrows
-      - Monster_Hunter
-      - Looting
-      - Experience
-    Item:
-      Lore:
-        l1: "§7Potężny łuk kompozytowy o wielkim zasięgu."
-      Items_To_Craft:
-        c1:
-          Material: BOW
-          Amount: 1
-  #
   basalt_sword:
     Material: STONE_SWORD
     Name: "§8§lBazaltowy Miecz"
@@ -1218,50 +1281,243 @@ Craftable_Tools:
           Amount: 1
 # ##armor
 Craftable_Armor:
-  leather_hat:
+  # --- SET CZARODZIEJA ---
+  wizard_helmet:
     Material: LEATHER_HELMET
-    Name: "§b§lCzapka Czarodzieja Powietrza"
-    Custom_Model_ID: 20010
+    Name: "§b§lCzapka Czarodzieja"
+    Custom_Model_ID: 0
     Required_Stage: WOODEN
     Armor: 1.0
-    Mana_Reduction_Percent: 0.33
-    Mana_Element: "AIR"
-    Cooldown_Reduction_Percent: 0.33
-    Cooldown_Element: "AIR"
-    Mold:
-      Items_To_Craft:
-        m1:
-          Material: FEATHER
-          Amount: 5
-      AllowedMagicEffects: []
-    Item:
-      Lore:
-        l1: "§7Lekkie nakrycie głowy nasycone esencją wiatru."
-      Items_To_Craft:
-        c1:
-          Material: LEATHER_HELMET
-          Amount: 1
-  thief_boots:
-    Material: LEATHER_BOOTS
-    Name: "§8§lButy Złodzieja"
-    Custom_Model_ID: 20011
-    Required_Stage: WOODEN
-    Armor: 1.0
-    Speed_Increase_Percent: 0.10
-    Cooldown_Reduction_Flat: 0.5
-    Cooldown_Element: "ALL"
     Mold:
       Items_To_Craft:
         m1:
           Material: LEATHER
           Amount: 4
         m2:
-          Material: FEATHER
+          Material: BLUE_DYE
           Amount: 2
-      AllowedMagicEffects: []
+        m3:
+          Material: PAPER
+          Amount: 2
+      AllowedMagicEffects:
+        - Wizard_Max_Mana
+        - Wizard_Mana_Regen
     Item:
       Lore:
-        l1: "§7Lekkie i ciche obuwie sprzyjające zwinności."
+        l1: "§7Mistyczna czapka tkana ze skóry nasyconej magią."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_HELMET
+          Amount: 1
+
+  wizard_chestplate:
+    Material: LEATHER_CHESTPLATE
+    Name: "§b§lSzata Czarodzieja"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
+    Armor: 3.0
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 7
+        m2:
+          Material: BLUE_DYE
+          Amount: 3
+        m3:
+          Material: PAPER
+          Amount: 4
+      AllowedMagicEffects:
+        - Wizard_Max_Mana
+        - Wizard_Mana_Regen
+    Item:
+      Lore:
+        l1: "§7Szata adepta arkanów z runicznym haftem."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_CHESTPLATE
+          Amount: 1
+
+  wizard_leggings:
+    Material: LEATHER_LEGGINGS
+    Name: "§b§lSpodnie Czarodzieja"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
+    Armor: 2.0
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 6
+        m2:
+          Material: BLUE_DYE
+          Amount: 2
+        m3:
+          Material: PAPER
+          Amount: 3
+      AllowedMagicEffects:
+        - Wizard_Max_Mana
+        - Wizard_Mana_Regen
+    Item:
+      Lore:
+        l1: "§7Lekkie spodnie ułatwiające przepływ energii."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_LEGGINGS
+          Amount: 1
+
+  wizard_boots:
+    Material: LEATHER_BOOTS
+    Name: "§b§lButy Czarodzieja"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
+    Armor: 1.0
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 4
+        m2:
+          Material: BLUE_DYE
+          Amount: 2
+        m3:
+          Material: PAPER
+          Amount: 2
+      AllowedMagicEffects:
+        - Wizard_Max_Mana
+        - Wizard_Mana_Regen
+    Item:
+      Lore:
+        l1: "§7Obuwie zapewniające skupienie podczas rzucania czarów."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_BOOTS
+          Amount: 1
+
+  # --- SET STRZELCA ---
+  marksman_helmet:
+    Material: LEATHER_HELMET
+    Name: "§e§lCzapka Strzelca"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
+    Armor: 1.0
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 3
+        m2:
+          Material: COPPER_INGOT
+          Amount: 2
+        m3:
+          Material: WHITE_WOOL
+          Amount: 1
+        m4:
+          Material: FEATHER
+          Amount: 3
+      AllowedMagicEffects:
+        - Marksman_Crit_Damage
+        - Marksman_Ammo_Save
+        - Marksman_Mob_Loot
+    Item:
+      Lore:
+        l1: "§7Czapka z piórem zwiększająca skupienie strzeleckie."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_HELMET
+          Amount: 1
+
+  marksman_chestplate:
+    Material: LEATHER_CHESTPLATE
+    Name: "§e§lKamizela Strzelca"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
+    Armor: 3.0
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 6
+        m2:
+          Material: COPPER_INGOT
+          Amount: 4
+        m3:
+          Material: WHITE_WOOL
+          Amount: 2
+        m4:
+          Material: FEATHER
+          Amount: 4
+      AllowedMagicEffects:
+        - Marksman_Crit_Damage
+        - Marksman_Ammo_Save
+        - Marksman_Mob_Loot
+    Item:
+      Lore:
+        l1: "§7Wzmocniona miedzią kamizela z kieszeniami na ładunki."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_CHESTPLATE
+          Amount: 1
+
+  marksman_leggings:
+    Material: LEATHER_LEGGINGS
+    Name: "§e§lSpodnie Strzelca"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
+    Armor: 2.0
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 5
+        m2:
+          Material: COPPER_INGOT
+          Amount: 3
+        m3:
+          Material: WHITE_WOOL
+          Amount: 2
+        m4:
+          Material: FEATHER
+          Amount: 2
+      AllowedMagicEffects:
+        - Marksman_Crit_Damage
+        - Marksman_Ammo_Save
+        - Marksman_Mob_Loot
+    Item:
+      Lore:
+        l1: "§7Wygodne spodnie z kaburami i pasem na amunicję."
+      Items_To_Craft:
+        c1:
+          Material: LEATHER_LEGGINGS
+          Amount: 1
+
+  marksman_boots:
+    Material: LEATHER_BOOTS
+    Name: "§e§lButy Strzelca"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
+    Armor: 1.0
+    Mold:
+      Items_To_Craft:
+        m1:
+          Material: LEATHER
+          Amount: 3
+        m2:
+          Material: COPPER_INGOT
+          Amount: 2
+        m3:
+          Material: WHITE_WOOL
+          Amount: 1
+        m4:
+          Material: FEATHER
+          Amount: 2
+      AllowedMagicEffects:
+        - Marksman_Crit_Damage
+        - Marksman_Ammo_Save
+        - Marksman_Mob_Loot
+    Item:
+      Lore:
+        l1: "§7Ciche obuwie myśliwskie z miedzianymi klamrami."
       Items_To_Craft:
         c1:
           Material: LEATHER_BOOTS
@@ -1305,47 +1561,59 @@ Craftable_Armor:
 
 # ##Itemy
 Craftable_Items:
-  Scroll:
+  Scroll_Of_Zombie_Raider:
     Material: PAPER
-    Name: §5Zwój Przyzwania Nieumarłych
-    Custom_Model_ID: 10002
+    Name: "§c§lZwój Przyzwania Martwego Najeźdźcy"
+    Custom_Model_ID: 0
+    Required_Stage: STONE
     Mold:
       Items_To_Craft:
         m1:
-          Material: ROTTEN_FLESH
-          Amount: 1
+          Material: SPIDER_EYE
+          Amount: 2
         m2:
           Material: BONE
-          Amount: 1
+          Amount: 5
+        m3:
+          Material: ROTTEN_FLESH
+          Amount: 5
       AllowedMagicEffects:
-      - Summon_Undead
-      - Meteor_Strike
-      - Ice_Wall
-      - Sand_Tornado
+        - Summon_Boss_Zombie_Raider
     Item:
       Lore:
-        l1: §7Zawiera starożytną wiedzę.
+        l1: "§7Starożytny pergamin zapisany krwią najeźdźców."
+        l2: "§e✦ Kliknij PPM: §fRozpoczyna rytuał przyzwania Martwego Najeźdźcy!"
       Items_To_Craft:
         c1:
           Material: PAPER
           Amount: 1
-  Scroll_Of_TestBoss:
+
+  Scroll_Of_Pirates:
     Material: PAPER
-    Name: §c[👹] Zwój Przyzwania Króla Szkieletów
-    Custom_Model_ID: 10002
+    Name: "§e§lZwój Przyzwania Piratów"
+    Custom_Model_ID: 0
+    Required_Stage: WOODEN
     Mold:
       Items_To_Craft:
+        m1:
+          Material: SPIDER_EYE
+          Amount: 1
         m2:
-          Material: DIAMOND
-          Amount: 1
+          Material: BONE
+          Amount: 3
         m3:
-          Material: PAPER
-          Amount: 1
+          Material: ROTTEN_FLESH
+          Amount: 3
       AllowedMagicEffects:
-      - Summon_Boss_TestBoss
+        - Summon_Boss_Pirates
     Item:
       Lore:
-        l1: §7Zwój przyzywający potężnego bossa.
+        l1: "§7Przeklęta mapa z wezwaniem morskich rozbójników."
+        l2: "§e✦ Kliknij PPM: §fRozpoczyna rytuał przyzwania Pirata Snajpera!"
+      Items_To_Craft:
+        c1:
+          Material: PAPER
+          Amount: 1
 
   Tome_Fire:
     Material: BOOK
@@ -1477,36 +1745,6 @@ Craftable_Items:
     Item:
       Lore:
         l1: "§7Prymitywna broń boczna na czarny proch."
-      Items_To_Craft:
-        c1:
-          Material: CROSSBOW
-          Amount: 1
-
-  flintlock:
-    Material: CROSSBOW
-    Name: "§6§lFlintlock"
-    Custom_Model_ID: 10055
-    Required_Stage: COPPER
-    Mold:
-      Items_To_Craft:
-        m1:
-          Material: COPPER_INGOT
-          Amount: 4
-        m2:
-          Material: FLINT
-          Amount: 2
-        m3:
-          Material: TRIPWIRE_HOOK
-          Amount: 1
-        m4:
-          Material: STRING
-          Amount: 2
-      AllowedMagicEffects: []
-    Item:
-      Lore:
-        l1: "§7Pistolet skałkowy oparty na mechanizmie napinania (Kusza)."
-        l2: "§e✦ Trzymaj PPM: §fNaciągnięcie kurka i wsypanie prochu"
-        l3: "§6✦ Kliknij PPM: §fWystrzał kuli z potężnym hukiem!"
       Items_To_Craft:
         c1:
           Material: CROSSBOW

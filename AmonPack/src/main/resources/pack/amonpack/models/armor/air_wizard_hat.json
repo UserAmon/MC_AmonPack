@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "amonpack:armor/air_wizard_hat"
-  }
-}
