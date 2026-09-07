@@ -79,6 +79,17 @@ public class InfectionManager {
     }
 
     /**
+     * Skraca pozostały czas życia gracza z infekcją (np. po wybuchu Spuchlaka).
+     */
+    public void reduceInfectionTime(Player player, int seconds) {
+        if (player == null) return;
+        InfectionState state = activeInfections.get(player.getUniqueId());
+        if (state != null) {
+            state.reduceSeconds(seconds);
+        }
+    }
+
+    /**
      * Taktowanie co sekundę dla wszystkich zakażonych graczy.
      */
     public void tick() {

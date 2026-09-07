@@ -37,6 +37,11 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -59,7 +64,7 @@ public class BattleRoyaleListener implements Listener {
 
     /**
      * Blokada poruszania się podczas 20-sekundowego odliczania na starcie meczu.
-     * Rejestracja skoków dla systemu hałasu.
+     * Rejestracja skoków dla systemu hałasu oraz detekcja bliskości samochodów.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
@@ -79,12 +84,27 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
-        // Skok gracza w Strefie Ciszy zwiększa hałas
-        if (game.getCurrentEvent() == BattleRoyaleEvent.SILENCE) {
-            Location from = event.getFrom();
-            Location to = event.getTo();
-            if (to != null && to.getY() > from.getY() + 0.35 && !player.isInsideVehicle()) {
+        Location from = event.getFrom();
+        Location to = event.getTo();
+
+        // Skok gracza generuje zdarzenie dźwiękowe
+        if (to != null && to.getY() > from.getY() + 0.35 && !player.isInsideVehicle()) {
+            game.getNoiseManager().recordNoise(player.getLocation(), 12.0, 15.0, "JUMP", player, game.getZombieManager());
+            if (game.getCurrentEvent() == BattleRoyaleEvent.SILENCE) {
                 game.getNoiseManager().addNoise(player, 6.0);
+            }
+        }
+
+        // Bliskość zaparkowanych samochodów (uruchomienie alarmu przy podejściu < 2.5m)
+        if (to != null && (from.getBlockX() != to.getBlockX() || from.getBlockZ() != to.getBlockZ())) {
+            for (Location carLoc : game.getArena().getCarLocations()) {
+                if (carLoc.getWorld() != null && carLoc.getWorld().equals(player.getWorld())) {
+                    if (carLoc.distanceSquared(to) <= 6.25) {
+                        if (!game.getDynamicEventManager().isCarAlarmActive(carLoc)) {
+                            game.getDynamicEventManager().triggerCarAlarm(carLoc);
+                        }
+                    }
+                }
             }
         }
     }
@@ -110,16 +130,37 @@ public class BattleRoyaleListener implements Listener {
         BattleRoyaleGame game = manager.getGameByPlayer(player);
         if (game == null) return;
 
-        // 2. Użycie Bandażu Medycznego (przytrzymanie PPM i ładowanie)
-        if (hand != null && BandageHandler.isBandage(hand)) {
+        // 2. Zakładanie / ulepszanie Plecaka (PPM)
+        if (hand != null && game.getBackpackManager().isBackpack(hand)) {
             if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 event.setCancelled(true);
-                game.getBandageHandler().handleInteract(player, event.getHand(), game.getInfectionManager());
+                game.getBackpackManager().equipBackpack(player, hand);
                 return;
             }
         }
 
-        // 3. Użycie Butelki Czystej Wody (Odwodnienie)
+        // 3. Otwieranie zaryglowanych drzwi żelaznych kluczem (PPM)
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null) {
+            Block b = event.getClickedBlock();
+            if (b.getType() == Material.IRON_DOOR) {
+                if (game.getKeyManager().handleDoorInteract(player, b, hand)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
+        // 4. Użycie Bandażu Medycznego (przytrzymanie PPM i ładowanie)
+        if (hand != null && BandageHandler.isBandage(hand)) {
+            if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                event.setCancelled(true);
+                game.getBandageHandler().handleInteract(player, event.getHand(), game.getInfectionManager());
+                game.getBloodTrailManager().onBandageUsed(player);
+                return;
+            }
+        }
+
+        // 5. Użycie Butelki Czystej Wody (Odwodnienie)
         if (hand != null && HydrationManager.isWaterBottle(hand)) {
             if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 event.setCancelled(true);
@@ -128,7 +169,7 @@ public class BattleRoyaleListener implements Listener {
             }
         }
 
-        // 4. Użycie Lekarstwa na Infekcję
+        // 6. Użycie Lekarstwa na Infekcję
         if (hand != null && BattleRoyaleWeaponHelper.isInfectionCure(hand)) {
             if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 event.setCancelled(true);
@@ -145,7 +186,7 @@ public class BattleRoyaleListener implements Listener {
             }
         }
 
-        // 5. Użycie Zestawu Ulepszenia Broni (Upgrade Kit)
+        // 7. Użycie Zestawu Ulepszenia Broni (Upgrade Kit)
         if (hand != null && BattleRoyaleWeaponHelper.isUpgradeKit(hand)) {
             if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 ItemStack offHand = player.getInventory().getItemInOffHand();
@@ -159,14 +200,13 @@ public class BattleRoyaleListener implements Listener {
             }
         }
 
-        // 6. Strzał z broni generuje potężny hałas w Strefie Ciszy
+        // 8. Strzał z broni generuje potężny hałas i rozchodzi się echem do okolicznych zombie
         if (hand != null && GunData.isGun(hand) && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) {
-            if (game.getCurrentEvent() == BattleRoyaleEvent.SILENCE) {
-                game.getNoiseManager().addNoise(player, 45.0);
-            }
+            game.getNoiseManager().recordNoise(player.getLocation(), 55.0, 45.0, "GUNSHOT", player, game.getZombieManager());
+            game.getNoiseManager().addNoise(player, 35.0);
         }
 
-        // 7. Otwieranie kontenerów z lootem
+        // 9. Otwieranie kontenerów z lootem oraz uderzenie w samochód
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();
             if (block != null) {
@@ -174,6 +214,16 @@ public class BattleRoyaleListener implements Listener {
                 if (t == Material.CHEST || t == Material.TRAPPED_CHEST || t == Material.BARREL ||
                         t.name().contains("BOOKSHELF") || t.name().contains("SHELF")) {
                     game.handleContainerOpen(block, player);
+                }
+
+                // Interakcja z samochodem uruchamia alarm
+                for (Location carLoc : game.getArena().getCarLocations()) {
+                    if (carLoc.getWorld() != null && carLoc.getWorld().equals(block.getWorld())) {
+                        if (carLoc.distanceSquared(block.getLocation()) <= 9.0) {
+                            game.getDynamicEventManager().triggerCarAlarm(carLoc);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -292,6 +342,21 @@ public class BattleRoyaleListener implements Listener {
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.4f);
             player.sendMessage(ChatColor.GREEN + "[BattleRoyale] Pomyślnie ulepszono broń na Poziom " + data.getLevel() + "!");
         }
+
+        // Obsługa ochrony przed duplikacją plecaków
+        game.getBackpackManager().handleInventoryClick(event);
+    }
+
+    /**
+     * Zamykanie GUI plecaka - bezpieczny zapis zawartości.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) return;
+        BattleRoyaleGame game = manager.getGameByPlayer(player);
+        if (game != null) {
+            game.getBackpackManager().handleInventoryClose(event);
+        }
     }
 
     /**
@@ -341,11 +406,14 @@ public class BattleRoyaleListener implements Listener {
             }
         }
 
-        // 2. Gracz atakujący wręcz generuje hałas w Strefie Ciszy
+        // 2. Gracz atakujący wręcz generuje hałas
         if (event.getDamager() instanceof Player attacker) {
             BattleRoyaleGame game = manager.getGameByPlayer(attacker);
-            if (game != null && game.getCurrentEvent() == BattleRoyaleEvent.SILENCE) {
-                game.getNoiseManager().addNoise(attacker, 10.0);
+            if (game != null) {
+                game.getNoiseManager().recordNoise(attacker.getLocation(), 15.0, 18.0, "MELEE", attacker, game.getZombieManager());
+                if (game.getCurrentEvent() == BattleRoyaleEvent.SILENCE) {
+                    game.getNoiseManager().addNoise(attacker, 10.0);
+                }
             }
         }
 
@@ -356,6 +424,12 @@ public class BattleRoyaleListener implements Listener {
 
         Entity damager = event.getDamager();
 
+        // Rejestracja plam krwi z obrażeń i ugryzień potwora
+        game.getBloodTrailManager().onPlayerDamage(victim, event.getFinalDamage());
+        if (damager instanceof Monster) {
+            game.getBloodTrailManager().onZombieBite(victim);
+        }
+
         // Atak Melee potwora, bota lub bossa
         if (damager instanceof Monster || damager instanceof LivingEntity) {
             EntityDamageEvent.DamageCause cause = event.getCause();
@@ -364,6 +438,19 @@ public class BattleRoyaleListener implements Listener {
                 if (random.nextDouble() <= chance) {
                     game.getInfectionManager().infect(victim);
                 }
+            }
+        }
+    }
+
+    /**
+     * Ogólne obrażenia gracza (strefa, upadek itp.) - rejestracja krwi.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerGenericDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            BattleRoyaleGame game = manager.getGameByPlayer(player);
+            if (game != null) {
+                game.getBloodTrailManager().onPlayerDamage(player, event.getFinalDamage());
             }
         }
     }
@@ -379,6 +466,7 @@ public class BattleRoyaleListener implements Listener {
         if (entity instanceof Player player) {
             BattleRoyaleGame game = manager.getGameByPlayer(player);
             if (game != null) {
+                event.getDrops().removeIf(item -> game.getBackpackManager().isLockedSlotItem(item));
                 game.handlePlayerDeath(player);
             }
             return;
@@ -414,25 +502,32 @@ public class BattleRoyaleListener implements Listener {
             return;
         }
 
-        // Śmierć specjalnego zombie (Leaper lub Gunner)
-        if (game.getZombieManager().isSpecialZombie(entity)) {
-            if (entity.getCustomName() != null && entity.getCustomName().contains("Strzelec")) {
-                if (random.nextDouble() < 0.75) {
-                    event.getDrops().add(BattleRoyaleWeaponHelper.createAmmo(AmmoType.LEAD_BULLET, 6 + random.nextInt(8)));
-                }
-                if (random.nextDouble() < 0.25) {
-                    event.getDrops().add(BattleRoyaleWeaponHelper.createGun(GunType.FLINTLOCK_PISTOL, 1, false, false, false, false, CustomContent.Guns.GunUniqueMod.NONE));
-                }
-            } else if (entity.getCustomName() != null && entity.getCustomName().contains("Skoczek")) {
-                if (random.nextDouble() < 0.70) {
-                    event.getDrops().add(BandageHandler.createBandage(1 + random.nextInt(2)));
+        // Śmierć Zombie (specjalnego lub zwykłego)
+        if (entity instanceof Zombie zombie) {
+            game.getZombieManager().handleZombieDeath(zombie, game.getBloodTrailManager(), game.getBackpackManager(), game.getLootManager(), game.getInfectionManager());
+
+            if (game.getZombieManager().isSpecialZombie(entity) || (entity.getCustomName() != null)) {
+                if (entity.getCustomName() != null && entity.getCustomName().contains("Strzelec")) {
+                    if (random.nextDouble() < 0.75) {
+                        event.getDrops().add(BattleRoyaleWeaponHelper.createAmmo(AmmoType.LEAD_BULLET, 6 + random.nextInt(8)));
+                    }
+                    if (random.nextDouble() < 0.25) {
+                        event.getDrops().add(BattleRoyaleWeaponHelper.createGun(GunType.FLINTLOCK_PISTOL, 1, false, false, false, false, CustomContent.Guns.GunUniqueMod.NONE));
+                    }
+                } else if (entity.getCustomName() != null && entity.getCustomName().contains("Skoczek")) {
+                    if (random.nextDouble() < 0.70) {
+                        event.getDrops().add(BandageHandler.createBandage(1 + random.nextInt(2)));
+                    }
                 }
             }
-            return;
         }
 
-        // Śmierć zwykłego moba PVE (Zombie/Skeleton itp.)
+        // Śmierć potwora PVE (Zombie/Skeleton/Creeper itp.)
         if (entity instanceof Monster) {
+            if (!(entity instanceof Zombie)) {
+                game.getBloodTrailManager().onZombieKilled(entity.getLocation());
+            }
+
             // Szansa na dodatkowy drop broni, bandaży, pocisków lub lekarstwa
             if (random.nextDouble() < 0.40) {
                 event.getDrops().add(BattleRoyaleWeaponHelper.createAmmo(AmmoType.LEAD_BULLET, 2 + random.nextInt(4)));
@@ -557,6 +652,59 @@ public class BattleRoyaleListener implements Listener {
         BattleRoyaleGame game = manager.getGameByPlayer(player);
         if (game != null) {
             game.handlePlayerLeave(player);
+        }
+    }
+
+    /**
+     * Blokada interakcji z zablokowanymi slotami plecaka w GUI.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        BattleRoyaleGame game = manager.getGameByPlayer(player);
+        if (game != null) {
+            game.getBackpackManager().handleInventoryClick(event);
+        }
+    }
+
+    /**
+     * Blokada przeciągania przedmiotów na zablokowane sloty.
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        BattleRoyaleGame game = manager.getGameByPlayer(player);
+        if (game != null) {
+            game.getBackpackManager().handleInventoryDrag(event);
+        }
+    }
+
+    /**
+     * Blokada wyrzucania przedmiotów reprezentujących zablokowane sloty (klawisz Q).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        BattleRoyaleGame game = manager.getGameByPlayer(player);
+        if (game != null && event.getItemDrop() != null) {
+            if (game.getBackpackManager().isLockedSlotItem(event.getItemDrop().getItemStack())) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    /**
+     * Blokada zamiany zablokowanego slotu do drugiej ręki (klawisz F).
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerSwapHandItems(PlayerSwapHandItemsEvent event) {
+        Player player = event.getPlayer();
+        BattleRoyaleGame game = manager.getGameByPlayer(player);
+        if (game != null) {
+            if (game.getBackpackManager().isLockedSlotItem(event.getMainHandItem())
+                    || game.getBackpackManager().isLockedSlotItem(event.getOffHandItem())) {
+                event.setCancelled(true);
+            }
         }
     }
 }

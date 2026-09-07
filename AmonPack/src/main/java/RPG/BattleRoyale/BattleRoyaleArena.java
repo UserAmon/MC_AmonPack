@@ -18,6 +18,7 @@ public class BattleRoyaleArena {
     private Location pasteLocation;
     private Location centerLocation;
     private final List<Location> spawnLocations = new ArrayList<>();
+    private final List<Location> carLocations = new ArrayList<>();
 
     // Ustawienia lobby i rozgrywki
     private int lobbyDurationSeconds = 60;
@@ -240,8 +241,22 @@ public class BattleRoyaleArena {
 
         // Portal i nagrody
         arena.portalRadius = config.getDouble("extraction.portal-radius", 2.5);
-        arena.rewardCommands = config.getStringList("extraction.rewards.commands");
-        arena.rewardExp = config.getInt("extraction.rewards.exp", 500);
+        // Lokalizacje samochodów (dla alarmów)
+        arena.carLocations.clear();
+        List<Map<?, ?>> carList = config.getMapList("arena.car-locations");
+        if (carList != null && !carList.isEmpty()) {
+            for (Map<?, ?> cMap : carList) {
+                double cx = getDouble(cMap.get("x"), 0.0);
+                double cy = getDouble(cMap.get("y"), 100.0);
+                double cz = getDouble(cMap.get("z"), 0.0);
+                arena.carLocations.add(new Location(defaultWorld, cx, cy, cz));
+            }
+        }
+        if (arena.carLocations.isEmpty()) {
+            arena.carLocations.add(arena.centerLocation.clone().add(15, 0, 10));
+            arena.carLocations.add(arena.centerLocation.clone().add(-18, 0, -12));
+            arena.carLocations.add(arena.centerLocation.clone().add(22, 0, -20));
+        }
 
         return arena;
     }
@@ -302,4 +317,10 @@ public class BattleRoyaleArena {
     public double getPortalRadius() { return portalRadius; }
     public List<String> getRewardCommands() { return rewardCommands; }
     public int getRewardExp() { return rewardExp; }
+    public List<Location> getCarLocations() { return Collections.unmodifiableList(carLocations); }
+    public void addCarLocation(Location loc) { if (loc != null) carLocations.add(loc); }
+    public void setWorldName(String worldName) { this.worldName = worldName; }
+    public void setPasteLocation(Location pasteLocation) { this.pasteLocation = pasteLocation; }
+    public void setCenterLocation(Location centerLocation) { this.centerLocation = centerLocation; }
+    public void setCarLocations(List<Location> cars) { this.carLocations.clear(); if (cars != null) this.carLocations.addAll(cars); }
 }

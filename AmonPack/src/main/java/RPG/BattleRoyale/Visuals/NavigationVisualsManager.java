@@ -1,10 +1,13 @@
 package RPG.BattleRoyale.Visuals;
 
 import RPG.BattleRoyale.GroundLoot.GroundLootManager;
+import RPG.BattleRoyale.Keys.KeyManager;
+import RPG.BattleRoyale.Keys.KeyType;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -12,20 +15,23 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Odpowiada za lekkie wskazówki wizualne dla graczy:
- * 1. Subtelne iskry na ziemi wokół leżącego Ground Lootu i interaktywnych elementów (skrzynie, beczki, dźwignie itp.) w promieniu 5 bloków.
- * 2. Ścieżka z cząsteczek na poziomie podłogi/ziemi wskazująca kierunek do bezpiecznej strefy (częstsza gdy gracz jest blisko strefy śmierci).
+ * 1. Subtelne iskry na ziemi wokół leżącego Ground Lootu i interaktywnych elementów w promieniu 5 bloków.
+ * 2. Ścieżka z cząsteczek na poziomie podłogi/ziemi wskazująca kierunek do bezpiecznej strefy.
+ * 3. Ścieżka z cząsteczek na ziemi prowadząca posiadacza klucza wprost do najbliższych zamkniętych drzwi (np. Military Depot, Pharmacy).
  */
 public class NavigationVisualsManager {
 
     private final Map<UUID, Long> lastNavTime = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastKeyNavTime = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastHighlightTime = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
     private static final Particle.DustOptions SAFE_DUST = new Particle.DustOptions(Color.fromRGB(80, 220, 180), 0.85f);
     private static final Particle.DustOptions WARNING_DUST = new Particle.DustOptions(Color.fromRGB(255, 140, 0), 0.95f);
     private static final Particle.DustOptions DANGER_DUST = new Particle.DustOptions(Color.fromRGB(255, 40, 40), 1.0f);
+    private static final Particle.DustOptions KEY_DOOR_DUST = new Particle.DustOptions(Color.fromRGB(255, 215, 0), 1.1f); // złote cząsteczki dla klucza
 
-    public void tick(World world, List<Player> players, Location center, double currentRadius) {
+    public void tick(World world, List<Player> players, Location center, double currentRadius, KeyManager keyManager) {
         if (world == null || players == null || players.isEmpty()) return;
 
         long now = System.currentTimeMillis();
@@ -42,31 +48,53 @@ public class NavigationVisualsManager {
                 renderInteractableHighlights(player, world, pLoc);
             }
 
-            // 2. Ścieżka na ziemi do bezpiecznej strefy
-            double distToCenter = Math.hypot(pLoc.getX() - center.getX(), pLoc.getZ() - center.getZ());
-            double distToBorder = currentRadius - distToCenter;
+            // 2. Sprawdzenie, czy gracz trzyma w ręce klucz do zamkniętych drzwi
+            boolean guidedToDoor = false;
+            if (keyManager != null) {
+                ItemStack mainHand = player.getInventory().getItemInMainHand();
+                ItemStack offHand = player.getInventory().getItemInOffHand();
+                KeyType heldKey = keyManager.getKeyType(mainHand);
+                if (heldKey == null) heldKey = keyManager.getKeyType(offHand);
 
-            // Częstotliwość zależna od odległości od strefy śmierci
-            long navCooldown;
-            Particle.DustOptions trailColor;
-            if (distToBorder <= 0.0) {
-                navCooldown = 1800; // Poza strefą: co 1.8 sekundy
-                trailColor = DANGER_DUST;
-            } else if (distToBorder <= 18.0) {
-                navCooldown = 2800; // Blisko krawędzi: co 2.8 sekundy
-                trailColor = WARNING_DUST;
-            } else if (distToBorder <= 45.0) {
-                navCooldown = 5500; // Średnia odległość: co 5.5 sekundy
-                trailColor = SAFE_DUST;
-            } else {
-                navCooldown = 9000; // Bezpiecznie w centrum: co 9 sekund
-                trailColor = SAFE_DUST;
+                if (heldKey != null) {
+                    Location doorLoc = keyManager.findNearestLockedDoor(pLoc, heldKey);
+                    if (doorLoc != null) {
+                        guidedToDoor = true;
+                        long lastKeyNav = lastKeyNavTime.getOrDefault(uuid, 0L);
+                        if (now - lastKeyNav >= 1800) {
+                            lastKeyNavTime.put(uuid, now);
+                            renderGroundNavigationTrail(player, world, pLoc, doorLoc.clone().add(0.5, 0, 0.5), KEY_DOOR_DUST);
+                        }
+                    }
+                }
             }
 
-            long lastNav = lastNavTime.getOrDefault(uuid, 0L);
-            if (now - lastNav >= navCooldown) {
-                lastNavTime.put(uuid, now);
-                renderGroundNavigationTrail(player, world, pLoc, center, trailColor);
+            // 3. Ścieżka na ziemi do bezpiecznej strefy (jeśli gracz nie jest prowadzony do drzwi)
+            if (!guidedToDoor) {
+                double distToCenter = Math.hypot(pLoc.getX() - center.getX(), pLoc.getZ() - center.getZ());
+                double distToBorder = currentRadius - distToCenter;
+
+                long navCooldown;
+                Particle.DustOptions trailColor;
+                if (distToBorder <= 0.0) {
+                    navCooldown = 1800; // Poza strefą: co 1.8 sekundy
+                    trailColor = DANGER_DUST;
+                } else if (distToBorder <= 18.0) {
+                    navCooldown = 2800; // Blisko krawędzi: co 2.8 sekundy
+                    trailColor = WARNING_DUST;
+                } else if (distToBorder <= 45.0) {
+                    navCooldown = 5500; // Średnia odległość: co 5.5 sekundy
+                    trailColor = SAFE_DUST;
+                } else {
+                    navCooldown = 9000; // Bezpiecznie w centrum: co 9 sekund
+                    trailColor = SAFE_DUST;
+                }
+
+                long lastNav = lastNavTime.getOrDefault(uuid, 0L);
+                if (now - lastNav >= navCooldown) {
+                    lastNavTime.put(uuid, now);
+                    renderGroundNavigationTrail(player, world, pLoc, center, trailColor);
+                }
             }
         }
     }
@@ -84,7 +112,6 @@ public class NavigationVisualsManager {
             if (frame.isValid() && frame.getPersistentDataContainer().has(GroundLootManager.KEY_GROUND_LOOT, org.bukkit.persistence.PersistentDataType.BYTE)) {
                 if (frame.getLocation().distanceSquared(pLoc) <= 25.0) {
                     Location fLoc = frame.getLocation();
-                    // 2 subtelne iskierki na poziomie podłoża tuż przy itemie
                     double ox = (random.nextDouble() - 0.5) * 0.45;
                     double oz = (random.nextDouble() - 0.5) * 0.45;
                     player.spawnParticle(Particle.WAX_OFF, fLoc.getX() + ox, fLoc.getY() + 0.05, fLoc.getZ() + oz, 1, 0, 0.02, 0, 0.01);
@@ -101,7 +128,6 @@ public class NavigationVisualsManager {
                     Material type = block.getType();
                     if (isInteractable(type)) {
                         Location bLoc = block.getLocation();
-                        // 1 lekka iskierka na górnej powierzchni bloku
                         double ox = 0.2 + random.nextDouble() * 0.6;
                         double oz = 0.2 + random.nextDouble() * 0.6;
                         player.spawnParticle(Particle.WAX_ON, bLoc.getX() + ox, bLoc.getY() + 0.95, bLoc.getZ() + oz, 1, 0, 0.01, 0, 0.01);
@@ -119,18 +145,17 @@ public class NavigationVisualsManager {
     }
 
     /**
-     * Rysuje na podłodze 4-5 lekkich cząsteczek prowadzących po ziemi w kierunku centrum bezpiecznej strefy.
+     * Rysuje na podłodze 4-5 lekkich cząsteczek prowadzących po ziemi w kierunku celu.
      */
-    private void renderGroundNavigationTrail(Player player, World world, Location pLoc, Location center, Particle.DustOptions dust) {
-        double dx = center.getX() - pLoc.getX();
-        double dz = center.getZ() - pLoc.getZ();
+    private void renderGroundNavigationTrail(Player player, World world, Location pLoc, Location target, Particle.DustOptions dust) {
+        double dx = target.getX() - pLoc.getX();
+        double dz = target.getZ() - pLoc.getZ();
         double len = Math.hypot(dx, dz);
-        if (len < 1.5) return; // Już w samym centrum
+        if (len < 1.5) return;
 
         dx /= len;
         dz /= len;
 
-        // Rysujemy ślad w krokach 1.2m, 2.2m, 3.2m, 4.2m
         double[] distances = { 1.2, 2.2, 3.2, 4.2 };
         Location lastStepFloor = null;
 
@@ -140,14 +165,12 @@ public class NavigationVisualsManager {
 
             Location floor = findFloorAt(world, tx, pLoc.getBlockY(), tz);
             if (floor != null) {
-                // Rysujemy cząsteczkę tuż nad powierzchnią podłogi
                 Location particleLoc = floor.clone().add(0, 0.08, 0);
                 player.spawnParticle(Particle.DUST, particleLoc, 1, 0, 0, 0, 0, dust);
                 lastStepFloor = floor;
             }
         }
 
-        // Dodanie małego grotu strzałki na końcu ścieżki
         if (lastStepFloor != null) {
             Vector forward = new Vector(dx, 0, dz);
             Vector left = new Vector(-dz, 0, dx).multiply(0.28);
@@ -161,9 +184,6 @@ public class NavigationVisualsManager {
         }
     }
 
-    /**
-     * Znajduje stały blok podłogi (nie powietrze) w pionowym oknie wokół gracza (+1 do -3).
-     */
     private Location findFloorAt(World world, double x, int baseY, double z) {
         int bx = (int) Math.floor(x);
         int bz = (int) Math.floor(z);
@@ -171,7 +191,6 @@ public class NavigationVisualsManager {
         for (int y = baseY + 1; y >= baseY - 3; y--) {
             Block block = world.getBlockAt(bx, y, bz);
             if (!block.getType().isAir() && block.getType().isSolid()) {
-                // Znaleziono podłogę
                 return new Location(world, x, y + 1.0, z);
             }
         }
@@ -180,6 +199,7 @@ public class NavigationVisualsManager {
 
     public void cleanup() {
         lastNavTime.clear();
+        lastKeyNavTime.clear();
         lastHighlightTime.clear();
     }
 }

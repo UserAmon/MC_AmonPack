@@ -5,12 +5,16 @@ import CustomContent.Guns.GunUniqueMod;
 import Plugin.AmonPackPlugin;
 import RPG.BattleRoyale.Barricades.BarricadeManager;
 import RPG.BattleRoyale.Bots.BattleRoyaleBotManager;
+import RPG.BattleRoyale.Backpacks.BackpackManager;
+import RPG.BattleRoyale.Blood.BloodTrailManager;
 import RPG.BattleRoyale.Events.BattleRoyaleEvent;
+import RPG.BattleRoyale.Events.DynamicEventManager;
 import RPG.BattleRoyale.Events.HydrationManager;
 import RPG.BattleRoyale.Events.NoiseManager;
 import RPG.BattleRoyale.GroundLoot.GroundLootManager;
 import RPG.BattleRoyale.Infection.InfectionManager;
 import RPG.BattleRoyale.Items.BandageHandler;
+import RPG.BattleRoyale.Keys.KeyManager;
 import RPG.BattleRoyale.Loot.BattleRoyaleLootManager;
 import RPG.BattleRoyale.Visuals.NavigationVisualsManager;
 import RPG.BattleRoyale.Weapons.BattleRoyaleWeaponHelper;
@@ -53,6 +57,10 @@ public class BattleRoyaleGame {
     private final CustomZombieManager zombieManager;
     private final BarricadeManager barricadeManager;
     private final NavigationVisualsManager visualsManager;
+    private final BloodTrailManager bloodTrailManager;
+    private final BackpackManager backpackManager;
+    private final KeyManager keyManager;
+    private final DynamicEventManager dynamicEventManager;
 
     private int hungerTickCounter = 0;
     private BattleRoyaleEvent currentEvent = BattleRoyaleEvent.NONE;
@@ -99,6 +107,10 @@ public class BattleRoyaleGame {
         this.zombieManager = new CustomZombieManager();
         this.barricadeManager = new BarricadeManager();
         this.visualsManager = new NavigationVisualsManager();
+        this.bloodTrailManager = new BloodTrailManager();
+        this.backpackManager = new BackpackManager();
+        this.keyManager = new KeyManager();
+        this.dynamicEventManager = new DynamicEventManager(this);
 
         for (Player p : initialPlayers) {
             activePlayers.add(p.getUniqueId());
@@ -110,6 +122,12 @@ public class BattleRoyaleGame {
      */
     public void start() {
         state = GameState.PREPARING;
+
+        if (manager.getConfig() != null) {
+            dynamicEventManager.loadFromConfig(manager.getConfig());
+            keyManager.loadFromConfig(manager.getConfig());
+        }
+        dynamicEventManager.start();
 
         // 1. Przygotowanie świata
         world = worldManager.prepareWorld();
@@ -138,6 +156,7 @@ public class BattleRoyaleGame {
 
                 // Zapisanie ekwipunku
                 BattleRoyaleInventoryBackup.backupAndClear(p);
+                backpackManager.initializePlayerInventory(p);
 
                 // Teleport
                 p.teleport(resolved);
@@ -352,11 +371,13 @@ public class BattleRoyaleGame {
                     tickPortal();
                 }
 
-                // 5. Wydarzenia mapy (Cisza / Odwodnienie)
+                // 5. Wydarzenia mapy, hałas, krew i dynamiczne zdarzenia
                 List<Player> onlinePlayers = getActiveOnlinePlayers();
-                if (currentEvent == BattleRoyaleEvent.SILENCE) {
-                    noiseManager.tick(world, onlinePlayers, zombieManager);
-                } else if (currentEvent == BattleRoyaleEvent.DEHYDRATION) {
+                noiseManager.tick(world, onlinePlayers, zombieManager, currentEvent == BattleRoyaleEvent.SILENCE);
+                bloodTrailManager.tick(world, onlinePlayers);
+                dynamicEventManager.tick(world, onlinePlayers, currentZoneRadius, arena.getCenterLocation());
+
+                if (currentEvent == BattleRoyaleEvent.DEHYDRATION) {
                     hydrationManager.tick(world, onlinePlayers);
                 }
 
@@ -391,9 +412,9 @@ public class BattleRoyaleGame {
                     return;
                 }
                 List<Player> players = getActiveOnlinePlayers();
-                zombieManager.tick(world);
+                zombieManager.tick(world, bloodTrailManager, noiseManager, players);
                 groundLootManager.checkProximityPickups(players);
-                visualsManager.tick(world, players, portalLocation != null ? portalLocation : arena.getCenterLocation(), currentZoneRadius);
+                visualsManager.tick(world, players, portalLocation != null ? portalLocation : arena.getCenterLocation(), currentZoneRadius, keyManager);
                 barricadeManager.tickZombieSiege(world, worldManager, arena.getBarricadeHitsToDestroy());
             }
         }.runTaskTimer(AmonPackPlugin.plugin, 10L, 10L);
@@ -541,6 +562,7 @@ public class BattleRoyaleGame {
 
         // Przywrócenie ekwipunku i powrót
         activePlayers.remove(player.getUniqueId());
+        backpackManager.clearPlayerLockedSlots(player);
         BattleRoyaleInventoryBackup.restore(player);
 
         World mainWorld = Bukkit.getWorlds().get(0);
@@ -618,6 +640,17 @@ public class BattleRoyaleGame {
         activePlayers.remove(player.getUniqueId());
         infectionManager.cure(player);
 
+        // Upuszczenie plecaka na ziemię oraz rozbryzg krwi
+        if (world != null) {
+            Location pLoc = player.getLocation();
+            int equippedTier = backpackManager.getPlayerTier(player);
+            if (equippedTier > 0) {
+                world.dropItemNaturally(pLoc, backpackManager.createBackpack(equippedTier));
+            }
+            backpackManager.clearPlayerLockedSlots(player);
+            bloodTrailManager.onPlayerDamage(player, 25.0);
+        }
+
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -636,6 +669,7 @@ public class BattleRoyaleGame {
     public void handlePlayerLeave(Player player) {
         if (activePlayers.remove(player.getUniqueId())) {
             infectionManager.cure(player);
+            backpackManager.clearPlayerLockedSlots(player);
             BattleRoyaleInventoryBackup.restore(player);
             World mainWorld = Bukkit.getWorlds().get(0);
             player.teleport(mainWorld.getSpawnLocation());
@@ -668,20 +702,24 @@ public class BattleRoyaleGame {
         zombieManager.cleanup();
         barricadeManager.cleanup();
         visualsManager.cleanup();
-
-        infectionManager.cleanupAll();
-        botManager.cleanup();
-
         // Przywrócenie pozostałych graczy
         for (UUID uuid : new ArrayList<>(activePlayers)) {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null && p.isOnline()) {
+                backpackManager.clearPlayerLockedSlots(p);
                 BattleRoyaleInventoryBackup.restore(p);
                 World mainWorld = Bukkit.getWorlds().get(0);
                 p.teleport(mainWorld.getSpawnLocation());
             }
         }
         activePlayers.clear();
+
+        dynamicEventManager.cleanup();
+        bloodTrailManager.cleanup();
+        backpackManager.cleanup();
+        keyManager.cleanup();
+        infectionManager.cleanupAll();
+        botManager.cleanup();
 
         // Reset świata areny
         worldManager.resetWorld();
@@ -723,8 +761,13 @@ public class BattleRoyaleGame {
     public CustomZombieManager getZombieManager() { return zombieManager; }
     public BarricadeManager getBarricadeManager() { return barricadeManager; }
     public NavigationVisualsManager getVisualsManager() { return visualsManager; }
+    public BloodTrailManager getBloodTrailManager() { return bloodTrailManager; }
+    public BackpackManager getBackpackManager() { return backpackManager; }
+    public KeyManager getKeyManager() { return keyManager; }
+    public DynamicEventManager getDynamicEventManager() { return dynamicEventManager; }
     public BattleRoyaleEvent getCurrentEvent() { return currentEvent; }
     public void setCurrentEvent(BattleRoyaleEvent event) { this.currentEvent = event; }
     public BattleRoyaleLootManager getLootManager() { return lootManager; }
     public GameState getState() { return state; }
+    public boolean isEnded() { return state == GameState.ENDED; }
 }

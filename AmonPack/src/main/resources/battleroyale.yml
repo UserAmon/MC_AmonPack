@@ -25,6 +25,12 @@ arena:
   world-name: "hungergames_arena"
   # Plik schematu w plugins/AmonPack/schematics/ używany do automatycznej naprawy mapy
   schematic: "hungergames_map.schem"
+  # UWAGA: Jeśli budujesz mapę na innym świecie/działce i zapisujesz schemat:
+  # 1. Metoda polecana (bez przesunięć): Użyj /hungergames tp, wklej schemat na świecie 'hungergames_arena'
+  #    i zmapuj skrzynie/drzwi/groundloot na miejscu różdżką (/hungergames wand).
+  # 2. Metoda relokacji: Jeśli zmapowałeś skrzynie na innym świecie, użyj:
+  #    /hungergames map relocate <x1> <y1> <z1> <x2> <y2> <z2> hungergames_arena
+  #    gdzie x1 y1 z1 to punkt bazowy kopiowania schematu, a x2 y2 z2 to punkt wklejenia poniżej.
   paste-location:
     x: 0.0
     y: 100.0
@@ -57,6 +63,12 @@ arena:
     - { x: 20.5, y: 101.0, z: -28.3, yaw: 36.0, pitch: 0.0 }
     - { x: 28.3, y: 101.0, z: -20.5, yaw: 54.0, pitch: 0.0 }
     - { x: 33.2, y: 101.0, z: -10.8, yaw: 72.0, pitch: 0.0 }
+
+  # Lokalizacje samochodów (dla alarmów samochodowych)
+  car-locations:
+    - { x: 18.0, y: 101.0, z: 12.0 }
+    - { x: -22.0, y: 101.0, z: -15.0 }
+    - { x: 25.0, y: 101.0, z: -25.0 }
 
 zone:
   # Początkowy promień strefy (w blokach)
@@ -226,6 +238,58 @@ custom-zombies:
   leaper-speed: 0.34
   leaper-cooldown-seconds: 4
   gunner-shot-cooldown-seconds: 4.5
+
+# ==============================================================================
+#                  DYNAMICZNE WYDARZENIA W CZASIE MECZU
+# ==============================================================================
+dynamic-events:
+  enabled: true
+  minimum-game-time: 180
+  cooldown: 120
+
+air-drop:
+  enabled: true
+  chance: 0.25
+  cooldown: 300
+
+blackout:
+  enabled: true
+  chance: 0.20
+  duration: 60
+  cooldown: 180
+
+blood-moon:
+  enabled: true
+  chance: 0.15
+  duration: 60
+  cooldown: 300
+
+car-alarm:
+  enabled: true
+  chance: 0.30
+  duration: 45
+  cooldown: 180
+
+# System plecaków przetrwania (I, II, III)
+backpacks:
+  tiers:
+    1: { slots: 18, name: "&6&l🎒 Plecak Skautowy [Poziom I]" }
+    2: { slots: 27, name: "&5&l🎒 Plecak Taktyczny [Poziom II]" }
+    3: { slots: 36, name: "&b&l🎒 Plecak Przetrwania [Poziom III]" }
+  zombie-drop-chances:
+    stalker: 0.10
+    bloater: 0.15
+    survivor: 0.25
+    boss: 1.00
+
+# System kluczy i zamkniętych drzwi żelaznych
+keys:
+  consume-on-use: false
+  locked-doors:
+    - { key: "POLICE_STATION", world: "hungergames_arena", x: 12.0, y: 101.0, z: 18.0 }
+    - { key: "PHARMACY", world: "hungergames_arena", x: -16.0, y: 101.0, z: 22.0 }
+    - { key: "MILITARY_DEPOT", world: "hungergames_arena", x: 30.0, y: 101.0, z: -20.0 }
+    - { key: "APARTMENT_204", world: "hungergames_arena", x: -25.0, y: 101.0, z: -30.0 }
 
 extraction:
   # Promień portalu na środku mapy

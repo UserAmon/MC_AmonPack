@@ -1,6 +1,7 @@
 package RPG.BattleRoyale.Barricades;
 
 import RPG.BattleRoyale.BattleRoyaleWorldManager;
+import RPG.BattleRoyale.Zombies.CustomZombieManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -8,8 +9,14 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Boss;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.WitherSkeleton;
+import org.bukkit.entity.Zombie;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Zarządza barykadami stawianymi przez graczy (np. dębowe płyty, deski).
  * Śledzi ich wytrzymałość i umożliwia zombie oraz bossom aktywne atakowanie
- * i niszczenie bloków blokujących im drogę do gracza.
+ * i niszczenie bloków blokujących im drogę do gracza, a sprytniejszym zombie szukanie obejść.
  */
 public class BarricadeManager {
 
@@ -73,10 +80,48 @@ public class BarricadeManager {
             }
 
             if (targetBarricade != null) {
+                // Sprytne zombie (Stalker, Survivor) próbują najpierw znaleźć otwarte obejście
+                if (isFlankerZombie(monster)) {
+                    if (tryFindAlternativeRoute(monster, mLoc)) {
+                        mobAttackCooldowns.put(monster.getUniqueId(), now);
+                        continue;
+                    }
+                }
+
                 mobAttackCooldowns.put(monster.getUniqueId(), now);
                 damageBarricade(targetBarricade, monster, player, worldManager, defaultHits);
             }
         }
+    }
+
+    private boolean isFlankerZombie(Monster monster) {
+        if (monster instanceof Zombie z) {
+            String type = z.getPersistentDataContainer().get(CustomZombieManager.KEY_ZOMBIE_TYPE, PersistentDataType.STRING);
+            return "STALKER".equalsIgnoreCase(type) || "SURVIVOR".equalsIgnoreCase(type);
+        }
+        return false;
+    }
+
+    /**
+     * Sprawdza przejście 2 bloki w lewo lub w prawo; jeśli wolne, kieruje moba w bok.
+     */
+    private boolean tryFindAlternativeRoute(Monster monster, Location mLoc) {
+        Vector dir = mLoc.getDirection();
+        Vector left = new Vector(-dir.getZ(), 0, dir.getX()).normalize().multiply(1.8);
+        Vector right = new Vector(dir.getZ(), 0, -dir.getX()).normalize().multiply(1.8);
+
+        Location checkLeft = mLoc.clone().add(left);
+        Location checkRight = mLoc.clone().add(right);
+
+        if (!checkLeft.getBlock().getType().isSolid() && checkLeft.getBlock().getRelative(BlockFace.DOWN).getType().isSolid()) {
+            monster.setVelocity(left.normalize().multiply(0.32));
+            return true;
+        }
+        if (!checkRight.getBlock().getType().isSolid() && checkRight.getBlock().getRelative(BlockFace.DOWN).getType().isSolid()) {
+            monster.setVelocity(right.normalize().multiply(0.32));
+            return true;
+        }
+        return false;
     }
 
     private Block findBarricadeInFront(Monster monster, World world) {
@@ -102,7 +147,6 @@ public class BarricadeManager {
             if (!bLoc.getWorld().equals(world)) continue;
             double distToMonster = bLoc.distanceSquared(mLoc);
             if (distToMonster <= maxDist * maxDist) {
-                // Sprawdź czy barykada leży w kierunku gracza (jest bliżej gracza niż sam mob)
                 double bDistToP = bLoc.distanceSquared(pLoc);
                 if (bDistToP <= mDistToP && distToMonster < minD) {
                     minD = distToMonster;
@@ -116,7 +160,10 @@ public class BarricadeManager {
     private void damageBarricade(Block block, Monster monster, Player player, BattleRoyaleWorldManager worldManager, int defaultHits) {
         Location bLoc = block.getLocation();
         int currentHp = barricades.getOrDefault(bLoc, defaultHits);
-        currentHp--;
+
+        // Bossowie oraz Bloater niszczą barykadę szybciej (2 obrażenia)
+        int damage = (monster instanceof WitherSkeleton || monster instanceof Boss || isBloater(monster)) ? 2 : 1;
+        currentHp = Math.max(0, currentHp - damage);
 
         // Animacja ataku potwora
         monster.swingMainHand();
@@ -141,6 +188,14 @@ public class BarricadeManager {
         } else {
             barricades.put(bLoc, currentHp);
         }
+    }
+
+    private boolean isBloater(Monster monster) {
+        if (monster instanceof Zombie z) {
+            String type = z.getPersistentDataContainer().get(CustomZombieManager.KEY_ZOMBIE_TYPE, PersistentDataType.STRING);
+            return "BLOATER".equalsIgnoreCase(type);
+        }
+        return false;
     }
 
     public void cleanup() {

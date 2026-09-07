@@ -4,8 +4,11 @@ import CustomContent.Guns.AmmoType;
 import CustomContent.Guns.GunType;
 import CustomContent.Guns.GunUniqueMod;
 import Plugin.AmonPackPlugin;
+import RPG.BattleRoyale.Backpacks.BackpackManager;
 import RPG.BattleRoyale.BattleRoyaleArena;
 import RPG.BattleRoyale.Items.BandageHandler;
+import RPG.BattleRoyale.Keys.KeyManager;
+import RPG.BattleRoyale.Keys.KeyType;
 import RPG.BattleRoyale.Weapons.BattleRoyaleWeaponHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -57,7 +60,8 @@ public class BattleRoyaleLootManager {
         FOOD,
         ARMOR,
         MAGIC,
-        BLOCK
+        BLOCK,
+        KEY
     }
 
     public static class LootEntry {
@@ -123,10 +127,11 @@ public class BattleRoyaleLootManager {
             } catch (Exception e) {
                 continue;
             }
-            double chance = map.get("chance") instanceof Number ? ((Number) map.get("chance")).doubleValue() : 0.5;
-            int min = map.get("min") instanceof Number ? ((Number) map.get("min")).intValue() : 1;
-            int max = map.get("max") instanceof Number ? ((Number) map.get("max")).intValue() : 1;
-            String param = map.get("param") != null ? map.get("param").toString() : "";
+            double chance = ((Number) map.getOrDefault("chance", 0.5)).doubleValue();
+            int min = ((Number) map.getOrDefault("min", 1)).intValue();
+            int max = ((Number) map.getOrDefault("max", 1)).intValue();
+            String param = (String) map.getOrDefault("param", "");
+
             target.add(new LootEntry(cat, chance, min, max, param));
         }
     }
@@ -144,8 +149,19 @@ public class BattleRoyaleLootManager {
         chestLoot.add(new LootEntry(LootCategory.BANDAGE, 0.50, 1, 3, ""));
         chestLoot.add(new LootEntry(LootCategory.VANILLA, 0.35, 1, 1, "IRON_SWORD"));
         chestLoot.add(new LootEntry(LootCategory.VANILLA, 0.20, 1, 1, "BOW"));
-        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.30, 1, 1, "IRON_CHESTPLATE"));
+
+        // Zbroje (leather, chain, iron)
+        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.35, 1, 1, "LEATHER_HELMET"));
+        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.35, 1, 1, "LEATHER_CHESTPLATE"));
+        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.30, 1, 1, "CHAINMAIL_CHESTPLATE"));
+        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.25, 1, 1, "CHAINMAIL_LEGGINGS"));
+        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.20, 1, 1, "IRON_HELMET"));
+        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.20, 1, 1, "IRON_CHESTPLATE"));
+        chestLoot.add(new LootEntry(LootCategory.ARMOR, 0.20, 1, 1, "IRON_BOOTS"));
+
         chestLoot.add(new LootEntry(LootCategory.FOOD, 0.50, 2, 5, "COOKED_BEEF"));
+        chestLoot.add(new LootEntry(LootCategory.BLOCK, 0.30, 3, 6, "OAK_SLAB"));
+        chestLoot.add(new LootEntry(LootCategory.KEY, 0.06, 1, 1, ""));
     }
 
     private void loadDefaultBarrelLoot() {
@@ -157,6 +173,7 @@ public class BattleRoyaleLootManager {
         barrelLoot.add(new LootEntry(LootCategory.AMMO, 0.30, 3, 6, "slug_cartridge"));
         barrelLoot.add(new LootEntry(LootCategory.UPGRADE_KIT, 0.15, 1, 1, "1"));
         barrelLoot.add(new LootEntry(LootCategory.GUN, 0.20, 1, 1, "flintlock_pistol"));
+        barrelLoot.add(new LootEntry(LootCategory.BLOCK, 0.25, 2, 4, "OAK_SLAB"));
     }
 
     private void loadDefaultShelfLoot() {
@@ -187,6 +204,7 @@ public class BattleRoyaleLootManager {
         medicalLoot.add(new LootEntry(LootCategory.POTION, 0.60, 1, 2, "HEALING"));
         medicalLoot.add(new LootEntry(LootCategory.POTION, 0.50, 1, 2, "REGENERATION"));
         medicalLoot.add(new LootEntry(LootCategory.FOOD, 0.40, 1, 2, "GOLDEN_APPLE"));
+        medicalLoot.add(new LootEntry(LootCategory.KEY, 0.12, 1, 1, "PHARMACY"));
     }
 
     private void loadDefaultGunsLoot() {
@@ -200,6 +218,13 @@ public class BattleRoyaleLootManager {
         gunsLoot.add(new LootEntry(LootCategory.AMMO, 0.30, 3, 6, "dragon_cartridge"));
         gunsLoot.add(new LootEntry(LootCategory.UPGRADE_KIT, 0.50, 1, 2, "1"));
         gunsLoot.add(new LootEntry(LootCategory.UPGRADE_KIT, 0.25, 1, 1, "2"));
+
+        // Zbroje militarne
+        gunsLoot.add(new LootEntry(LootCategory.ARMOR, 0.35, 1, 1, "CHAINMAIL_CHESTPLATE"));
+        gunsLoot.add(new LootEntry(LootCategory.ARMOR, 0.35, 1, 1, "IRON_CHESTPLATE"));
+        gunsLoot.add(new LootEntry(LootCategory.ARMOR, 0.30, 1, 1, "IRON_LEGGINGS"));
+        gunsLoot.add(new LootEntry(LootCategory.ARMOR, 0.30, 1, 1, "IRON_BOOTS"));
+        gunsLoot.add(new LootEntry(LootCategory.KEY, 0.15, 1, 1, "MILITARY_DEPOT"));
     }
 
     private void loadDefaultMagicLoot() {
@@ -207,17 +232,69 @@ public class BattleRoyaleLootManager {
         magicLoot.add(new LootEntry(LootCategory.MAGIC, 0.60, 1, 2, "SCROLL_FROST"));
         magicLoot.add(new LootEntry(LootCategory.MAGIC, 0.50, 1, 1, "SCROLL_LIGHTNING"));
         magicLoot.add(new LootEntry(LootCategory.POTION, 0.60, 1, 2, "SPEED"));
-        magicLoot.add(new LootEntry(LootCategory.VANILLA, 0.40, 1, 1, "DIAMOND_SWORD"));
+        magicLoot.add(new LootEntry(LootCategory.VANILLA, 0.40, 1, 1, "IRON_SWORD"));
     }
 
     private void loadDefaultMeleeLoot() {
-        meleeLoot.add(new LootEntry(LootCategory.VANILLA, 0.80, 1, 1, "DIAMOND_SWORD"));
-        meleeLoot.add(new LootEntry(LootCategory.VANILLA, 0.70, 1, 1, "IRON_SWORD"));
+        meleeLoot.add(new LootEntry(LootCategory.VANILLA, 0.75, 1, 1, "IRON_SWORD"));
         meleeLoot.add(new LootEntry(LootCategory.VANILLA, 0.60, 1, 1, "IRON_AXE"));
         meleeLoot.add(new LootEntry(LootCategory.VANILLA, 0.50, 1, 1, "SHIELD"));
-        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.60, 1, 1, "IRON_CHESTPLATE"));
-        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.60, 1, 1, "IRON_LEGGINGS"));
-        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.60, 1, 1, "IRON_BOOTS"));
+        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.40, 1, 1, "CHAINMAIL_CHESTPLATE"));
+        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.35, 1, 1, "CHAINMAIL_LEGGINGS"));
+        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.30, 1, 1, "IRON_CHESTPLATE"));
+        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.30, 1, 1, "IRON_BOOTS"));
+        meleeLoot.add(new LootEntry(LootCategory.ARMOR, 0.35, 1, 1, "LEATHER_CHESTPLATE"));
+    }
+
+    /**
+     * Wypełnia skrzynię zrzutu zaopatrzenia (Air Drop) elitarnym łupem.
+     */
+    public void populateAirDropChest(Inventory inv) {
+        if (inv == null) return;
+        inv.clear();
+
+        // 1. Zestaw Ulepszenia Poziom III
+        inv.setItem(11, BattleRoyaleWeaponHelper.createUpgradeKit(3));
+
+        // 2. Broń wysokiego poziomu (Pepperbox lub Muszkiet)
+        GunType topGun = random.nextBoolean() ? GunType.PEPPERBOX : GunType.FLINTLOCK_MUSKET;
+        inv.setItem(13, BattleRoyaleWeaponHelper.createGun(topGun, 2, true, true, false, false, GunUniqueMod.NONE));
+
+        // 3. Amunicja wysokiej klasy
+        inv.setItem(12, BattleRoyaleWeaponHelper.createAmmo(AmmoType.DRAGON_CARTRIDGE, 6));
+        inv.setItem(14, BattleRoyaleWeaponHelper.createAmmo(AmmoType.LEAD_BULLET, 16));
+
+        // 4. Element zbroi żelaznej
+        Material[] ironArmors = { Material.IRON_HELMET, Material.IRON_CHESTPLATE, Material.IRON_LEGGINGS, Material.IRON_BOOTS };
+        inv.setItem(15, new ItemStack(ironArmors[random.nextInt(ironArmors.length)]));
+
+        // 5. Lekarstwo na infekcję
+        inv.setItem(4, BattleRoyaleWeaponHelper.createInfectionCure());
+
+        // 6. Plecak Taktyczny lub Przetrwania (Poziom II lub III)
+        int bpTier = random.nextDouble() < 0.40 ? 3 : 2;
+        inv.setItem(22, new BackpackManager().createBackpack(bpTier));
+
+        // 7. Bandaże i złote jabłko
+        inv.setItem(21, BandageHandler.createBandage(3));
+        inv.setItem(23, new ItemStack(Material.GOLDEN_APPLE, 2));
+    }
+
+    /**
+     * Generuje losowy przedmiot przetrwania (dla zombie z plecakami).
+     */
+    public ItemStack generateRandomSurvivalItem() {
+        int r = random.nextInt(6);
+        switch (r) {
+            case 0: return BandageHandler.createBandage(2);
+            case 1: return BattleRoyaleWeaponHelper.createAmmo(AmmoType.LEAD_BULLET, 8);
+            case 2: return new ItemStack(Material.COOKED_BEEF, 3);
+            case 3: return BattleRoyaleWeaponHelper.createUpgradeKit(1);
+            case 4:
+                Material[] armors = { Material.CHAINMAIL_CHESTPLATE, Material.IRON_HELMET, Material.IRON_BOOTS, Material.LEATHER_CHESTPLATE };
+                return new ItemStack(armors[random.nextInt(armors.length)]);
+            case 5: default: return BattleRoyaleWeaponHelper.createInfectionCure();
+        }
     }
 
     /**
@@ -233,7 +310,6 @@ public class BattleRoyaleLootManager {
 
         List<LootEntry> table = selectLootTable(block);
 
-        int minItems = 2;
         int maxItems = Math.min(inv.getSize() / 3, 6);
         int itemsPlaced = 0;
 
@@ -254,7 +330,6 @@ public class BattleRoyaleLootManager {
             }
         }
 
-        // Gwarancja przynajmniej 1 przedmiotu
         if (itemsPlaced == 0 && !table.isEmpty()) {
             LootEntry fallback = table.get(random.nextInt(table.size()));
             ItemStack is = generateItem(fallback, arena);
@@ -267,10 +342,8 @@ public class BattleRoyaleLootManager {
     private List<LootEntry> selectLootTable(Block block) {
         Location loc = block.getLocation();
 
-        // 1. Sprawdź czy to oznaczona przez admina skrzynia tematyczna
         ThemedChestType themedType = configuredThemedChests.get(loc);
         if (themedType == null) {
-            // Spróbuj z zaokrąglonymi koordynatami bloku
             Location blockLoc = new Location(loc.getWorld(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
             themedType = configuredThemedChests.get(blockLoc);
         }
@@ -291,7 +364,6 @@ public class BattleRoyaleLootManager {
             }
         }
 
-        // 2. Domyślny wybór według typu bloku
         Material type = block.getType();
         if (type == Material.BARREL) {
             return barrelLoot;
@@ -359,6 +431,14 @@ public class BattleRoyaleLootManager {
                 Material blockMat = Material.matchMaterial(entry.getParam());
                 return new ItemStack(blockMat != null ? blockMat : Material.OAK_SLAB, amount);
 
+            case KEY:
+                KeyType kt = KeyType.fromString(entry.getParam());
+                if (kt == null) {
+                    KeyType[] allKeys = KeyType.values();
+                    kt = allKeys[random.nextInt(allKeys.length)];
+                }
+                return new KeyManager().createKey(kt);
+
             default:
                 return null;
         }
@@ -412,18 +492,16 @@ public class BattleRoyaleLootManager {
         return emptySlots.get(random.nextInt(emptySlots.size()));
     }
 
-    // --- ZARZĄDZANIE SKRZYNIAMI TEMATYCZNYMI (ADMIN TOOLS) ---
-
     public void setThemedChest(Location loc, ThemedChestType type) {
         if (loc == null) return;
         Location blockLoc = new Location(loc.getWorld(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
         configuredThemedChests.put(blockLoc, type);
     }
 
-    public boolean removeThemedChest(Location loc) {
-        if (loc == null) return false;
+    public void removeThemedChest(Location loc) {
+        if (loc == null) return;
         Location blockLoc = new Location(loc.getWorld(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-        return configuredThemedChests.remove(blockLoc) != null || configuredThemedChests.remove(loc) != null;
+        configuredThemedChests.remove(blockLoc);
     }
 
     public ThemedChestType getThemedChest(Location loc) {
@@ -472,5 +550,93 @@ public class BattleRoyaleLootManager {
         } catch (IOException e) {
             AmonPackPlugin.plugin.getLogger().warning("[BattleRoyale] Błąd zapisu skrzyń tematycznych: " + e.getMessage());
         }
+    }
+
+    /**
+     * Wypełnia skrzynię zrzutu zaopatrzenia (Air Drop) elitarnym łupem.
+     */
+    public void populateAirDropChest(Inventory inv) {
+        if (inv == null) return;
+        inv.clear();
+
+        List<ItemStack> eliteLoot = new ArrayList<>();
+        // 1. Zawsze plecak poziomu II lub III
+        eliteLoot.add(new BackpackManager().createBackpack(random.nextDouble() < 0.4 ? 3 : 2));
+
+        // 2. Wysokiej klasy broń palna z ulepszeniami
+        GunType[] guns = { GunType.FLINTLOCK_RIFLE, GunType.FLINTLOCK_SHOTGUN, GunType.BLUNDERBUSS, GunType.REVOLVER };
+        GunType selectedGun = guns[random.nextInt(guns.length)];
+        eliteLoot.add(BattleRoyaleWeaponHelper.createGun(selectedGun, 2, true, true, false, false, GunUniqueMod.NONE));
+
+        // 3. Duża paczka amunicji
+        eliteLoot.add(BattleRoyaleWeaponHelper.createAmmo(AmmoType.LEAD_BULLET, 16 + random.nextInt(17)));
+
+        // 4. Antidotum na wirusa
+        eliteLoot.add(BattleRoyaleWeaponHelper.createInfectionCure());
+
+        // 5. Zestaw bandaży
+        eliteLoot.add(BandageHandler.createBandage(3 + random.nextInt(3)));
+
+        // 6. Szansa na Zestaw ulepszeń broni poziomu II
+        if (random.nextDouble() < 0.75) {
+            eliteLoot.add(BattleRoyaleWeaponHelper.createUpgradeKit(2));
+        }
+
+        // 7. Pancerz żelazny
+        Material[] armors = { Material.IRON_CHESTPLATE, Material.IRON_HELMET, Material.IRON_LEGGINGS, Material.IRON_BOOTS };
+        eliteLoot.add(new ItemStack(armors[random.nextInt(armors.length)]));
+
+        // 8. Eliksir leczenia lub regeneracji
+        eliteLoot.add(createCustomPotion(random.nextBoolean() ? "HEALING" : "REGENERATION"));
+
+        // Rozmieszczenie w losowych slotach
+        for (ItemStack item : eliteLoot) {
+            int slot = random.nextInt(inv.getSize());
+            int attempts = 0;
+            while (inv.getItem(slot) != null && attempts < 20) {
+                slot = random.nextInt(inv.getSize());
+                attempts++;
+            }
+            inv.setItem(slot, item);
+        }
+    }
+
+    /**
+     * Losowy przedmiot przetrwania do plecaków zombie lub skrzyń.
+     */
+    public ItemStack generateRandomSurvivalItem() {
+        int roll = random.nextInt(7);
+        switch (roll) {
+            case 0:
+                return BattleRoyaleWeaponHelper.createAmmo(AmmoType.LEAD_BULLET, 4 + random.nextInt(9));
+            case 1:
+                return BandageHandler.createBandage(1 + random.nextInt(2));
+            case 2:
+                return BattleRoyaleWeaponHelper.createInfectionCure();
+            case 3:
+                return BattleRoyaleWeaponHelper.createRandomGun(1, 2);
+            case 4:
+                Material[] foods = { Material.COOKED_BEEF, Material.BREAD, Material.GOLDEN_CARROT, Material.APPLE };
+                return new ItemStack(foods[random.nextInt(foods.length)], 2 + random.nextInt(4));
+            case 5:
+                String[] pots = { "HEALING", "REGENERATION", "SPEED" };
+                return createCustomPotion(pots[random.nextInt(pots.length)]);
+            case 6:
+            default:
+                Material[] armors = { Material.LEATHER_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE, Material.IRON_HELMET, Material.IRON_BOOTS };
+                return new ItemStack(armors[random.nextInt(armors.length)]);
+        }
+    }
+
+    public void shiftChests(int dx, int dy, int dz, World targetWorld) {
+        Map<Location, ThemedChestType> shifted = new ConcurrentHashMap<>();
+        for (Map.Entry<Location, ThemedChestType> entry : configuredThemedChests.entrySet()) {
+            Location old = entry.getKey();
+            World w = targetWorld != null ? targetWorld : old.getWorld();
+            Location newLoc = new Location(w, old.getBlockX() + dx, old.getBlockY() + dy, old.getBlockZ() + dz);
+            shifted.put(newLoc, entry.getValue());
+        }
+        configuredThemedChests.clear();
+        configuredThemedChests.putAll(shifted);
     }
 }

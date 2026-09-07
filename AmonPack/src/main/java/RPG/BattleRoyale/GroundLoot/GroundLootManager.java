@@ -256,4 +256,16 @@ public class GroundLootManager {
             AmonPackPlugin.plugin.getLogger().warning("[BattleRoyale] Błąd zapisu ground-loot: " + e.getMessage());
         }
     }
+
+    public void shiftPoints(int dx, int dy, int dz, World targetWorld) {
+        List<GroundLootPoint> shifted = new ArrayList<>();
+        for (GroundLootPoint p : configuredPoints) {
+            Location old = p.getLocation();
+            World w = targetWorld != null ? targetWorld : old.getWorld();
+            Location newLoc = new Location(w, old.getBlockX() + dx, old.getBlockY() + dy, old.getBlockZ() + dz);
+            shifted.add(new GroundLootPoint(newLoc, p.getCategory()));
+        }
+        configuredPoints.clear();
+        configuredPoints.addAll(shifted);
+    }
 }

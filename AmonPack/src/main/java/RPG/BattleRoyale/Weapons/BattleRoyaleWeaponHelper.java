@@ -127,6 +127,10 @@ public class BattleRoyaleWeaponHelper {
     /**
      * Tworzy Lekarstwo na Infekcję (Antidotum).
      */
+    public static ItemStack createInfectionCure() {
+        return createInfectionCure("POTION", "&a&l💉 Antidotum na Infekcję", Collections.singletonList("&7Wypij ten wywar, aby natychmiast usunąć wirus zombie!"), 22001);
+    }
+
     public static ItemStack createInfectionCure(String materialStr, String displayName, List<String> lore, int customModelData) {
         Material mat = Material.matchMaterial(materialStr);
         if (mat == null) mat = Material.POTION;
