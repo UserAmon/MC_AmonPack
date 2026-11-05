@@ -207,94 +207,6 @@ public class Levels_Bending {
         ItemsAdderHook.showTexturedInventory(Bukkit.getPlayer(name), BendingSkillMenu, BendingSkillMenu.getSize(), BendingSkillMenu.getTitle(), "amonpack:bending_abilities_list", inv);
     }
 
-    public void OpenSkillUpgradeMenu(Player p, String skillName) {
-        PlayerBendingBranch playersBranch = GetBranchByPlayerName(p.getName());
-        if (playersBranch == null) return;
-        Element element = playersBranch.getCurrentElement();
-        ElementTree SelectedElement = GetElement(element);
-        if (SelectedElement == null) return;
-
-        SkillUpgradeMenuHolder holder = new SkillUpgradeMenuHolder(54, ChatColor.DARK_PURPLE + "Ulepszenia: " + skillName, skillName);
-        Inventory inv = holder.getInventory();
-
-        String elName = element.getName().toLowerCase();
-        Material blankMat = Material.GRAY_STAINED_GLASS_PANE;
-        ItemStack blank = FastEasyStack(blankMat, " ");
-        for (int i = 0; i < 54; i++) {
-            inv.setItem(i, blank);
-        }
-
-        // Header in slot 4
-        Material skillMat = Material.getMaterial(SkillTreeConfig.getString("AmonPack.Menu." + elName + ".Material", "PAPER"));
-        int baseGreenModel = SkillTreeConfig.getInt("AmonPack.Menu." + elName + ".Green", 10013);
-        ItemStack headerItem = FastEasyStack(skillMat != null ? skillMat : Material.PAPER, ChatColor.GOLD + "★ " + skillName + " ★", baseGreenModel);
-        ItemMeta hMeta = headerItem.getItemMeta();
-        if (hMeta != null) {
-            List<String> hLore = new ArrayList<>();
-            hLore.add(ChatColor.GREEN + "Główna umiejętność");
-            hLore.addAll(getFormattedDescription(element.getName(), skillName));
-            hMeta.setLore(hLore);
-            headerItem.setItemMeta(hMeta);
-        }
-        inv.setItem(4, headerItem);
-
-        List<SkillTree_Ability> upgrades = SelectedElement.getSkillUpgradesFor(skillName);
-        int[] availableSlots = new int[]{19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
-        int uIdx = 0;
-
-        for (SkillTree_Ability upg : upgrades) {
-            int slot = (upg.getPlace() >= 0 && upg.getPlace() < 54 && upg.getPlace() != 4 && upg.getPlace() != 49 && upg.getPlace() != 45)
-                    ? upg.getPlace() : (uIdx < availableSlots.length ? availableSlots[uIdx] : 18 + uIdx);
-            uIdx++;
-
-            boolean unlocked = playersBranch.getUnlockedAbilities().contains(upg.getName()) || upg.isdef();
-            boolean canAfford = playersBranch.GetPoints(element) >= upg.getCost();
-            boolean reqMet = upg.getListOfPreAbility().isEmpty() || new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(upg.getListOfPreAbility());
-
-            int modelId;
-            ItemStack item = FastEasyStack(skillMat != null ? skillMat : Material.PAPER, upg.getName());
-            ItemMeta meta = item.getItemMeta();
-            List<String> lore = new ArrayList<>();
-
-            if (unlocked) {
-                modelId = SkillTreeConfig.getInt("AmonPack.Menu." + elName + ".Green", 10013);
-                lore.add(ChatColor.GREEN + "✔ ODBLOKOWANO");
-            } else if (canAfford && reqMet) {
-                modelId = SkillTreeConfig.getInt("AmonPack.Menu." + elName + ".Orange", 10012);
-                lore.add(ChatColor.GOLD + "▶ KOSZT: " + ChatColor.YELLOW + upg.getCost() + " pkt " + element.getName());
-                if (!upg.getListOfPreAbility().isEmpty()) {
-                    lore.add(ChatColor.GRAY + "Wymagane: " + String.join(", ", upg.getListOfPreAbility()));
-                }
-                lore.add(" ");
-                lore.add(ChatColor.GREEN + "▶ Kliknij LPM, aby odblokować!");
-            } else {
-                modelId = SkillTreeConfig.getInt("AmonPack.Menu." + elName + ".Red", 10011);
-                lore.add(ChatColor.RED + "✖ ZABLOKOWANE");
-                lore.add(ChatColor.RED + "Koszt: " + upg.getCost() + " pkt (Posiadasz: " + playersBranch.GetPoints(element) + ")");
-                if (!upg.getListOfPreAbility().isEmpty()) {
-                    lore.add(ChatColor.GRAY + "Wymagane: " + String.join(", ", upg.getListOfPreAbility()));
-                }
-            }
-
-            List<String> formattedDesc = getFormattedDescription(element.getName(), upg.getName());
-            if (!formattedDesc.isEmpty()) {
-                lore.add(" ");
-                lore.addAll(formattedDesc);
-            }
-
-            if (meta != null) {
-                meta.setCustomModelData(modelId);
-                meta.setLore(lore);
-                item.setItemMeta(meta);
-            }
-            inv.setItem(slot, item);
-        }
-
-        inv.setItem(49, FastEasyStack(Material.PAPER, ChatColor.RED + "Powrot", 10013));
-
-        p.openInventory(inv);
-    }
-
     public void LoadData(){
         LevelConfig= AmonPackPlugin.getLevelConfig();
         SkillTreeConfig= AmonPackPlugin.getSkillTreeConfig();
@@ -442,37 +354,6 @@ public class Levels_Bending {
         inv.setItem(53, CloseButton);
 
         ItemsAdderHook.showTexturedInventory(Bukkit.getPlayer(name), holder, 54, ChatColor.DARK_PURPLE + "Dungeonowe Umiejętności", "amonpack:bending_abilities_list", inv);
-    }
-
-    public static class SkillUpgradeMenuHolder implements org.bukkit.inventory.InventoryHolder {
-        private final Inventory inventory;
-        private final int size;
-        private final String title;
-        private final String skillName;
-
-        public SkillUpgradeMenuHolder(int size, String title, String skillName) {
-            this.size = size;
-            this.title = title;
-            this.skillName = skillName;
-            this.inventory = Bukkit.createInventory(this, size, title);
-        }
-
-        public String getSkillName() {
-            return skillName;
-        }
-
-        @Override
-        public Inventory getInventory() {
-            return inventory;
-        }
-
-        public int getSize() {
-            return size;
-        }
-
-        public String getTitle() {
-            return title;
-        }
     }
 
     public static class DungeonSkillMenuHolder implements org.bukkit.inventory.InventoryHolder {

@@ -22,8 +22,6 @@ import com.projectkorra.projectkorra.util.ParticleEffect;
 import com.projectkorra.projectkorra.util.TempBlock;
 import com.projectkorra.projectkorra.waterbending.ice.PhaseChange;
 
-import Abilities.PK_Abilities.Earth.SandBreath;
-
 public class Methods {
 	public Methods() {
 		super();
@@ -429,13 +427,8 @@ public class Methods {
 			for (Entity entity : GeneralMethods.getEntitiesAroundPoint(loc, 1 + i)) {
 				if ((entity instanceof LivingEntity) && entity.getUniqueId() != p.getUniqueId()) {
 					DamageHandler.damageEntity(entity, damage, abi);
-					if (SandBreath.push == true) {
-
-						((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS,
-								SandBreath.DeBuffsDuration, SandBreath.DeBuffsPower, false, false));
-						((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS,
-								SandBreath.DeBuffsDuration, SandBreath.DeBuffsPower, false, false));
-					}
+					((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 1, false, false));
+					((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1, false, false));
 				}
 			}
 		} while (loc.distance(originloc) < range || !loc.getBlock().getType().isSolid());

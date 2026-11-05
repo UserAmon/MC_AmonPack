@@ -4,10 +4,7 @@ import RPG.Crafting.CraftingMenager;
 import RPG.Gathering.CombatMenager;
 import RPG.Gathering.ForestMenager;
 import RPG.Gathering.MiningMenager;
-import Abilities.PK_Abilities.Air.*;
-import Abilities.PK_Abilities.Earth.*;
-import Abilities.PK_Abilities.Fire.*;
-import Abilities.PK_Abilities.Water.*;
+import Abilities.Bending.SoundAbility;
 import Plugin.Commands;
 import Plugin.AmonPackPlugin;
 import Plugin.Methods;
@@ -250,7 +247,8 @@ public class MagicEffects {
                     }
                 }
                 if (NearBlocks.size() > 3) {
-                    new EarthHammer(player, 0);
+                    player.getWorld().spawnParticle(Particle.BLOCK, player.getLocation(), 20, 0.5, 0.5, 0.5, Material.DIRT.createBlockData());
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_STONE_BREAK, 1.0f, 0.8f);
                     DamageReduction = DamageReduction + 1;
                     System.out.println("Test 32 earth   " + DamageReduction);
                 }
@@ -302,13 +300,15 @@ public class MagicEffects {
                 victim.setVelocity(direction.multiply(1).setY(0.45));
                 break;
             case "Burrow":
-                new SandWave(player, true, victim);
+                if (victim instanceof LivingEntity lv) lv.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
+                victim.getWorld().spawnParticle(Particle.BLOCK, victim.getLocation(), 25, 0.5, 0.5, 0.5, Material.SAND.createBlockData());
                 break;
             case "Fire_Aspect":
                 victim.setFireTicks(50);
                 break;
             case "Smoke_Aspect":
-                new SmokeSurge(player, true);
+                if (victim instanceof LivingEntity lv) lv.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 0));
+                victim.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, victim.getLocation(), 20, 0.5, 0.5, 0.5, 0.05);
                 break;
             case "Minor_Air_Sound_Damage_Buff":
                 if (AfffectedEntities != null && !AfffectedEntities.keySet().isEmpty()
@@ -317,31 +317,35 @@ public class MagicEffects {
                 }
                 break;
             case "Major_Air_Sound_Hit":
-                new SoundCrash(player, victim, 0);
+                SoundAbility.HandleDamage(player, victim, 4.0);
                 break;
             case "Earth_Hammer_Aspect":
-                new EarthHammer(player, 1);
+                victim.getWorld().spawnParticle(Particle.BLOCK, victim.getLocation(), 25, 0.6, 0.6, 0.6, Material.DIRT.createBlockData());
+                victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 0.6f);
                 break;
             case "Minor_Water_Icy_Slowness_Hit":
-                new IceThorn(player, victim, 2);
+                if (victim instanceof LivingEntity lv) lv.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
+                victim.getWorld().spawnParticle(Particle.SNOWFLAKE, victim.getLocation(), 15, 0.5, 0.5, 0.5, 0.05);
                 break;
             case "Air_Thrust":
                 victim.setVelocity(new Vector(0, 1, 0));
-                new AirPressure(player, victim, 0);
                 ParticleEffect.CLOUD.display(victim.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
                 break;
             case "Air_Damage_Boost_Downward":
                 DamageBoosts = DamageBoosts + 1;
-                new AirPressure(player, victim, 1);
+                victim.setVelocity(new Vector(0, -1, 0));
+                ParticleEffect.CLOUD.display(victim.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
                 break;
             case "Earth_1":
                 Methods.spawnFallingBlocks(victim.getLocation(), Material.DIRT, 6, 1.5, player);
                 break;
             case "Ice_Thorn_Ability_Aspect":
-                new IceThorn(player, victim, 0);
+                if (victim instanceof LivingEntity lv) lv.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 2));
+                victim.getWorld().spawnParticle(Particle.BLOCK, victim.getLocation(), 20, 0.5, 0.5, 0.5, Material.ICE.createBlockData());
                 break;
             case "Ice_Encase":
-                new IceThorn(player, victim, 1);
+                if (victim instanceof LivingEntity lv) lv.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 3));
+                victim.getWorld().spawnParticle(Particle.BLOCK, victim.getLocation(), 30, 0.5, 0.5, 0.5, Material.PACKED_ICE.createBlockData());
                 break;
             case "Lightning_Aspect":
                 Methods.LightningProjectile(victim.getLocation().clone().add(0, 1.5, 0), player);

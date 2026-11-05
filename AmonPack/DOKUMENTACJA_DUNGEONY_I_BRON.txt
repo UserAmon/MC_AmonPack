@@ -1,0 +1,149 @@
+# AmonPack — Dokumentacja Wersji Dungeony & Broń Palna
+**Branch:** `feature/dungeons-and-guns`  
+**Wersja:** 1.1 (Build produkcyjny na serwer)  
+**Plik wynikowy JAR:** `target/AmonPack-1.1.jar`
+
+---
+
+## 1. Podsumowanie Wprowadzonych Zmian
+
+W tej gałęzi projekt został zoptymalizowany pod kątem rozgrywki opartej na **Lochach (Dungeonach)** oraz **Zaawansowanym Systemie Broni Palnej**, eliminując zbędne i konfliktowe mechaniki:
+
+1. **Całkowite usunięcie systemu ruchów magicznych PK (ProjectKorra abilities):**
+   - Usunięto ponad 65 autorskich zdolności bendingu PK z pakietu `Abilities.PK_Abilities` (w tym całe gałęzie Chi, Wody, Ognia, Ziemi i Powietrza).
+   - Usunięto rejestrację sub-elementów Dymu i Dźwięku (`SmokeElement`, `SoundElement`) oraz listenerów combo/triggerów z PK (`AbilitiesListener`, `SpecialTriggerManager`).
+   - Usunięto zarządzanie Chi (`ChiManager`) oraz zadania w tle powiązane z ruchami PK.
+
+2. **Całkowite usunięcie ulepszeń magii PK (Upgrades):**
+   - Z konfiguracji drzewka umiejętności (`RPG/skilltree.yml`) usunięto wszystkie 51 węzłów ulepszeń umiejętności bendingu (`IsSkillUpgrade`, `IsAbilityUpgrade`, `IsPassiveUpgrade`).
+   - Usunięto menu GUI ulepszeń umiejętności PK (`SkillUpgradeMenuHolder`, `OpenSkillUpgradeMenu`) oraz mechanikę modyfikowania statystyk ability PK (`UpgradesMenager`, `AttributeModifier`).
+   - Z plików `abilities_config.yml` usunięto sekcje ulepszeń.
+
+3. **Całkowite usunięcie trybu Zombie (Battle Royale):**
+   - Usunięto pakiet `RPG.BattleRoyale` (zombie customowe, system infekcji wirusem zombie, mechanikę krwi, barykady, hałas, plecaki, boty, strefy burzy i zrzuty zaopatrzenia).
+   - Usunięto plik konfiguracyjny `battleroyale.yml` oraz komendę `/hungergames` (`/hg`, `/br`, `/battleroyale`).
+
+4. **Nienaruszone i w 100% zachowane:**
+   - **System Dungeonów (Lochów Rogue-lite):** Pełna logika generowania, walk, fal potworów, bossów, skrzyń z łupami, kluczy, błogosławieństw oraz ulepszeń startowych (`/dungbuild`).
+   - **System Broni Palnej (Guns):** Wszystkie archetypy broni, system rusznikarstwa, unikalne modyfikacje broni, system amunicji, efekty dźwiękowe/cząsteczkowe oraz bonusy zestawów pancerzy strzeleckich.
+   - **Systemy Wspierające RPG:** Progresja etapowa (`slow_progression`), customowe bloki, rudy i przedmioty (ItemsAdder / PackManager), bossowie MythicMobs, crafting na formach, bounties oraz system drużyn (party).
+
+---
+
+## 2. System Dungeonów (Lochów Rogue-lite)
+
+Modułowy system lochów instancjonowanych działający na dedykowanych światach tymczasowych.
+
+### Główne cechy
+- **Instancje tymczasowe:** Każdy rajd lochu tworzy odizolowany świat (lub instancję), w którym gracze przechodzą przez sekwencję sal i wyzwań.
+- **Kondycje i zadania w pokojach (`DungeonCondition`):**
+  - `KILL_MOBS`: Eliminacja wyznaczonych potworów lub bossów MythicMobs.
+  - `INTERACTION`: Aktywacja dźwigni, przycisków, składanie ofiar lub interakcja z blokami.
+  - `KEY_INSERTION`: Otwieranie wrót przy użyciu znalezionych w lochu kluczy.
+  - `PRESSURE_PLATE`: Mechanizmy naciskowe wymagające koordynacji drużyny.
+  - `PARKOUR` / `REBUILD`: Wyzwania zręcznościowe oraz odbudowywanie struktur.
+- **Błogosławieństwa (Dungeon Blessings) i Wyposażenie Unikalne:**
+  - *Sierp Wiatru (Wind Sickle):* Ładowanie pędu w biegu, fala uderzeniowa i obrażenia dźwiękowe (`SoundAbility.HandleDamage`).
+  - *Bliźniacze Ostrza Błękitnego Ducha (Blue Spirit Swords):* Płynna walka dwoma mieczami, bonusy za parowanie.
+  - *Sztylety Mai (Mai Daggers):* Rzut wachlarzem sztyletów, oznaczanie i spowalnianie celów.
+  - *Młot Ziemi (Earth Hammer):* Zwiększona obrona, fala uderzeniowa przy 100% naładowania.
+  - *Laska Wody (Water Staff):* Aura lecząca sojuszników, spowalnianie wrogów wokół.
+- **Skrzynie ze Skarbami (`DungeonLootChest`):**
+  - Wybór nagród po ukończeniu etapów (ulepszenia statystyk HP, DEF, ATK, krytyków lub perki broni).
+- **Startowe Ulepszenia Lochów (`/dungbuild`, `dung_build.yml`):**
+  - Odblokowywanie trwałych bonusów przed wejściem do lochu na podstawie poziomu statystyki `DUNGEON` (dodatkowe życia, startowe mikstury, redukcja cooldownów).
+
+### Komendy Dungeonów
+| Komenda | Opis | Uprawnienia |
+|---|---|---|
+| `/dungeons start <nazwa>` | Rozpoczyna rajd do wybranego lochu (np. `makapu_bandyci`, `przykladowy_dungeon`) | Gracze / Drużyna |
+| `/dungeons leave` | Opuszczenie aktywnego lochu i powrót na spawn | Dostępne dla uczestnika |
+| `/dungeons skills` | Otwiera menu umiejętności dungeonowych | Dostępne w lochu |
+| `/dungeons reload` | Przeładowuje pliki konfiguracji lochów | Administrator (`amonpack.admin`) |
+| `/dungbuild` | Otwiera GUI startowych ulepszeń eksploracji lochów | Gracze |
+
+---
+
+## 3. System Broni Palnej i Rusznikarni (Guns & Gunsmithing)
+
+Autorski, zaawansowany silnik broni palnej z pełną fizyką pocisków ray-trace, odrzutem i modyfikacjami.
+
+### Archetypy Broni Palnej
+1. **Flintlock Pistol (Pistolet Skałkowy):**
+   - Lekka, poręczna broń boczna o szybkim czasie przeładowania.
+2. **Blunderbuss (Garłacz):**
+   - Broń krótka o potężnym rozrzucie śrutu, zadająca niszczycielskie obrażenia w zwarciu.
+3. **Flintlock Musket (Muszkiet Skałkowy):**
+   - Długodystansowa broń piechoty o wysokiej celności i dużych obrażeniach pojedynczego strzału.
+4. **Crude Rifle (Samopał / Karabin):**
+   - Zbalansowana broń o średnim zasięgu, dużej penetracji i podatności na ulepszenia.
+5. **Crude Shotgun (Dubeltówka / Strzelba):**
+   - Dwustrzałowa potęga bliskiego dystansu, wystrzeliwująca chmarę śrutu.
+6. **Pepperbox (Rewolwer Wiązkowy):**
+   - Wielolufowy pistolet z magazynkiem bębenkowym, pozwalający na oddanie serii strzałów przed koniecznością dłuższego ładowania.
+7. **Stalker Rifle (Karabin Tropiciela):**
+   - Specjalistyczny karabin precyzyjny o dużej sile rażenia przy trafieniach w głowę.
+
+### Mechanika Strzelania i Przeładowania
+- **Fizyka i Detekcja:** Wykrywanie trafień metodą precyzyjnego ray-castingu, z uwzględnieniem headshotów (mnożnik obrażeń krytycznych).
+- **Przeładowanie:** Wymaga posiadania odpowiedniej amunicji w ekwipunku lub drugiej ręce (off-hand). Animacja i dźwięki ryglowania/ładowania.
+- **Rzadkości Broni (`GunRarity`):** `COMMON`, `UNCOMMON`, `RARE`, `EPIC`, `LEGENDARY` — wyższe rzadkości skalują obrażenia, pojemność magazynka i trwałość.
+- **Unikalne Modyfikacje (`GunUniqueMod`):**
+  - `SCOPED`: Luneta przybliżająca pole widzenia (FOV zoom) zwiększająca celność.
+  - `EXTENDED_MAG`: Zwiększona pojemność komory/magazynka.
+  - `DRAGON_BREATH`: Pociski zapalające podpalające cele i otoczenie.
+  - `HEAVY_FRAME`: Zwiększone obrażenia kosztem wyższego odrzutu.
+  - `LIGHTWEIGHT`: Zwiększona mobilność gracza podczas trzymania broni.
+  - `DUAL_SHOT`: Wystrzeliwanie podwójnych pocisków w jednej salwie.
+
+### Amunicja
+- **Lead Bullet (Ołowiana Kula):** Standardowy pocisk do pistoletów i karabinów.
+- **Scatter Shot (Śrut):** Amunicja do strzelb i garłaczy.
+- **Slug Cartridge (Pocisk Breneka):** Ciężki pocisk jednolity do strzelb o potężnej sile obalającej.
+- **Dragon Cartridge & Dragon Scatter Shot:** Zapalające warianty amunicji nasycone smoczym prochem.
+
+### Stół Rusznikarski (`Gunsmith Table`)
+- Dedykowany blok i interfejs GUI do czyszczenia, naprawiania, nakładania modyfikacji oraz kalibracji broni palnej.
+
+---
+
+## 4. Pozostałe Systemy RPG w AmonPack
+
+### Progresja Etapowa (`Slow Progression`)
+- System etapów RPG (Epoki: Kamienna, Żelazna, Diamentowa, Magiczna, etc.).
+- Cele i zadania fabularne: zabijanie określonych bossów, wydobywanie rud, rzemiosło.
+- GUI postępu: `/progression` (alias: `/progress`, `/quests`, `/stage`, `/zadania`).
+
+### Customowe Przedmioty, Bloki i Bossowie (`CustomContent`)
+- Integracja z ItemsAdder oraz autorski serwer/manager resourcepacka (`/amon`).
+- Pancerze z bonusami zestawów:
+  - *Zestaw Strzelecki (Marksman Armor):* Szansa na niezłożenie amunicji, bonus do trafień w głowę, skrócenie czasu przeładowania broni palnej.
+- Przywoływanie Bossów MythicMobs za pomocą zwojów (`Scroll_Of_Zombie_Raider`, etc.).
+
+### System Poziomów Gracza i Baza Danych (`PlayerLevelMenager`)
+- Statystyki poziomów zapisywane w lokalnej bazie SQLite (`AmonPackSQL.db`):
+  - `MINING` (Kopalnictwo)
+  - `COMBAT` (Walka z mobami)
+  - `DUNGEON` (Eksploracja lochów)
+  - `FARMING`, `LUMBERING`, `SMITHING`, `CRAFTING`, `BOUNTY`
+- GUI statystyk i poziomów: `/Level`.
+
+### Bounties (Zlecenia) & Party (Drużyny)
+- Tablica zleceń `/bounties`: eliminacja potworów za nagrody pieniężne i EXP.
+- System drużyn `/party` (`/p <wiadomość>`): wspólne rajdy do lochów, toggle friendly-fire.
+
+---
+
+## 5. Instrukcja Wdrożenia na Serwerze
+
+1. **Plik wtyczki:**
+   - Gotowy plik JAR znajduje się pod ścieżką:  
+     `target/AmonPack-1.1.jar`
+2. **Wymagania serwera:**
+   - Silnik: Paper / Purpur / Spigot w wersji 1.20 - 1.21.x.
+   - Java: 17 lub 21 (zgodnie z wersją silnika serwera).
+   - Zależności opcjonalne / softdepend: ProtocolLib, WorldEdit / FastAsyncWorldEdit, ItemsAdder (dla tekstur i modeli).
+3. **Instalacja:**
+   - Skopiuj plik `AmonPack-1.1.jar` do katalogu `plugins/` swojego serwera Minecraft.
+   - Uruchom lub przeładuj serwer. W konsoli pojawi się komunikat:
+     `[AmonPack] AmonPack włączony [Bending: false, SkillTree: true, Dungeons: true, RPG: true, ...]`

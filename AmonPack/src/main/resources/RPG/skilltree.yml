@@ -65,35 +65,6 @@ AmonPack:
         Cost: 0
         Place: 49
         ReqAbilities: []
-      FireSwirlMulti:
-        Cost: 5
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "FireSwirl"
-        ReqAbilities:
-        - FireSwirl
-        Description:
-        - '&7Dodaje &eużycie LPM&7.'
-      FireSwirlMaster:
-        Cost: 25
-        Place: 24
-        IsSkillUpgrade: true
-        SkillName: "FireSwirl"
-        ReqAbilities:
-          - FireSwirlDouble
-        Description:
-          - "&ePodpalenie trwa dwukrotnie dłużej&7 (&e6 sekund&7)."
-          - "&7Pociski w locie &elekko podążają za kamerą&7."
-      FireSwirlDouble:
-        Cost: 15
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "FireSwirl"
-        ReqAbilities:
-          - FireSwirlMulti
-        Description:
-          - "&7Dodaje &e użycie LPM&7."
-          - "&ePociski przeszywają wrogów&7."
       FireBlast:
         Cost: 5
         Place: 47
@@ -119,16 +90,6 @@ AmonPack:
         Place: 22
         ReqAbilities:
         - WallOfFire
-      Firefly:
-        Cost: 22
-        IsSkillUpgrade: true
-        SkillName: "FlameSpins"
-        ReqAbilities:
-          - FlameSpins
-        Description:
-          - "&7Pozwala na &e3 strzały &7LPM dla FlameSpins,"
-          - "&7wydłuża czas opadania w powietrzu o &e1 sekundę&7,"
-          - "&7oraz skraca cooldown o &epołowę&7."
       FireShield:
         Cost: 20
         Place: 2
@@ -142,37 +103,6 @@ AmonPack:
         Description:
           - "&7Wystrzeliwuje pocisk ognia wysoko w górę po łuku."
           - "&7Pocisk idealnie trafia we wskazany blok i wybucha."
-      FireRainWide:
-        Cost: 5
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "FireRain"
-        ReqAbilities:
-        - FireRain
-        Description:
-          - "&7Zwiększa obszar wybuchu o &e80%&7."
-          - "&7Podpala bloki podłoża w obszarze trafienia."
-      DoubleTheFun:
-        Cost: 35
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "FireRain"
-        ReqAbilities:
-          - FireRain
-        Description:
-          - "&cPozwala na &edrugie użycie FireRain&c"
-          - "&cw ciągu &e3 sekund&c przed nałożeniem cooldownu."     
-      FireRainInferno:
-        Cost: 45
-        Place: 24
-        IsSkillUpgrade: true
-        SkillName: "FireRain"
-        ReqAbilities:
-          - DoubleTheFun
-          - FireRainWide
-        Description:
-          - "&7Każde użycie wystrzeliwuje &e2 pociski ognia&7."
-          - "&7Pociski uderzają symetrycznie z obu stron celu."
       FlameWeave:
         Cost: 30
         Place: 92
@@ -246,17 +176,6 @@ AmonPack:
         Description:
           - "&1Przyzwij potęgę błyskawic. Zbierz wewnętrzną"            
           - "&1energię elektryczną, by uwolnić niszczycielską wiązkę!"
-      CoilThunder:
-        Cost: 20
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "Coil"
-        ReqAbilities:
-          - Coil
-        Description:
-          - "&eTrafienie we wroga tworzy pod jego nogami pierścień błyskawic,"
-          - "&7który &eładuje się stopniowo co 30°&7. Po pełnym naładowaniu"
-          - "&7w obszarze uderzają pioruny, zadając obrażenia i odrzucając wrogów!"
       SmokeSurge:
         Cost: 40
         Place: 78
@@ -274,15 +193,6 @@ AmonPack:
         Description:
           - "&cUderz wrogów płonącym biczem!"
           - "&cKontroluj go przynieść innym śmierć!"
-      Static:
-        Cost: 45
-        Place: 54
-        IsAbilityUpgrade: true
-        ReqAbilities:
-          - ArcBlast
-        Description:
-          - "&7Ionization wypuszcza &e2 dodatkowe pociski &7na boki,"
-          - "&7będące mniejszymi kopiami oryginalnej wiązki."
       FireLordStance:
         Cost: 100
         Place: 55
@@ -341,25 +251,6 @@ AmonPack:
         Place: 81
         ReqAbilities:
         - SandRupture
-      Probender:
-        Cost: 35
-        Place: 54
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - SandDisc
-        Description:
-        - '&7Dodaje &edodatkowy dysk &7do umiejętności'
-        - '&eEarthDiscs &7oraz &eSandDisc&7.'
-      EarthShater:
-        Cost: 30
-        Place: 74
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - SandRupture
-        Description:
-        - '&7Pozwala na użycie &eSandRupture (LPM)'
-        - '&7na &edowolnym bloku &7podlegającym magii ziemi,'
-        - '&7generując spadające bloki z tego materiału.'
       BoulderRoll:
         Cost: 35
         Place: 56
@@ -383,43 +274,15 @@ AmonPack:
         Place: 76
         ReqAbilities:
         - RaiseEarth
-      EarthWallLaunch:
-        Cost: 30
-        Place: 77
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - RaiseEarth
-        Description:
-        - '&7Puszczenie SHIFT przed końcem czasu wysyła ścianę'
-        - '&7naprzód jako falę ziemi porywającą wrogów!'
       EarthShift:
         Cost: 35
         Place: 58
         ReqAbilities:
         - EarthHammer
-      Chunky:
-        Cost: 35
-        Place: 60
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - EarthShift
-        Description:
-        - '&7Zwiększa zasięg i promień &eEarthShift &7i &eEarthHammer &7o &e1 blok&7.'
-        - '&7Pomyślne przyciągnięcie EarthShiftem daje efekt pośpiechu na &e10s&7,'
-        - '&7który sprawia, że kolejny EarthHammer nie wymaga ładowania i jest szybszy.'
       EarthStrike:
         Cost: 0
         Place: 49
         ReqAbilities: []
-      EarthStrikeTriOrbit:
-        Cost: 15
-        Place: 22
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - EarthSpear
-        Description:
-        - '&7Pochłania &e3 bloki ziemi&7 orbitujące pionowo.'
-        - '&7Wystrzeliwuje &e3 pociski naraz&7.'
       EarthBarricade:
         Cost: 20
         Place: 4
@@ -428,23 +291,6 @@ AmonPack:
         Description:
         - '&4Wznieś przed sobą wielką ściane z'
         - '&4kamienia i zablokuj wszelkie ataki!'
-      EarthWallSize:
-        Cost: 25
-        Place: 103
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - EarthBarricade
-        Description:
-        - '&7Zwiększa wysokość, szerokość oraz grubość ściany.'
-      EarthWallShatter:
-        Cost: 25
-        Place: 106
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - EarthBarricade
-        Description:
-        - '&7Przy rozpadzie generuje &eodłamki FallingBlock&7'
-        - '&7wyrzucane w przód i we wszystkich kierunkach.'
       EarthBlast:
         Cost: 5
         Place: 47
@@ -470,25 +316,6 @@ AmonPack:
         Place: 18
         ReqAbilities:
         - Catapult
-      EarthStrikePiercing:
-        Cost: 20
-        Place: 0
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - DiscHurl
-        Description:
-        - '&ePociski przeszywają wrogów&7.'
-        - '&7W locie pociski &elekko podążają za kamerą&7.'
-        - '&7Rozpad następuje wyłącznie przy uderzeniu w blok.'
-      EarthStrikeSplit:
-        Cost: 5
-        Place: 51
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - EarthStrike
-        Description:
-        - '&7Po uderzeniu w ścianę lub we wroga -ruch &erozpada się&7'
-        - '&7na odłamki pocisków zadające obrażenia na większym promieniu.'
       EarthSpear:
         Cost: 10
         Place: 33
@@ -609,17 +436,6 @@ AmonPack:
         - '&7Następnie podłoże zamienia się w wyjałowioną ziemię'
         - '&7i wykwitają wysokie pola cierni (2-3 bloki) z efektem Wither.'
         - '&e[Ruch Specjalny - SWAP (F)]'
-      Uppercut:
-        Cost: 2
-        Place: 20
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - WaterFist
-        Description:
-        - '&7Zmniejsza cooldown &eWaterFist o połowę&7,'
-        - '&7zwiększa zasięg ataku o &e1 kratkę&7,'
-        - '&7daje &e1 dodatkowe użycie LPM&7,'
-        - '&7oraz sprawia, że &ekażdy atak zamraża cel&7.'
       WaterArms:
         Cost: 75
         Place: 19
@@ -661,17 +477,6 @@ AmonPack:
         Place: 27
         ReqAbilities:
         - Echo
-      Dysonance:
-        Cost: 35
-        Place: 21
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - Acoustics
-        Description:
-        - '&7Zwiększa limit stacków dźwięku przed wybuchem do &e25&7.'
-        - '&7Przeciwnicy tracą nałożone stacki &edwukrotnie wolniej&7.'
-        - '&7Dodaje &e2 dodatkowe pociski &7do umiejętności &eEcho&7.'
-        - '&7Umiejętność &eResonance &7ładuje się &edwukrotnie szybciej&7.'
       Acoustics:
         Cost: 15
         Place: 19
@@ -691,17 +496,6 @@ AmonPack:
         - '&7Po &e3 sekundach &7nad kliknietym blokiem pojawia sie'
         - '&7spadajacy pocisk basowy. Uderzenie wysyla szeroka'
         - '&7fale dzwiekowa, naklada stacki i trzesie kamera graczy.'
-      Encore:
-        Cost: 50
-        Place: 2
-        IsAbilityUpgrade: true
-        ReqAbilities:
-        - Acoustics
-        Description:
-        - '&7Pozwala na użycie &eAcoustics &7nawet na celach bez stacków.'
-        - '&7Zwiększa &ezasięg łączenia &7oraz zasięg maksymalny linów w Acoustics.'
-        - '&7Każda umiejętność dźwiękowa nakłada o &e1 stack więcej&7.'
-        - '&7Pocisk &eSoundCrash &7podczas lotu &elekko podąża za celownikiem&7.'
       AirSteps:
         Cost: 20
         Place: 26
@@ -712,559 +506,6 @@ AmonPack:
         - '&7Każdy podskok wystrzeliwuje podmuch powietrza w dół,'
         - '&7odrzucający wrogów na boki.'
         - '&7Uderzenie odrzuconego wroga w ścianę zadaje obrażenia!'
-      Cyclone:
-        Cost: 30
-        Place: 28
-        ReqAbilities:
-        - AirSteps
-        Description:
-        - '&7Wystrzeliwuje małe tornado poruszające się naprzód.'
-        - '&7Przechwytuje wroga, odrywa go od ziemi, trzyma'
-        - '&7i obraca w wirowym powietrzu.'
-
-# AmonPack:
-#   Menu:
-#     fire:
-#       Material: PAPER
-#       Path: 10010
-#       Green: 10013
-#       Orange: 10012
-#       Red: 10011
-#     air:
-#       Material: PAPER
-#       Path: 10018
-#       Green: 10021
-#       Orange: 10020
-#       Red: 10019
-#     water:
-#       Material: PAPER
-#       Path: 10014
-#       Green: 10017
-#       Orange: 10016
-#       Red: 10015
-#     earth:
-#       Material: PAPER
-#       Path: 10022
-#       Green: 10025
-#       Orange: 10024
-#       Red: 10023
-#   Tree:
-#     Fire:
-#       PathDecoration:
-#       FireJet:
-#         Cost: 15
-#         Place: 20
-#         ReqAbilities:
-#         - FlameSpins
-
-#       SteadyHand:
-#         Cost: 20
-#         Place: 18
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - FlameSpins
-#         Description:
-#           - "&7Ulepsza &eSmokeDaggers&7."
-#           - "&7Umiejętność rzuca &e2 sztyletami &7zamiast 3."
-#           - "&7Ruch ma &e3 użycia LPM &7zanim wejdzie w cooldown."
-#           - "&7Pierwsze dwa rzuty nie zostawiają dymu."
-#           - "&7Dopiero &etrzecie użycie &7zostawia źródło dymu (smokesource)."
-#           - "&7Czas na wykonanie całej sekwencji wynosi hojne &e6 sekund&7."
-#       Strategist:
-#         Cost: 20
-#         Place: 28
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - Blaze
-#         Description:
-#           - "&7Przyciągane źródła dymu (&eSmokePull&7, &eSmokeBarrage&7, &eSmokeCamouflage&7)"
-#           - "&7zadają &edodatkowe obrażenia &7wrogom, przez których przechodzą."
-#       BOOrst:
-#         Cost: 20
-#         Place: 29
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - Blaze
-#         Description:
-#           - "&7Jeśli masz przypisaną umiejętność &eSmokeBurst &7na dowolnym slocie,"
-#           - "&7dotknięcie źródła dymu &eSmokeSource &7powoduje jego &enatychmiastowy wybuch&7."
-
-#       DoubleTheFun:
-#         Cost: 20
-#         Place: 45
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - FireRain
-#         Description:
-#           - "&7Pozwala na &edrugie użycie FireRain&7"
-#           - "&7w ciągu &e3 sekund&7 przed nałożeniem cooldownu."
-#       FireRainInferno:
-#         Cost: 25
-#         Place: 47
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - DoubleTheFun
-#         Description:
-#           - "&7Każde użycie wystrzeliwuje &e2 pociski ognia&7."
-#           - "&7Pociski uderzają symetrycznie z obu stron celu."
-#     Earth:
-#       PathDecoration:
-#         - 12
-#         - 13
-#         - 23
-#         - 25
-#         - 28
-#         - 29
-#         - 31
-#         - 39
-#         - 41
-#         - 46
-#         - 49
-#         - 58
-#         - 65
-#         - 68
-#         - 72
-#         - 73
-#         - 75
-#         - 76
-#         - 79
-#         - 82
-#         - 85
-#         - 87
-#         - 90
-#         - 97
-#         - 103
-#         - 112
-#         - 112
-
-
-
-#       Trickshot:
-#         Cost: 2
-#         Place: 13
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - EarthDiscs
-#         Description:
-#           - "&7Z każdym odbiciem DiscHurl, EarthDiscs i SandDisc"
-#           - "&7zwiększa swoje obrażenia o &e0.5&7,"
-#           - "&7aż do osiągnięcia &edwukrotności &7obrażeń bazowych."
-
-
-#       EarthWallShatter:
-#         Cost: 20
-#         Place: 45
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - EarthBarricade
-#         Description:
-#           - "&7Przy rozpadzie generuje &eodłamki FallingBlock&7"
-#           - "&7wyrzucane w przód i we wszystkich kierunkach."
-#       EarthWallLaunch:
-#         Cost: 25
-#         Place: 46
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - EarthWallSize
-#         Description:
-#           - "&7Puszczenie SHIFT przed końcem czasu wysyła ścianę"
-#           - "&7naprzód jako falę ziemi porywającą wrogów!"
-#     Water:
-#       PathDecoration:
-#         - 38
-#         - 39
-#         - 40
-#         - 41
-#         - 29
-#         - 42
-#         - 22
-#         - 22
-#         - 28
-#         - 24
-#         - 6
-#         - 10
-#         - 9
-#         - 1
-#         - 3
-#         - 105
-#         - 96
-#       WaterFist:
-#         Cost: 0
-#         Place: 49
-#         ReqAbilities: []
-#       WaterManipulation:
-#         Cost: 5
-#         Place: 38
-#         ReqAbilities:
-#         - WaterFist
-#       Surge:
-#         Cost: 20
-#         Place: 31
-#         ReqAbilities:
-#         - WaterManipulation
-#       PhaseChange:
-#         Cost: 15
-#         Place: 37
-#         ReqAbilities:
-#         - WaterManipulation
-#       IceThorn:
-#         Cost: 50
-#         Place: 4
-#         ReqAbilities:
-#         - PhaseChange
-#         - WaterFist
-#       HealingWaters:
-#         Cost: 10
-#         Place: 33
-#         ReqAbilities: []
-#       CalmTide:
-#         Cost: 30
-#         Place: 15
-#         ReqAbilities:
-#         - HealingWaters
-#       BloodBending:
-#         Cost: 40
-#         Place: 7
-#         ReqAbilities:
-#         - CalmTide
-#       BloodArrow:
-#         Cost: 50
-#         Place: 87
-#         ReqAbilities:
-#         - BloodBending
-#       BloodCall:
-#         Cost: 50
-#         Place: 94
-#         ReqAbilities:
-#         - BloodBending
-#       WaterWhip:
-#         Cost: 10
-#         Place: 23
-#         ReqAbilities:
-#           - WaterFist
-#         Description:
-#           - "&71. LPM: Zaznacza źródło wody."
-#           - "&72. LPM: Wystrzeliwuje falujący bicz wodny."
-#       WaterWhipLong:
-#         Cost: 15
-#         Place: 24
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - WaterWhip
-#         Description:
-#           - "&7Zwiększa zasięg bicza o &e8 bloków&7."
-#           - "&eBicz przeszywa wielu wrogów naraz&7."
-#       WaterWhipPull:
-#         Cost: 20
-#         Place: 27
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - WaterWhipLong
-#         Description:
-#           - "&7Bicz przyciąga trafionych wrogów do gracza."
-#           - "&7Przeciąga wszystkich złapanych wrogów przy powrocie."
-#       WaterWhipExtend:
-#         Cost: 25
-#         Place: 28
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - WaterWhipPull
-#         Description:
-#           - "&7Po uderzeniu bicz wraca i &epozostaje w dłoni na 5s&7."
-#           - "&7W tym stanie możesz aktywnie sterować biczem kamerą."
-#       Hoarfrost:
-#         Cost: 25
-#         Place: 25
-#         IsSpecialBindAbility: true
-#         ReqAbilities:
-#           - WaterWhip
-#         Description:
-#           - "&7Przyciąga lód ze źródła wody (do 3 stacków)."
-#           - "&7Wciśnięcie SHIFT wystrzeliwuje sople lodu."
-#           - "&e[Ruch Specjalny - SWAP (F)]"
-#       VineSnare:
-#         Cost: 35
-#         Place: 26
-#         IsSpecialBindAbility: true
-#         ReqAbilities:
-#           - Hoarfrost
-#         Description:
-#           - "&7Tworzy zielony krąg pnączy w wskazanym miejscu roślinnym."
-#           - "&7Po 2s animacji macki pnączy strzelają w górę i przyciągają wrogów."
-#           - "&7Przeciwnicy są unieruchomieni przez 3s."
-#           - "&7Po zakończeniu w miejscu uwięzienia zakwitają kwiaty!"
-#           - "&e[Ruch Specjalny - SWAP (F)]"
-#       Blossom:
-#         Cost: 25
-#         Place: 90
-#         ReqAbilities:
-#           - VineSnare
-#         Description:
-#           - "&7Ładuje falę trawy i kwiatów w stożku V przed graczem."
-#           - "&7Po puszczeniu SHIFT fala kwiatów wystrzeliwuje na wprost,"
-#           - "&7strzela pnączami na boki i zostawia dzikie kwiaty na ziemi."
-#       Withering:
-#         Cost: 40
-#         Place: 78
-#         IsSpecialBindAbility: true
-#         ReqAbilities:
-#           - Blossom
-#         Description:
-#           - "&7Powoduje 2s usychanie roślin w obszarze."
-#           - "&7Następnie podłoże zamienia się w wyjałowioną ziemię"
-#           - "&7i wykwitają wysokie pola cierni (2-3 bloki) z efektem Wither."
-#           - "&e[Ruch Specjalny - SWAP (F)]"
-#       Uppercut:
-#         Cost: 2
-#         Place: 20
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - WaterFist
-#         Description:
-#           - "&7Zmniejsza cooldown &eWaterFist o połowę&7,"
-#           - "&7zwiększa zasięg ataku o &e1 kratkę&7,"
-#           - "&7daje &e1 dodatkowe użycie LPM&7,"
-#           - "&7oraz sprawia, że &ekażdy atak zamraża cel&7."
-#       WaterArms:
-#         Cost: 75
-#         Place: 19
-#         ReqAbilities:
-#         - WaterFist
-#       TideLock:
-#         Cost: 35
-#         Place: 0
-#         ReqAbilities:
-#         - WaterArms
-#       Torrent:
-#         Cost: 50
-#         Place: 2
-#         ReqAbilities:
-#           - TideLock
-#           - PhaseChange
-#       WaterStrike:
-#         Cost: 5
-#         Place: 12
-#         ReqAbilities: []
-#         Description:
-#           - "&7Przytrzymaj SHIFT na wodzie lub lodzie, aby unieść"
-#           - "&7blok przed kamerę. Puszczenie SHIFT wystrzeliwuje pocisk."
-#       WaterStrikeSplit:
-#         Cost: 15
-#         Place: 13
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - WaterStrike
-#         Description:
-#           - "&7Po uderzeniu w ścianę pocisk &erozpada się&7"
-#           - "&7na 5 odłamków spowalniających wrogów."
-#       WaterStrikeTriOrbit:
-#         Cost: 20
-#         Place: 14
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - WaterStrike
-#         Description:
-#           - "&7Pochłania &e3 bloki wody/lodu&7 orbitujące pionowo."
-#           - "&7Wystrzeliwuje &e3 pociski naraz&7."
-#       WaterStrikePiercing:
-#         Cost: 25
-#         Place: 21
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - WaterStrikeSplit
-#         Description:
-#           - "&ePociski przeszywają wrogów&7."
-#           - "&7W locie pociski &elekko podążają za kamerą&7."
-#           - "&7Rozpad następuje wyłącznie przy uderzeniu w blok."
-#       IceBarricade:
-#         Cost: 5
-#         Place: 43
-#         ReqAbilities: []
-#         Description:
-#           - "&7Przytrzymaj SHIFT na wodzie/lodzie, aby wznieść lodową ścianę."
-#           - "&7Ściana podąża za obrotem kamery z bezwładnością."
-#           - "&7Rozpad nakłada &eSlowness II&7 na pobliskich wrogów."
-#       IceWallSize:
-#         Cost: 15
-#         Place: 44
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - IceBarricade
-#         Description:
-#           - "&7Zwiększa wysokość, szerokość oraz grubość lodowej ściany."
-#       IceWallShatter:
-#         Cost: 20
-#         Place: 45
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - IceBarricade
-#         Description:
-#           - "&7Przy rozpadzie generuje &eodłamki lodu FallingBlock&7."
-#       IceWallLaunch:
-#         Cost: 25
-#         Place: 46
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - IceWallSize
-#         Description:
-#           - "&7Puszczenie SHIFT wysyła lodową ścianę jak lodowiec naprzód!"
-#     Air:
-#       PathDecoration:
-#         - 39
-#         - 40
-#         - 41
-#         - 37
-#         - 9
-#         - 1
-#         - 20
-#         - 36
-#         - 18
-#       AirSwipe:
-#         Cost: 0
-#         Place: 49
-#         ReqAbilities: []
-#       Echo:
-#         Cost: 15
-#         Place: 38
-#         ReqAbilities:
-#           - AirSwipe
-#       Resonance:
-#         Cost: 25
-#         Place: 27
-#         ReqAbilities:
-#           - Echo
-#       Dysonance:
-#         Cost: 35
-#         Place: 21
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - Acoustics
-#         Description:
-#           - "&7Zwiększa limit stacków dźwięku przed wybuchem do &e25&7."
-#           - "&7Przeciwnicy tracą nałożone stacki &edwukrotnie wolniej&7."
-#           - "&7Dodaje &e2 dodatkowe pociski &7do umiejętności &eEcho&7."
-#           - "&7Umiejętność &eResonance &7ładuje się &edwukrotnie szybciej&7."
-#       Acoustics:
-#         Cost: 15
-#         Place: 19
-#         ReqAbilities:
-#           - Resonance
-#       SoundCrash:
-#         Cost: 20
-#         Place: 0
-#         ReqAbilities:
-#           - Resonance
-#       BassDrop:
-#         Cost: 30
-#         Place: 1
-#         ReqAbilities:
-#            - Resonance
-#         Description:
-#            - "&7Po &e3 sekundach &7nad kliknietym blokiem pojawia sie"
-#            - "&7spadajacy pocisk basowy. Uderzenie wysyla szeroka"
-#            - "&7fale dzwiekowa, naklada stacki i trzesie kamera graczy."
-#       Encore:
-#         Cost: 50
-#         Place: 2
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - Acoustics
-#         Description:
-#           - "&7Pozwala na użycie &eAcoustics &7nawet na celach bez stacków."
-#           - "&7Zwiększa &ezasięg łączenia &7oraz zasięg maksymalny linów w Acoustics."
-#           - "&7Każda umiejętność dźwiękowa nakłada o &e1 stack więcej&7."
-#           - "&7Pocisk &eSoundCrash &7podczas lotu &elekko podąża za celownikiem&7."
-#       AirSteps:
-#         Cost: 20
-#         Place: 26
-#         ReqAbilities:
-#           - AirSwipe
-#         Description:
-#           - "&7Kucnięcie (SHIFT) w powietrzu pozwala na 3 podskoki."
-#           - "&7Każdy podskok wystrzeliwuje podmuch powietrza w dół,"
-#           - "&7odrzucający wrogów na boki."
-#           - "&7Uderzenie odrzuconego wroga w ścianę zadaje obrażenia!"
-#       Cyclone:
-#         Cost: 30
-#         Place: 28
-#         ReqAbilities:
-#           - AirSteps
-#         Description:
-#           - "&7Wystrzeliwuje małe tornado poruszające się naprzód."
-#           - "&7Przechwytuje wroga, odrywa go od ziemi, trzyma"
-#           - "&7i obraca w wirowym powietrzu."
-#       AirSwirl:
-#         Cost: 5
-#         Place: 30
-#         ReqAbilities: []
-#         LockAbilities:
-#           - AirSwipe
-#         Description:
-#           - "&7Wystrzeliwuje pocisk powietrzny w rosnącej spirali."
-#           - "&7Trafienie odrzuca przeciwnika."
-#           - "&c[Odblokowanie zablokuje AirSwipe!]"
-#       AirSwirlMulti:
-#         Cost: 15
-#         Place: 31
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - AirSwirl
-#         Description:
-#           - "&7Dodaje &edrugie użycie LPM&7."
-#           - "&7Brak strzału w ciągu &e3s&7 nakłada cooldown."
-#       AirSwirlDouble:
-#         Cost: 20
-#         Place: 32
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - AirSwirlMulti
-#         Description:
-#           - "&7Dodaje &etrzecie użycie LPM&7."
-#           - "&ePociski przeszywają wrogów&7."
-#       AirSwirlMaster:
-#         Cost: 25
-#         Place: 33
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - AirSwirlDouble
-#         Description:
-#           - "&eOdrzucenie zwiększone o 60%&7."
-#           - "&7Uderzenie wroga w ścianę zadaje &edodatkowe obrażenia&7."
-#           - "&7Pociski w locie &elekko podążają za kamerą&7."
-#       AirVolley:
-#         Cost: 10
-#         Place: 43
-#         ReqAbilities: []
-#         Description:
-#           - "&7Ładuj SHIFT przez 2s, aby stworzyć 360° pierścień."
-#           - "&7Po naładowaniu automatycznie strzela serią pocisków."
-#       AirVolleyBarrage:
-#         Cost: 15
-#         Place: 44
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - AirVolley
-#         Description:
-#           - "&7Zwiększa liczbę segmentów i pocisków salwy do &e10&7."
-#       AirVolleyHarmonics:
-#         Cost: 20
-#         Place: 45
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - AirVolley
-#         Description:
-#           - "&7Co &edrugi wystrzał &7staje się strzałem Soundbendingu."
-#           - "&7Nakłada stacki dźwięku oraz &eSlowness&7."
-#       AirVolleyPrecision:
-#         Cost: 25
-#         Place: 46
-#         IsAbilityUpgrade: true
-#         ReqAbilities:
-#           - AirVolleyHarmonics
-#         Description:
-#           - "&e100% trafień &7salwy natychmiast rozpoczyna"
-#           - "&7nowe ładowanie &ebez cooldownu&7!"
-
     Chi:
       PathDecoration:
       - 50
@@ -1311,27 +552,6 @@ AmonPack:
           - QuickStrike
         Description:
           - "&7Błyskawiczne kopnięcie podcinające przeciwnika."
-      SwiftKickVault:
-        Cost: 10
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "SwiftKick"
-        ReqAbilities:
-          - SwiftKick
-        Description:
-          - "&7Po celnym kopnięciu &eodbijasz się wysoko w powietrze&7,"
-          - "&7zyskując &eodporność na obrażenia od upadku&7."
-      SwiftKickDisarm:
-        Cost: 15
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "SwiftKick"
-        ReqAbilities:
-          - SwiftKickVault
-        Description:
-          - "&7Trafienie dezorientuje wroga, nakładając &eSlowness II"
-          - "&7oraz &eWeakness II &7na &e%config_sec:AmonPack.Chi.SwiftKick.Upgrades.Disarm.DurationTicks% sekundy&7."
-
       RapidPunch:
         Cost: 5
         Place: 51
@@ -1339,16 +559,6 @@ AmonPack:
           - QuickStrike
         Description:
           - "&7Wyprowadź błyskawiczną serię ciosów pięściami."
-      RapidPunchDrain:
-        Cost: 15
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "RapidPunch"
-        ReqAbilities:
-          - RapidPunch
-        Description:
-          - "&7Każde celne uderzenie z serii &eodnawia +%config:AmonPack.Chi.RapidPunch.Upgrades.Drain.ChiPerHit% Chi&7."
-
       HighJump:
         Cost: 10
         Place: 38
@@ -1364,26 +574,6 @@ AmonPack:
           - RapidPunch
         Description:
           - "&7Wyskocz w powietrze i rzucaj wachlarzem noży (LPM)."
-      DaggerTrickForward:
-        Cost: 15
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "DaggerTrick"
-        ReqAbilities:
-          - DaggerTrick
-        Description:
-          - "&7Zamiast skoku w tył, wykonujesz &egwałtowny skok w przód&7,"
-          - "&7doskakując do celownika i rzucając nożami w locie."
-      DaggerTrickMulti:
-        Cost: 20
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "DaggerTrick"
-        ReqAbilities:
-          - DaggerTrickForward
-        Description:
-          - "&7Zwiększa liczbę salw noży w locie do &e%config:AmonPack.Chi.DaggerTrick.Upgrades.Multi.MaxArrowClicks% kliknięć LPM&7."
-
       PoisonDagger:
         Cost: 15
         Place: 33
@@ -1391,37 +581,6 @@ AmonPack:
           - DaggerTrick
         Description:
           - "&7Rzuć zatrutym sztyletem, nakładając &aPoison II &7i &8Slowness II&7."
-      PoisonDaggerTwin:
-        Cost: 15
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "PoisonDagger"
-        ReqAbilities:
-          - PoisonDagger
-        Description:
-          - "&7Możliwość rzucenia &edrugiego zatrutego noża&7"
-          - "&7w oknie &e%config_sec:AmonPack.Chi.PoisonDagger.Upgrades.Twin.WindowMs% sekund &7przed wejściem na cooldown."
-      PoisonDaggerSynergy:
-        Cost: 20
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "PoisonDagger"
-        ReqAbilities:
-          - PoisonDaggerTwin
-        Description:
-          - "&7Celne trafienie nożem natychmiast &eresetuje cooldown"
-          - "&7umiejętności &eDaggerTrick&7!"
-      PoisonDaggerNeurotoxin:
-        Cost: 25
-        Place: 24
-        IsSkillUpgrade: true
-        SkillName: "PoisonDagger"
-        ReqAbilities:
-          - PoisonDaggerSynergy
-        Description:
-          - "&7Neurotoksyna &eparaliżuje układ Chi wroga&7,"
-          - "&7nakładając &eChi Blocking na %config_sec:AmonPack.Chi.PoisonDagger.Upgrades.Neurotoxin.DurationMs% sekundy&7."
-
       Smokescreen:
         Cost: 15
         Place: 29
@@ -1437,38 +596,6 @@ AmonPack:
           - Smokescreen
         Description:
           - "&7Rzuć odbijającym się granatem, który wybucha i tworzy chmurę dymu."
-      CrudeBombDouble:
-        Cost: 15
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "CrudeBomb"
-        ReqAbilities:
-          - CrudeBomb
-        Description:
-          - "&7Możliwość rzucenia &edrugiej bomby&7"
-          - "&7w oknie &e%config_sec:AmonPack.Chi.CrudeBomb.Upgrades.Double.WindowMs% sekund &7przed wejściem na cooldown."
-      CrudeBombThickSmoke:
-        Cost: 20
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "CrudeBomb"
-        ReqAbilities:
-          - CrudeBombDouble
-        Description:
-          - "&7Zwiększa promień chmury dymu do &e%config:AmonPack.Chi.CrudeBomb.Upgrades.ThickSmoke.Radius% bloków&7"
-          - "&7oraz wydłuża czas jej trwania do &e%config_sec:AmonPack.Chi.CrudeBomb.Upgrades.ThickSmoke.DurationMs% sekund&7."
-      CrudeBombFlashbang:
-        Cost: 25
-        Place: 24
-        IsSkillUpgrade: true
-        SkillName: "CrudeBomb"
-        ReqAbilities:
-          - CrudeBombThickSmoke
-        Description:
-          - "&7Przy wybuchu emituje &eoślepiający błysk (Flash)&7,"
-          - "&7nakładając &eBlindness i Nausea &7na cele w promieniu &e%config:AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.Radius%m&7."
-          - "&aZmniejsza koszt Chi o %config_percent:AmonPack.Chi.CrudeBomb.Upgrades.Flashbang.ChiCostMultiplier%%&7."
-
       Feintstep:
         Cost: 20
         Place: 24
@@ -1476,37 +603,6 @@ AmonPack:
           - PoisonDagger
         Description:
           - "&7Naładuj postawę, aby zyskać przyspieszenie i unikać ataków."
-      FeintstepAgility:
-        Cost: 15
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "Feintstep"
-        ReqAbilities:
-          - Feintstep
-        Description:
-          - "&7Podczas trwania postawy zyskujesz &eSpeed II&7,"
-          - "&a+%config:AmonPack.Chi.Feintstep.Upgrades.Agility.TempMaxChiBonus% Max Chi &7oraz &a+%config:AmonPack.Chi.Feintstep.Upgrades.Agility.TempRegenBonus% Chi/s regeneracji&7."
-      FeintstepMastery:
-        Cost: 20
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "Feintstep"
-        ReqAbilities:
-          - FeintstepAgility
-        Description:
-          - "&7Zwiększa liczbę uników do &e%config:AmonPack.Chi.Feintstep.Upgrades.Mastery.MaxDodges% uników&7,"
-          - "&eJump Boost II &7oraz &azmniejsza koszt Chi o %config_percent:AmonPack.Chi.Feintstep.Upgrades.Mastery.ChiCostMultiplier%%&7."
-      FeintstepFlow:
-        Cost: 25
-        Place: 24
-        IsSkillUpgrade: true
-        SkillName: "Feintstep"
-        ReqAbilities:
-          - FeintstepMastery
-        Description:
-          - "&7Zamiast kosztu jednorazowego, zużywa &e%config:AmonPack.Chi.Feintstep.Upgrades.Flow.DrainPerSecond% Chi/s&7."
-          - "&7Podstawowe ciosy wręcz zadają &e+%config_hearts:AmonPack.Chi.Feintstep.Upgrades.Flow.BonusMeleeDamage% serca obrażeń&7."
-
       QuickPalms:
         Cost: 25
         Place: 11
@@ -1515,37 +611,6 @@ AmonPack:
           - Feintstep
         Description:
           - "&7Shift = Stan Kontry | LPM = Uderzenie w punkty witalne."
-      QuickPalmsReflex:
-        Cost: 15
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "QuickPalms"
-        ReqAbilities:
-          - QuickPalms
-        Description:
-          - "&7Czas trwania kontry wydłużony do &e%config_sec:AmonPack.Chi.QuickPalms.Upgrades.Reflex.StanceDurationMs% sekund&7."
-          - "&7Udany blok i teleportacja &aodnawiają natychmiast +%config:AmonPack.Chi.QuickPalms.Upgrades.Reflex.ChiRestore% Chi&7."
-      QuickPalmsTripleStrike:
-        Cost: 20
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "QuickPalms"
-        ReqAbilities:
-          - QuickPalmsReflex
-        Description:
-          - "&7Odsłania &e%config:AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.VitalPoints% punkty witalne &7na ciele wroga."
-          - "&7Każdy cios zadaje &e+%config_hearts:AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.BonusDamage% serca obrażeń &7i blokuje Chi na &e%config_sec:AmonPack.Chi.QuickPalms.Upgrades.TripleStrike.ChiBlockDurationMs%s&7."
-      QuickPalmsPressureBurst:
-        Cost: 25
-        Place: 24
-        IsSkillUpgrade: true
-        SkillName: "QuickPalms"
-        ReqAbilities:
-          - QuickPalmsTripleStrike
-        Description:
-          - "&7Trafienie we wszystkie punkty wywołuje &ewewnętrzny wybuch Chi&7:"
-          - "&7Zadaje &c%config_hearts:AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.Damage% serca obrażeń&7, odrzuca i nakłada &eParaliż na %config_sec:AmonPack.Chi.QuickPalms.Upgrades.PressureBurst.ParalyzeDurationMs%s&7."
-
       Lasso:
         Cost: 25
         Place: 15
@@ -1561,27 +626,6 @@ AmonPack:
           - QuickPalms
         Description:
           - "&7Skup wzrok na wrogu i wykonaj niszczycielskie uderzenie punktowe."
-      PointBlankFocus:
-        Cost: 20
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "PointBlank"
-        ReqAbilities:
-          - PointBlank
-        Description:
-          - "&7Czas ładowania skrócony do &e%config_sec:AmonPack.Chi.PointBlank.Upgrades.Focus.ChargeTimeMs%s&7."
-          - "&7Zasięg namierzania wroga zwiększony do &e%config:AmonPack.Chi.PointBlank.Upgrades.Focus.Range% metrów&7."
-      PointBlankSlam:
-        Cost: 25
-        Place: 22
-        IsSkillUpgrade: true
-        SkillName: "PointBlank"
-        ReqAbilities:
-          - PointBlankFocus
-        Description:
-          - "&7Uderzenie wbija wroga w ziemię, całkowicie"
-          - "&7blokując skakanie i sprint na &e%config_sec:AmonPack.Chi.PointBlank.Upgrades.Slam.DurationTicks% sekundy&7."
-
       PulseBreak:
         Cost: 30
         Place: 3
@@ -1589,16 +633,6 @@ AmonPack:
           - QuickPalms
         Description:
           - "&7Uderzenie rozrywające meridiany, dodające cooldown na umiejętności wroga."
-      PulseBreakOverload:
-        Cost: 20
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "PulseBreak"
-        ReqAbilities:
-          - PulseBreak
-        Description:
-          - "&7Nakłada dodatkowy cooldown na &e%config:AmonPack.Chi.PulseBreak.Upgrades.Overload.AbilitiesCount% losowe umiejętności &7wroga."
-
       Paralyze:
         Cost: 35
         Place: 1
@@ -1607,17 +641,6 @@ AmonPack:
           - PulseBreak
         Description:
           - "&7Precyzyjny cios paraliżujący cały układ nerwowy wroga."
-      ParalyzeExtended:
-        Cost: 25
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "Paralyze"
-        ReqAbilities:
-          - Paralyze
-        Description:
-          - "&7Wydłuża czas trwania paraliżu o &e%config_percent:AmonPack.Chi.Paralyze.Upgrades.Extended.DurationMultiplier%%&7"
-          - "&7oraz &azmniejsza koszt Chi do %config:AmonPack.Chi.Paralyze.Upgrades.Extended.ChiCost% punktów&7."
-
       WarriorStance:
         Cost: 25
         Place: 93
@@ -1625,17 +648,6 @@ AmonPack:
           - SwiftKick
         Description:
           - "&7Przyjmij bojową postawę wojownika, zyskując Siłę i Odporność."
-      WarriorStanceFortitude:
-        Cost: 20
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "WarriorStance"
-        ReqAbilities:
-          - WarriorStance
-        Description:
-          - "&7Wzmacnia Odporność do &eResistance II&7 na &e%config_sec:AmonPack.Chi.WarriorStance.Upgrades.Fortitude.DurationTicks%s"
-          - "&7oraz daje &e100% odporności na odrzut (Knockback Resistance)&7."
-
       AcrobatStance:
         Cost: 25
         Place: 97
@@ -1643,80 +655,3 @@ AmonPack:
           - RapidPunch
         Description:
           - "&7Przyjmij postawę akrobaty, zyskując ogromną zwinność i skoczność."
-      AcrobatStanceFlurry:
-        Cost: 20
-        Place: 20
-        IsSkillUpgrade: true
-        SkillName: "AcrobatStance"
-        ReqAbilities:
-          - AcrobatStance
-        Description:
-          - "&7Podczas trwania postawy wszystkie czasy odnowienia (cooldowny)"
-          - "&7umiejętności Chi są &eskrócone o %config:AmonPack.Chi.AcrobatStance.Upgrades.Flurry.CooldownReductionPercent%%&7."
-
-      ChiFlow:
-        Cost: 15
-        Place: 31
-        IsPassiveUpgrade: true
-        ReqAbilities:
-          - HighJump
-          - DaggerTrick
-        Description:
-          - "&eSwobodny Przepływ Chi"
-          - "&a+%config:AmonPack.Chi.Passives.ChiFlow.MaxChiBonus% Maksymalnego Chi &7oraz &a+%config:AmonPack.Chi.Passives.ChiFlow.RegenBonus% Chi/s regeneracji&7."
-
-      PrecisionStrikes:
-        Cost: 20
-        Place: 67
-        IsPassiveUpgrade: true
-        ReqAbilities:
-          - QuickPalms
-        Description:
-          - "&ePrecyzyjne Ciosy"
-          - "&7Zwykłe ataki wręcz mają &e%config_percent:AmonPack.Chi.Passives.PrecisionStrikes.Chance%% szansy &7na nałożenie"
-          - "&eChi Blockingu na %config_sec:AmonPack.Chi.Passives.PrecisionStrikes.ChiBlockDurationMs% sekundy&7."
-
-      PressureMaster:
-        Cost: 20
-        Place: 65
-        IsPassiveUpgrade: true
-        ReqAbilities:
-          - Paralyze
-        Description:
-          - "&eMistrz Meridianów"
-          - "&7Wydłuża czas trwania wszystkich nakładanych"
-          - "&7efektów &eChi Blockingu i Paraliżu o %config_percent:AmonPack.Chi.Passives.PressureMaster.DurationMultiplier%%&7."
-
-      IronBody:
-        Cost: 20
-        Place: 85
-        IsPassiveUpgrade: true
-        ReqAbilities:
-          - WarriorStance
-        Description:
-          - "&eŻelazne Ciało"
-          - "&7Skraca czas trwania otrzymywanych efektów kontroli"
-          - "&7(&eSlowness, Blindness, Nausea, Weakness&7) o &e%config_percent:AmonPack.Chi.Passives.IronBody.DurationReductionMultiplier%%&7."
-
-      ChiExpansion:
-        Cost: 25
-        Place: 79
-        IsPassiveUpgrade: true
-        ReqAbilities:
-          - ChiFlow
-        Description:
-          - "&eEkspansja Zbiornika Chi"
-          - "&a+%config:AmonPack.Chi.Passives.ChiExpansion.MaxChiBonus% Maksymalnego Chi na stałe!&7"
-
-      ChiRegeneration:
-        Cost: 25
-        Place: 70
-        IsPassiveUpgrade: true
-        ReqAbilities:
-          - ChiFlow
-        Description:
-          - "&eWzmocniona Regeneracja Chi"
-          - "&a+%config:AmonPack.Chi.Passives.ChiRegeneration.RegenBonus% Chi/sekundę regeneracji na stałe!&7"
-
-
-

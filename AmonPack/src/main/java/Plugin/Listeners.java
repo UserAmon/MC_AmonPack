@@ -544,17 +544,6 @@ public class Listeners implements Listener {
         }
 
         if (event.getEntity() instanceof Player p) {
-            if (com.projectkorra.projectkorra.ability.CoreAbility.hasAbility(p,
-                    Abilities.PK_Abilities.Air.GustShield.class)) {
-                Abilities.PK_Abilities.Air.GustShield shield = com.projectkorra.projectkorra.ability.CoreAbility
-                        .getAbility(
-                                p,
-                                Abilities.PK_Abilities.Air.GustShield.class);
-                shield.onHit();
-                event.setCancelled(true);
-                return;
-            }
-
             boolean ignoreArmor = p.hasMetadata("magic_ignore_armor");
             if (ignoreArmor) {
                 p.removeMetadata("magic_ignore_armor", AmonPackPlugin.plugin);
@@ -1240,9 +1229,6 @@ public class Listeners implements Listener {
                                 || playersBranch.getTemporaryAbilities().contains(STA.getName())
                                 || STA.isdef();
                         if (isAlreadyUnlocked) {
-                            if (SelectedElement.hasSkillUpgrades(STA.getName())) {
-                                AmonPackPlugin.levelsBending.OpenSkillUpgradeMenu(p, STA.getName());
-                            }
                             return;
                         }
 
@@ -1285,50 +1271,6 @@ public class Listeners implements Listener {
                                 AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p,
                                         playersBranch.getCurrentPage());
                             }
-                        }
-                    }
-                }
-            } else if (event.getInventory().getHolder() instanceof Levels_Bending.SkillUpgradeMenuHolder) {
-                event.setCancelled(true);
-                Levels_Bending.SkillUpgradeMenuHolder holder = (Levels_Bending.SkillUpgradeMenuHolder) event.getInventory().getHolder();
-                String skillName = holder.getSkillName();
-                PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
-                if (playersBranch == null) return;
-                Element element = playersBranch.getCurrentElement();
-                ElementTree SelectedElement = AmonPackPlugin.levelsBending.GetElement(element);
-                if (SelectedElement == null) return;
-
-                ItemStack clicked = event.getCurrentItem();
-                if (clicked == null || clicked.getType() == Material.AIR || clicked.getType() == Material.GRAY_STAINED_GLASS_PANE) return;
-
-                if (event.getSlot() == 49 || event.getSlot() == 53 || (clicked.getType() == Material.PAPER && clicked.getItemMeta() != null && (ChatColor.stripColor(clicked.getItemMeta().getDisplayName()).equalsIgnoreCase("Powrot") || ChatColor.stripColor(clicked.getItemMeta().getDisplayName()).equalsIgnoreCase("Powrót")))) {
-                    AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage());
-                    return;
-                }
-
-                if (clicked.getType() == Material.PAPER && clicked.getItemMeta() != null) {
-                    String upgName = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
-                    SkillTree_Ability upg = SelectedElement.getSkillUpgradesFor(skillName).stream()
-                            .filter(a -> a.getName().equalsIgnoreCase(upgName))
-                            .findFirst().orElse(null);
-                    if (upg != null) {
-                        if (playersBranch.getUnlockedAbilities().contains(upg.getName()) || upg.isdef()) {
-                            p.sendMessage(ChatColor.YELLOW + "To ulepszenie jest już odblokowane!");
-                            return;
-                        }
-                        if (playersBranch.GetPoints(element) >= upg.getCost()) {
-                            if (upg.getListOfPreAbility().isEmpty() || new HashSet<>(playersBranch.getUnlockedAbilities()).containsAll(upg.getListOfPreAbility())) {
-                                playersBranch.UnlockAbility(upg.getElement(), upg.getCost(), upg.getName());
-                                p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
-                                p.sendMessage(ChatColor.GREEN + "Pomyślnie odblokowano ulepszenie: " + ChatColor.GOLD + upg.getName() + ChatColor.GREEN + "!");
-                                AmonPackPlugin.levelsBending.OpenSkillUpgradeMenu(p, skillName);
-                            } else {
-                                p.sendMessage(ChatColor.RED + "Nie spełniasz wymagań wstępnych dla tego ulepszenia!");
-                                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
-                            }
-                        } else {
-                            p.sendMessage(ChatColor.RED + "Nie masz wystarczającej liczby punktów magii (" + element.getName() + ")!");
-                            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
                         }
                     }
                 }

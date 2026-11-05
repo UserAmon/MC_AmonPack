@@ -23,7 +23,6 @@ import Plugin.Listeners;
 //import RPG.UnUsed.Menagerie.MMORPG.GuiMenu;
 
 import Plugin.SimpleWorldGenerator;
-import RPG.UnUsed.Menagerie.UpgradesMenager;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.ListenerPriority;
@@ -35,7 +34,6 @@ import com.projectkorra.projectkorra.ProjectKorra;
 
 import com.projectkorra.projectkorra.storage.SQLite;
 import Plugin.*;
-import Abilities.Bending.AbilitiesListener;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -65,7 +63,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	private java.io.File configFile;
 	public FileConfiguration config;
 
-	public static boolean ENABLE_BENDING_ABILITIES = true;
+	public static boolean ENABLE_BENDING_ABILITIES = false;
 	public static boolean ENABLE_RPG_SYSTEMS = true;
 	public static boolean ENABLE_SLOW_PROGRESSION = ENABLE_RPG_SYSTEMS;
 	public static boolean ENABLE_DATABASE = true;
@@ -76,7 +74,6 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static boolean ENABLE_PARTY = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
 	public static boolean ENABLE_WORLD_GEN = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
 	public static boolean ENABLE_ARMOR_EFFECTS = ENABLE_RPG_SYSTEMS && ENABLE_DATABASE;
-	public static boolean ENABLE_BATTLE_ROYALE = true;
 
 	public static CustomContent.Pack.PackManager packManager;
 	public static CustomContent.Items.CustomItemManager customItemManager;
@@ -86,7 +83,6 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static RPG.Magic.manager.ManaManager manaManager;
 	public static RPG.Magic.manager.SpellRegistry spellRegistry;
 	public static CustomContent.Guns.GunManager gunManager;
-	public static RPG.BattleRoyale.BattleRoyaleManager battleRoyaleManager;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -161,11 +157,7 @@ public class AmonPackPlugin extends JavaPlugin {
 			setDungeonConfig(YamlConfiguration.loadConfiguration(DungeonConfigFile));
 		}
 
-		// 2. Przeładowanie skryptów i konfiguracji umiejętności Magii (Bending)
-		if (ENABLE_BENDING_ABILITIES) {
-			Abilities.PK_Abilities.Earth.SandWave.loadConfig();
-			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
-		}
+		// 2. Umiejętności Magii (Bending) wyłączone w tym buildzie
 
 		// 3. Przeładowanie systemów Gathering/Crafting/Boss/Bounties w ConfigsMenager
 		if (configs_menager != null) {
@@ -196,11 +188,6 @@ public class AmonPackPlugin extends JavaPlugin {
 					}
 				}
 				PlayerMenager.CreateInventories();
-			}
-			try {
-				new UpgradesMenager();
-			} catch (Exception e) {
-				getLogger().warning("Błąd odświeżania UpgradesMenager: " + e.getMessage());
 			}
 		}
 
@@ -289,8 +276,7 @@ public class AmonPackPlugin extends JavaPlugin {
 				"dungeons/dungeon_config.yml",
 				"dungeons/przykladowy_dungeon.yml",
 				"dungeons/makapu_bandyci.yml",
-				"dungeons/dokumentacja_dungeonow.yml",
-				"battleroyale.yml"
+				"dungeons/dokumentacja_dungeonow.yml"
 		};
 		for (String res : resourcesToSave) {
 			try {
@@ -352,32 +338,11 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 		}
 
-		// --- 1. RUCHY MAGICZNE (BENDING ABILITIES) ---
-		if (ENABLE_BENDING_ABILITIES) {
-			SmokeElement = new SubElement("Smoke", Element.FIRE, ElementType.BENDING, ProjectKorra.plugin);
-			SoundElement = new SubElement("Sound", Element.AIR, ElementType.BENDING, ProjectKorra.plugin);
-			CoreAbility.registerPluginAbilities(this, "Abilities.PK_Abilities");
-			createconf();
-
-			AbilitiesConfigFile = new File(getDataFolder(), "abilities_config.yml");
-			AbilitiesConfig = YamlConfiguration.loadConfiguration(AbilitiesConfigFile);
-			java.io.InputStream defAbilitiesStream = getResource("abilities_config.yml");
-			if (defAbilitiesStream != null) {
-				org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration
-						.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream,
-								java.nio.charset.StandardCharsets.UTF_8));
-				AbilitiesConfig.setDefaults(defConfig);
-			}
-			Abilities.PK_Abilities.Earth.SandWave.loadConfig();
-			Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
-			this.getServer().getPluginManager().registerEvents(new AbilitiesListener(), this);
-			Abilities.Bending.SpecialTriggerManager.registerAdvancementPacketListener();
-			Abilities.PK_Abilities.Chi.ChiManager.init();
-			try {
-				StartDeafnessTimer();
-			} catch (Exception e) {
-				getLogger().warning("Nie udało się uruchomić StartDeafnessTimer: " + e.getMessage());
-			}
+		// --- 1. RUCHY MAGICZNE PK (WYŁĄCZONE) ---
+		try {
+			StartDeafnessTimer();
+		} catch (Exception e) {
+			getLogger().warning("Nie udało się uruchomić StartDeafnessTimer: " + e.getMessage());
 		}
 
 		// --- 3. RPG GATHERING & CRAFTING ---
@@ -412,7 +377,6 @@ public class AmonPackPlugin extends JavaPlugin {
 			try {
 				PlayerMenager = new PlayerLevelMenager();
 				PlayerMenager.CreateInventories();
-				new UpgradesMenager();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -570,19 +534,6 @@ public class AmonPackPlugin extends JavaPlugin {
 			progressionManager.load();
 		}
 
-		// --- 9. SYSTEM BATTLE ROYALE / ZOMBIE APOCALYPSE ---
-		if (ENABLE_BATTLE_ROYALE) {
-			battleRoyaleManager = RPG.BattleRoyale.BattleRoyaleManager.getInstance();
-			battleRoyaleManager.init();
-			this.getServer().getPluginManager().registerEvents(new RPG.BattleRoyale.BattleRoyaleListener(battleRoyaleManager), this);
-
-			if (this.getCommand("hungergames") != null) {
-				RPG.BattleRoyale.BattleRoyaleCommand brCmd = new RPG.BattleRoyale.BattleRoyaleCommand(battleRoyaleManager);
-				this.getCommand("hungergames").setExecutor(brCmd);
-				this.getCommand("hungergames").setTabCompleter(brCmd);
-			}
-		}
-
 		System.out.println("Amonpack Załadowany!");
 	}
 
@@ -611,9 +562,6 @@ public class AmonPackPlugin extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		try {
-			if (battleRoyaleManager != null) {
-				battleRoyaleManager.shutdown();
-			}
 			if (manaManager != null) {
 				manaManager.stop();
 			}
@@ -630,7 +578,6 @@ public class AmonPackPlugin extends JavaPlugin {
 				packManager.unload();
 			}
 
-			Abilities.PK_Abilities.Chi.ChiManager.stop();
 			if (ENABLE_DUNGEONS && RPG.Dungeons.DungeonManager.getInstance() != null) {
 				RPG.Dungeons.DungeonManager.getInstance().cleanupAll();
 			}
@@ -813,19 +760,7 @@ public class AmonPackPlugin extends JavaPlugin {
 
 	public static void reloadAllConfigs() {
 		try {
-			if (ENABLE_BENDING_ABILITIES) {
-				plugin.reloadConfig();
-				AbilitiesConfig = YamlConfiguration.loadConfiguration(new File(configpath, "abilities_config.yml"));
-				java.io.InputStream defAbilitiesStream = plugin.getResource("abilities_config.yml");
-				if (defAbilitiesStream != null) {
-					org.bukkit.configuration.file.YamlConfiguration defConfig = org.bukkit.configuration.file.YamlConfiguration
-							.loadConfiguration(new java.io.InputStreamReader(defAbilitiesStream,
-									java.nio.charset.StandardCharsets.UTF_8));
-					AbilitiesConfig.setDefaults(defConfig);
-				}
-				Abilities.PK_Abilities.Earth.SandWave.loadConfig();
-				Abilities.PK_Abilities.Earth.SandBreath.loadConfig();
-			}
+			// Bending abilities are disabled
 
 			if (ENABLE_SKILL_TREE) {
 				if (configpath != null) {
