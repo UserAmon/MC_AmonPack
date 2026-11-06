@@ -1,7 +1,5 @@
 package RPG.Crafting.Objects;
 
-import com.projectkorra.projectkorra.ability.Ability;
-import com.projectkorra.projectkorra.ability.CoreAbility;
 import Plugin.AmonPackPlugin;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;

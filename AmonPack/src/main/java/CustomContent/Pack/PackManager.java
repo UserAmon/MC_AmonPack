@@ -30,7 +30,7 @@ public class PackManager {
 
     private int httpPort = 8085;
     private String hostAddress = "auto";
-    private boolean autoSendOnJoin = true;
+    private boolean autoSendOnJoin = false;
     private boolean forcePack = false;
     private String promptMessage = "§6§lAmonPack §7- Pobierz tekstury i modele 3D serwera!";
     private String detectedPublicIp = null;
@@ -72,7 +72,7 @@ public class PackManager {
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(cfgFile);
         this.httpPort = cfg.getInt("PackServer.Port", 8085);
         this.hostAddress = cfg.getString("PackServer.Host", "auto");
-        this.autoSendOnJoin = cfg.getBoolean("ResourcePack.AutoSendOnJoin", true);
+        this.autoSendOnJoin = cfg.getBoolean("ResourcePack.AutoSendOnJoin", false);
         this.forcePack = cfg.getBoolean("ResourcePack.ForcePack", false);
         this.promptMessage = ChatColor.translateAlternateColorCodes('&', cfg.getString("ResourcePack.PromptMessage", "&6&lAmonPack &7- Pobierz paczkę zasobów z modelami 3D!"));
         detectPublicIpAsync();

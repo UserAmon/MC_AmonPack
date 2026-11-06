@@ -309,16 +309,14 @@ public class DungBuildManager implements Listener {
                         } else if (level == 3) {
                             stats.addHpBoost(4.0);
                             stats.addMCritRate(0.10);
-                            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-                            if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"))) {
+                            if (Plugin.ProjectKorraHook.hasElement(player, "Earth")) {
                                 stats.addHpBoost(-12.0);
                             }
                         }
                     } else if (key.equals("EARTH_MACE")) {
                         int level = stats.getBlessingLevel("EARTH_MACE");
                         if (level == 3) {
-                            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-                            if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"))) {
+                            if (Plugin.ProjectKorraHook.hasElement(player, "Earth")) {
                                 stats.addRegenLevel(1);
                             }
                         }

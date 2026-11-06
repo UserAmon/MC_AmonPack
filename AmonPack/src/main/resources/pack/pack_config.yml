@@ -6,6 +6,8 @@ PackServer:
   Host: "auto"
 
 ResourcePack:
-  AutoSendOnJoin: true
-  ForcePack: true
+  # Czy automatycznie wysyłać paczkę zasobów po wejściu gracza na serwer (false zapobiega nadpisywaniu/wywalaniu innych texturepacków)
+  AutoSendOnJoin: false
+  # Czy wyrzucać gracza jeśli odrzuci paczkę zasobów (zostaw false, aby nie kickować graczy)
+  ForcePack: false
   PromptMessage: "&6&lAmonPack &7- Załaduj autorskie modele 3D broni, zbroi, rud i bossów!"

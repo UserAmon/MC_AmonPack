@@ -428,15 +428,19 @@ public class Menagerie {
         }
     }
     public void ResetAdditionalAbilities(Player p){
-        BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
-
-        for (int i = 0; i <= 9; i++) {
-            String ability = bPlayer.getAbilities().get(i);
-            if (CoreAbility.getAbility(ability) != null) {
-                BendingBoardManager.getBoard(p).get().clearSlot(i);
-                bPlayer.getAbilities().remove(i);
+        if (!Plugin.ProjectKorraHook.isEnabled()) return;
+        try {
+            BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
+            if (bPlayer == null) return;
+            for (int i = 0; i <= 9; i++) {
+                String ability = bPlayer.getAbilities().get(i);
+                if (ability != null && CoreAbility.getAbility(ability) != null) {
+                    final int slot = i;
+                    BendingBoardManager.getBoard(p).ifPresent(board -> board.clearSlot(slot));
+                    bPlayer.getAbilities().remove(i);
+                }
             }
-        }
+        } catch (Throwable ignored) {}
     }
     public static void removeAllItemX(Player player, ItemStack targetItem) {
         Inventory inventory = player.getInventory();

@@ -10,7 +10,7 @@ import RPG.Levels.PlayerLevelMenager;
 //import RPG.UnUsed.Menagerie.MMORPG.GuiMenu;
 import RPG.UnUsed.Menagerie.MenagerieMenager;
 import RPG.Bounties.BountiesMenager;
-import com.projectkorra.projectkorra.Element;
+import Plugin.ProjectKorraHook;
 import Plugin.AmonPackPlugin;
 import org.bukkit.*;
 import org.bukkit.command.Command;
@@ -57,9 +57,21 @@ public class Commands implements CommandExecutor, TabCompleter {
         }
 
         switch (cmdName) {
+            case "hungergames":
+            case "hg":
+            case "br":
+            case "battleroyale":
+                if (AmonPackPlugin.battleRoyaleManager != null) {
+                    return new RPG.BattleRoyale.BattleRoyaleCommand(AmonPackPlugin.battleRoyaleManager).onCommand(sender, cmd, commandLabel, args);
+                }
+                return true;
 
             case "selectelement":
                 if (sender instanceof Player) {
+                    if (!ProjectKorraHook.isEnabled()) {
+                        sender.sendMessage(ChatColor.RED + "[AmonPack] System żywiołów Bending wymaga obecności pluginu ProjectKorra na serwerze!");
+                        return true;
+                    }
                     PlayerLevelMenager.OpenSelectElementMenu((Player) sender);
                 } else {
                     sender.sendMessage("Tylko gracz może użyć tej komendy!");
@@ -68,35 +80,8 @@ public class Commands implements CommandExecutor, TabCompleter {
 
             case "level":
                 if (args != null && args.length == 4 && args[0].equalsIgnoreCase("magic")) {
-                    try {
-                        Player p = Bukkit.getPlayer(args[1]);
-                        PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
-                        if (branch != null) {
-                            if (args[2].equalsIgnoreCase("Set")) {
-                                branch.SetCurrentElement(Element.getElement(args[3]));
-                            } else {
-                                int points = Integer.parseInt(args[2]);
-                                if (args[3].equalsIgnoreCase("All")) {
-                                    branch.AddAllPoints(points);
-                                } else {
-                                    Element element = Element.getElement(args[3]);
-                                    branch.AddPoints(element, points);
-                                }
-                            }
-                        } else {
-                            int points = Integer.parseInt(args[2]);
-                            List<Element> elements = new ArrayList<>();
-                            List<String> abilities = new ArrayList<>();
-                            elements.add(Element.getElement(args[3]));
-                            branch = new PlayerBendingBranch(0, Element.getElement(args[3]), 0, elements, 0,
-                                    p.getName(), abilities, 0);
-                            AmonPackPlugin.levelsBending.AddNewBranch(branch);
-                            AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName())
-                                    .AddPoints(Element.getElement(args[3]), points);
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Error in Level magic command " + e.getMessage());
-                    }
+                    ProjectKorraHook.handleLevelMagicCommand(sender, args);
+                    return true;
                 } else if (args.length != 0 && args[0].equalsIgnoreCase("add")) {
                     try {
                         LevelSkill.SkillType type = LevelSkill.SkillType.valueOf(args[1]);
@@ -153,7 +138,11 @@ public class Commands implements CommandExecutor, TabCompleter {
                         RPG.Dungeons.DungeonInstance run = RPG.Dungeons.DungeonManager.getInstance()
                                 .getActiveInstance(player);
                         if (run != null) {
-                            AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(player.getName());
+                            if (AmonPackPlugin.levelsBending != null) {
+                                AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(player.getName());
+                            } else {
+                                player.sendMessage(ChatColor.RED + "Menu umiejętności nie jest dostępne (ProjectKorra nie jest zainstalowany).");
+                            }
                         } else {
                             player.sendMessage(ChatColor.RED + "Ta komenda dziala tylko w dungeonie!");
                         }

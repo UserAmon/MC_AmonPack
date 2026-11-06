@@ -30,10 +30,8 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers;
-import com.projectkorra.projectkorra.ProjectKorra;
-
-import com.projectkorra.projectkorra.storage.SQLite;
 import Plugin.*;
+import Plugin.SQLite;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -46,10 +44,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.projectkorra.projectkorra.Element;
-import com.projectkorra.projectkorra.Element.ElementType;
-import com.projectkorra.projectkorra.Element.SubElement;
-import com.projectkorra.projectkorra.ability.CoreAbility;
 
 import static Abilities.Bending.SoundAbility.StartDeafnessTimer;
 
@@ -57,13 +51,12 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static AmonPackPlugin plugin;
 	public static boolean BuildingOnArenas;
 	public static SQLite sqlite;
-	private static Element BladesElement;
-	private static Element SmokeElement;
-	private static Element SoundElement;
+	public static boolean hasProjectKorra = false;
 	private java.io.File configFile;
 	public FileConfiguration config;
 
 	public static boolean ENABLE_BENDING_ABILITIES = false;
+	public static boolean ENABLE_BATTLE_ROYALE = true;
 	public static boolean ENABLE_RPG_SYSTEMS = true;
 	public static boolean ENABLE_SLOW_PROGRESSION = ENABLE_RPG_SYSTEMS;
 	public static boolean ENABLE_DATABASE = true;
@@ -83,6 +76,7 @@ public class AmonPackPlugin extends JavaPlugin {
 	public static RPG.Magic.manager.ManaManager manaManager;
 	public static RPG.Magic.manager.SpellRegistry spellRegistry;
 	public static CustomContent.Guns.GunManager gunManager;
+	public static RPG.BattleRoyale.BattleRoyaleManager battleRoyaleManager;
 
 	@Override
 	public FileConfiguration getConfig() {
@@ -245,9 +239,15 @@ public class AmonPackPlugin extends JavaPlugin {
 	public void onEnable() {
 		BuildingOnArenas = false;
 		plugin = this;
+		hasProjectKorra = getServer().getPluginManager().isPluginEnabled("ProjectKorra");
+		if (!hasProjectKorra) {
+			ENABLE_BENDING_ABILITIES = false;
+			getLogger().info("ProjectKorra nie zostało wykryte - moduły magii Bending zostały bezpiecznie wyłączone. Dungeony, broń palna i Battle Royale działają w pełni samodzielnie!");
+		}
 		getLogger().info("AmonPack włączony [Bending: " + ENABLE_BENDING_ABILITIES +
 				", SkillTree: " + ENABLE_SKILL_TREE +
 				", Dungeons: " + ENABLE_DUNGEONS +
+				", BattleRoyale: " + ENABLE_BATTLE_ROYALE +
 				", RPG: " + ENABLE_RPG_GATHERING +
 				", Bounties: " + ENABLE_BOUNTIES +
 				", Party: " + ENABLE_PARTY +
@@ -276,7 +276,8 @@ public class AmonPackPlugin extends JavaPlugin {
 				"dungeons/dungeon_config.yml",
 				"dungeons/przykladowy_dungeon.yml",
 				"dungeons/makapu_bandyci.yml",
-				"dungeons/dokumentacja_dungeonow.yml"
+				"dungeons/dokumentacja_dungeonow.yml",
+				"battleroyale.yml"
 		};
 		for (String res : resourcesToSave) {
 			try {
@@ -373,7 +374,13 @@ public class AmonPackPlugin extends JavaPlugin {
 			}
 			LevelConfig = YamlConfiguration.loadConfiguration(LevelConfigFile);
 
-			levelsBending = new Levels_Bending();
+			if (hasProjectKorra) {
+				try {
+					levelsBending = new Levels_Bending();
+				} catch (Throwable t) {
+					getLogger().warning("Nie udalo sie zainicjalizowac Levels_Bending: " + t.getMessage());
+				}
+			}
 			try {
 				PlayerMenager = new PlayerLevelMenager();
 				PlayerMenager.CreateInventories();
@@ -534,6 +541,19 @@ public class AmonPackPlugin extends JavaPlugin {
 			progressionManager.load();
 		}
 
+		// --- 9. SYSTEM BATTLE ROYALE / ZOMBIE APOCALYPSE ---
+		if (ENABLE_BATTLE_ROYALE) {
+			battleRoyaleManager = RPG.BattleRoyale.BattleRoyaleManager.getInstance();
+			battleRoyaleManager.init();
+			this.getServer().getPluginManager().registerEvents(new RPG.BattleRoyale.BattleRoyaleListener(battleRoyaleManager), this);
+
+			if (this.getCommand("hungergames") != null) {
+				RPG.BattleRoyale.BattleRoyaleCommand brCmd = new RPG.BattleRoyale.BattleRoyaleCommand(battleRoyaleManager);
+				this.getCommand("hungergames").setExecutor(brCmd);
+				this.getCommand("hungergames").setTabCompleter(brCmd);
+			}
+		}
+
 		System.out.println("Amonpack Załadowany!");
 	}
 
@@ -562,6 +582,10 @@ public class AmonPackPlugin extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		try {
+			if (battleRoyaleManager != null) {
+				battleRoyaleManager.shutdown();
+			}
+			TempBlock.revertAll();
 			if (manaManager != null) {
 				manaManager.stop();
 			}
@@ -746,18 +770,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		}
 	}
 
-	public static Element getBladesElement() {
-		return BladesElement;
-	}
-
-	public static Element getSmokeElement() {
-		return SmokeElement;
-	}
-
-	public static Element getSoundElement() {
-		return SoundElement;
-	}
-
 	public static void reloadAllConfigs() {
 		try {
 			// Bending abilities are disabled
@@ -922,20 +934,6 @@ public class AmonPackPlugin extends JavaPlugin {
 		IMeta.setLore(lore);
 		TempItem.setItemMeta(IMeta);
 		return TempItem;
-	}
-
-	public static Element ElementBasedOnSubElement(Element SubElement) {
-		for (Element element : Element.getAllElements()) {
-			if (element.equals(SubElement)) {
-				return element;
-			}
-			for (Element subele : Element.getSubElements(element)) {
-				if (subele.equals(SubElement)) {
-					return element;
-				}
-			}
-		}
-		return null;
 	}
 
 	private void saveDefaultDungeonResources() {

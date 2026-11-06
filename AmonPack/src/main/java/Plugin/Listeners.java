@@ -12,11 +12,7 @@ import RPG.Levels.PlayerLevelMenager;
 import RPG.Levels.Objects.LevelSkill;
 import RPG.Levels.Objects.PlayerLevel;
 import RPG.Levels.BendingTree.SkillTree_Ability;
-import com.projectkorra.projectkorra.BendingPlayer;
-import com.projectkorra.projectkorra.Element;
-import com.projectkorra.projectkorra.ability.CoreAbility;
-import com.projectkorra.projectkorra.board.BendingBoardManager;
-import com.projectkorra.projectkorra.event.AbilityDamageEntityEvent;
+import Plugin.ProjectKorraHook;
 import Abilities.Bending.SoundAbility;
 import Plugin.AmonPackPlugin;
 import Plugin.Methods;
@@ -42,7 +38,6 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
-import static Plugin.AmonPackPlugin.ElementBasedOnSubElement;
 import static Plugin.AmonPackPlugin.plugin;
 import static Plugin.Methods.getRandom;
 
@@ -983,22 +978,25 @@ public class Listeners implements Listener {
                                 (Player) event.getWhoClicked());
                     }
                 }
-                Element ele = PlayerLevelMenager.GetElementByPlace(event.getSlot());
+                String ele = PlayerLevelMenager.GetElementByPlace(event.getSlot());
                 if (ele != null) {
-
+                    if (!ProjectKorraHook.isEnabled() || AmonPackPlugin.levelsBending == null) {
+                        p.sendMessage(ChatColor.RED + "System żywiołów Bending wymaga obecności pluginu ProjectKorra na serwerze!");
+                        return;
+                    }
                     PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
                     if (playersBranch == null) {
                         p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
                         return;
                     }
-                    Element element = playersBranch.getCurrentElement();
+                    String currentEleName = (playersBranch.getCurrentElement() != null) ? playersBranch.getCurrentElement().getName() : null;
 
-                    if (element == ele) {
+                    if (currentEleName != null && currentEleName.equalsIgnoreCase(ele)) {
                         AmonPackPlugin.levelsBending.OpenBendingSkillMenu(playersBranch.getName());
                     } else {
                         event.getWhoClicked()
                                 .sendMessage(ChatColor.RED + "Nie masz wybranego tego zywiołu! Twój zywioł to: "
-                                        + playersBranch.getCurrentElement());
+                                        + currentEleName);
                     }
                 }
             } else if (Objects.equals(event.getInventory().getHolder(), PlayerLevelMenager.BendingSkillMenu)) {
@@ -1064,25 +1062,22 @@ public class Listeners implements Listener {
                 }
 
                 Material clickedItem = event.getCurrentItem().getType();
-                BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
                 if (clickedItem.equals(Material.PAPER) && rawSlot >= 9 && rawSlot <= 17) {
-                    bPlayer.bindAbility(
+                    ProjectKorraHook.bindAbility(
+                            p,
                             abilityName,
                             Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
-                    bPlayer.saveAbility(
-                            abilityName,
-                            Integer.parseInt(event.getCurrentItem().getItemMeta().getDisplayName()));
-                    if (AmonPackPlugin.levelsBending.isPlayerInDungeon(p)) {
+                    if (AmonPackPlugin.levelsBending != null && AmonPackPlugin.levelsBending.isPlayerInDungeon(p)) {
                         AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(p.getName());
-                    } else {
+                    } else if (AmonPackPlugin.levelsBending != null) {
                         AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                     }
                 }
                 if (event.getCurrentItem().getType() == Material.PAPER
                         && event.getCurrentItem().getItemMeta().getDisplayName().contains("Zamknij")) {
-                    if (AmonPackPlugin.levelsBending.isPlayerInDungeon(p)) {
+                    if (AmonPackPlugin.levelsBending != null && AmonPackPlugin.levelsBending.isPlayerInDungeon(p)) {
                         AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(p.getName());
-                    } else {
+                    } else if (AmonPackPlugin.levelsBending != null) {
                         AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                     }
                 }
@@ -1091,92 +1086,39 @@ public class Listeners implements Listener {
                 if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) {
                     return;
                 }
-                PlayerBendingBranch playersBranch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName());
+                PlayerBendingBranch playersBranch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(p.getName()) : null;
                 if (playersBranch == null) {
-                    List<Element> elements = new ArrayList<>();
-                    List<String> abilities = new ArrayList<>();
-                    playersBranch = new PlayerBendingBranch(0, null, 0, elements, 0, p.getName(), abilities, 0);
-                    AmonPackPlugin.levelsBending.AddNewBranch(playersBranch);
+                    playersBranch = ProjectKorraHook.createDefaultPlayerBranch(p.getName());
+                    if (AmonPackPlugin.levelsBending != null) {
+                        AmonPackPlugin.levelsBending.AddNewBranch(playersBranch);
+                    }
                 }
 
                 Material clicked = event.getCurrentItem().getType();
-                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer
-                        .getBendingPlayer(p);
+                if (!ProjectKorraHook.isEnabled()) {
+                    p.sendMessage(ChatColor.RED + "System zywiołów Bending wymaga obecności pluginu ProjectKorra!");
+                    p.closeInventory();
+                    return;
+                }
 
                 if (clicked == Material.BARRIER) {
-                    // Clear only paid (cost > 0) abilities via ClearAbilities.
-                    // Free abilities (cost == 0) are preserved automatically.
-                    for (com.projectkorra.projectkorra.Element el : new com.projectkorra.projectkorra.Element[] {
-                            Element.AIR, Element.WATER, Element.FIRE, Element.EARTH }) {
-                        RPG.Levels.BendingTree.ElementTree tree = AmonPackPlugin.levelsBending.GetElement(el);
-                        if (tree != null) {
-                            playersBranch.ClearAbilities(tree);
-                        }
-                    }
-
-                    playersBranch.getElementsInPossesion().clear();
-                    playersBranch.SetCurrentElement(null);
-                    playersBranch.AddPoints(Element.AIR, -playersBranch.getAirPoints());
-                    playersBranch.AddPoints(Element.WATER, -playersBranch.getWaterPoints());
-                    playersBranch.AddPoints(Element.FIRE, -playersBranch.getFirePoints());
-                    playersBranch.AddPoints(Element.EARTH, -playersBranch.getEarthPoints());
-
-                    bPlayer.getElements().clear();
-                    bPlayer.getAbilities().clear();
-                    bPlayer.removeUnusableAbilities();
-                    bPlayer.saveElements();
-                    for (int i = 1; i <= 9; i++) {
-                        bPlayer.saveAbility("", i);
-                    }
-
+                    ProjectKorraHook.resetAllElements(p, playersBranch);
                     p.sendMessage("§aZresetowano wszystkie żywioły i drzewko magii!");
                     p.closeInventory();
                 } else if (clicked == Material.BLAZE_POWDER) {
-                    bPlayer.getElements().clear();
-                    bPlayer.addElement(Element.FIRE);
-                    bPlayer.saveElements();
-                    if (!playersBranch.getElementsInPossesion().contains(Element.FIRE)) {
-                        playersBranch.getElementsInPossesion().add(Element.FIRE);
-                    }
-                    playersBranch.SetCurrentElement(Element.FIRE);
-                    playersBranch.AddPoints(Element.FIRE, 5000);
-                    playersBranch.unlockDefaultAbilities();
+                    ProjectKorraHook.selectElement(p, "Fire", playersBranch);
                     p.sendMessage("§aWybrano żywioł Ognia! Otrzymałeś +5000 punktów!");
                     p.closeInventory();
                 } else if (clicked == Material.GRASS_BLOCK) {
-                    bPlayer.getElements().clear();
-                    bPlayer.addElement(Element.EARTH);
-                    bPlayer.saveElements();
-                    if (!playersBranch.getElementsInPossesion().contains(Element.EARTH)) {
-                        playersBranch.getElementsInPossesion().add(Element.EARTH);
-                    }
-                    playersBranch.SetCurrentElement(Element.EARTH);
-                    playersBranch.AddPoints(Element.EARTH, 5000);
-                    playersBranch.unlockDefaultAbilities();
+                    ProjectKorraHook.selectElement(p, "Earth", playersBranch);
                     p.sendMessage("§aWybrano żywioł Ziemi! Otrzymałeś +5000 punktów!");
                     p.closeInventory();
                 } else if (clicked == Material.WATER_BUCKET) {
-                    bPlayer.getElements().clear();
-                    bPlayer.addElement(Element.WATER);
-                    bPlayer.saveElements();
-                    if (!playersBranch.getElementsInPossesion().contains(Element.WATER)) {
-                        playersBranch.getElementsInPossesion().add(Element.WATER);
-                    }
-                    playersBranch.SetCurrentElement(Element.WATER);
-                    playersBranch.AddPoints(Element.WATER, 5000);
-                    playersBranch.unlockDefaultAbilities();
+                    ProjectKorraHook.selectElement(p, "Water", playersBranch);
                     p.sendMessage("§aWybrano żywioł Wody! Otrzymałeś +5000 punktów!");
                     p.closeInventory();
                 } else if (clicked == Material.FEATHER) {
-                    bPlayer.getElements().clear();
-                    bPlayer.addElement(Element.AIR);
-                    bPlayer.saveElements();
-                    if (!playersBranch.getElementsInPossesion().contains(Element.AIR)) {
-                        playersBranch.getElementsInPossesion().add(Element.AIR);
-                    }
-                    playersBranch.SetCurrentElement(Element.AIR);
-                    playersBranch.AddPoints(Element.AIR, 5000);
-                    playersBranch.unlockDefaultAbilities();
+                    ProjectKorraHook.selectElement(p, "Air", playersBranch);
                     p.sendMessage("§aWybrano żywioł Powietrza! Otrzymałeś +5000 punktów!");
                     p.closeInventory();
                 }
@@ -1187,30 +1129,19 @@ public class Listeners implements Listener {
                     p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
                     return;
                 }
-                Element element = playersBranch.getCurrentElement();
-                ElementTree SelectedElement = AmonPackPlugin.levelsBending.GetElement(element);
+                ElementTree SelectedElement = ProjectKorraHook.getElementTree(playersBranch);
+                if (SelectedElement == null) {
+                    p.sendMessage("Nie masz wybranego zywiołu! Przejdz samouczek!");
+                    return;
+                }
                 Material ClickedItem = event.getCurrentItem().getType();
-                BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(p);
 
                 if (ClickedItem == Material.PAPER
                         && event.getCurrentItem().getItemMeta().getDisplayName().contains("Powrot")) {
                     AmonPackPlugin.levelsBending.OpenBendingSkillMenu(p.getName());
                 } else if (ClickedItem.equals(Material.CHEST)) {
-                    for (int i = 0; i <= 9; i++) {
-                        if (CoreAbility.getAbility(bPlayer.getAbilities().get(i)) != null
-                                && (CoreAbility.getAbility(bPlayer.getAbilities().get(i)).getElement()
-                                        .equals(SelectedElement.getElement())
-                                        || Objects.equals(
-                                                ElementBasedOnSubElement(CoreAbility
-                                                        .getAbility(bPlayer.getAbilities().get(i)).getElement()),
-                                                SelectedElement.getElement()))) {
-                            BendingBoardManager.getBoard(p).get().clearSlot(i);
-                            bPlayer.getAbilities().remove(i);
-                        }
-                    }
-                    playersBranch.ClearAbilities(SelectedElement);
+                    ProjectKorraHook.clearBendingBoardAndAbilities(p, SelectedElement, playersBranch);
                     AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, 0);
-                    bPlayer.removeUnusableAbilities();
                 } else if (event.getSlot() == 26) {
                     if (playersBranch.getCurrentPage() < (SelectedElement.getRows() / 54)) {
                         AmonPackPlugin.levelsBending.OpenSkillTreeMenuByElement(p, playersBranch.getCurrentPage() + 1);
@@ -1232,7 +1163,7 @@ public class Listeners implements Listener {
                             return;
                         }
 
-                        if (playersBranch.GetPoints(element) >= STA.getCost()) {
+                        if (playersBranch.GetPoints(SelectedElement.getElement()) >= STA.getCost()) {
                             if (new HashSet<>(playersBranch.getUnlockedAbilities())
                                     .containsAll(STA.getListOfPreAbility()) || STA.getListOfPreAbility().size() == 0) {
 
@@ -1255,14 +1186,7 @@ public class Listeners implements Listener {
                                 if (STA.getLockAbilities() != null && !STA.getLockAbilities().isEmpty()) {
                                     for (String lockedName : STA.getLockAbilities()) {
                                         if (playersBranch.getUnlockedAbilities().contains(lockedName)) {
-                                            playersBranch.LockAndRemoveAbility(lockedName);
-                                            for (int i = 0; i <= 9; i++) {
-                                                final int slot = i;
-                                                if (bPlayer.getAbilities().containsKey(slot) && lockedName.equalsIgnoreCase(bPlayer.getAbilities().get(slot))) {
-                                                    com.projectkorra.projectkorra.board.BendingBoardManager.getBoard(p).ifPresent(board -> board.clearSlot(slot));
-                                                    bPlayer.getAbilities().remove(slot);
-                                                }
-                                            }
+                                            ProjectKorraHook.lockAndRemoveAbility(p, lockedName, playersBranch);
                                             p.sendMessage(ChatColor.DARK_RED + "Skill " + lockedName + " został zablokowany przez odblokowanie " + STA.getName() + "!");
                                         }
                                     }
@@ -1613,12 +1537,7 @@ public class Listeners implements Listener {
     // }
     // }
 
-    @EventHandler
-    public void test(AbilityDamageEntityEvent event) {
-        if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")) {
-            event.setCancelled(true);
-            SoundAbility.HandleDamage(event.getAbility().getPlayer(), event.getEntity(), 10.0);
-        }
+
         // if(MagicEffects.AffectedAbilities.contains(event.getAbility().getName())){
         // if (event.getAbility().getName().equalsIgnoreCase("SonicBlast")) {
         // event.setCancelled(true);
@@ -1635,8 +1554,6 @@ public class Listeners implements Listener {
         // }
         // }
         // }
-
-    }
 
     /*
      * for (AssaultDef A:AssaultMenager.listOfAssaultDef) {

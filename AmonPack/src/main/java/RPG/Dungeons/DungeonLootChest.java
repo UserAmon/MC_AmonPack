@@ -62,23 +62,20 @@ public class DungeonLootChest implements InventoryHolder {
         List<RewardOption> eligibleOthers = new ArrayList<>();
 
         if (blessingType.equalsIgnoreCase("Chest_General") || blessingType.equalsIgnoreCase("Chest_Abilities")) {
-            PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+            PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
             List<String> globallyUnlocked = branch != null ? branch.getUnlockedAbilities() : new ArrayList<>();
             List<String> alreadyBound = stats.getBoundDungeonSkills();
 
             org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
             if (branch != null && skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
                 for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
-                    com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
-                    if (pkEl != null) {
-                        ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
-                        if (tree != null) {
-                            for (SkillTree_Ability ability : tree.getAbilities()) {
-                                String skillName = ability.getName();
-                                if (!ability.isUpgrade() && !ability.isdef() && !globallyUnlocked.contains(skillName) && !alreadyBound.contains(skillName)) {
-                                    ItemStack icon = createSkillIcon(skillName, branch);
-                                    eligibleSkills.add(new RewardOption(RewardOption.RewardType.SKILL, skillName, icon));
-                                }
+                    org.bukkit.configuration.ConfigurationSection sec = skillTreeConfig.getConfigurationSection("AmonPack.Tree." + elName);
+                    if (sec != null) {
+                        for (String skillName : sec.getKeys(false)) {
+                            boolean isDef = sec.getBoolean(skillName + ".def", false);
+                            if (!isDef && !globallyUnlocked.contains(skillName) && !alreadyBound.contains(skillName)) {
+                                ItemStack icon = createSkillIcon(skillName, branch);
+                                eligibleSkills.add(new RewardOption(RewardOption.RewardType.SKILL, skillName, icon));
                             }
                         }
                     }
@@ -227,35 +224,26 @@ public class DungeonLootChest implements InventoryHolder {
         int customModelData = 0;
         
         try {
-            com.projectkorra.projectkorra.Element skillElement = null;
+            String foundElement = null;
             org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
             if (skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
                 for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
-                    com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
-                    if (pkEl != null) {
-                        ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
-                        if (tree != null) {
-                            for (SkillTree_Ability ability : tree.getAbilities()) {
-                                if (ability.getName().equalsIgnoreCase(skillName)) {
-                                    skillElement = pkEl;
-                                    break;
-                                }
-                            }
-                        }
+                    if (skillTreeConfig.contains("AmonPack.Tree." + elName + "." + skillName)) {
+                        foundElement = elName;
+                        break;
                     }
-                    if (skillElement != null) break;
                 }
             }
 
-            if (skillElement != null) {
-                String elementname = skillElement.getName().toLowerCase();
+            if (foundElement != null) {
+                String elementname = foundElement.toLowerCase();
                 String matName = AmonPackPlugin.getSkillTreeConfig().getString("AmonPack.Menu." + elementname + ".Material");
                 if (matName != null) {
                     mat = Material.getMaterial(matName);
                 }
                 customModelData = AmonPackPlugin.getSkillTreeConfig().getInt("AmonPack.Menu." + elementname + ".Green");
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
         ItemStack item = new ItemStack(mat == null ? Material.BOOK : mat);

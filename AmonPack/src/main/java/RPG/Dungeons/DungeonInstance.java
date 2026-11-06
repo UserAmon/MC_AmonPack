@@ -1,7 +1,7 @@
 package RPG.Dungeons;
 
-import com.projectkorra.projectkorra.util.TempBlock;
-import com.projectkorra.projectkorra.BendingPlayer;
+import Plugin.TempBlock;
+import Plugin.ProjectKorraHook;
 import RPG.Levels.Objects.LevelSkill;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
@@ -369,8 +369,7 @@ public class DungeonInstance {
                     if (moved) {
                         double pct = 3.0;
                         if (sickleLvl >= 3) {
-                            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(p);
-                            if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Air"))) {
+                            if (ProjectKorraHook.hasElement(p, "Air")) {
                                 pct = 6.0;
                             } else {
                                 pct = 4.5;
@@ -402,8 +401,7 @@ public class DungeonInstance {
                     if (!holdingStaff) {
                         double chargeAmt = 2.0;
                         if (staffLvl >= 3) {
-                            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(p);
-                            if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Air"))) {
+                            if (ProjectKorraHook.hasElement(p, "Air")) {
                                 chargeAmt = 3.0;
                             }
                         }
@@ -413,8 +411,7 @@ public class DungeonInstance {
                         double currentDur = stats.getWeaponDurability("WATER_STAFF");
                         double cost = 24.0;
                         if (staffLvl >= 3) {
-                            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(p);
-                            if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"))) {
+                            if (ProjectKorraHook.hasElement(p, "Earth")) {
                                 cost = 33.0;
                             }
                         }
@@ -1300,10 +1297,7 @@ public class DungeonInstance {
             for (UUID u : dynamicPathChiBlockedPlayers) {
                 Player p = Bukkit.getPlayer(u);
                 if (p != null) {
-                    BendingPlayer bp = BendingPlayer.getBendingPlayer(p);
-                    if (bp != null && bp.isChiBlocked()) {
-                        bp.unblockChi();
-                    }
+                    ProjectKorraHook.unblockChi(p);
                 }
             }
             dynamicPathChiBlockedPlayers.clear();
@@ -2110,16 +2104,11 @@ public class DungeonInstance {
     public static void clearPlayerTemporaryStatsAndAbilities(org.bukkit.OfflinePlayer player) {
         if (player == null) return;
         
-        PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+        PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
         if (branch != null) {
             branch.getTemporaryAbilities().clear();
-            
-            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-            if (bPlayer != null) {
-                for (com.projectkorra.projectkorra.Element tempEl : branch.getTemporaryElements()) {
-                    bPlayer.getElements().remove(tempEl);
-                }
-                bPlayer.removeUnusableAbilities();
+            if (player.isOnline()) {
+                ProjectKorraHook.cleanupTemporaryElements(player.getPlayer(), branch);
             }
             branch.getTemporaryElements().clear();
         }
@@ -2642,11 +2631,8 @@ public class DungeonInstance {
 
                 if (inColumn) {
                     p.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1, false, false, true));
-                    BendingPlayer bp = BendingPlayer.getBendingPlayer(p);
-                    if (bp != null && !bp.isChiBlocked()) {
-                        bp.blockChi();
-                        dynamicPathChiBlockedPlayers.add(p.getUniqueId());
-                    }
+                    ProjectKorraHook.blockChi(p);
+                    dynamicPathChiBlockedPlayers.add(p.getUniqueId());
 
                     // Calculate distance to nearest safe path block
                     double minSafeDistSq = Double.MAX_VALUE;
@@ -2681,10 +2667,7 @@ public class DungeonInstance {
                     }
                 } else if (dynamicPathChiBlockedPlayers.contains(p.getUniqueId())) {
                     dynamicPathChiBlockedPlayers.remove(p.getUniqueId());
-                    BendingPlayer bp = BendingPlayer.getBendingPlayer(p);
-                    if (bp != null && bp.isChiBlocked()) {
-                        bp.unblockChi();
-                    }
+                    ProjectKorraHook.unblockChi(p);
                 }
             }
         }

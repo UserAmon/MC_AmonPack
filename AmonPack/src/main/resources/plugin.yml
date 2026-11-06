@@ -3,8 +3,7 @@ version: '${project.version}'
 main: Plugin.AmonPackPlugin
 api-version: 1.20
 authors: [ Amon ]
-depend: ['ProjectKorra']
-softdepend: [WorldEdit, FastAsyncWorldEdit]
+softdepend: [WorldEdit, FastAsyncWorldEdit, ProjectKorra, ProtocolLib]
 description: 'Plugin made for Avatarserv'
 commands:
   Puzzle:
@@ -46,3 +45,7 @@ commands:
     usage: /<command>
     description: "Glowny system progresji etapow RPG"
     aliases: [progress, quests, stage, zadania]
+  hungergames:
+    usage: /<command>
+    description: "Battle Royale / Zombie Apocalypse PvPvE minigame"
+    aliases: [hg, br, battleroyale]

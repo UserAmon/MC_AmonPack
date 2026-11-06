@@ -42,8 +42,7 @@ public class DungeonBlessingManager {
         int lvl = stats.getBlessingLevel("DODGE");
         int windSickleLvl = stats.getBlessingLevel("WIND_SICKLE");
         if (windSickleLvl >= 3) {
-            com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-            if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Air"))) {
+            if (Plugin.ProjectKorraHook.hasElement(player, "Air")) {
                 org.bukkit.inventory.ItemStack held = player.getInventory().getItemInMainHand();
                 if (held != null && held.hasItemMeta()) {
                     org.bukkit.persistence.PersistentDataContainer pdc = held.getItemMeta().getPersistentDataContainer();

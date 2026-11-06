@@ -5,7 +5,6 @@ import RPG.Crafting.Objects.MagicEffectsConditions;
 import RPG.Util.InventoryXHolder;
 import RPG.Levels.Objects.LevelSkill;
 import RPG.Levels.Objects.PlayerLevel;
-import com.projectkorra.projectkorra.Element;
 import Plugin.Commands;
 import Plugin.AmonPackPlugin;
 import net.md_5.bungee.api.ChatMessageType;
@@ -516,7 +515,7 @@ public class PlayerLevelMenager {
         return null;
     }
 
-    public static Element GetElementByPlace(int place) {
+    public static String GetElementByPlace(int place) {
         FileConfiguration config = AmonPackPlugin.getLevelConfig();
         if (config == null) return null;
         org.bukkit.configuration.ConfigurationSection sec = config.getConfigurationSection("AmonPack.Levels");
@@ -526,7 +525,7 @@ public class PlayerLevelMenager {
                 String Path = "AmonPack.Levels." + key;
                 int placeinconfig = config.getInt(Path + ".Gui.Place");
                 if (place == placeinconfig) {
-                    return Element.getElement(key.replace("Mastery", ""));
+                    return key.replace("Mastery", "");
                 }
             }
         }

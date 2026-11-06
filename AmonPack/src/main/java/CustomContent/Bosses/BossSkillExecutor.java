@@ -1,7 +1,6 @@
 package CustomContent.Bosses;
 
 import Plugin.AmonPackPlugin;
-import com.projectkorra.projectkorra.GeneralMethods;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -115,7 +114,9 @@ public class BossSkillExecutor {
             if (p.getLocation().distance(center) <= 5.5) {
                 p.damage(10.0, boss);
                 p.setFireTicks(80);
-                p.setVelocity(GeneralMethods.getDirection(center, p.getLocation()).normalize().multiply(0.8).setY(0.3));
+                Vector dir = p.getLocation().toVector().subtract(center.toVector());
+                if (dir.lengthSquared() > 0.001) dir.normalize();
+                p.setVelocity(dir.multiply(0.8).setY(0.3));
             }
         }
     }

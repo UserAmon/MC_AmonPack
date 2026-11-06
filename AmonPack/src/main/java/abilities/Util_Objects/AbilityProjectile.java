@@ -1,12 +1,10 @@
 package Abilities.Util_Objects;
 
-import com.projectkorra.projectkorra.util.ParticleEffect;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.Random;
-
 
 public class AbilityProjectile {
     private Location location;

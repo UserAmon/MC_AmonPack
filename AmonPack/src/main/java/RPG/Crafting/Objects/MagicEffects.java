@@ -8,10 +8,7 @@ import Abilities.Bending.SoundAbility;
 import Plugin.Commands;
 import Plugin.AmonPackPlugin;
 import Plugin.Methods;
-import com.projectkorra.projectkorra.GeneralMethods;
-import com.projectkorra.projectkorra.ability.EarthAbility;
-import com.projectkorra.projectkorra.util.ParticleEffect;
-import com.projectkorra.projectkorra.util.TempBlock;
+import Plugin.TempBlock;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
@@ -227,7 +224,7 @@ public class MagicEffects {
                 break;
             case "Repulse":
                 if (attacker instanceof LivingEntity) {
-                    Vector forceDir = GeneralMethods.getDirection(attacker.getLocation(),
+                    Vector forceDir = Methods.getDirection(attacker.getLocation(),
                             player.getLocation().clone().subtract(0, 1, 0));
                     attacker.setVelocity(forceDir.clone().normalize().multiply(-1));
                 }
@@ -239,10 +236,10 @@ public class MagicEffects {
                 break;
             case "Earth_Resolve_Dmg_Taking":
                 List<Block> NearBlocks = new ArrayList<>();
-                for (Block b : GeneralMethods.getBlocksAroundPoint(player.getLocation(), 4)) {
+                for (Block b : Methods.getBlocksAroundPoint(player.getLocation(), 4)) {
                     if (b.getLocation().getY() <= player.getLocation().getY() + 1
                             && b.getLocation().distance(player.getLocation()) < 7
-                            && EarthAbility.isEarthbendable(player, b)) {
+                            && isEarthbendable(b)) {
                         NearBlocks.add(b);
                     }
                 }
@@ -329,12 +326,12 @@ public class MagicEffects {
                 break;
             case "Air_Thrust":
                 victim.setVelocity(new Vector(0, 1, 0));
-                ParticleEffect.CLOUD.display(victim.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
+                victim.getWorld().spawnParticle(Particle.CLOUD, victim.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
                 break;
             case "Air_Damage_Boost_Downward":
                 DamageBoosts = DamageBoosts + 1;
                 victim.setVelocity(new Vector(0, -1, 0));
-                ParticleEffect.CLOUD.display(victim.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
+                victim.getWorld().spawnParticle(Particle.CLOUD, victim.getLocation(), 5, 0.5, 0.5, 0.5, 0.05);
                 break;
             case "Earth_1":
                 Methods.spawnFallingBlocks(victim.getLocation(), Material.DIRT, 6, 1.5, player);
@@ -493,7 +490,7 @@ public class MagicEffects {
                         currentHeight++;
                 }
 
-                for (Block b : GeneralMethods.getBlocksAroundPoint(startLoc, currentRadius)) {
+                for (Block b : Methods.getBlocksAroundPoint(startLoc, currentRadius)) {
                     if (b.getType() != Material.AIR && b.getType() != Material.BEDROCK
                             && b.getType() != Material.BARRIER && !b.isLiquid()) {
                         if (b.getLocation().distance(startLoc) <= currentRadius) {
@@ -514,14 +511,14 @@ public class MagicEffects {
                         new TempBlock(center, Material.BLUE_ICE).setRevertTime(5000L);
                     }
                     if (i == 0 && currentHeight > 3) {
-                        for (Block b : GeneralMethods.getBlocksAroundPoint(center.getLocation(), 1.75)) {
+                        for (Block b : Methods.getBlocksAroundPoint(center.getLocation(), 1.75)) {
                             if (b.getType() == Material.AIR && b.getY() <= (startLoc.getBlockY() + 1)) {
                                 new TempBlock(b, Material.BLUE_ICE).setRevertTime(5000L);
                             }
                         }
                     }
                     if (i == 1 && currentHeight > 4) {
-                        for (Block b : GeneralMethods.getBlocksAroundPoint(center.getLocation(), 1)) {
+                        for (Block b : Methods.getBlocksAroundPoint(center.getLocation(), 1)) {
                             if (b.getType() == Material.AIR && b.getY() <= (startLoc.getBlockY() + 2)) {
                                 new TempBlock(b, Material.BLUE_ICE).setRevertTime(5000L);
                             }
@@ -532,7 +529,7 @@ public class MagicEffects {
                         2, currentRadius, 0.05);
                 startLoc.getWorld().spawnParticle(Particle.CLOUD, startLoc.clone().add(0, 1, 0), 5, currentRadius / 2,
                         1, currentRadius / 2, 0.05);
-                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(startLoc, currentRadius)) {
+                for (Entity entity : Methods.getEntitiesAroundPoint(startLoc, currentRadius)) {
                     if (entity instanceof LivingEntity) {
                         LivingEntity le = (LivingEntity) entity;
                         le.damage(0.5);
@@ -620,14 +617,14 @@ public class MagicEffects {
                     loc.getWorld().spawnParticle(Particle.LAVA, meteor.getLocation(), 20, 1, 1, 1, 0.5);
 
                     // Damage entities
-                    for (Entity entity : GeneralMethods.getEntitiesAroundPoint(meteor.getLocation(), 4)) {
+                    for (Entity entity : Methods.getEntitiesAroundPoint(meteor.getLocation(), 4)) {
                         if (entity instanceof org.bukkit.entity.LivingEntity) {
                             ((org.bukkit.entity.LivingEntity) entity).damage(4);
                             entity.setFireTicks(50);
                         }
                     }
                     meteor.getLocation().getBlock().setType(Material.AIR);
-                    for (Block b : GeneralMethods.getBlocksAroundPoint(meteor.getLocation(), 4)) {
+                    for (Block b : Methods.getBlocksAroundPoint(meteor.getLocation(), 4)) {
                         if (b.getType() != Material.AIR && b.getType() != Material.BEDROCK) {
                             new TempBlock(b, Material.AIR).setRevertTime(10000);
                         }
@@ -678,7 +675,7 @@ public class MagicEffects {
                     currentRadius += (maxRadius - 1.0) / duration;
                 }
 
-                for (Block b : GeneralMethods.getBlocksAroundPoint(currentLocation, currentRadius)) {
+                for (Block b : Methods.getBlocksAroundPoint(currentLocation, currentRadius)) {
                     if (b.getType() != Material.AIR && b.getType() != Material.BEDROCK
                             && b.getType() != Material.BARRIER && !b.isLiquid()) {
                         if (b.getLocation().distance(currentLocation) <= currentRadius) {
@@ -699,7 +696,7 @@ public class MagicEffects {
                 }
                 angle += 0.5;
 
-                for (Entity entity : GeneralMethods.getEntitiesAroundPoint(currentLocation, currentRadius)) {
+                for (Entity entity : Methods.getEntitiesAroundPoint(currentLocation, currentRadius)) {
                     if (entity instanceof LivingEntity) {
                         LivingEntity le = (LivingEntity) entity;
                         le.damage(1.0);
@@ -752,5 +749,13 @@ public class MagicEffects {
         }.runTaskTimer(AmonPackPlugin.plugin, 0, 1);
 
         player.getWorld().playSound(player.getLocation(), Sound.ITEM_TRIDENT_THROW, 1f, 1f);
+    }
+
+    private boolean isEarthbendable(Block b) {
+        if (b == null) return false;
+        Material m = b.getType();
+        return m == Material.DIRT || m == Material.GRASS_BLOCK || m == Material.STONE || m == Material.COBBLESTONE
+                || m == Material.DEEPSLATE || m == Material.COBBLED_DEEPSLATE || m == Material.SAND || m == Material.GRAVEL
+                || m == Material.ANDESITE || m == Material.DIORITE || m == Material.GRANITE;
     }
 }

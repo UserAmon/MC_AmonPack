@@ -1,5 +1,6 @@
 package RPG.Dungeons;
 
+import Plugin.ProjectKorraHook;
 import RPG.Levels.BendingTree.PlayerBendingBranch;
 import Plugin.AmonPackPlugin;
 import org.bukkit.Bukkit;
@@ -972,8 +973,7 @@ public class DungeonManager implements Listener {
             DungeonPlayerStats stats = run.getPlayerStats(killer);
             DungeonBlessingManager.handleVampirism(killer, victim, stats);
             if (stats != null && stats.getBlessingLevel("WATER_STAFF") >= 3 && stats.hasWeaponInInventory(killer, "WATER_STAFF")) {
-                com.projectkorra.projectkorra.BendingPlayer bKiller = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(killer);
-                if (bKiller != null && bKiller.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"))) {
+                if (ProjectKorraHook.hasElement(killer, "Fire")) {
                     double currentDur = stats.getWeaponDurability("WATER_STAFF");
                     stats.setWeaponDurability("WATER_STAFF", currentDur + 10.0);
                 }
@@ -1141,8 +1141,7 @@ public class DungeonManager implements Listener {
                             }
 
                             if (bowLvl >= 3) {
-                                com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
-                                if (bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"))) {
+                                if (ProjectKorraHook.hasElement(attacker, "Fire")) {
                                     vic.setFireTicks(80);
                                     for (org.bukkit.entity.Entity ent : vic.getNearbyEntities(6.0, 6.0, 6.0)) {
                                         if (ent instanceof LivingEntity && !ent.getUniqueId().equals(attacker.getUniqueId())) {
@@ -1165,8 +1164,7 @@ public class DungeonManager implements Listener {
                         LivingEntity vic = (LivingEntity) event.getEntity();
                         int amonLvl = stats.getBlessingLevel("AMON_GLOVE");
                         
-                        com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
-                        boolean isEarth = bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"));
+                        boolean isEarth = ProjectKorraHook.hasElement(attacker, "Earth");
 
                         org.bukkit.util.Vector knockDir = vic.getLocation().toVector().subtract(attacker.getLocation().toVector());
                         knockDir.setY(0.25);
@@ -1228,8 +1226,7 @@ public class DungeonManager implements Listener {
                         stats.setLastMaiHitTime(System.currentTimeMillis());
 
                         double critRate = stats.getPCritRate();
-                        com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
-                        boolean isFire = bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"));
+                        boolean isFire = ProjectKorraHook.hasElement(attacker, "Fire");
                         if (maiLvl >= 3 && isFire) {
                             critRate += 0.25;
                         }
@@ -1287,8 +1284,7 @@ public class DungeonManager implements Listener {
                             vic.getWorld().playSound(vic.getLocation(), Sound.ENTITY_DRAGON_FIREBALL_EXPLODE, 1.0f, 0.8f);
 
                             if (maceLvl >= 3) {
-                                com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
-                                if (bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Air"))) {
+                                if (ProjectKorraHook.hasElement(attacker, "Air")) {
                                     attacker.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS, 60, 1));
                                     attacker.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS, 60, 0));
                                     Abilities.Bending.SoundAbility.HandleDamage(attacker, vic, 10.0);
@@ -1306,8 +1302,7 @@ public class DungeonManager implements Listener {
 
                     if (sickleLvl >= 3) {
                         if (dur >= 100.0) {
-                            com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
-                            boolean isFire = bAttacker != null && bAttacker.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"));
+                            boolean isFire = ProjectKorraHook.hasElement(attacker, "Fire");
                             if (isFire && event.getEntity() instanceof LivingEntity && ((LivingEntity) event.getEntity()).getFireTicks() > 0) {
                                 scaling = 3.0;
                             } else {
@@ -1330,30 +1325,12 @@ public class DungeonManager implements Listener {
 
                     int waterLvl = stats.getBlessingLevel("WATER_STAFF");
                     if (waterLvl >= 2) {
-                        com.projectkorra.projectkorra.BendingPlayer bAttacker = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(attacker);
-                        if (bAttacker != null) {
-                            int count = 0;
-                            for (int i = 1; i <= 9; i++) {
-                                String abilityName = bAttacker.getAbilities().get(i);
-                                if (abilityName != null) {
-                                    com.projectkorra.projectkorra.ability.CoreAbility ability = com.projectkorra.projectkorra.ability.CoreAbility.getAbility(abilityName);
-                                    if (ability != null) {
-                                        if (ability instanceof com.projectkorra.projectkorra.ability.HealingAbility 
-                                            || ability instanceof com.projectkorra.projectkorra.ability.BloodAbility
-                                            || (ability.getElement() != null && (ability.getElement().getName().equalsIgnoreCase("Healing") || ability.getElement().getName().equalsIgnoreCase("Blood")))) {
-                                            count++;
-                                        }
-                                    }
-                                }
-                            }
-                            double multiplier = 1.0 + (0.50 * count);
-                            if (multiplier > 3.0) {
-                                multiplier = 3.0;
-                            }
-                            damage = waterBase * multiplier;
-                        } else {
-                            damage = waterBase;
+                        int count = ProjectKorraHook.countHealingOrBloodAbilities(attacker);
+                        double multiplier = 1.0 + (0.50 * count);
+                        if (multiplier > 3.0) {
+                            multiplier = 3.0;
                         }
+                        damage = waterBase * multiplier;
 
                         if (event.getEntity() instanceof LivingEntity) {
                             LivingEntity vic = (LivingEntity) event.getEntity();
@@ -1675,7 +1652,9 @@ public class DungeonManager implements Listener {
                 run.setPlayerReady(player, !run.isPlayerReady(player));
             } else if (item.getType() == Material.CHEST && item.hasItemMeta() && item.getItemMeta().getDisplayName().contains("Menu Umiejętności")) {
                 event.setCancelled(true);
-                AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(player.getName());
+                if (AmonPackPlugin.levelsBending != null) {
+                    AmonPackPlugin.levelsBending.OpenDungeonSkillMenu(player.getName());
+                }
             }
         }
     }
@@ -1730,7 +1709,7 @@ public class DungeonManager implements Listener {
             
             if (option != null) {
                 DungeonPlayerStats stats = run.getPlayerStats(player);
-                PlayerBendingBranch branch = AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName());
+                PlayerBendingBranch branch = (AmonPackPlugin.levelsBending != null) ? AmonPackPlugin.levelsBending.GetBranchByPlayerName(player.getName()) : null;
                 
                 switch (option.type) {
                     case SKILL:
@@ -1738,41 +1717,19 @@ public class DungeonManager implements Listener {
                         if (branch != null) {
                             branch.getTemporaryAbilities().add(option.key);
                             
-                            com.projectkorra.projectkorra.Element skillElement = null;
+                            String skillElement = null;
                             org.bukkit.configuration.file.FileConfiguration skillTreeConfig = AmonPackPlugin.getSkillTreeConfig();
                             if (skillTreeConfig != null && skillTreeConfig.getConfigurationSection("AmonPack.Tree") != null) {
                                 for (String elName : skillTreeConfig.getConfigurationSection("AmonPack.Tree").getKeys(false)) {
-                                    com.projectkorra.projectkorra.Element pkEl = com.projectkorra.projectkorra.Element.getElement(elName);
-                                    if (pkEl != null) {
-                                        RPG.Levels.BendingTree.ElementTree tree = AmonPackPlugin.levelsBending.GetElement(pkEl);
-                                        if (tree != null) {
-                                            for (RPG.Levels.BendingTree.SkillTree_Ability ability : tree.getAbilities()) {
-                                                if (ability.getName().equalsIgnoreCase(option.key)) {
-                                                    skillElement = pkEl;
-                                                    break;
-                                                }
-                                            }
-                                        }
+                                    if (skillTreeConfig.contains("AmonPack.Tree." + elName + "." + option.key)) {
+                                        skillElement = elName;
+                                        break;
                                     }
-                                    if (skillElement != null) break;
                                 }
                             }
                             
                             if (skillElement != null) {
-                                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-                                if (bPlayer != null) {
-                                    if (!bPlayer.hasElement(skillElement)) {
-                                        bPlayer.getElements().add(skillElement);
-                                        branch.getTemporaryElements().add(skillElement);
-                                        player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Przyznano Ci tymczasowy żywioł/subżywioł: " + skillElement.getName() + " na czas tego dungeonu!");
-                                    }
-                                    com.projectkorra.projectkorra.Element parentElement = AmonPackPlugin.ElementBasedOnSubElement(skillElement);
-                                    if (parentElement != null && !bPlayer.hasElement(parentElement)) {
-                                        bPlayer.getElements().add(parentElement);
-                                        branch.getTemporaryElements().add(parentElement);
-                                        player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.LIGHT_PURPLE + "Przyznano Ci tymczasowy żywioł główny: " + parentElement.getName() + " na czas tego dungeonu!");
-                                    }
-                                }
+                                ProjectKorraHook.grantTemporaryElement(player, skillElement, branch);
                             }
                         }
                         player.sendMessage(ChatColor.GREEN + "[Nagroda] " + ChatColor.YELLOW + "Odblokowano ruch: " + option.key + " na czas tego dungeonu!");
@@ -1810,8 +1767,7 @@ public class DungeonManager implements Listener {
                             } else if (level == 3) {
                                 stats.addHpBoost(4.0);
                                 stats.addMCritRate(0.10);
-                                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-                                if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"))) {
+                                if (ProjectKorraHook.hasElement(player, "Earth")) {
                                     stats.addHpBoost(-12.0);
                                 }
                             }
@@ -1819,8 +1775,7 @@ public class DungeonManager implements Listener {
                         } else if (option.key.equals("EARTH_MACE")) {
                             int level = stats.getBlessingLevel("EARTH_MACE");
                             if (level == 3) {
-                                com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-                                if (bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Earth"))) {
+                                if (ProjectKorraHook.hasElement(player, "Earth")) {
                                     stats.addRegenLevel(1);
                                 }
                             }
@@ -2460,8 +2415,7 @@ public class DungeonManager implements Listener {
     private void triggerWindSickleSkill(Player player, DungeonPlayerStats stats, int lvl, DungeonInstance run) {
         stats.setWeaponDurability("WIND_SICKLE", 5.0);
 
-        com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-        boolean isWater = bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Water"));
+        boolean isWater = ProjectKorraHook.hasElement(player, "Water");
 
         int speedAmplifier = 0;
         if (lvl >= 3 && isWater) {
@@ -2605,9 +2559,8 @@ public class DungeonManager implements Listener {
         org.bukkit.configuration.file.FileConfiguration cfg = AmonPackPlugin.getDungeonConfig();
         final double baseDmg = (cfg != null) ? cfg.getDouble("blessings.MAI_DAGGERS.base-damage", 1.0) : 1.0;
 
-        com.projectkorra.projectkorra.BendingPlayer bPlayer = com.projectkorra.projectkorra.BendingPlayer.getBendingPlayer(player);
-        final boolean isFire = bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Fire"));
-        final boolean isWater = bPlayer != null && bPlayer.hasElement(com.projectkorra.projectkorra.Element.getElement("Water"));
+        final boolean isFire = ProjectKorraHook.hasElement(player, "Fire");
+        final boolean isWater = ProjectKorraHook.hasElement(player, "Water");
 
         org.bukkit.util.Vector dir = player.getEyeLocation().getDirection().clone();
         org.bukkit.util.Vector right = new org.bukkit.util.Vector(-dir.getZ(), 0.0, dir.getX()).normalize();
